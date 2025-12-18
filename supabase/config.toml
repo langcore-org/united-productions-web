@@ -1,0 +1,105 @@
+# Supabase Local Development Configuration
+# For detailed configuration reference: https://supabase.com/docs/guides/local-development/cli/config
+
+# プロジェクト識別子
+project_id = "united-production"
+
+[api]
+enabled = true
+# Kong API Gateway のポート番号
+port = 55321
+# API で公開するスキーマ
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+# API レスポンスの最大行数
+max_rows = 1000
+
+[db]
+# PostgreSQL のポート番号
+port = 55322
+# Shadow DB のポート（マイグレーション差分検出用）
+shadow_port = 54320
+# PostgreSQL のメジャーバージョン
+major_version = 15
+
+[db.pooler]
+enabled = false
+port = 54329
+pool_mode = "transaction"
+default_pool_size = 20
+max_client_conn = 100
+
+[db.seed]
+# シードデータの自動投入を有効化
+enabled = true
+sql_paths = ["./seed.sql"]  # Development test data: users, instance, programs
+
+[realtime]
+# Realtime 機能（V2+で使用予定）
+enabled = true
+
+[studio]
+enabled = true
+# Supabase Studio (管理画面) のポート番号
+port = 55323
+api_url = "http://127.0.0.1"
+
+[inbucket]
+# メールテスト用サーバー
+enabled = true
+# Inbucket Web UI のポート番号
+port = 54324
+
+[storage]
+enabled = true
+# アップロード可能な最大ファイルサイズ
+file_size_limit = "50MiB"
+
+[auth]
+enabled = true
+# WebApp の URL（リダイレクト先）
+site_url = "env(SUPABASE_SITE_URL)"
+# OAuth コールバック URL
+additional_redirect_urls = ["env(SUPABASE_AUTH_REDIRECT_URL)"]
+# JWT の有効期限（秒）: 1時間
+jwt_expiry = 3600
+# ユーザー登録を許可
+enable_signup = true
+
+[auth.email]
+# メールでの新規登録を許可
+enable_signup = true
+# メール確認を必須にする
+enable_confirmations = false
+
+# Google OAuth 設定
+[auth.external.google]
+enabled = true
+client_id = "env(GOOGLE_CLIENT_ID)"
+secret = "env(GOOGLE_CLIENT_SECRET)"
+# Supabase Auth のコールバック URL（Supabase が自動的に使用）
+redirect_uri = "env(SUPABASE_OAUTH_CALLBACK_URI)"
+
+# Azure AD (Microsoft) OAuth 設定
+[auth.external.azure]
+enabled = true
+client_id = "env(AZURE_CLIENT_ID)"
+secret = "env(AZURE_CLIENT_SECRET)"
+# Supabase Auth のコールバック URL（Supabase が自動的に使用）
+redirect_uri = "env(SUPABASE_OAUTH_CALLBACK_URI)"
+# テナント情報は url で指定（マルチテナントの場合は 'common' を使用）
+url = "https://login.microsoftonline.com/common"
+
+[edge_runtime]
+# Edge Functions（未使用だが有効化）
+enabled = true
+policy = "per_worker"
+inspector_port = 8083
+
+[analytics]
+enabled = true
+port = 54327
+backend = "postgres"
+
+[experimental]
+# 実験的機能は無効
