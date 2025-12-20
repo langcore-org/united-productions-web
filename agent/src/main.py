@@ -480,6 +480,14 @@ async def _generate_completion_events(
     Core completion logic that yields SSE-formatted event strings.
     This runs in a background task.
     """
+    import time
+    perf_start = time.time()
+    def perf_log(label: str):
+        elapsed = (time.time() - perf_start) * 1000
+        logger.info(f"[PERF] {label}: {elapsed:.0f}ms")
+
+    perf_log("completion_started")
+
     # Helper to buffer and yield events
     def buffer_and_format(event_type: str, event_data: Any) -> str:
         """Buffer event and return SSE formatted string."""
@@ -491,6 +499,7 @@ async def _generate_completion_events(
         all_messages, actual_session_id = session_manager.process_messages(
             request.messages, request.session_id
         )
+        perf_log("messages_processed")
 
         # Convert messages to prompt
         prompt, system_prompt = MessageAdapter.messages_to_prompt(all_messages)
@@ -534,9 +543,11 @@ async def _generate_completion_events(
             claude_options["max_turns"] = 1
 
         # Run Claude Code
+        perf_log("calling_claude_sdk")
         chunks_buffer = []
         role_sent = False  # Track if we've sent the initial role chunk
         content_sent = False  # Track if we've sent any content
+        first_chunk_logged = False
 
         async for chunk in claude_cli.run_completion(
             prompt=prompt,
@@ -546,8 +557,13 @@ async def _generate_completion_events(
             allowed_tools=claude_options.get("allowed_tools"),
             disallowed_tools=claude_options.get("disallowed_tools"),
             permission_mode=claude_options.get("permission_mode", "bypassPermissions"),
+            session_id=actual_session_id,  # Pass session_id for Claude SDK resume
+            continue_session=actual_session_id is not None,  # Enable session continuity
             stream=True,
         ):
+            if not first_chunk_logged:
+                perf_log("first_chunk_from_claude_sdk")
+                first_chunk_logged = True
             chunks_buffer.append(chunk)
 
             # Handle tool_result - check for FILE_CREATED markers from Bash tool output
@@ -1440,6 +1456,97 @@ async def get_mcp_stats(
     """Get statistics about MCP connections."""
     await verify_api_key(request, credentials)
     return mcp_client.get_stats()
+
+
+# File Access Endpoints (for agent-generated files)
+
+import base64
+import mimetypes
+from pathlib import Path
+
+
+@app.get("/v1/files/read")
+@rate_limit_endpoint("general")
+async def read_file(
+    path: str,
+    request: Request,
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security)
+):
+    """
+    Read a file from the agent's working directory.
+
+    Returns file content as base64 encoded string along with metadata.
+    Used by frontend to retrieve agent-generated files for upload to Google Drive.
+
+    Security: Only files within the configured working directory (CLAUDE_CWD) can be accessed.
+    """
+    await verify_api_key(request, credentials)
+
+    try:
+        file_path = Path(path).resolve()
+        workspace_path = claude_cli.cwd.resolve()
+
+        # Security check: Ensure file is within workspace directory
+        if not str(file_path).startswith(str(workspace_path)):
+            logger.warning(f"File access denied - path outside workspace: {path}")
+            raise HTTPException(
+                status_code=403,
+                detail="Access denied: File path is outside the agent workspace"
+            )
+
+        # Check if file exists
+        if not file_path.exists():
+            raise HTTPException(
+                status_code=404,
+                detail=f"File not found: {path}"
+            )
+
+        if not file_path.is_file():
+            raise HTTPException(
+                status_code=400,
+                detail=f"Path is not a file: {path}"
+            )
+
+        # Check file size (limit to 50MB)
+        file_size = file_path.stat().st_size
+        max_size = 50 * 1024 * 1024  # 50MB
+        if file_size > max_size:
+            raise HTTPException(
+                status_code=413,
+                detail=f"File too large: {file_size} bytes (max {max_size} bytes)"
+            )
+
+        # Detect MIME type
+        mime_type, _ = mimetypes.guess_type(str(file_path))
+        if not mime_type:
+            mime_type = "application/octet-stream"
+
+        # Read file content
+        with open(file_path, "rb") as f:
+            content = f.read()
+
+        # Encode as base64
+        content_base64 = base64.b64encode(content).decode("utf-8")
+
+        logger.info(f"File read successfully: {path} ({file_size} bytes, {mime_type})")
+
+        return {
+            "path": str(file_path),
+            "name": file_path.name,
+            "size": file_size,
+            "mime_type": mime_type,
+            "content": content_base64,
+            "encoding": "base64"
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error reading file {path}: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error reading file: {str(e)}"
+        )
 
 
 @app.exception_handler(HTTPException)

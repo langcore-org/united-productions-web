@@ -171,9 +171,15 @@ class ClaudeCodeCLI:
                              'is_error', 'error_message')
 
                 # Run the query and yield messages
-                logger.debug("🚀 Starting Claude Agent SDK query...")
+                import time
+                sdk_start = time.time()
+                logger.info(f"🚀 [PERF] Starting Claude Agent SDK query...")
                 message_count = 0
+                first_msg_logged = False
                 async for message in query(prompt=prompt, options=options):
+                    if not first_msg_logged:
+                        first_msg_logged = True
+                        logger.info(f"🚀 [PERF] first_sdk_message: {(time.time() - sdk_start) * 1000:.0f}ms")
                     message_count += 1
 
                     # Only log at DEBUG level to reduce overhead
