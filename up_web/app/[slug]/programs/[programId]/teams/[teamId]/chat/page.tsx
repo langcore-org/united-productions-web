@@ -2,8 +2,6 @@
 
 import { useState, useEffect, useCallback, use, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { useChat } from "@ai-sdk/react";
-import { DefaultChatTransport, UIMessage } from "ai";
 import { createClient } from "@/lib/supabase/client";
 import { SidebarTabs, FolderTree, TeamFileTree } from "@/components/sidebar";
 import {
@@ -33,6 +31,7 @@ import {
   updateGeneratedFile,
   loadSessionData,
 } from "@/lib/session-persistence";
+import { useAgentStream, type AgentMessage } from "@/hooks/useAgentStream";
 
 interface TeamData {
   id: string;
@@ -48,7 +47,7 @@ interface TeamData {
   };
 }
 
-// New Chat Selector Component - displayed when no session is selected
+// New Chat Selector Component
 function NewChatSelector({ onSelectMode }: { onSelectMode: (mode: AgentMode) => void }) {
   return (
     <div className="h-full flex flex-col items-center justify-center p-6 sm:p-8">
@@ -115,7 +114,7 @@ export default function TeamChatPage({
   const [dbMessages, setDbMessages] = useState<Message[]>([]);
   const [claudeSessionId, setClaudeSessionId] = useState<string | null>(null);
 
-  // Streaming state - simplified
+  // Agent state
   const [sessionStatus, setSessionStatus] = useState<SessionStatus>("idle");
   const [todos, setTodos] = useState<Todo[]>([]);
   const [generatedFiles, setGeneratedFiles] = useState<GeneratedFile[]>([]);
@@ -130,154 +129,14 @@ export default function TeamChatPage({
     currentSessionIdRef.current = currentSessionId;
   }, [currentSessionId]);
 
-  // Streaming content state
-  const [streamingContent, setStreamingContent] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-
-  // Extract text content from UIMessage parts
-  const extractTextFromParts = useCallback((message: UIMessage): string => {
-    if (!message.parts) return "";
-    return message.parts
-      .filter((part): part is { type: "text"; text: string } => part.type === "text")
-      .map((part) => part.text)
-      .join("");
-  }, []);
-
-  // Create transport with dynamic body
-  const transportRef = useRef<DefaultChatTransport<UIMessage> | null>(null);
-
-  // Update transport when claudeSessionId changes
-  useEffect(() => {
-    transportRef.current = new DefaultChatTransport({
-      api: "/api/chat/completions",
-      body: {
-        session_id: claudeSessionId,
-        enable_tools: true,
-      },
-    });
-  }, [claudeSessionId]);
-
-  // useChat from Vercel AI SDK v6 - primary streaming mechanism
+  // Custom streaming hook
   const {
-    messages: chatMessages,
-    sendMessage,
-    stop,
-    status,
-    setMessages: setChatMessages,
-    error: chatError,
-  } = useChat({
-    transport: transportRef.current || new DefaultChatTransport({
-      api: "/api/chat/completions",
-      body: {
-        session_id: claudeSessionId,
-        enable_tools: true,
-      },
-    }),
-    onFinish: async ({ message }) => {
-      // Save assistant message to Supabase when streaming completes
-      const content = extractTextFromParts(message);
-      if (currentSessionIdRef.current && content) {
-        const supabase = createClient();
-        const { data: savedMessage } = await supabase
-          .from("messages")
-          .insert({
-            session_id: currentSessionIdRef.current,
-            role: "assistant",
-            content: content,
-          })
-          .select("id, role, content, file_attachments, created_at")
-          .single();
-
-        if (savedMessage) {
-          setDbMessages((prev) => [...prev, savedMessage as Message]);
-        }
-      }
-      setSessionStatus("completed");
-      setIsLoading(false);
-      setStreamingContent("");
-    },
-    onError: (error) => {
-      console.error("Chat error:", error);
-      setSessionStatus("error");
-      setIsLoading(false);
-    },
-    onData: (dataItem) => {
-      // Handle data events (todos, files) from the stream
-      if (!dataItem || typeof dataItem !== "object") return;
-
-      const item = dataItem as Record<string, unknown>;
-
-      // Handle todo_update events
-      if (item.type === "todo_update" && item.todos) {
-        console.log("[ChatPage] Received todo_update:", (item.todos as unknown[]).length, "todos");
-        const todosWithIds: Todo[] = (item.todos as Array<{ content: string; status: string; activeForm?: string; id?: string }>).map((todo, index) => ({
-          id: todo.id || `todo-${index}-${Date.now()}`,
-          content: todo.content,
-          status: (todo.status as Todo["status"]) || "pending",
-          activeForm: todo.activeForm,
-        }));
-        setTodos(todosWithIds);
-        if (currentSessionIdRef.current) {
-          saveTodos(currentSessionIdRef.current, todosWithIds);
-        }
-      }
-
-      // Handle file_created events
-      if (item.type === "file_created" && item.path) {
-        console.log("[ChatPage] Received file_created:", item.path);
-        handleFileCreated(item.path as string);
-      }
-
-      // Handle gdrive_file_created events
-      if (item.type === "gdrive_file_created" && item.file_name) {
-        console.log("[ChatPage] Received gdrive_file_created:", item.file_name);
-        if (item.status === "completed" && item.drive_id) {
-          const file: GeneratedFile = {
-            id: `gdrive-${item.drive_id}`,
-            path: `gdrive://${item.folder_id || "drive"}/${item.file_name}`,
-            name: item.file_name as string,
-            createdAt: new Date().toISOString(),
-            uploadStatus: "completed" as FileUploadStatus,
-            driveId: item.drive_id as string,
-            driveUrl: item.web_view_link as string | undefined,
-          };
-          setGeneratedFiles((prev) => {
-            if (prev.some((f) => f.driveId === item.drive_id)) return prev;
-            return [...prev, file];
-          });
-          if (currentSessionIdRef.current) {
-            saveGeneratedFile(currentSessionIdRef.current, file);
-          }
-        }
-      }
-    },
-  });
-
-  // Track loading state from status
-  useEffect(() => {
-    const loading = status === "submitted" || status === "streaming";
-    setIsLoading(loading);
-  }, [status]);
-
-  // Track streaming content from chatMessages
-  useEffect(() => {
-    const lastMessage = chatMessages[chatMessages.length - 1];
-    if (lastMessage?.role === "assistant") {
-      const content = extractTextFromParts(lastMessage);
-      if (content && !dbMessages.some((db) => db.content === content)) {
-        setStreamingContent(content);
-      }
-    }
-  }, [chatMessages, dbMessages, extractTextFromParts]);
-
-  // Handle chat errors
-  useEffect(() => {
-    if (chatError) {
-      console.error("Chat error:", chatError);
-      setSessionStatus("error");
-    }
-  }, [chatError]);
-
+    streamingContent,
+    isStreaming,
+    error: streamError,
+    sendMessage: sendAgentMessage,
+    stop: stopStream,
+  } = useAgentStream();
 
   // Handle local file_created - auto-upload to Google Drive
   const handleFileCreated = async (path: string) => {
@@ -293,8 +152,8 @@ export default function TeamChatPage({
 
     // Save to database
     let dbFileId: string | null = null;
-    if (currentSessionId) {
-      dbFileId = await saveGeneratedFile(currentSessionId, file);
+    if (currentSessionIdRef.current) {
+      dbFileId = await saveGeneratedFile(currentSessionIdRef.current, file);
     }
 
     // Auto-upload to Google Drive if output_directory_id is configured
@@ -345,8 +204,8 @@ export default function TeamChatPage({
           )
         );
 
-        if (dbFileId && currentSessionId) {
-          await updateGeneratedFile(currentSessionId, dbFileId, {
+        if (dbFileId && currentSessionIdRef.current) {
+          await updateGeneratedFile(currentSessionIdRef.current, dbFileId, {
             driveId: uploadData.file.id,
             driveUrl: uploadData.file.webViewLink,
             uploadStatus: "completed",
@@ -362,8 +221,8 @@ export default function TeamChatPage({
           )
         );
 
-        if (dbFileId && currentSessionId) {
-          await updateGeneratedFile(currentSessionId, dbFileId, { uploadStatus: "error" });
+        if (dbFileId && currentSessionIdRef.current) {
+          await updateGeneratedFile(currentSessionIdRef.current, dbFileId, { uploadStatus: "error" });
         }
       }
     }
@@ -382,7 +241,7 @@ export default function TeamChatPage({
   // ESC key handler for stopping session
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && isLoading) {
+      if (e.key === "Escape" && isStreaming) {
         e.preventDefault();
         handleStopSession();
       }
@@ -390,7 +249,7 @@ export default function TeamChatPage({
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isLoading]);
+  }, [isStreaming]);
 
   // Fetch team data and pre-load team files
   useEffect(() => {
@@ -536,7 +395,6 @@ export default function TeamChatPage({
   useEffect(() => {
     if (!currentSessionId) {
       setDbMessages([]);
-      setChatMessages([]);
       return;
     }
 
@@ -570,11 +428,11 @@ export default function TeamChatPage({
     }
 
     fetchMessages();
-  }, [currentSessionId, setChatMessages]);
+  }, [currentSessionId]);
 
   // Background session check - poll only when we have a claude session and not currently streaming
   useEffect(() => {
-    if (!claudeSessionId || !currentSessionId || isLoading) return;
+    if (!claudeSessionId || !currentSessionId || isStreaming) return;
 
     let mounted = true;
     let pollInterval: NodeJS.Timeout | null = null;
@@ -609,7 +467,6 @@ export default function TeamChatPage({
                 const buffer = await bufferRes.json();
                 // Process buffered events if any
                 if (buffer.events && Array.isArray(buffer.events)) {
-                  // Get last content to save as assistant message
                   let finalContent = "";
                   for (const event of buffer.events) {
                     if (event.type === "content" && event.content) {
@@ -649,7 +506,7 @@ export default function TeamChatPage({
       mounted = false;
       if (pollInterval) clearInterval(pollInterval);
     };
-  }, [claudeSessionId, currentSessionId, isLoading]);
+  }, [claudeSessionId, currentSessionId, isStreaming]);
 
   // Create new session - show mode selector first
   const handleNewSession = useCallback(() => {
@@ -680,7 +537,6 @@ export default function TeamChatPage({
     if (!error && data) {
       setCurrentSessionId(data.id);
       setDbMessages([]);
-      setChatMessages([]);
       setCurrentMode(selectedMode);
       setTodos([]);
       setGeneratedFiles([]);
@@ -694,7 +550,7 @@ export default function TeamChatPage({
     }
 
     setShowModeSelector(false);
-  }, [teamId, selectedMode, slug, programId, router, setChatMessages]);
+  }, [teamId, selectedMode, slug, programId, router]);
 
   // Handle mode cancel
   const handleModeCancel = () => {
@@ -719,7 +575,6 @@ export default function TeamChatPage({
     if (!error && data) {
       setCurrentSessionId(data.id);
       setDbMessages([]);
-      setChatMessages([]);
       setCurrentMode(mode);
       setTodos([]);
       setGeneratedFiles([]);
@@ -731,13 +586,12 @@ export default function TeamChatPage({
 
       sessionListRef.current?.refresh();
     }
-  }, [teamId, slug, programId, router, setChatMessages]);
+  }, [teamId, slug, programId, router]);
 
   // Handle session deleted
   const handleSessionDeleted = useCallback(() => {
     setCurrentSessionId(null);
     setDbMessages([]);
-    setChatMessages([]);
     setCurrentMode(null);
     setTodos([]);
     setGeneratedFiles([]);
@@ -746,12 +600,11 @@ export default function TeamChatPage({
 
     const newUrl = `/${slug}/programs/${programId}/teams/${teamId}/chat`;
     router.push(newUrl, { scroll: false });
-  }, [slug, programId, teamId, router, setChatMessages]);
+  }, [slug, programId, teamId, router]);
 
   // Handle session selection
   const handleSessionSelect = useCallback(async (sessionId: string) => {
     setCurrentSessionId(sessionId);
-    setChatMessages([]);
 
     const newUrl = `/${slug}/programs/${programId}/teams/${teamId}/chat?session=${sessionId}`;
     router.push(newUrl, { scroll: false });
@@ -777,7 +630,7 @@ export default function TeamChatPage({
     setTodos(sessionData.todos);
     setGeneratedFiles(sessionData.files);
     setSessionStatus("idle");
-  }, [slug, programId, teamId, router, setChatMessages]);
+  }, [slug, programId, teamId, router]);
 
   // Handle file selection for preview
   const handleFileSelect = useCallback((file: DriveFile) => {
@@ -880,7 +733,7 @@ export default function TeamChatPage({
     }
 
     // Build messages for Claude API
-    const agentMessages: Array<{ role: "system" | "user" | "assistant"; content: string }> = [];
+    const agentMessages: AgentMessage[] = [];
 
     // Build file context for system prompt
     const availableFiles = teamFiles.filter((f) => f.ref_type === "file").slice(0, 50);
@@ -900,7 +753,7 @@ export default function TeamChatPage({
       files: driveFileRefs,
     });
 
-    agentMessages.push({ role: "system" as const, content: systemPromptContent });
+    agentMessages.push({ role: "system", content: systemPromptContent });
 
     // Add previous messages
     agentMessages.push(
@@ -928,7 +781,7 @@ ${JSON.stringify(fileRefs, null, 2)}
 workspace_id="${workspaceId}", file_id="各ファイルのfile_id"`;
     }
 
-    agentMessages.push({ role: "user" as const, content: userMessageContent });
+    agentMessages.push({ role: "user", content: userMessageContent });
 
     // Generate claude session ID
     const newClaudeSessionId = `agent-${sessionId}-${Date.now()}`;
@@ -944,25 +797,67 @@ workspace_id="${workspaceId}", file_id="各ファイルのfile_id"`;
     setTodos([]);
     setGeneratedFiles([]);
     setSessionStatus("running");
-    setIsLoading(true);
 
-    // Update transport with new session ID
-    transportRef.current = new DefaultChatTransport({
-      api: "/api/chat/completions",
-      body: {
-        messages: agentMessages,
-        session_id: newClaudeSessionId,
-        enable_tools: true,
-      },
-    });
+    // Send message and handle streaming
+    try {
+      const finalContent = await sendAgentMessage(agentMessages, {
+        onTodoUpdate: (newTodos) => {
+          setTodos(newTodos);
+          if (currentSessionIdRef.current) {
+            saveTodos(currentSessionIdRef.current, newTodos);
+          }
+        },
+        onFileCreated: handleFileCreated,
+        onGdriveFileCreated: (file) => {
+          setGeneratedFiles((prev) => {
+            if (prev.some((f) => f.driveId === file.driveId)) return prev;
+            return [...prev, file];
+          });
+          if (currentSessionIdRef.current) {
+            saveGeneratedFile(currentSessionIdRef.current, file);
+          }
+        },
+        onError: (err) => {
+          console.error("Stream error:", err);
+          setSessionStatus("error");
+        },
+        onComplete: async (content) => {
+          // Save assistant message to Supabase
+          if (currentSessionIdRef.current && content) {
+            await supabase
+              .from("messages")
+              .insert({
+                session_id: currentSessionIdRef.current,
+                role: "assistant",
+                content,
+              });
 
-    // Use sendMessage to send and start streaming (AI SDK v6 API)
-    await sendMessage({ text: userMessageContent });
+            // Refresh messages
+            const { data } = await supabase
+              .from("messages")
+              .select(`
+                id, role, content, file_attachments, created_at, user_id,
+                user:users!messages_user_id_fkey(id, display_name, avatar_url)
+              `)
+              .eq("session_id", currentSessionIdRef.current)
+              .order("created_at", { ascending: true });
+
+            if (data) {
+              setDbMessages(data as Message[]);
+            }
+          }
+          setSessionStatus("completed");
+        },
+      });
+    } catch (err) {
+      console.error("Send error:", err);
+      setSessionStatus("error");
+    }
   };
 
   // Handle stop session
   const handleStopSession = async () => {
-    stop();
+    stopStream();
 
     if (claudeSessionId) {
       try {
@@ -1001,7 +896,7 @@ workspace_id="${workspaceId}", file_id="各ファイルのfile_id"`;
     );
   }
 
-  // Combine DB messages for display (streamingContent is already a state variable)
+  // Combine DB messages for display
   const displayMessages = [...dbMessages];
 
   return (
@@ -1112,7 +1007,7 @@ workspace_id="${workspaceId}", file_id="各ファイルのfile_id"`;
             )}
 
             {/* Agent Running Status Indicator */}
-            {(isLoading || sessionStatus === "running" || isReconnecting) && (
+            {(isStreaming || sessionStatus === "running" || isReconnecting) && (
               <div className="flex items-center gap-3 px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-lg shadow-lg animate-pulse shrink-0">
                 <span className="relative flex h-3 w-3">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
@@ -1142,8 +1037,8 @@ workspace_id="${workspaceId}", file_id="各ファイルのfile_id"`;
               {/* Messages */}
               <MessageList
                 messages={displayMessages}
-                isLoading={isLoading}
-                isStreaming={isLoading}
+                isLoading={isStreaming}
+                isStreaming={isStreaming}
                 streamingContent={streamingContent}
                 sessionStatus={sessionStatus}
               />
@@ -1171,7 +1066,7 @@ workspace_id="${workspaceId}", file_id="各ファイルのfile_id"`;
                 <ChatInput
                   teamFiles={teamFiles}
                   onSend={handleSend}
-                  isLoading={isLoading}
+                  isLoading={isStreaming}
                   workspaceId={team.program.workspace_id}
                 />
               </div>

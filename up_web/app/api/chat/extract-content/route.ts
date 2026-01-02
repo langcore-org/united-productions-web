@@ -3,9 +3,6 @@ import { createClient } from "@/lib/supabase/server";
 import { getDriveClientForWorkspace } from "@/lib/google-drive";
 import mammoth from "mammoth";
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const pdfParse = require("pdf-parse");
-
 const MAX_CONTENT_LENGTH = 50000; // 50KB limit
 
 /**
@@ -97,13 +94,25 @@ export async function POST(request: NextRequest) {
 
       // PDF files
       case "application/pdf": {
-        const fileResponse = await drive.files.get(
-          { fileId, alt: "media", supportsAllDrives: true },
-          { responseType: "arraybuffer" }
-        );
-        const buffer = Buffer.from(fileResponse.data as ArrayBuffer);
-        const pdfData = await pdfParse(buffer);
-        content = pdfData.text;
+        try {
+          const fileResponse = await drive.files.get(
+            { fileId, alt: "media", supportsAllDrives: true },
+            { responseType: "arraybuffer" }
+          );
+          const buffer = Buffer.from(fileResponse.data as ArrayBuffer);
+          // Dynamic import to avoid build-time issues with @napi-rs/canvas
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const pdfParseModule: any = await import("pdf-parse");
+          const pdfParse = pdfParseModule.default || pdfParseModule;
+          const pdfData = await pdfParse(buffer);
+          content = pdfData.text;
+        } catch (pdfError) {
+          console.error("PDF parsing failed:", pdfError);
+          return NextResponse.json(
+            { error: "PDF parsing is not available in this environment" },
+            { status: 500 }
+          );
+        }
         break;
       }
 
