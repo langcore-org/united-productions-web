@@ -7,9 +7,9 @@
     "dev:auth": "next dev --turbopack --port 3100",
     "dev:online": "env-cmd -f .env.bypass next dev --turbopack --port 3100",
     "build": "next build",
-    "start": "PORT=3100 next start",
+    "start": "PORT=3100 env-cmd -f .env next start",
     "start:bypass": "PORT=3100 env-cmd -f .env.bypass.local next start",
-    "start:online": "PORT=3100 env-cmd -f .env.bypass next start",
+    "start:online": "PORT=3100 env-cmd -f .env next start",
     "lint": "eslint .",
     "db:reset": "cd ../supabase && supabase db reset --local",
     "db:reset:full": "cd ../supabase && supabase db reset --local && supabase --experimental storage cp -r storage/avatars ss:///avatars --local",
@@ -64,6 +64,8 @@
     "react-dom": "^19.0.0",
     "react-easy-crop": "^5.5.6",
     "react-grab": "^0.0.91",
+    "react-markdown": "^10.1.0",
+    "remark-gfm": "^4.0.1",
     "tailwind-merge": "^3.3.0"
   },
   "devDependencies": {

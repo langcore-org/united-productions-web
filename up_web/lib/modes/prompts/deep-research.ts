@@ -2,7 +2,7 @@ import type { AgentMode } from '../types';
 
 export const deepResearchMode: AgentMode = {
   id: 'deep-research',
-  name: 'Deep Research',
+  name: 'ディープリサーチ',
   description: '徹底的な調査と分析を行うリサーチャー',
   icon: '🔍',
   systemPrompt: `あなたは徹底的な調査と分析を行う Deep Research Agent です。

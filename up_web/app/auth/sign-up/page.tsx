@@ -8,7 +8,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
@@ -19,7 +18,6 @@ export default function SignUpPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [agreed, setAgreed] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -43,11 +41,6 @@ export default function SignUpPage() {
 
     if (password !== confirmPassword) {
       setError("パスワードが一致しません");
-      return;
-    }
-
-    if (!agreed) {
-      setError("利用規約への同意が必要です");
       return;
     }
 
@@ -168,24 +161,6 @@ export default function SignUpPage() {
                 )}
               </Button>
             </div>
-          </div>
-
-          <div className="flex items-start space-x-2">
-            <Checkbox
-              id="terms"
-              checked={agreed}
-              onCheckedChange={(checked) => setAgreed(checked === true)}
-            />
-            <Label htmlFor="terms" className="text-sm font-normal leading-snug">
-              <Link href="/terms" className="text-primary hover:underline">
-                利用規約
-              </Link>
-              と
-              <Link href="/privacy" className="text-primary hover:underline">
-                プライバシーポリシー
-              </Link>
-              に同意します
-            </Label>
           </div>
 
           <Button type="submit" className="w-full" disabled={isLoading}>

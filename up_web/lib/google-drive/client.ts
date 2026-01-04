@@ -408,3 +408,65 @@ export async function uploadFileToWorkspace(
 
   return uploadFile(drive, folderId, fileName, content, mimeType);
 }
+
+/**
+ * フォルダ内のファイルを名前で検索
+ * @param drive - Drive APIクライアント
+ * @param folderId - 検索対象フォルダID
+ * @param fileName - 検索するファイル名
+ * @returns 見つかったファイル情報、見つからない場合はnull
+ */
+export async function findFileByName(
+  drive: drive_v3.Drive,
+  folderId: string,
+  fileName: string
+): Promise<DriveFile | null> {
+  try {
+    // Escape special characters in file name for search query
+    const escapedName = fileName.replace(/'/g, "\\'");
+
+    const response = await drive.files.list({
+      q: `'${folderId}' in parents and name = '${escapedName}' and trashed = false`,
+      pageSize: 1,
+      fields: "files(id, name, mimeType, parents, webViewLink, iconLink, modifiedTime, size)",
+      supportsAllDrives: true,
+      includeItemsFromAllDrives: true,
+    });
+
+    const files = response.data.files || [];
+    if (files.length === 0) {
+      return null;
+    }
+
+    const file = files[0];
+    return {
+      id: file.id!,
+      name: file.name!,
+      mimeType: file.mimeType!,
+      parents: file.parents || undefined,
+      webViewLink: file.webViewLink || undefined,
+      iconLink: file.iconLink || undefined,
+      modifiedTime: file.modifiedTime || undefined,
+      size: file.size || undefined,
+    };
+  } catch (error) {
+    console.error("Error finding file by name:", error);
+    return null;
+  }
+}
+
+/**
+ * ワークスペースのDriveでファイルを名前で検索
+ */
+export async function findFileByNameInWorkspace(
+  workspaceId: string,
+  folderId: string,
+  fileName: string
+): Promise<DriveFile | null> {
+  const drive = await getDriveClientForWorkspace(workspaceId);
+  if (!drive) {
+    return null;
+  }
+
+  return findFileByName(drive, folderId, fileName);
+}

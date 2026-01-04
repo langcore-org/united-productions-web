@@ -56,10 +56,10 @@ function NewChatSelector({ onSelectMode }: { onSelectMode: (mode: AgentMode) => 
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-muted mb-4">
             <MessageSquare className="w-8 h-8 text-muted-foreground" />
           </div>
-          <h2 className="text-2xl font-bold mb-2">Start a conversation</h2>
+          <h2 className="text-2xl font-bold mb-2">会話を始める</h2>
           <p className="text-muted-foreground">
-            Ask questions, get help with tasks, or discuss ideas. Use @ to
-            reference team files or drag files from the folder tree.
+            質問したり、タスクのサポートを受けたり、アイデアを話し合ったりできます。
+            @ でチームファイルを参照するか、フォルダツリーからファイルをドラッグしてください。
           </p>
         </div>
 
@@ -810,7 +810,24 @@ workspace_id="${workspaceId}", file_id="各ファイルのfile_id"`;
         onFileCreated: handleFileCreated,
         onGdriveFileCreated: (file) => {
           setGeneratedFiles((prev) => {
-            if (prev.some((f) => f.driveId === file.driveId)) return prev;
+            // If file has driveId (completed upload), update existing file with same name
+            if (file.driveId) {
+              const existingIndex = prev.findIndex((f) => f.name === file.name && !f.driveId);
+              if (existingIndex >= 0) {
+                // Update existing file with driveId and url
+                const updated = [...prev];
+                updated[existingIndex] = {
+                  ...updated[existingIndex],
+                  ...file,
+                };
+                return updated;
+              }
+              // If no existing file, check for duplicate by driveId
+              if (prev.some((f) => f.driveId === file.driveId)) return prev;
+            } else {
+              // If uploading event, check for duplicate by name
+              if (prev.some((f) => f.name === file.name)) return prev;
+            }
             return [...prev, file];
           });
           if (currentSessionIdRef.current) {
@@ -1049,6 +1066,8 @@ workspace_id="${workspaceId}", file_id="各ファイルのfile_id"`;
                   todos={todos}
                   generatedFiles={generatedFiles}
                   sessionStatus={sessionStatus}
+                  workspaceId={team?.program?.workspace_id}
+                  outputFolderId={team?.output_directory_id || undefined}
                   onFilePreview={(file) => {
                     setPreviewFile({
                       id: file.driveId || file.id,
@@ -1056,6 +1075,20 @@ workspace_id="${workspaceId}", file_id="各ファイルのfile_id"`;
                       mimeType: file.mimeType || "text/plain",
                       webViewLink: file.driveUrl,
                     });
+                  }}
+                  onFileUpdated={async (fileId, updates) => {
+                    // Update local state
+                    setGeneratedFiles(prev => prev.map(f =>
+                      f.id === fileId ? { ...f, ...updates } : f
+                    ));
+                    // Persist to database
+                    if (currentSessionIdRef.current) {
+                      await updateGeneratedFile(currentSessionIdRef.current, fileId, {
+                        driveId: updates.driveId,
+                        driveUrl: updates.driveUrl,
+                        uploadStatus: updates.uploadStatus as "pending" | "uploading" | "completed" | "error" | undefined,
+                      });
+                    }
                   }}
                   className="mx-3 sm:mx-4 mb-2"
                 />

@@ -50,10 +50,10 @@ export function MessageList({
     return (
       <div className="flex-1 min-h-0 flex flex-col items-center justify-center p-8 text-center">
         <Bot className="h-12 w-12 text-muted-foreground/30 mb-4" />
-        <h3 className="text-lg font-medium mb-2">Start a conversation</h3>
+        <h3 className="text-lg font-medium mb-2">会話を始める</h3>
         <p className="text-sm text-muted-foreground max-w-md">
-          Ask questions, get help with tasks, or discuss ideas. Use @ to
-          reference team files or drag files from the folder tree.
+          質問したり、タスクのサポートを受けたり、アイデアを話し合ったりできます。
+          @ でチームファイルを参照するか、フォルダツリーからファイルをドラッグしてください。
         </p>
       </div>
     );

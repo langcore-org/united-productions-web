@@ -117,6 +117,7 @@ export async function middleware(request: NextRequest) {
     "/auth/forgot-password",
     "/auth/update-password",
     "/auth/sign-up-success",
+    "/invitations",
   ];
   const isPublicRoute = publicRoutes.some((route) =>
     pathname === route || pathname.startsWith(route)

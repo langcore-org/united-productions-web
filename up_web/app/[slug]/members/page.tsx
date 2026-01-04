@@ -41,7 +41,8 @@ import {
 } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { PageHeader } from "@/components/layout";
-import { Loader2, Mail, MoreVertical, Plus, Search, UserMinus } from "lucide-react";
+import { Check, Copy, Loader2, Mail, MoreVertical, Plus, Search, UserMinus, X } from "lucide-react";
+import type { InvitationLinkResult } from "@/lib/types/database";
 
 interface Member {
   id: string;
@@ -84,23 +85,28 @@ export default function MembersPage({ params }: PageProps) {
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
-  useEffect(() => {
-    async function fetchMembers() {
-      try {
-        const response = await fetch(`/api/workspace/${slug}/members`);
-        if (!response.ok) {
-          throw new Error('Failed to fetch members');
-        }
-        const data = await response.json();
-        setMembers(data.members || []);
-        setInvitations(data.invitations || []);
-        setCurrentUserId(data.currentUserId);
-      } catch (error) {
-        console.error('Error fetching members:', error);
-      } finally {
-        setIsDataLoading(false);
+  // Invitation link result dialog
+  const [invitationResult, setInvitationResult] = useState<InvitationLinkResult | null>(null);
+  const [isCopied, setIsCopied] = useState(false);
+
+  const fetchMembers = async () => {
+    try {
+      const response = await fetch(`/api/workspace/${slug}/members`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch members');
       }
+      const data = await response.json();
+      setMembers(data.members || []);
+      setInvitations(data.invitations || []);
+      setCurrentUserId(data.currentUserId);
+    } catch (error) {
+      console.error('Error fetching members:', error);
+    } finally {
+      setIsDataLoading(false);
     }
+  };
+
+  useEffect(() => {
     fetchMembers();
   }, [slug]);
 
@@ -111,18 +117,63 @@ export default function MembersPage({ params }: PageProps) {
   );
 
   const handleInvite = async () => {
+    if (!inviteEmail.trim()) return;
+
     setIsLoading(true);
     try {
-      // TODO: Send invite via API
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      setIsInviteDialogOpen(false);
-      setInviteEmail("");
-      setInviteMessage("");
-    } catch {
-      // Handle error
+      const response = await fetch(`/api/workspace/${slug}/members/invite`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: inviteEmail.trim(),
+          role: inviteRole,
+        }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        alert(data.error || '招待の作成に失敗しました');
+        return;
+      }
+
+      const result: InvitationLinkResult = await response.json();
+      setInvitationResult(result);
+
+      // Refresh the invitations list
+      fetchMembers();
+    } catch (error) {
+      console.error('Invite error:', error);
+      alert('招待の作成に失敗しました');
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleCopyLink = () => {
+    if (invitationResult) {
+      navigator.clipboard.writeText(invitationResult.invitation_url);
+      setIsCopied(true);
+      setTimeout(() => setIsCopied(false), 2000);
+    }
+  };
+
+  const handleCloseInvitationResult = () => {
+    setInvitationResult(null);
+    setIsInviteDialogOpen(false);
+    setInviteEmail("");
+    setInviteMessage("");
+    setIsCopied(false);
+  };
+
+  const handleInvitationResent = (invitationId: string, newResult: InvitationLinkResult) => {
+    setInvitationResult(newResult);
+    fetchMembers();
+  };
+
+  const handleInvitationRevoked = (invitationId: string) => {
+    setInvitations((prev) => prev.filter((inv) => inv.id !== invitationId));
   };
 
   if (isDataLoading) {
@@ -181,9 +232,6 @@ export default function MembersPage({ params }: PageProps) {
                   value={inviteEmail}
                   onChange={(e) => setInviteEmail(e.target.value)}
                 />
-                <p className="text-xs text-muted-foreground">
-                  複数のメールアドレスをカンマ区切りで入力できます
-                </p>
               </div>
 
               <div className="space-y-2">
@@ -225,12 +273,54 @@ export default function MembersPage({ params }: PageProps) {
               </Button>
               <Button onClick={handleInvite} disabled={!inviteEmail || isLoading}>
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                招待を送信
+                招待リンクを生成
               </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
       </div>
+
+      {/* Invitation Link Result Dialog */}
+      <Dialog open={!!invitationResult} onOpenChange={(open) => !open && handleCloseInvitationResult()}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>招待リンクが生成されました</DialogTitle>
+            <DialogDescription>
+              以下のリンクをコピーして、招待したいメンバーに共有してください。
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="flex items-center gap-2">
+              <Input
+                value={invitationResult?.invitation_url || ''}
+                readOnly
+                className="font-mono text-sm"
+              />
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={handleCopyLink}
+              >
+                {isCopied ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+              </Button>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              有効期限: {invitationResult?.expires_at
+                ? new Date(invitationResult.expires_at).toLocaleDateString('ja-JP', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                  })
+                : '-'}
+            </p>
+          </div>
+          <DialogFooter>
+            <Button onClick={handleCloseInvitationResult}>
+              完了
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Active Members */}
       <Card className="mb-6">
@@ -268,7 +358,13 @@ export default function MembersPage({ params }: PageProps) {
           </CardHeader>
           <CardContent className="space-y-4">
             {invitations.map((invitation) => (
-              <InvitationRow key={invitation.id} invitation={invitation} />
+              <InvitationRow
+                key={invitation.id}
+                invitation={invitation}
+                slug={slug}
+                onResent={handleInvitationResent}
+                onRevoked={handleInvitationRevoked}
+              />
             ))}
           </CardContent>
         </Card>
@@ -446,33 +542,128 @@ function MemberRow({
 
 function InvitationRow({
   invitation,
+  slug,
+  onResent,
+  onRevoked,
 }: {
   invitation: Invitation;
+  slug: string;
+  onResent?: (invitationId: string, result: InvitationLinkResult) => void;
+  onRevoked?: (invitationId: string) => void;
 }) {
+  const [isResending, setIsResending] = useState(false);
+  const [isRevoking, setIsRevoking] = useState(false);
+  const [showRevokeDialog, setShowRevokeDialog] = useState(false);
+
+  const handleResend = async () => {
+    setIsResending(true);
+    try {
+      const response = await fetch(`/api/workspace/${slug}/members/${invitation.id}/resend`, {
+        method: 'POST',
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        alert(data.error || '再送信に失敗しました');
+        return;
+      }
+
+      const result: InvitationLinkResult = await response.json();
+      onResent?.(invitation.id, result);
+    } catch (error) {
+      console.error('Resend error:', error);
+      alert('再送信に失敗しました');
+    } finally {
+      setIsResending(false);
+    }
+  };
+
+  const handleRevoke = async () => {
+    setIsRevoking(true);
+    try {
+      const response = await fetch(`/api/workspace/${slug}/members/${invitation.id}/revoke`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        alert(data.error || '取消に失敗しました');
+        return;
+      }
+
+      onRevoked?.(invitation.id);
+    } catch (error) {
+      console.error('Revoke error:', error);
+      alert('取消に失敗しました');
+    } finally {
+      setIsRevoking(false);
+      setShowRevokeDialog(false);
+    }
+  };
+
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 rounded-lg border p-4">
-      <div className="flex items-center gap-3 sm:gap-4">
-        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted shrink-0">
-          <Mail className="h-5 w-5 text-muted-foreground" />
+    <>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 rounded-lg border p-4">
+        <div className="flex items-center gap-3 sm:gap-4">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted shrink-0">
+            <Mail className="h-5 w-5 text-muted-foreground" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <h3 className="font-medium truncate">{invitation.email}</h3>
+            <p className="text-sm text-muted-foreground">
+              役割: {roleLabels[invitation.role]} • 招待者: {invitation.inviter_name}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              有効期限: {invitation.expires_at || "-"}
+            </p>
+          </div>
         </div>
-        <div className="min-w-0 flex-1">
-          <h3 className="font-medium truncate">{invitation.email}</h3>
-          <p className="text-sm text-muted-foreground">
-            役割: {roleLabels[invitation.role]} • 招待者: {invitation.inviter_name}
-          </p>
-          <p className="text-xs text-muted-foreground">
-            有効期限: {invitation.expires_at || "-"}
-          </p>
+        <div className="flex gap-2 ml-0 sm:ml-auto">
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex-1 sm:flex-none"
+            onClick={() => setShowRevokeDialog(true)}
+            disabled={isRevoking}
+          >
+            {isRevoking && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            取消
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex-1 sm:flex-none"
+            onClick={handleResend}
+            disabled={isResending}
+          >
+            {isResending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            再送信
+          </Button>
         </div>
       </div>
-      <div className="flex gap-2 ml-0 sm:ml-auto">
-        <Button variant="outline" size="sm" className="flex-1 sm:flex-none">
-          取消
-        </Button>
-        <Button variant="outline" size="sm" className="flex-1 sm:flex-none">
-          再送信
-        </Button>
-      </div>
-    </div>
+
+      <AlertDialog open={showRevokeDialog} onOpenChange={setShowRevokeDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>招待を取り消しますか？</AlertDialogTitle>
+            <AlertDialogDescription>
+              <span className="font-medium text-foreground">{invitation.email}</span> への招待を取り消します。
+              招待リンクは無効になります。
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isRevoking}>キャンセル</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleRevoke}
+              disabled={isRevoking}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isRevoking && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              取り消す
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }

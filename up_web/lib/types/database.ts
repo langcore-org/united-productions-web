@@ -70,6 +70,9 @@ export interface WorkspaceMember {
   role: WorkspaceRole;
   status: MemberStatus;
   joined_at: string | null;
+  // Invitation token fields (added 2026-01-03)
+  invitation_token: string | null;
+  invitation_expires_at: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -269,4 +272,53 @@ export interface UpdateSettingsInput {
   email_notifications?: boolean;
   push_notifications?: boolean;
   notification_frequency?: NotificationFrequency;
+}
+
+// ===========================================
+// Invitation Types (added 2026-01-03)
+// ===========================================
+
+/**
+ * Input for creating a workspace invitation
+ * Note: 'owner' role cannot be invited, only assigned during workspace creation
+ */
+export interface CreateInvitationInput {
+  email: string;
+  role: Exclude<WorkspaceRole, 'owner'>;
+}
+
+/**
+ * Detailed invitation information returned when validating an invitation token
+ */
+export interface InvitationDetails {
+  id: string;
+  workspace_id: string;
+  workspace_name: string;
+  workspace_slug: string;
+  email: string;
+  role: WorkspaceRole;
+  inviter_name: string | null;
+  invited_at: string;
+  expires_at: string;
+  is_expired: boolean;
+}
+
+/**
+ * Result returned after successfully creating an invitation
+ */
+export interface InvitationLinkResult {
+  invitation_id: string;
+  invitation_token: string;
+  invitation_url: string;
+  expires_at: string;
+}
+
+/**
+ * Result returned after accepting an invitation
+ */
+export interface InvitationAcceptResult {
+  success: boolean;
+  workspace_slug: string;
+  email_mismatch: boolean;
+  message: string;
 }

@@ -210,7 +210,7 @@ export function FolderTreeItem({
             size="icon"
             className="h-6 w-6 flex-shrink-0 opacity-70 hover:opacity-100"
             onClick={handleReloadClick}
-            title="Reload"
+            title="再読み込み"
           >
             <RefreshCw className="h-3 w-3" />
           </Button>
@@ -234,7 +234,7 @@ export function FolderTreeItem({
                       e.stopPropagation();
                       setDeleteDialogOpen(true);
                     }}
-                    title="Delete"
+                    title="削除"
                     disabled={isDeleting}
                   >
                     {isDeleting ? (

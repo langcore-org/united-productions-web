@@ -131,18 +131,21 @@ export function useAgentStream(): UseAgentStreamReturn {
                   } else if (item.type === "file_created" && typeof item.path === "string") {
                     callbacks?.onFileCreated?.(item.path);
                   } else if (item.type === "gdrive_file_created" && typeof item.file_name === "string") {
-                    if (item.status === "completed" && item.drive_id) {
-                      const file: GeneratedFile = {
-                        id: `gdrive-${item.drive_id}`,
-                        path: `gdrive://${item.folder_id || "drive"}/${item.file_name}`,
-                        name: item.file_name as string,
-                        createdAt: new Date().toISOString(),
-                        uploadStatus: "completed" as FileUploadStatus,
-                        driveId: item.drive_id as string,
-                        driveUrl: item.web_view_link as string | undefined,
-                      };
-                      callbacks?.onGdriveFileCreated?.(file);
-                    }
+                    // Handle both "uploading" and "completed" statuses
+                    const status = (item.status as string) || "uploading";
+                    const needsLookup = item.needs_lookup === true;
+                    const file: GeneratedFile = {
+                      id: item.drive_id ? `gdrive-${item.drive_id}` : `gdrive-pending-${Date.now()}`,
+                      path: `gdrive://${item.folder_id || "drive"}/${item.file_name}`,
+                      name: item.file_name as string,
+                      createdAt: new Date().toISOString(),
+                      // If needs_lookup is true, mark as completed but without driveId yet
+                      uploadStatus: status === "completed" ? "completed" : "uploading" as FileUploadStatus,
+                      driveId: item.drive_id as string | undefined,
+                      driveUrl: item.web_view_link as string | undefined,
+                      needsLookup: needsLookup,
+                    };
+                    callbacks?.onGdriveFileCreated?.(file);
                   } else if (item.type === "error" && typeof item.message === "string") {
                     callbacks?.onError?.(item.message);
                     setError(item.message);

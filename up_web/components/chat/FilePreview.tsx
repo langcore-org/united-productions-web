@@ -169,7 +169,7 @@ export function FilePreview({ file, workspaceId, onClose }: FilePreviewProps) {
               size="icon"
               className="h-8 w-8"
               onClick={() => window.open(metadata.webViewLink, "_blank")}
-              title="Open in Google Drive"
+              title="Google Driveで開く"
             >
               <ExternalLink className="h-4 w-4" />
             </Button>
@@ -179,7 +179,7 @@ export function FilePreview({ file, workspaceId, onClose }: FilePreviewProps) {
             size="icon"
             className="h-8 w-8"
             onClick={onClose}
-            title="Close preview"
+            title="プレビューを閉じる"
           >
             <X className="h-4 w-4" />
           </Button>
@@ -215,7 +215,7 @@ export function FilePreview({ file, workspaceId, onClose }: FilePreviewProps) {
             size="icon"
             className="h-8 w-8"
             onClick={loadFile}
-            title="Reload"
+            title="再読み込み"
           >
             <RotateCw className="h-4 w-4" />
           </Button>

@@ -23,6 +23,7 @@ type Invitation = {
   inviter_name: string;
   role: string;
   expires_at: string;
+  invitation_token: string;
 };
 
 async function getWorkspaces(userId: string): Promise<WorkspaceWithStats[]> {
@@ -104,6 +105,7 @@ async function getInvitations(userEmail: string): Promise<Invitation[]> {
       id,
       role,
       invited_at,
+      invitation_token,
       workspaces (
         name
       ),
@@ -120,7 +122,7 @@ async function getInvitations(userEmail: string): Promise<Invitation[]> {
 
   // Calculate expiration (7 days from invited_at)
   return invitations
-    .filter((inv) => inv.workspaces != null)
+    .filter((inv) => inv.workspaces != null && inv.invitation_token != null)
     .map((inv) => {
       const workspace = inv.workspaces as unknown as { name: string };
       const inviter = inv.inviter as unknown as { display_name: string } | null;
@@ -133,6 +135,7 @@ async function getInvitations(userEmail: string): Promise<Invitation[]> {
         inviter_name: inviter?.display_name || "Unknown",
         role: inv.role,
         expires_at: expiresAt.toISOString(),
+        invitation_token: inv.invitation_token as string,
       };
     })
     .filter((inv) => new Date(inv.expires_at) > new Date()); // Filter out expired
@@ -306,8 +309,15 @@ function InvitationsList({
     inviter_name: string;
     role: string;
     expires_at: string;
+    invitation_token: string;
   }>;
 }) {
+  const roleLabels: Record<string, string> = {
+    owner: "オーナー",
+    admin: "管理者",
+    member: "メンバー",
+  };
+
   return (
     <div className="space-y-4">
       {invitations.map((invitation) => (
@@ -321,7 +331,7 @@ function InvitationsList({
                 <div>
                   <h3 className="font-semibold">{invitation.workspace_name}</h3>
                   <p className="mt-1 text-sm text-muted-foreground">
-                    {invitation.inviter_name}からの招待 • {invitation.role}として
+                    {invitation.inviter_name}からの招待 • {roleLabels[invitation.role] || invitation.role}として
                   </p>
                   <p className="mt-1 text-xs text-muted-foreground">
                     有効期限: {new Date(invitation.expires_at).toLocaleDateString("ja-JP")}
@@ -329,9 +339,10 @@ function InvitationsList({
                 </div>
               </div>
               <div className="flex gap-2">
-                <Button size="sm">承認する</Button>
-                <Button size="sm" variant="outline">
-                  辞退する
+                <Button size="sm" asChild>
+                  <Link href={`/invitations/${invitation.invitation_token}`}>
+                    承認する
+                  </Link>
                 </Button>
               </div>
             </div>

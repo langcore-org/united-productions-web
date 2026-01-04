@@ -257,9 +257,9 @@ export const SessionList = forwardRef<SessionListRef, SessionListProps>(
           minute: "2-digit",
         });
       } else if (days === 1) {
-        return "Yesterday";
+        return "昨日";
       } else if (days < 7) {
-        return `${days} days ago`;
+        return `${days}日前`;
       } else {
         return date.toLocaleDateString("ja-JP", {
           month: "short",
@@ -290,7 +290,7 @@ export const SessionList = forwardRef<SessionListRef, SessionListProps>(
         <div className="p-3 border-b shrink-0">
           <Button onClick={onNewSession} className="w-full gap-2">
             <Plus className="h-4 w-4" />
-            New Chat
+            新規チャット
           </Button>
         </div>
 
@@ -302,9 +302,9 @@ export const SessionList = forwardRef<SessionListRef, SessionListProps>(
           ) : sessions.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8 text-center px-4">
               <MessageSquare className="h-8 w-8 text-muted-foreground/30 mb-2" />
-              <p className="text-sm text-muted-foreground">No sessions yet</p>
+              <p className="text-sm text-muted-foreground">セッションはまだありません</p>
               <p className="text-xs text-muted-foreground mt-1">
-                Start a new chat to begin
+                新しいチャットを始めてください
               </p>
             </div>
           ) : (
@@ -338,19 +338,19 @@ export const SessionList = forwardRef<SessionListRef, SessionListProps>(
                             onKeyDown={(e) => handleEditKeyDown(e, session.id)}
                             onClick={(e) => e.stopPropagation()}
                             className="h-6 text-sm px-1 py-0"
-                            placeholder="Session title"
+                            placeholder="セッションタイトル"
                           />
                         ) : (
                           <div className="flex items-center gap-1 group/title min-w-0">
                             {/* Running indicator */}
                             {session.isAgentRunning && (
-                              <span className="relative flex h-2 w-2 shrink-0" title="Agent is running">
+                              <span className="relative flex h-2 w-2 shrink-0" title="エージェント実行中">
                                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
                                 <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
                               </span>
                             )}
                             <p className="text-sm font-medium truncate flex-1 min-w-0">
-                              {session.title || "New Chat"}
+                              {session.title || "新規チャット"}
                             </p>
                             <Button
                               variant="ghost"

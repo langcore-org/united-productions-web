@@ -58,7 +58,7 @@ export function FolderTree({
           style={{ paddingLeft: `${depth * 16 + 24}px` }}
         >
           <Loader2 className="h-3 w-3 animate-spin" />
-          <span>Loading...</span>
+          <span>読み込み中...</span>
         </div>
       );
     }

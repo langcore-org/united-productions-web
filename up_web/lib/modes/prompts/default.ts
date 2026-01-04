@@ -2,7 +2,7 @@ import type { AgentMode } from '../types';
 
 export const defaultMode: AgentMode = {
   id: 'default',
-  name: 'Default',
+  name: 'デフォルト',
   description: '汎用アシスタント',
   icon: '💬',
   systemPrompt: `あなたは汎用的なAIアシスタントです。ユーザーのあらゆる質問や依頼に対応します。

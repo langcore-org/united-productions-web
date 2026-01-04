@@ -1,13 +1,15 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { Loader2, Circle, CheckCircle2, XCircle, StopCircle } from "lucide-react";
+import { Loader2, Circle, CheckCircle2, XCircle, StopCircle, RefreshCw } from "lucide-react";
 import type { SessionStatus } from "@/lib/agent/types";
 
 interface SessionStatusBadgeProps {
   status: SessionStatus;
   teamName?: string;
   className?: string;
+  bufferedCount?: number;
+  onStop?: () => void;
 }
 
 const statusConfig: Record<
@@ -64,9 +66,14 @@ export function SessionStatusBadge({
   status,
   teamName,
   className,
+  bufferedCount,
+  onStop,
 }: SessionStatusBadgeProps) {
   const config = statusConfig[status];
   const Icon = config.icon;
+  const isRunning = status === "running";
+  const isReconnecting = status === "reconnecting";
+  const showBuffered = bufferedCount !== undefined && bufferedCount > 0 && isReconnecting;
 
   return (
     <div
@@ -91,6 +98,24 @@ export function SessionStatusBadge({
           )}
         />
         <span className={config.color}>{config.label}</span>
+
+        {/* Show buffered events count during reconnection */}
+        {showBuffered && (
+          <span className="ml-1 px-1.5 py-0.5 bg-yellow-200 dark:bg-yellow-800 rounded text-xs font-medium">
+            {bufferedCount} 件
+          </span>
+        )}
+
+        {/* ESC hint when running */}
+        {isRunning && onStop && (
+          <button
+            onClick={onStop}
+            className="ml-2 px-2 py-0.5 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded text-xs font-mono text-muted-foreground transition-colors"
+            title="ESCキーまたはクリックで停止"
+          >
+            ESC
+          </button>
+        )}
       </div>
     </div>
   );

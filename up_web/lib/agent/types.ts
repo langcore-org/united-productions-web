@@ -30,6 +30,8 @@ export interface GeneratedFile {
   uploadError?: string;
   driveId?: string;
   driveUrl?: string;
+  // Flag indicating driveId needs to be fetched via lookup
+  needsLookup?: boolean;
   // Database persistence ID
   dbId?: string;
 }
@@ -76,6 +78,7 @@ export interface GDriveFileCreatedEvent {
   status: 'uploading' | 'completed' | 'error';
   drive_id?: string;      // Snake case from Agent
   web_view_link?: string; // Snake case from Agent
+  needs_lookup?: boolean; // Flag indicating driveId needs to be fetched
 }
 
 export interface ContentEvent {
@@ -147,4 +150,13 @@ export interface ChatCompletionRequest {
 export interface AgentMessage {
   role: 'user' | 'assistant' | 'system';
   content: string;
+}
+
+// File reference for @mentions and attachments in chat
+export interface FileReference {
+  id: string;           // Drive file ID or local ID
+  name: string;
+  mimeType: string;
+  webViewLink?: string;
+  source: 'mention' | 'dragdrop' | 'auto-detect';
 }
