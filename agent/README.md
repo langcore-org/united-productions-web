@@ -87,13 +87,13 @@ cd claude-code-openai-wrapper
 poetry install
 
 # 4. Start the server
-poetry run uvicorn src.main:app --reload --port 8000
+poetry run uvicorn src.main:app --reload --port 8230
 
 # 5. Test it works
 poetry run python test_endpoints.py
 ```
 
-🎉 **That's it!** Your OpenAI-compatible Claude Code API is running on `http://localhost:8000`
+🎉 **That's it!** Your OpenAI-compatible Claude Code API is running on `http://localhost:8230`
 
 ## Prerequisites
 

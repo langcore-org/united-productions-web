@@ -201,6 +201,51 @@ class BackgroundSessionManager:
         """Get a session by ID."""
         return self.sessions.get(session_id)
 
+    async def register_session(
+        self,
+        session_id: str,
+        task: asyncio.Task,
+        event_queue: asyncio.Queue,
+    ) -> BackgroundSession:
+        """
+        Thread-safe registration of a new session.
+
+        This method ensures proper locking to prevent race conditions
+        when multiple concurrent requests try to register sessions.
+
+        Args:
+            session_id: Unique session identifier
+            task: The asyncio Task running the completion
+            event_queue: Queue for SSE events
+
+        Returns:
+            The registered BackgroundSession (or existing one if already running)
+        """
+        async with self._lock:
+            # Check if session already exists and is running
+            if session_id in self.sessions:
+                existing = self.sessions[session_id]
+                if existing.status == SessionStatus.RUNNING:
+                    logger.warning(
+                        f"Session {session_id} already running, "
+                        f"returning existing session (possible race condition detected)"
+                    )
+                    return existing
+                # Remove old completed session
+                logger.info(f"Replacing old session {session_id} (status: {existing.status})")
+                del self.sessions[session_id]
+
+            # Create and register new session
+            session = BackgroundSession(
+                session_id=session_id,
+                task=task,
+                status=SessionStatus.RUNNING,
+                event_queue=event_queue,
+            )
+            self.sessions[session_id] = session
+            logger.info(f"Registered session {session_id} (total active: {len(self.sessions)})")
+            return session
+
     def is_session_running(self, session_id: str) -> bool:
         """Check if a session is currently running."""
         session = self.sessions.get(session_id)
@@ -257,6 +302,26 @@ class BackgroundSessionManager:
                         timeout=30.0
                     )
 
+                    # Handle None (completion signal from main.py)
+                    if event is None:
+                        logger.info(f"Session {session_id} received completion signal")
+                        break
+
+                    # Handle SSE-formatted strings (from main.py run_completion_task)
+                    if isinstance(event, str):
+                        # Already SSE formatted, yield directly
+                        yield event
+                        # Check if this is a done event by parsing the JSON
+                        if event.startswith("data: "):
+                            try:
+                                data = json.loads(event[6:].strip())
+                                if data.get("type") == "done" or "[DONE]" in event:
+                                    break
+                            except (json.JSONDecodeError, TypeError):
+                                pass
+                        continue
+
+                    # Handle dict events (for backward compatibility)
                     if event.get("type") == "done":
                         yield self._format_sse("done", event)
                         break

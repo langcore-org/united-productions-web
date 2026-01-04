@@ -45,6 +45,7 @@ class MCPServerConnection:
     session: Any  # ClientSession
     read_stream: Any
     write_stream: Any
+    context_manager: Any = None  # Store the async context manager for cleanup
     connected_at: datetime = field(default_factory=datetime.utcnow)
     available_tools: List[Dict[str, Any]] = field(default_factory=list)
     available_resources: List[Dict[str, Any]] = field(default_factory=list)
@@ -125,8 +126,10 @@ class MCPClient:
                 env=config.env,
             )
 
-            # Connect to server
-            read, write = await stdio_client(server_params)
+            # Connect to server using async context manager
+            # We manually enter the context manager to keep connection open
+            cm = stdio_client(server_params)
+            read, write = await cm.__aenter__()
             session = ClientSession(read, write)
 
             # Initialize session
@@ -183,12 +186,13 @@ class MCPClient:
             except Exception as e:
                 logger.warning(f"Could not list prompts from {name}: {e}")
 
-            # Store connection
+            # Store connection with context manager for cleanup
             connection = MCPServerConnection(
                 config=config,
                 session=session,
                 read_stream=read,
                 write_stream=write,
+                context_manager=cm,
                 available_tools=available_tools,
                 available_resources=available_resources,
                 available_prompts=available_prompts,
@@ -236,8 +240,9 @@ class MCPClient:
             del self.connections[name]
 
         try:
-            # Close the session gracefully
-            # The MCP SDK handles cleanup when session is garbage collected
+            # Close the context manager properly
+            if connection.context_manager:
+                await connection.context_manager.__aexit__(None, None, None)
             logger.info(f"Disconnected from MCP server: {name}")
             return True
         except Exception as e:

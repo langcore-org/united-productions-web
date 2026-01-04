@@ -137,6 +137,10 @@ class MessageAdapter:
     @staticmethod
     def format_tool_use(tool_name: str, tool_input: Dict[str, Any]) -> str:
         """Format a tool use block for display."""
+        # Ensure tool_input is a dict to prevent 'str' object has no attribute 'get' errors
+        if not isinstance(tool_input, dict):
+            tool_input = {}
+
         # Tool-specific formatting with icons
         tool_icons = {
             "Read": "📄",

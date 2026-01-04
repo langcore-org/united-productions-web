@@ -70,7 +70,12 @@ enable_signup = true
 # メールでの新規登録を許可
 enable_signup = true
 # メール確認を必須にする
-enable_confirmations = false
+enable_confirmations = true
+# メール変更時の二重確認
+double_confirm_changes = true
+# メール送信頻度制限
+max_frequency = "1s"
+# SMTP設定は環境変数で指定（.envファイル参照）
 
 # Google OAuth 設定
 [auth.external.google]

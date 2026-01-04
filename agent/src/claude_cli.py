@@ -104,6 +104,7 @@ class ClaudeCodeCLI:
         session_id: Optional[str] = None,
         continue_session: bool = False,
         permission_mode: Optional[str] = None,
+        mcp_servers: Optional[Dict[str, Any]] = None,
     ) -> AsyncGenerator[Dict[str, Any], None]:
         """Run Claude Agent using the Python SDK and yield response chunks."""
 
@@ -121,7 +122,7 @@ class ClaudeCodeCLI:
                 options = ClaudeAgentOptions(
                     max_turns=max_turns,
                     cwd=self.cwd,
-                    max_buffer_size=100 * 1024 * 1024  # 100MB for large PDFs
+                    max_buffer_size=100 * 1024 * 1024,  # 100MB for large PDFs
                 )
 
                 # Set model if specified
@@ -157,6 +158,11 @@ class ClaudeCodeCLI:
                 # Set permission mode (default, acceptEdits, bypassPermissions)
                 if permission_mode:
                     options.permission_mode = permission_mode
+
+                # Set MCP servers configuration
+                if mcp_servers:
+                    options.mcp_servers = mcp_servers
+                    logger.info(f"🔧 MCP servers configured: {list(mcp_servers.keys())}")
 
                 # Handle session continuity
                 if continue_session:

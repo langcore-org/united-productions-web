@@ -4,6 +4,7 @@ import asyncio
 import logging
 import secrets
 import string
+import re
 from typing import Optional, AsyncGenerator, Dict, Any
 from contextlib import asynccontextmanager
 
@@ -32,6 +33,7 @@ from src.models import (
     MCPServerInfoResponse,
     MCPServersListResponse,
     MCPConnectionRequest,
+    MCPToolCallRequest,
 )
 from src.claude_cli import ClaudeCodeCLI
 from src.message_adapter import MessageAdapter
@@ -187,10 +189,50 @@ async def lifespan(app: FastAPI):
     # Start session cleanup task
     session_manager.start_cleanup_task()
 
+    # Register Google Drive MCP server if Supabase credentials are configured
+    supabase_url = os.getenv("SUPABASE_URL")
+    supabase_key = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
+    encryption_key = os.getenv("GOOGLE_CREDENTIALS_ENCRYPTION_KEY", "dev-encryption-key-32chars!!")
+
+    if supabase_url and supabase_key and mcp_client.is_available():
+        logger.info("Registering Google Drive MCP server (workspace-based auth)...")
+
+        # Get the path to the gdrive server script
+        import sys
+        gdrive_server_module = "src.mcp_servers.gdrive.server"
+
+        gdrive_config = MCPServerConfig(
+            name="gdrive",
+            command=sys.executable,
+            args=["-m", gdrive_server_module],
+            env={
+                "SUPABASE_URL": supabase_url,
+                "SUPABASE_SERVICE_ROLE_KEY": supabase_key,
+                "GOOGLE_CREDENTIALS_ENCRYPTION_KEY": encryption_key,
+            },
+            description="Google Drive file access via workspace-based Service Account",
+            enabled=True,
+        )
+        mcp_client.register_server(gdrive_config)
+        logger.info("✅ Google Drive MCP server registered (will connect on first use)")
+    elif (supabase_url or supabase_key) and not mcp_client.is_available():
+        logger.warning("⚠️  Supabase credentials set but MCP SDK not available")
+    else:
+        logger.info("Google Drive MCP not configured (SUPABASE_URL/SUPABASE_SERVICE_ROLE_KEY not set)")
+
     yield
 
     # Cleanup on shutdown
-    logger.info("Shutting down session manager...")
+    logger.info("Shutting down...")
+
+    # Disconnect MCP servers
+    for server_name in mcp_client.list_connected_servers():
+        try:
+            await mcp_client.disconnect_server(server_name)
+            logger.info(f"Disconnected MCP server: {server_name}")
+        except Exception as e:
+            logger.warning(f"Error disconnecting MCP server {server_name}: {e}")
+
     session_manager.shutdown()
 
 
@@ -401,6 +443,12 @@ async def generate_streaming_response(
     """Generate SSE formatted streaming response with background execution support."""
     session_id = request.session_id or request_id
 
+    # Log session ID resolution for debugging session mixing issues
+    logger.info(
+        f"🔑 Session ID resolved: request.session_id={request.session_id}, "
+        f"request_id={request_id}, final_session_id={session_id}"
+    )
+
     # Check if session is already running (reconnection case)
     if background_session_manager.is_session_running(session_id):
         logger.info(f"🔄 Reconnecting to running session {session_id}")
@@ -439,14 +487,12 @@ async def generate_streaming_response(
     # Register task with manager to prevent garbage collection
     background_session_manager.register_task(task, session_id)
 
-    # Register with background manager for reconnection support
-    session = BackgroundSession(
+    # Register with background manager for reconnection support (thread-safe)
+    session = await background_session_manager.register_session(
         session_id=session_id,
         task=task,
-        status=SessionStatus.RUNNING,
         event_queue=event_queue,
     )
-    background_session_manager.sessions[session_id] = session
 
     try:
         # Stream events to client
@@ -490,14 +536,20 @@ async def _generate_completion_events(
 
     # Helper to buffer and yield events
     def buffer_and_format(event_type: str, event_data: Any) -> str:
-        """Buffer event and return SSE formatted string."""
+        """Buffer event and return SSE formatted string with session_id for validation."""
+        # Add session_id to custom events for client-side validation
+        if event_type in ("todo_update", "file_created", "gdrive_file_created"):
+            if isinstance(event_data, dict):
+                event_data = {**event_data, "session_id": session_id}
         session_buffer.buffer_event(session_id, event_type, event_data)
         return f"data: {json.dumps(event_data)}\n\n"
 
     try:
         # Process messages with session management
+        # IMPORTANT: Use session_id (which is request.session_id or request_id) consistently
+        # to ensure SSE buffering and Claude SDK use the same session identifier
         all_messages, actual_session_id = session_manager.process_messages(
-            request.messages, request.session_id
+            request.messages, session_id  # Use session_id, not request.session_id
         )
         perf_log("messages_processed")
 
@@ -542,12 +594,31 @@ async def _generate_completion_events(
             claude_options["disallowed_tools"] = CLAUDE_TOOLS
             claude_options["max_turns"] = 1
 
+        # Build MCP servers configuration for Claude Agent SDK
+        mcp_servers_config = None
+        if mcp_client.is_available():
+            import sys
+            mcp_servers_config = {}
+            for server_config in mcp_client.list_servers():
+                if server_config.enabled:
+                    mcp_servers_config[server_config.name] = {
+                        "type": "stdio",
+                        "command": server_config.command,
+                        "args": server_config.args,
+                        "env": server_config.env or {},
+                    }
+            if mcp_servers_config:
+                logger.debug(f"MCP servers for SDK: {list(mcp_servers_config.keys())}")
+            else:
+                mcp_servers_config = None
+
         # Run Claude Code
         perf_log("calling_claude_sdk")
         chunks_buffer = []
         role_sent = False  # Track if we've sent the initial role chunk
         content_sent = False  # Track if we've sent any content
         first_chunk_logged = False
+        pending_gdrive_uploads = []  # Track file names for pending gdrive uploads
 
         async for chunk in claude_cli.run_completion(
             prompt=prompt,
@@ -560,24 +631,59 @@ async def _generate_completion_events(
             session_id=actual_session_id,  # Pass session_id for Claude SDK resume
             continue_session=actual_session_id is not None,  # Enable session continuity
             stream=True,
+            mcp_servers=mcp_servers_config,
         ):
             if not first_chunk_logged:
                 perf_log("first_chunk_from_claude_sdk")
                 first_chunk_logged = True
             chunks_buffer.append(chunk)
 
-            # Handle tool_result - check for FILE_CREATED markers from Bash tool output
+            # Handle tool results - check for FILE_CREATED markers and Google Drive uploads
+            # Claude Agent SDK returns tool results as ToolResultBlock inside UserMessage.content
+            # Message type is "user", and content blocks have type "tool_result"
             chunk_type = chunk.get("type", "")
-            if chunk_type == "tool_result":
-                result_content = chunk.get("content", "")
-                if isinstance(result_content, list):
-                    result_content = " ".join(str(c) for c in result_content)
-                elif hasattr(result_content, "text"):
-                    result_content = result_content.text
+
+            # Debug: Log ALL chunk types to understand what SDK is returning
+            chunk_subtype = chunk.get("subtype", "")
+            print(f"[DEBUG] SDK chunk received: type={chunk_type}, subtype={chunk_subtype}")
+
+            # Extract tool result content from UserMessage (type="user") with ToolResultBlock
+            tool_result_contents = []
+            if chunk_type == "user":
+                content = chunk.get("content", [])
+                print(f"[DEBUG] UserMessage content type: {type(content)}, length: {len(content) if isinstance(content, list) else 'N/A'}")
+                if isinstance(content, list):
+                    for block in content:
+                        # Handle both SDK objects and dicts
+                        block_type = getattr(block, "type", None) if hasattr(block, "type") else block.get("type") if isinstance(block, dict) else None
+                        if block_type == "tool_result":
+                            # Extract content from ToolResultBlock
+                            block_content = getattr(block, "content", None) if hasattr(block, "content") else block.get("content") if isinstance(block, dict) else None
+                            print(f"[DEBUG] ToolResultBlock content type: {type(block_content)}, preview: {str(block_content)[:200] if block_content else 'None'}")
+                            if block_content:
+                                if isinstance(block_content, str):
+                                    tool_result_contents.append(block_content)
+                                elif isinstance(block_content, list):
+                                    # Content may be a list of text blocks
+                                    for item in block_content:
+                                        if hasattr(item, "text"):
+                                            tool_result_contents.append(item.text)
+                                        elif isinstance(item, dict) and "text" in item:
+                                            tool_result_contents.append(item["text"])
+                                        elif isinstance(item, str):
+                                            tool_result_contents.append(item)
+                                elif hasattr(block_content, "text"):
+                                    tool_result_contents.append(block_content.text)
+
+            # Process each tool result content
+            for result_content in tool_result_contents:
                 result_content = str(result_content)
 
+                # Debug: Log tool result content to understand MCP response format
+                if "gdrive" in result_content.lower() or "file" in result_content.lower() or "upload" in result_content.lower():
+                    print(f"[DEBUG] Tool result content (first 500 chars): {result_content[:500]}")
+
                 # Check for FILE_CREATED marker
-                import re
                 file_matches = re.findall(r'FILE_CREATED:(.+?)(?:\n|$)', result_content)
                 for file_path in file_matches:
                     file_path = file_path.strip()
@@ -585,8 +691,40 @@ async def _generate_completion_events(
                         file_event = {"type": "file_created", "path": file_path}
                         yield buffer_and_format("file_created", file_event)
 
+                # Check for Google Drive upload success pattern
+                # Pattern: ✅ File created: {name} (ID: {id})\n...View: {webViewLink}
+                gdrive_match = re.search(
+                    r'✅\s*File created:\s*(.+?)\s*\(ID:\s*([^)]+)\)',
+                    result_content
+                )
+                if gdrive_match:
+                    file_name = gdrive_match.group(1).strip()
+                    drive_id = gdrive_match.group(2).strip()
+                    # Extract webViewLink if present
+                    view_match = re.search(r'View:\s*(https://[^\s]+)', result_content)
+                    web_view_link = view_match.group(1) if view_match else None
+
+                    print(f"[DEBUG] Google Drive upload completed: {file_name} (ID: {drive_id})")
+                    gdrive_event = {
+                        "type": "gdrive_file_created",
+                        "file_name": file_name,
+                        "drive_id": drive_id,
+                        "web_view_link": web_view_link,
+                        "status": "completed",
+                    }
+                    yield buffer_and_format("gdrive_file_created", gdrive_event)
+
             # Get content blocks using unified helper (handles both old/new formats)
             content_blocks = get_content_blocks(chunk)
+
+            # Debug: Log chunk structure to understand what we're receiving
+            if content_blocks:
+                for block in content_blocks:
+                    block_type = getattr(block, "type", None) if hasattr(block, "type") else block.get("type") if isinstance(block, dict) else None
+                    block_class = type(block).__name__
+                    if block_type == "tool_use" or block_class == "ToolUseBlock":
+                        tool_name = getattr(block, "name", None) or (block.get("name") if isinstance(block, dict) else None)
+                        print(f"[DEBUG] Found tool block in content_blocks: type={block_type}, class={block_class}, name={tool_name}")
 
             if content_blocks is not None:
                 # Send initial role chunk if we haven't already
@@ -615,8 +753,10 @@ async def _generate_completion_events(
                         # Always send TodoWrite updates
                         if tool_name == "TodoWrite":
                             todos = tool_input.get("todos", []) if isinstance(tool_input, dict) else []
+                            print(f"[DEBUG] TodoWrite detected: {len(todos)} todos")
                             if todos:
                                 todo_event = {"type": "todo_update", "todos": todos}
+                                print(f"[DEBUG] Sending todo_update event: {todo_event}")
                                 yield buffer_and_format("todo_update", todo_event)
 
                         # Always send Write file events
@@ -626,9 +766,26 @@ async def _generate_completion_events(
                                 file_event = {"type": "file_created", "path": file_path}
                                 yield buffer_and_format("file_created", file_event)
 
+                        # Send gdrive_upload_file events for MCP uploads
+                        # Handle both direct tool name and MCP prefixed name (mcp__gdrive__gdrive_upload_file)
+                        if tool_name and tool_name.endswith("gdrive_upload_file") and isinstance(tool_input, dict):
+                            file_name = tool_input.get("file_name", "")
+                            folder_id = tool_input.get("folder_id", "")
+                            if file_name:
+                                # Track pending upload for matching with completed event
+                                pending_gdrive_uploads.append(file_name)
+                                print(f"[DEBUG] Tracking pending gdrive upload: {file_name}")
+                                gdrive_event = {
+                                    "type": "gdrive_file_created",
+                                    "file_name": file_name,
+                                    "folder_id": folder_id,
+                                    "status": "uploading",
+                                }
+                                yield buffer_and_format("gdrive_file_created", gdrive_event)
+
                         # Only show tool activity if show_thinking is enabled
                         if request.show_thinking and tool_name:
-                            formatted = MessageAdapter.format_tool_use(tool_name, tool_input or {})
+                            formatted = MessageAdapter.format_tool_use(tool_name, tool_input if isinstance(tool_input, dict) else {})
                             tool_chunk = ChatCompletionStreamResponse(
                                 id=request_id,
                                 model=request.model,
@@ -648,6 +805,35 @@ async def _generate_completion_events(
                     raw_text = extract_text_content(block)
                     if raw_text:
                         filtered_text = MessageAdapter.filter_content(raw_text, show_thinking=request.show_thinking)
+
+                        # Check for Google Drive success pattern in Claude's text response
+                        # Pattern: Google Docs/Drive URL like https://docs.google.com/document/d/{file_id}/edit
+                        # or https://drive.google.com/file/d/{file_id}/view
+                        gdrive_url_match = re.search(
+                            r'https://(?:docs|drive)\.google\.com/(?:document|file|spreadsheets)/d/([a-zA-Z0-9_-]+)',
+                            raw_text
+                        )
+                        if gdrive_url_match:
+                            drive_id = gdrive_url_match.group(1)
+                            full_url = gdrive_url_match.group(0)
+                            # Use pending upload file name if available
+                            if pending_gdrive_uploads:
+                                file_name = pending_gdrive_uploads.pop(0)  # Use first pending upload
+                                print(f"[DEBUG] Matched pending upload: {file_name}")
+                            else:
+                                # Fallback: Try to extract file name from nearby text
+                                name_match = re.search(r'(?:created|uploaded|saved)(?:\s+\w+)*\s+["\']?([^"\']+?)["\']?\s*(?:\(|to|at|$)', raw_text, re.IGNORECASE)
+                                file_name = name_match.group(1).strip() if name_match else f"gdrive-{drive_id}"
+
+                            print(f"[DEBUG] Google Drive URL detected in text: {full_url}, drive_id={drive_id}, name={file_name}")
+                            gdrive_event = {
+                                "type": "gdrive_file_created",
+                                "file_name": file_name,
+                                "drive_id": drive_id,
+                                "web_view_link": full_url,
+                                "status": "completed",
+                            }
+                            yield buffer_and_format("gdrive_file_created", gdrive_event)
 
                         if filtered_text and not filtered_text.isspace():
                             stream_chunk = ChatCompletionStreamResponse(
@@ -718,6 +904,30 @@ async def _generate_completion_events(
                 total_tokens=token_usage["total_tokens"],
             )
             logger.debug(f"Estimated usage: {usage_data}")
+
+        # Handle pending uploads that weren't matched with URLs
+        # Try to find them in the assistant response and emit completed events
+        if pending_gdrive_uploads and assistant_content:
+            # Look for Japanese patterns indicating successful save
+            # Pattern: 「ファイル名」をGoogle Driveに保存しました
+            for pending_file in list(pending_gdrive_uploads):
+                # Check if the file was mentioned as saved in the response
+                # Escape special regex characters in file name
+                escaped_name = re.escape(pending_file)
+                save_pattern = rf'[「『]?{escaped_name}[」』]?\s*(?:を|が).*(?:保存|アップロード|作成)(?:しました|完了|成功)'
+                if re.search(save_pattern, assistant_content, re.IGNORECASE):
+                    print(f"[DEBUG] Found save confirmation for: {pending_file}")
+                    # Emit completed event without drive_id - frontend will need to handle this
+                    # or we could add a lookup mechanism later
+                    gdrive_event = {
+                        "type": "gdrive_file_created",
+                        "file_name": pending_file,
+                        "status": "completed",
+                        "needs_lookup": True,  # Flag for frontend to know driveId needs to be fetched
+                    }
+                    yield buffer_and_format("gdrive_file_created", gdrive_event)
+                    pending_gdrive_uploads.remove(pending_file)
+                    print(f"[DEBUG] Emitted completed event (needs_lookup) for: {pending_file}")
 
         # Send final chunk with finish reason and optionally usage data
         final_chunk = ChatCompletionStreamResponse(
@@ -851,6 +1061,24 @@ async def chat_completions(
             else:
                 logger.info("Tools enabled by user request")
 
+            # Build MCP servers configuration for Claude Agent SDK
+            mcp_servers_config = None
+            if mcp_client.is_available():
+                import sys
+                mcp_servers_config = {}
+                for server_config in mcp_client.list_servers():
+                    if server_config.enabled:
+                        mcp_servers_config[server_config.name] = {
+                            "type": "stdio",
+                            "command": server_config.command,
+                            "args": server_config.args,
+                            "env": server_config.env or {},
+                        }
+                if mcp_servers_config:
+                    logger.debug(f"MCP servers for SDK (non-streaming): {list(mcp_servers_config.keys())}")
+                else:
+                    mcp_servers_config = None
+
             # Collect all chunks
             chunks = []
             async for chunk in claude_cli.run_completion(
@@ -862,6 +1090,7 @@ async def chat_completions(
                 disallowed_tools=claude_options.get("disallowed_tools"),
                 permission_mode=claude_options.get("permission_mode", "bypassPermissions"),
                 stream=False,
+                mcp_servers=mcp_servers_config,
             ):
                 chunks.append(chunk)
 
@@ -1167,6 +1396,54 @@ async def get_session_buffer(
     }
 
 
+@app.get("/v1/sessions/{session_id}/stream")
+async def stream_session(
+    session_id: str,
+    since_id: int = 0,
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security)
+):
+    """
+    SSE stream for session reconnection.
+
+    This endpoint allows clients to reconnect to a running session and receive
+    events in real-time via Server-Sent Events (SSE).
+
+    - First sends buffered events since `since_id`
+    - Then streams real-time events as they occur
+    - Sends keep-alive every 30 seconds
+    - Closes when session completes or client disconnects
+
+    Args:
+        session_id: Session ID to stream
+        since_id: Only return events with ID > since_id (for resuming)
+    """
+    # Check if session exists
+    state = session_buffer.get_session_state(session_id)
+    if not state:
+        raise HTTPException(status_code=404, detail=f"Session {session_id} not found")
+
+    async def event_generator():
+        try:
+            async for event in background_session_manager.subscribe(session_id, since_id):
+                yield event
+        except asyncio.CancelledError:
+            logger.info(f"Stream cancelled for session {session_id}")
+            raise
+        except Exception as e:
+            logger.error(f"Stream error for session {session_id}: {e}")
+            yield f"data: {json.dumps({'type': 'error', 'message': str(e)})}\n\n"
+
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        },
+    )
+
+
 @app.post("/v1/sessions/{session_id}/stop")
 async def stop_session(
     session_id: str,
@@ -1456,6 +1733,95 @@ async def get_mcp_stats(
     """Get statistics about MCP connections."""
     await verify_api_key(request, credentials)
     return mcp_client.get_stats()
+
+
+@app.post("/v1/mcp/call")
+@rate_limit_endpoint("general")
+async def call_mcp_tool(
+    body: MCPToolCallRequest,
+    request: Request,
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
+):
+    """
+    Call a tool on an MCP server.
+
+    This endpoint allows calling tools on connected MCP servers.
+    For Google Drive MCP, available tools are:
+    - gdrive_read_file: Read file content from Google Drive
+    - gdrive_search: Search for files by name
+    - gdrive_list_folder: List files in a folder
+
+    Example request:
+    {
+        "server_name": "gdrive",
+        "tool_name": "gdrive_read_file",
+        "arguments": {"file_id": "your-file-id-here"}
+    }
+    """
+    await verify_api_key(request, credentials)
+
+    if not mcp_client.is_available():
+        raise HTTPException(
+            status_code=503, detail="MCP SDK not available. Install with: pip install mcp"
+        )
+
+    # Check if server is connected
+    connection = mcp_client.get_connection(body.server_name)
+    if not connection:
+        # Try to auto-connect if server is registered
+        server_config = mcp_client.get_server(body.server_name)
+        if server_config:
+            logger.info(f"Auto-connecting to MCP server: {body.server_name}")
+            connected = await mcp_client.connect_server(body.server_name)
+            if not connected:
+                raise HTTPException(
+                    status_code=503,
+                    detail=f"Failed to connect to MCP server '{body.server_name}'"
+                )
+            connection = mcp_client.get_connection(body.server_name)
+        else:
+            raise HTTPException(
+                status_code=404,
+                detail=f"MCP server '{body.server_name}' not registered"
+            )
+
+    # Verify tool exists
+    available_tools = [t["name"] for t in connection.available_tools]
+    if body.tool_name not in available_tools:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Tool '{body.tool_name}' not found. Available tools: {available_tools}"
+        )
+
+    try:
+        result = await mcp_client.call_tool(body.server_name, body.tool_name, body.arguments)
+
+        # Extract content from MCP response
+        content = []
+        if hasattr(result, "content"):
+            for item in result.content:
+                if hasattr(item, "text"):
+                    content.append({"type": "text", "text": item.text})
+                elif hasattr(item, "data"):
+                    content.append({"type": "data", "data": item.data})
+                else:
+                    content.append({"type": "unknown", "raw": str(item)})
+        else:
+            content.append({"type": "raw", "data": str(result)})
+
+        return {
+            "success": True,
+            "server_name": body.server_name,
+            "tool_name": body.tool_name,
+            "content": content
+        }
+
+    except Exception as e:
+        logger.error(f"MCP tool call failed: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Tool call failed: {str(e)}"
+        )
 
 
 # File Access Endpoints (for agent-generated files)
