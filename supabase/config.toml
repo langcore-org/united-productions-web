@@ -8,6 +8,8 @@ project_id = "united-production"
 enabled = true
 # Kong API Gateway のポート番号
 port = 55321
+# 外部公開URL（メールリンク等で使用）
+external_url = "https://api.ai-prod-staff.com"
 # API で公開するスキーマ
 schemas = ["public", "graphql_public"]
 extra_search_path = ["public", "extensions"]
@@ -45,10 +47,10 @@ port = 55323
 api_url = "http://127.0.0.1"
 
 [inbucket]
-# メールテスト用サーバー
-enabled = true
+# メールテスト用サーバー（本番ではfalseにしてSMTPを使用）
+enabled = false
 # Inbucket Web UI のポート番号
-port = 54324
+port = 55324
 
 [storage]
 enabled = true
@@ -69,13 +71,36 @@ enable_signup = true
 [auth.email]
 # メールでの新規登録を許可
 enable_signup = true
-# メール確認を必須にする
-enable_confirmations = true
+# メール確認を無効化（即座にログイン可能）
+enable_confirmations = false
 # メール変更時の二重確認
 double_confirm_changes = true
 # メール送信頻度制限
 max_frequency = "1s"
-# SMTP設定は環境変数で指定（.envファイル参照）
+# OTP有効期限（秒）: 24時間
+otp_expiry = 86400
+
+[auth.email.smtp]
+# Resend SMTP設定
+host = "env(GOTRUE_SMTP_HOST)"
+port = 587
+user = "env(GOTRUE_SMTP_USER)"
+pass = "env(GOTRUE_SMTP_PASS)"
+admin_email = "env(GOTRUE_SMTP_ADMIN_EMAIL)"
+sender_name = "env(GOTRUE_SMTP_SENDER_NAME)"
+
+# カスタムメールテンプレート（本番URL使用）
+[auth.email.template.confirmation]
+subject = "メールアドレスの確認"
+content_path = "./supabase/templates/confirmation.html"
+
+[auth.email.template.recovery]
+subject = "パスワードリセット"
+content_path = "./supabase/templates/recovery.html"
+
+[auth.email.template.invite]
+subject = "招待"
+content_path = "./supabase/templates/invite.html"
 
 # Google OAuth 設定
 [auth.external.google]
@@ -103,7 +128,7 @@ inspector_port = 8083
 
 [analytics]
 enabled = true
-port = 54327
+port = 55327
 backend = "postgres"
 
 [experimental]

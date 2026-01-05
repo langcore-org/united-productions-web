@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { getSiteUrl } from "@/lib/utils";
 
 export default function SignUpPage() {
   const router = useRouter();
@@ -48,26 +49,31 @@ export default function SignUpPage() {
 
     try {
       const supabase = createClient();
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
-        },
       });
 
       if (error) {
+        console.error("Signup error:", error);
         if (error.message.includes("already registered")) {
           setError("このメールアドレスは既に登録されています");
         } else {
-          setError("登録に失敗しました。もう一度お試しください。");
+          setError(`登録に失敗しました: ${error.message}`);
         }
         return;
       }
 
-      router.push("/auth/sign-up-success");
-    } catch {
-      setError("登録に失敗しました。もう一度お試しください。");
+      // メール確認が無効の場合、即座にセッションが作成される
+      if (data.session) {
+        router.push("/mypage");
+      } else {
+        // フォールバック: セッションがない場合はログインページへ
+        router.push("/auth/login");
+      }
+    } catch (err) {
+      console.error("Signup exception:", err);
+      setError(`登録に失敗しました: ${err instanceof Error ? err.message : "不明なエラー"}`);
     } finally {
       setIsLoading(false);
     }
@@ -78,7 +84,7 @@ export default function SignUpPage() {
     await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
+        redirectTo: `${getSiteUrl()}/auth/callback`,
       },
     });
   };
