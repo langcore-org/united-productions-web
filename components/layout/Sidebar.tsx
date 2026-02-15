@@ -10,6 +10,8 @@ import {
   LogOut,
   ChevronLeft,
   ChevronRight,
+  History,
+  MessageSquare,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -24,6 +26,17 @@ interface NavItem {
   label: string;
   href: string;
   badge?: string;
+}
+
+interface HistoryItem {
+  id: string;
+  title: string;
+  timestamp: Date;
+}
+
+interface HistorySection {
+  label: string;
+  items: HistoryItem[];
 }
 
 const navItems: NavItem[] = [
@@ -60,6 +73,33 @@ const bottomItems: NavItem[] = [
     icon: <LogOut className="w-5 h-5" />,
     label: "ログアウト",
     href: "/logout",
+  },
+];
+
+// モック履歴データ
+const mockHistory: HistorySection[] = [
+  {
+    label: "今日",
+    items: [
+      { id: "1", title: "第3回制作会議の議事録作成", timestamp: new Date() },
+      { id: "2", title: "ロケ地候補のリサーチ", timestamp: new Date() },
+      { id: "3", title: "出演者インタビュー文字起こし", timestamp: new Date() },
+    ],
+  },
+  {
+    label: "昨日",
+    items: [
+      { id: "4", title: "脚本の推敲と修正案", timestamp: new Date(Date.now() - 86400000) },
+      { id: "5", title: "予算表の分析", timestamp: new Date(Date.now() - 86400000) },
+    ],
+  },
+  {
+    label: "過去7日間",
+    items: [
+      { id: "6", title: "スタッフスケジュール調整", timestamp: new Date(Date.now() - 3 * 86400000) },
+      { id: "7", title: "機材リストの整理", timestamp: new Date(Date.now() - 5 * 86400000) },
+      { id: "8", title: "前回収録の反省会メモ", timestamp: new Date(Date.now() - 6 * 86400000) },
+    ],
   },
 ];
 
@@ -128,6 +168,70 @@ export function Sidebar({ className }: SidebarProps) {
             </Link>
           );
         })}
+
+        {/* History Section */}
+        <div className={cn("mt-6", isCollapsed && "mt-4")}>
+          {!isCollapsed ? (
+            <>
+              {/* History Header */}
+              <div className="flex items-center gap-2 px-3 mb-3">
+                <History className="w-4 h-4 text-gray-500" />
+                <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  履歴
+                </span>
+              </div>
+
+              {/* History Groups */}
+              <div className="space-y-4">
+                {mockHistory.map((section) => (
+                  <div key={section.label}>
+                    <div className="px-3 mb-1.5">
+                      <span className="text-xs text-gray-600">{section.label}</span>
+                    </div>
+                    <div className="space-y-0.5">
+                      {section.items.map((item) => (
+                        <button
+                          key={item.id}
+                          className={cn(
+                            "w-full flex items-center gap-2 px-3 py-2 rounded-lg",
+                            "text-left text-sm text-gray-400",
+                            "hover:bg-[#2a2a35] hover:text-gray-200",
+                            "transition-colors duration-200",
+                            "group"
+                          )}
+                          title={item.title}
+                        >
+                          <MessageSquare className="w-3.5 h-3.5 flex-shrink-0 text-gray-600 group-hover:text-gray-500" />
+                          <span className="truncate">{item.title}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
+          ) : (
+            /* Collapsed History Icon */
+            <div className="flex flex-col items-center gap-3 pt-2">
+              <div
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-500 hover:bg-[#2a2a35] hover:text-gray-300 transition-colors cursor-pointer"
+                title="履歴"
+              >
+                <History className="w-4 h-4" />
+              </div>
+              {/* Show a few dots to indicate history items */}
+              <div className="flex flex-col items-center gap-1.5">
+                {mockHistory[0].items.slice(0, 3).map((item, idx) => (
+                  <div
+                    key={item.id}
+                    className="w-2 h-2 rounded-full bg-gray-700 hover:bg-gray-500 transition-colors cursor-pointer"
+                    title={item.title}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
       </nav>
 
       {/* Bottom Items */}
