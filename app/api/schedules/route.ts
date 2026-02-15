@@ -70,7 +70,7 @@ async function handleGenerate(request: NextRequest) {
         {
           success: false,
           error: "バリデーションエラー",
-          details: error.errors,
+          details: error.issues,
         },
         { status: 400 }
       );
@@ -135,7 +135,7 @@ async function handleExport(request: NextRequest) {
         {
           success: false,
           error: "バリデーションエラー",
-          details: error.errors,
+          details: error.issues,
         },
         { status: 400 }
       );
