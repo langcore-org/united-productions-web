@@ -1,0 +1,326 @@
+# デプロイ手順
+
+## 概要
+
+AI HubはVercelプラットフォームへのデプロイを前提として設計されています。
+
+## 前提条件
+
+- Vercelアカウント
+- GitHub/GitLab/Bitbucketアカウント（リポジトリ連携用）
+- 各種外部サービスのアカウント
+  - [Neon](https://neon.tech/) - PostgreSQLデータベース
+  - [Upstash](https://upstash.com/) - Redisキャッシュ
+  - [Google Cloud Console](https://console.cloud.google.com/) - OAuth認証
+  - [Google AI Studio](https://aistudio.google.com/) - Gemini API
+  - [xAI](https://x.ai/api) - Grok API（オプション）
+  - [Perplexity](https://www.perplexity.ai/settings/api) - Perplexity API（オプション）
+
+## デプロイ手順
+
+### 1. リポジトリの準備
+
+```bash
+# Gitリポジトリの初期化（まだの場合）
+git init
+git add .
+git commit -m "Initial commit"
+
+# リモートリポジトリにプッシュ
+git remote add origin <your-repository-url>
+git push -u origin main
+```
+
+### 2. Vercelプロジェクトの作成
+
+#### 方法A: Vercel Dashboardから作成
+
+1. [Vercel Dashboard](https://vercel.com/dashboard) にアクセス
+2. 「Add New Project」をクリック
+3. リポジトリをインポート
+4. プロジェクト名を設定（例: `ai-hub`）
+5. Framework Preset: `Next.js`（自動検出）
+
+#### 方法B: Vercel CLIを使用
+
+```bash
+# Vercel CLIのインストール
+npm i -g vercel
+
+# ログイン
+vercel login
+
+# プロジェクト作成
+vercel
+```
+
+### 3. 環境変数の設定
+
+Vercel Dashboardで以下の環境変数を設定します：
+
+#### 必須環境変数
+
+| 変数名 | 値 | 取得方法 |
+|-------|-----|---------|
+| `NEXTAUTH_SECRET` | ランダム文字列 | `openssl rand -base64 32` |
+| `NEXTAUTH_URL` | 本番URL | Vercelドメイン（デプロイ後に更新） |
+| `GOOGLE_CLIENT_ID` | Google OAuthクライアントID | Google Cloud Console |
+| `GOOGLE_CLIENT_SECRET` | Google OAuthクライアントシークレット | Google Cloud Console |
+| `DATABASE_URL` | NeonデータベースURL | Neon Dashboard |
+| `UPSTASH_REDIS_REST_URL` | Upstash Redis URL | Upstash Console |
+| `UPSTASH_REDIS_REST_TOKEN` | Upstash Redisトークン | Upstash Console |
+| `GEMINI_API_KEY` | Google AI Studio APIキー | AI Studio |
+
+#### オプション環境変数
+
+| 変数名 | 値 | 取得方法 |
+|-------|-----|---------|
+| `XAI_API_KEY` | xAI APIキー | xAI Console |
+| `PERPLEXITY_API_KEY` | Perplexity APIキー | Perplexity Settings |
+
+### 4. データベースのセットアップ
+
+#### Neon PostgreSQL
+
+1. [Neon](https://neon.tech/) でプロジェクトを作成
+2. データベース接続文字列をコピー
+3. Vercelの環境変数 `DATABASE_URL` に設定
+4. マイグレーション実行：
+
+```bash
+# ローカルからNeonにマイグレーション
+export DATABASE_URL="postgresql://..."
+npx prisma migrate deploy
+```
+
+またはVercelのBuild Commandに追加：
+```json
+{
+  "scripts": {
+    "vercel-build": "prisma migrate deploy && next build"
+  }
+}
+```
+
+### 5. Google OAuthの設定
+
+1. [Google Cloud Console](https://console.cloud.google.com/apis/credentials) にアクセス
+2. 「OAuth 2.0 クライアント ID」を作成
+3. 承認済みリダイレクトURIに以下を追加：
+   - 開発: `http://localhost:3000/api/auth/callback/google`
+   - 本番: `https://<your-domain>/api/auth/callback/google`
+4. クライアントIDとシークレットをVercelの環境変数に設定
+
+### 6. デプロイ実行
+
+#### 自動デプロイ
+
+Gitリポジトリにプッシュすると自動的にデプロイされます：
+
+```bash
+git push origin main
+```
+
+#### 手動デプロイ
+
+```bash
+vercel --prod
+```
+
+### 7. デプロイ後の確認
+
+1. **アプリケーションURLにアクセス**
+   - ダッシュボードが表示されることを確認
+
+2. **認証フローの確認**
+   - Googleログインが正常に動作することを確認
+
+3. **API動作確認**
+   ```bash
+   curl -X POST https://<your-domain>/api/meeting-notes \
+     -H "Content-Type: application/json" \
+     -d '{"transcript": "テスト", "template": "meeting"}'
+   ```
+
+## 継続的デプロイメント
+
+### ブランチ戦略
+
+| ブランチ | 環境 | 自動デプロイ |
+|---------|------|------------|
+| `main` | 本番 | ✓ |
+| `develop` | ステージング | ✓（設定時） |
+| フィーチャーブランチ | プレビュー | ✓（PR時） |
+
+### プレビューデプロイ
+
+Pull Requestを作成すると、自動的にプレビュー環境が作成されます。
+
+## トラブルシューティング
+
+### ビルドエラー
+
+#### Prisma Client生成エラー
+
+```bash
+# ビルド前にPrisma Clientを生成
+npm run postinstall
+# または
+npx prisma generate
+```
+
+#### 環境変数エラー
+
+```
+Error: Missing environment variables
+```
+
+- Vercel Dashboardで全ての環境変数が設定されているか確認
+- 変数名のスペルミスがないか確認
+
+### ランタイムエラー
+
+#### データベース接続エラー
+
+```
+Error: Can't reach database server
+```
+
+- `DATABASE_URL`が正しいか確認
+- NeonのIP許可設定（VercelのIPからのアクセスを許可）
+
+#### Redis接続エラー
+
+```
+Error: Upstash Redis credentials not found
+```
+
+- `UPSTASH_REDIS_REST_URL` と `UPSTASH_REDIS_REST_TOKEN` を確認
+- Upstashのデータベースがアクティブか確認
+
+#### APIキーエラー
+
+```
+Error: GEMINI_API_KEY environment variable is not set
+```
+
+- 各APIキーが正しく設定されているか確認
+- Google AI Studioでキーが有効か確認
+
+### 認証エラー
+
+#### OAuthコールバックエラー
+
+```
+Error: redirect_uri_mismatch
+```
+
+- Google Cloud Consoleの承認済みリダイレクトURIを確認
+- `NEXTAUTH_URL`が正しいか確認
+
+## パフォーマンス最適化
+
+### Vercel設定
+
+#### `vercel.json`
+
+```json
+{
+  "regions": ["hnd1"],
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        }
+      ]
+    }
+  ]
+}
+```
+
+### ビルド設定
+
+#### 最適化されたビルドコマンド
+
+```json
+{
+  "scripts": {
+    "build": "next build",
+    "vercel-build": "prisma generate && prisma migrate deploy && next build"
+  }
+}
+```
+
+## バックアップ・リストア
+
+### データベースバックアップ
+
+Neonでは自動バックアップが有効です。手動バックアップも可能：
+
+```bash
+# pg_dumpでバックアップ
+pg_dump $DATABASE_URL > backup.sql
+
+# リストア
+psql $DATABASE_URL < backup.sql
+```
+
+### 環境変数のバックアップ
+
+Vercel CLIでエクスポート：
+
+```bash
+vercel env pull .env.production
+```
+
+## スケーリング
+
+### 自動スケーリング
+
+Vercelは自動的にスケーリングします。制限：
+
+- Hobbyプラン: 10,000 requests/day
+- Proプラン: 1,000,000 requests/month
+
+### データベーススケーリング
+
+Neonは自動スケーリングされます。無料枠：
+
+- 500 MB ストレージ
+- 190 コンピュート時間/月
+
+## 監視・ログ
+
+### Vercel Analytics
+
+1. Dashboard → Analytics を有効化
+2. Web Vitalsの監視
+
+### ログ確認
+
+```bash
+# リアルタイムログ
+vercel logs --json
+
+# 特定時間のログ
+vercel logs --since 1h
+```
+
+## カスタムドメイン設定
+
+1. Vercel Dashboard → Settings → Domains
+2. ドメインを追加
+3. DNSレコードを設定
+4. SSL証明書は自動発行
+
+## ロールバック
+
+```bash
+# 特定のデプロイメントにロールバック
+vercel --rollback
+
+# またはDashboardから過去のデプロイを選択
+```
