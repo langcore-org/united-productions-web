@@ -4,6 +4,50 @@
 AI Hubは複数のLLMプロバイダーを統一インターフェースで利用可能。
 初期はGoogle AI Studio無料枠（Gemini）を使用し、必要に応じて他LLMを追加。
 
+## 実装状況
+
+| プロバイダー | モデル | 実装状況 | 動作確認 |
+|---|---|---|---|
+| Google | Gemini 2.5 Flash-Lite | ✅ 実装済み | ✅ 動作確認済み |
+| Google | Gemini 3.0 Flash | ✅ 実装済み | ✅ 動作確認済み |
+| xAI | Grok 4.1 Fast | ✅ 実装済み | ✅ 動作確認済み |
+| xAI | Grok 4 | ✅ 実装済み | ⏳ 未確認 |
+| OpenAI | GPT-4o-mini | ✅ 実装済み | ⏳ 未確認 |
+| OpenAI | GPT-5 | ✅ 実装済み | ⏳ 未確認 |
+| Anthropic | Claude 4.5 Sonnet | ✅ 実装済み | ⏳ 未確認 |
+| Anthropic | Claude Opus 4.6 | ✅ 実装済み | ⏳ 未確認 |
+| Perplexity | Sonar | ✅ 実装済み | ✅ 動作確認済み |
+| Perplexity | Sonar Pro | ✅ 実装済み | ⏳ 未確認 |
+
+## 実装ファイル構成
+
+```
+src/lib/llm/
+├── types.ts              # LLM共通型定義
+├── factory.ts            # LLMClient生成ファクトリ
+├── cache.ts              # レスポンスキャッシュ（Upstash Redis）
+└── clients/
+    ├── gemini.ts         # Google Gemini実装
+    ├── grok.ts           # xAI Grok実装
+    ├── openai.ts         # OpenAI実装
+    ├── anthropic.ts      # Anthropic実装
+    └── perplexity.ts     # Perplexity実装
+```
+
+## API Routes実装状況
+
+| エンドポイント | 実装状況 | 説明 |
+|---|---|---|
+| `/api/llm/chat` | ✅ 実装済み | 非同期チャットAPI |
+| `/api/llm/stream` | ✅ 実装済み | ストリーミングチャットAPI |
+
+## 使用量モニタリング実装状況
+
+- [x] UsageLogモデル（Prisma）実装
+- [x] トークン数記録機能
+- [x] コスト計算機能
+- [ ] 月次レポート生成（将来実装）
+
 ## 対応モデル一覧（2026年2月時点）
 
 | プロバイダー | モデル | 入力$/1M | 出力$/1M | コンテキスト | 主な用途 |
@@ -130,11 +174,6 @@ export async function POST(req: NextRequest) {
 // Upstash Redis（無料枠: 10,000コマンド/日）でキャッシュ
 // 同じプロンプト+プロバイダーの組み合わせを24時間キャッシュ
 ```
-
-## 使用量モニタリング
-- UsageLogモデルに全リクエストを記録
-- provider, inputTokens, outputTokens, cost を記録
-- 月次レポート生成機能（将来実装）
 
 ## 環境変数
 ```bash
