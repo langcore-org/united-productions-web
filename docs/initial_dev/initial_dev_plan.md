@@ -1,7 +1,24 @@
-# AI Hub - Agent Swarm開発プラン（改訂版 v2）
+# UPエージェント - Agent Swarm開発プラン（改訂版 v2）
 
-> **本ドキュメントは、Agent Swarmによる「AI Hub」（PJ-A/B/C/D統合）アプリの実装プランです。**
+> **本ドキュメントは、Agent Swarmによる「UPエージェント」（PJ-A/B/C/D統合）アプリの実装プランです。**
 > **2026年2月15日改訂: PJ-B仕様変更、複数LLM対応、最新モデル料金反映**
+
+---
+
+## 🚀 Agent Swarm 開発について
+
+本プロジェクトは**複数エージェントを並列起動**して効率的に開発を進めます。
+
+**必ず先に読むこと:**
+- 📘 **[Agent Swarm 並列開発ガイド](./agent-swarm-guide.md)** - エージェントの役割、並列実行計画、ベストプラクティス
+- 📋 **[ログ仕様](../logs/README.md)** - エージェント間通信の記録方法
+
+**基本方針:**
+- 「依存関係が解決できれば即座に開始」
+- 「並列で最大限進めて早く完成させる」
+- 「必要に応じてエージェントを統合・分割」
+
+---
 
 ---
 
@@ -454,39 +471,52 @@ model UsageLog {
 
 ## 🚀 開発フェーズ
 
-### Phase 0: 基盤構築（Day 1-2）
+## 🚀 開発計画（依存関係ベース）
 
-| タスク | 成果物 |
-|--------|--------|
-| Grok UI分析 | `docs/ui-analysis.md` |
-| Next.js + Prisma セットアップ | `prisma/schema.prisma`, `src/app/` |
-| LLM Factory実装 | `src/lib/llm/` |
-| DevOps設定 | `.env.template`, `vercel.json` |
+**Agent Swarm による並列開発**で進めます。時間軸ではなく、依存関係の解決を基準にWave単位で並列実行します。
 
-**完了条件**: Gemini 2.5 Flash-Lite（Google AI Studio無料枠）で動作確認
+詳細な進め方は [`agent-swarm-guide.md`](./agent-swarm-guide.md) を参照。
 
-### Phase 1: コア機能（Day 3-5）
+### Wave 1: 基盤構築（独立して並列実行）
 
-| タスク | 成果物 |
-|--------|--------|
-| PJ-C リサーチ・考査 | `src/components/research/` |
-| Grok API + Perplexity連携 | `src/lib/llm/clients/grok.ts` |
-| Google Drive連携 | `src/lib/google/drive.ts` |
-| LLM選択UI | `src/components/llm/LLMSelector.tsx` |
+| エージェント | 成果物 | 依存 |
+|-------------|--------|------|
+| `ui-research` | `docs/ui-analysis.md` | なし |
+| `database-schema` | `prisma/schema.prisma` | なし |
+| `auth-api` | `src/app/api/auth/` | なし |
+| `llm-factory` | `src/lib/llm/factory.ts` | なし |
 
-**完了条件**: 人探し機能がE2Eで動作、LLM切り替え可能
+**完了条件**: Gemini 2.5 Flash-Lite で動作確認
 
-### Phase 2: 周辺機能（Day 6-8）
+### Wave 2: UI/LLM連携（Wave 1 完了後に並列実行）
 
-| タスク | 成果物 |
-|--------|--------|
-| PJ-A 議事録 | `src/components/meeting-notes/` |
-| PJ-B 書き起こし（簡素化版） | `src/components/transcripts/` |
-| PJ-D ロケスケ管理 | `src/components/location-schedule/` |
+| エージェント | 成果物 | 依存 |
+|-------------|--------|------|
+| `design-system` | `src/components/ui/` | ui-research |
+| `llm-gemini` | `src/lib/llm/clients/gemini.ts` | llm-factory |
+| `llm-grok` | `src/lib/llm/clients/grok.ts` | llm-factory |
+| `llm-perplexity` | `src/lib/llm/clients/perplexity.ts` | llm-factory |
 
-**完了条件**: 全PJがGemini無料枠で動作
+**完了条件**: LLM切り替えが動作
 
-### Phase 3: 統合・最適化（Day 9-10）
+### Wave 3: 機能実装（Wave 2 完了後に並列実行）
+
+| エージェント | 成果物 | 依存 |
+|-------------|--------|------|
+| `pj-a-meeting` | `src/components/meeting-notes/` | design-system, llm-gemini |
+| `pj-b-transcript` | `src/components/transcripts/` | design-system, llm-gemini |
+| `pj-c-research` | `src/components/research/` | design-system, llm-grok, llm-perplexity |
+| `pj-d-schedule` | `src/components/location-schedule/` | design-system, llm-gemini |
+| `google-drive` | `src/lib/google/drive.ts` | auth-api |
+
+**完了条件**: 全PJが動作
+
+### Wave 4: 統合・最適化（必要に応じて）
+
+| エージェント | 成果物 | 依存 |
+|-------------|--------|------|
+| `optimization` | キャッシュ実装 | 全機能 |
+| `testing` | テスト・バグ修正 | 全機能 |
 
 - LLMレスポンスキャッシュ実装
 - 使用量モニタリング
@@ -526,32 +556,38 @@ model UsageLog {
 
 ## ✅ 最終チェックリスト
 
-### Phase 0 開始前
+### 開発開始前（人間の作業が必要）
+
+> **⚠️ 以下はエージェントでは実行できません。開発者が事前に完了させてください。**
+> **詳細は [`agent-swarm-guide.md`](./agent-swarm-guide.md#人間の介入ポイント) を参照。**
 
 - [ ] Google AI Studio でAPIキーを取得（https://aistudio.google.com/）
 - [ ] xAI でAPIキーを取得（$25無料クレジット）
-- [ ] `.env.template` に `GEMINI_API_KEY` 記載
-- [ ] `docs/assets/images/` にGrok UI参考画像配置
+- [ ] Perplexity APIキーを取得（必要なら）
+- [ ] Google Cloud Console で OAuth クライアントID/シークレットを取得
+- [ ] `.env.local` を作成し、APIキー/認証情報を設定
+- [ ] `docs/assets/images/` にGrok UI参考画像を配置
 
-### Phase 0 完了時
+### Wave 1 完了時（基盤構築）
 
 - [ ] `src/lib/llm/factory.ts` → Gemini 2.5 Flash-Lite 動作確認
 - [ ] `prisma/schema.prisma` → `LLMProvider` Enum 定義
 - [ ] NextAuth.js → Google Workspace SSO 動作
 - [ ] Vercelデプロイ成功
 
-### Phase 1 完了時
+### Wave 2 完了時（UI/LLM連携）
 
 - [ ] Grok 4.1 Fast → X Search 動作確認
 - [ ] Perplexity Sonar → エビデンス付き回答確認
 - [ ] LLM選択UI → 切り替え動作確認
 
-### Phase 2 完了時
+### Wave 3 完了時（機能実装）
 
 - [ ] PJ-A/B/D → Gemini無料枠で動作
 - [ ] PJ-B → テキスト貼り付けのみで動作（映像アップロード不要）
+- [ ] PJ-C → 人探し・エビデンス検索が動作
 
-### Phase 3 完了時
+### Wave 4 完了時（統合・最適化）
 
 - [ ] UsageLog → 使用量記録確認
 - [ ] LLMキャッシュ → 動作確認
@@ -563,10 +599,9 @@ model UsageLog {
 
 | ドキュメント | 用途 |
 |-------------|------|
-| `docs/technical-review.md` | 技術設計レビュー |
-| `docs/llm-integration.md` | 複数LLM統合設計 |
-| `docs/assets/` | 参考資料（リサーチ、議事録、ロケスケ等） |
-| `docs/old_discussions/` | 過去の議論・旧プラン |
+| `llm-integration.md` | 複数LLM統合設計 |
+| `../assets/` | 参考資料（リサーチ、議事録、ロケスケ等） |
+| `../archive/` | 過去の議論・旧プラン |
 
 ---
 
