@@ -1,0 +1,191 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// Enums
+// ============================================
+
+enum LLMProvider {
+  GEMINI_25_FLASH_LITE  // デフォルト（無料枠）
+  GEMINI_30_FLASH       // 高品質（無料枠）
+  GROK_41_FAST          // X検索
+  GROK_4                // 最高品質
+  GPT_4O_MINI           // コスパ
+  GPT_5                 // フラッグシップ
+  CLAUDE_SONNET_45      // バランス
+  CLAUDE_OPUS_46        // 最高品質
+  PERPLEXITY_SONAR      // エビデンス検索
+  PERPLEXITY_SONAR_PRO  // 高品質検索
+}
+
+// ============================================
+// Models
+// ============================================
+
+// ============================================
+// NextAuth.js 認証モデル
+// ============================================
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ============================================
+// アプリケーションモデル
+// ============================================
+
+model User {
+  id              String             @id @default(uuid())
+  email           String             @unique
+  name            String?
+  image           String?
+  emailVerified   DateTime?
+  googleId        String?            @unique
+  accounts        Account[]
+  sessions        Session[]
+  meetingNotes    MeetingNote[]
+  transcripts     Transcript[]
+  researchChats   ResearchChat[]
+  schedules       LocationSchedule[]
+  usageLogs       UsageLog[]
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  @@index([email])
+  @@index([googleId])
+}
+
+// PJ-A: 議事録・文字起こし
+model MeetingNote {
+  id            String      @id @default(uuid())
+  userId        String
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type          String      // MEETING | INTERVIEW
+  rawText       String      @db.Text
+  formattedText String?     @db.Text
+  llmProvider   LLMProvider @default(GEMINI_25_FLASH_LITE)
+  status        String      // DRAFT | FORMATTING | COMPLETED
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@index([userId, createdAt])
+  @@index([status])
+}
+
+// PJ-B: 起こし・NA原稿
+model Transcript {
+  id            String      @id @default(uuid())
+  userId        String
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rawText       String      @db.Text
+  formattedText String?     @db.Text
+  llmProvider   LLMProvider @default(GEMINI_25_FLASH_LITE)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@index([userId, createdAt])
+}
+
+// PJ-C: リサーチ・考査
+model ResearchChat {
+  id          String            @id @default(uuid())
+  userId      String
+  user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  agentType   String            // PEOPLE | LOCATION | EVIDENCE
+  llmProvider LLMProvider       @default(GROK_41_FAST)
+  messages    ResearchMessage[]
+  results     Json?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  @@index([userId, createdAt])
+  @@index([agentType])
+  @@index([llmProvider])
+}
+
+model ResearchMessage {
+  id        String       @id @default(uuid())
+  chatId    String
+  chat      ResearchChat @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  role      String       // USER | ASSISTANT | SYSTEM
+  content   String       @db.Text
+  thinking  String?      @db.Text
+  createdAt DateTime     @default(now())
+
+  @@index([chatId, createdAt])
+  @@index([role])
+}
+
+// PJ-D: ロケスケ管理
+model LocationSchedule {
+  id          String      @id @default(uuid())
+  userId      String
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title       String?
+  masterData  Json
+  llmProvider LLMProvider @default(GEMINI_25_FLASH_LITE)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@index([userId, createdAt])
+}
+
+// 使用量記録
+model UsageLog {
+  id            String      @id @default(uuid())
+  userId        String
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider      LLMProvider
+  inputTokens   Int
+  outputTokens  Int
+  cost          Float       // USD（無料枠は0）
+  metadata      Json?       // 追加情報（エンドポイント、モデル詳細など）
+  createdAt     DateTime    @default(now())
+
+  @@index([userId, createdAt])
+  @@index([provider, createdAt])
+  @@index([createdAt])
+}
