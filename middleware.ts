@@ -47,8 +47,8 @@ function getIdentifier(request: NextRequest): string {
     return realIp;
   }
 
-  // フォールバック: リモートアドレス
-  return request.ip ?? 'unknown';
+  // フォールバック: unknown
+  return 'unknown';
 }
 
 /**
