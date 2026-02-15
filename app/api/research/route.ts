@@ -165,7 +165,7 @@ export async function POST(request: NextRequest) {
           .split("\n")
           .map((line) => line.replace(/^\[\d+\]\s*/, ""));
         // 本文からSourcesセクションを削除
-        response.content = response.content.replace(/\n\n---\n\n\*\*Sources:\*\*.*/s, "");
+        response.content = response.content.replace(/\n\n---\n\n\*\*Sources:\*\*[\s\S]*/, "");
       }
     }
 
