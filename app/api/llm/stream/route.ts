@@ -3,6 +3,7 @@
  * 
  * POST /api/llm/stream
  * Server-Sent Events形式でストリーミングレスポンスを返すエンドポイント
+ * レート制限対応（キャッシュはストリーミングには適用しない）
  */
 
 import { NextRequest } from 'next/server';
