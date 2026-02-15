@@ -20,6 +20,8 @@ import {
   ThumbsUp,
   Square,
   Loader2,
+  Brain,
+  Terminal,
 } from "lucide-react";
 
 type MeetingTemplate = "meeting" | "interview";
@@ -235,12 +237,12 @@ export default function MeetingNotesPage() {
 
   return (
     <div className="min-h-screen bg-[#0d0d12] text-gray-100">
-      {/* Header */}
-      <header className="border-b border-[#2a2a35] bg-[#1a1a24]/50 backdrop-blur-sm sticky top-0 z-10">
+      {/* Header - Sticky */}
+      <header className="sticky top-0 z-50 border-b border-[#2a2a35] bg-[#0d0d12]/80 backdrop-blur-xl">
         <div className="max-w-6xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-[#ff6b00]/10 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#ff6b00]/20 to-[#ff6b00]/5 flex items-center justify-center border border-[#ff6b00]/20">
                 <FileText className="w-5 h-5 text-[#ff6b00]" />
               </div>
               <div>
@@ -270,24 +272,25 @@ export default function MeetingNotesPage() {
                 key={template.id}
                 onClick={() => setSelectedTemplate(template.id)}
                 className={cn(
-                  "relative p-5 rounded-xl border text-left transition-all duration-200",
+                  "relative p-5 rounded-xl border text-left transition-all duration-300",
+                  "hover:scale-[1.02] hover:shadow-lg hover:shadow-black/20",
                   selectedTemplate === template.id
-                    ? "border-[#ff6b00] bg-[#ff6b00]/5"
+                    ? "border-[#ff6b00] bg-gradient-to-br from-[#ff6b00]/10 to-[#ff6b00]/5 shadow-lg shadow-[#ff6b00]/10"
                     : "border-[#2a2a35] bg-[#1a1a24] hover:border-[#3a3a45] hover:bg-[#1f1f2a]"
                 )}
               >
                 {selectedTemplate === template.id && (
-                  <div className="absolute top-4 right-4 w-5 h-5 rounded-full bg-[#ff6b00] flex items-center justify-center">
+                  <div className="absolute top-4 right-4 w-5 h-5 rounded-full bg-[#ff6b00] flex items-center justify-center shadow-lg shadow-[#ff6b00]/30">
                     <Check className="w-3 h-3 text-white" />
                   </div>
                 )}
                 <div className="flex items-center gap-3 mb-3">
                   <div
                     className={cn(
-                      "w-10 h-10 rounded-lg flex items-center justify-center",
+                      "w-10 h-10 rounded-lg flex items-center justify-center transition-all duration-300",
                       selectedTemplate === template.id
-                        ? "bg-[#ff6b00]/20 text-[#ff6b00]"
-                        : "bg-[#2a2a35] text-gray-400"
+                        ? "bg-[#ff6b00]/20 text-[#ff6b00] shadow-inner"
+                        : "bg-[#2a2a35] text-gray-400 group-hover:bg-[#3a3a45]"
                     )}
                   >
                     {template.icon}
@@ -301,7 +304,12 @@ export default function MeetingNotesPage() {
                   {template.features.map((feature) => (
                     <span
                       key={feature}
-                      className="text-xs px-2 py-1 rounded-full bg-[#2a2a35] text-gray-400"
+                      className={cn(
+                        "text-xs px-2.5 py-1 rounded-full transition-colors duration-300",
+                        selectedTemplate === template.id
+                          ? "bg-[#ff6b00]/10 text-[#ff6b00] border border-[#ff6b00]/20"
+                          : "bg-[#2a2a35] text-gray-400"
+                      )}
                     >
                       {feature}
                     </span>
@@ -321,13 +329,13 @@ export default function MeetingNotesPage() {
             {transcript && (
               <button
                 onClick={() => setTranscript("")}
-                className="text-xs text-gray-500 hover:text-gray-300 transition-colors"
+                className="text-xs text-gray-500 hover:text-[#ff6b00] transition-colors"
               >
                 クリア
               </button>
             )}
           </div>
-          <div className="relative">
+          <div className="relative group">
             <textarea
               value={transcript}
               onChange={(e) => setTranscript(e.target.value)}
@@ -336,15 +344,15 @@ export default function MeetingNotesPage() {
                 : "【面談用】面談相手の発言、経歴、出演に関する話題などが含まれるテキストを入力してください。"
               }`}
               className={cn(
-                "w-full h-[300px] p-5 rounded-xl resize-none",
-                "bg-[#1a1a24] border border-[#2a2a35]",
+                "w-full h-[300px] p-5 rounded-2xl resize-none",
+                "bg-[#1a1a24] border-2 border-[#2a2a35]",
                 "text-gray-200 placeholder-gray-600",
-                "focus:outline-none focus:border-[#ff6b00]/50 focus:ring-1 focus:ring-[#ff6b00]/20",
-                "transition-all duration-200",
+                "focus:outline-none focus:border-[#ff6b00] focus:ring-2 focus:ring-[#ff6b00]/10",
+                "transition-all duration-300",
                 "text-sm leading-relaxed"
               )}
             />
-            <div className="absolute bottom-4 right-4 text-xs text-gray-600">
+            <div className="absolute bottom-4 right-4 text-xs text-gray-600 bg-[#0d0d12]/80 px-2 py-1 rounded-md">
               {transcript.length.toLocaleString()} 文字
             </div>
           </div>
@@ -357,10 +365,10 @@ export default function MeetingNotesPage() {
               onClick={handleCancel}
               className={cn(
                 "flex items-center gap-3 px-8 py-4 rounded-xl font-medium transition-all duration-200",
-                "bg-red-500 text-white hover:bg-red-600 shadow-lg shadow-red-500/20"
+                "bg-red-500/90 text-white hover:bg-red-500 shadow-lg shadow-red-500/20 hover:shadow-red-500/30"
               )}
             >
-              <Square className="w-5 h-5" />
+              <Square className="w-5 h-5 fill-current" />
               生成を停止
             </button>
           ) : (
@@ -368,10 +376,10 @@ export default function MeetingNotesPage() {
               onClick={handleProcess}
               disabled={!transcript.trim()}
               className={cn(
-                "flex items-center gap-3 px-8 py-4 rounded-xl font-medium transition-all duration-200",
+                "flex items-center gap-3 px-8 py-4 rounded-xl font-medium transition-all duration-300",
                 !transcript.trim()
                   ? "bg-[#2a2a35] text-gray-500 cursor-not-allowed"
-                  : "bg-[#ff6b00] text-white hover:bg-[#ff8533] shadow-lg shadow-[#ff6b00]/20 hover:shadow-xl hover:shadow-[#ff6b00]/30"
+                  : "bg-gradient-to-r from-[#ff6b00] to-[#ff8533] text-white hover:from-[#ff8533] hover:to-[#ff6b00] shadow-lg shadow-[#ff6b00]/20 hover:shadow-xl hover:shadow-[#ff6b00]/30 hover:scale-[1.02]"
               )}
             >
               <Sparkles className="w-5 h-5" />
@@ -391,15 +399,17 @@ export default function MeetingNotesPage() {
         {(result || status === "streaming") && (
           <section ref={resultRef} className="animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-sm font-medium text-gray-400 uppercase tracking-wider">
-                整形結果
+              <div className="flex items-center gap-3">
+                <h2 className="text-sm font-medium text-gray-400 uppercase tracking-wider">
+                  整形結果
+                </h2>
                 {status === "streaming" && (
-                  <span className="ml-2 inline-flex items-center gap-1 text-green-400">
-                    <Loader2 className="w-3 h-3 animate-spin" />
-                    生成中...
+                  <span className="inline-flex items-center gap-2 text-[#22c55e] bg-[#22c55e]/10 px-3 py-1 rounded-full text-xs border border-[#22c55e]/20">
+                    <Brain className="w-3.5 h-3.5 animate-pulse" />
+                    思考中...
                   </span>
                 )}
-              </h2>
+              </div>
               <div className="flex items-center gap-2">
                 <button
                   onClick={handleCopy}
@@ -407,8 +417,8 @@ export default function MeetingNotesPage() {
                   className={cn(
                     "flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-all duration-200",
                     copied
-                      ? "bg-green-500/20 text-green-400"
-                      : "bg-[#2a2a35] text-gray-400 hover:text-gray-200 hover:bg-[#3a3a45]"
+                      ? "bg-[#22c55e]/20 text-[#22c55e] border border-[#22c55e]/30"
+                      : "bg-[#2a2a35] text-gray-400 hover:text-gray-200 hover:bg-[#3a3a45] border border-transparent"
                   )}
                 >
                   {copied ? (
@@ -426,37 +436,57 @@ export default function MeetingNotesPage() {
                 <button
                   onClick={handleDownload}
                   disabled={!result}
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm bg-[#2a2a35] text-gray-400 hover:text-gray-200 hover:bg-[#3a3a45] transition-all duration-200 disabled:opacity-50"
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm bg-[#2a2a35] text-gray-400 hover:text-gray-200 hover:bg-[#3a3a45] transition-all duration-200 disabled:opacity-50 border border-transparent hover:border-[#3a3a45]"
                 >
                   <Download className="w-4 h-4" />
                   Markdown保存
                 </button>
                 <button
                   onClick={handleReset}
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm bg-[#2a2a35] text-gray-400 hover:text-gray-200 hover:bg-[#3a3a45] transition-all duration-200"
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm bg-[#2a2a35] text-gray-400 hover:text-gray-200 hover:bg-[#3a3a45] transition-all duration-200 border border-transparent hover:border-[#3a3a45]"
                 >
                   <RotateCcw className="w-4 h-4" />
                   新規作成
                 </button>
               </div>
             </div>
-            <div className="bg-[#1a1a24] border border-[#2a2a35] rounded-xl overflow-hidden">
-              <div className="prose prose-invert max-w-none p-6">
+            
+            {/* Code Block Style Result */}
+            <div className="bg-[#1a1a24] border border-[#2a2a35] rounded-2xl overflow-hidden shadow-xl shadow-black/20">
+              {/* Window Header */}
+              <div className="flex items-center justify-between px-4 py-3 bg-[#252532] border-b border-[#2a2a35]">
+                <div className="flex items-center gap-2">
+                  <Terminal className="w-4 h-4 text-gray-500" />
+                  <span className="text-xs text-gray-500 font-mono">meeting-notes.md</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <div className="w-3 h-3 rounded-full bg-[#ff5f56]" />
+                  <div className="w-3 h-3 rounded-full bg-[#ffbd2e]" />
+                  <div className="w-3 h-3 rounded-full bg-[#27c93f]" />
+                </div>
+              </div>
+              
+              {/* Content */}
+              <div className="p-6">
                 <div
-                  className="text-gray-200 leading-relaxed whitespace-pre-wrap"
+                  className="text-gray-200 leading-relaxed whitespace-pre-wrap font-mono text-sm"
                   dangerouslySetInnerHTML={{
                     __html: result
-                      .replace(/### (.*)/g, '<h3 class="text-lg font-semibold text-white mt-6 mb-3">$1</h3>')
-                      .replace(/## (.*)/g, '<h2 class="text-xl font-semibold text-white mt-8 mb-4">$1</h2>')
-                      .replace(/# (.*)/g, '<h1 class="text-2xl font-bold text-white mt-8 mb-4">$1</h1>')
-                      .replace(/\*\*(.*?)\*\*/g, '<strong class="text-white">$1</strong>')
-                      .replace(/- (.*)/g, '<li class="ml-4 text-gray-300">$1</li>')
-                      .replace(/\[ \] (.*)/g, '<div class="flex items-center gap-2 my-1"><span class="w-4 h-4 border border-gray-500 rounded"></span><span>$1</span></div>')
-                      .replace(/\[x\] (.*)/g, '<div class="flex items-center gap-2 my-1"><span class="w-4 h-4 bg-[#ff6b00] rounded flex items-center justify-center text-white text-xs">✓</span><span class="line-through text-gray-500">$1</span></div>')
+                      // Headers with syntax highlighting
+                      .replace(/### (.*)/g, '<h3 class="text-lg font-bold text-[#ff6b00] mt-6 mb-3 flex items-center gap-2"><span class="text-[#ff6b00]/50">###</span> $1</h3>')
+                      .replace(/## (.*)/g, '<h2 class="text-xl font-bold text-[#ff8533] mt-8 mb-4 flex items-center gap-2"><span class="text-[#ff8533]/50">##</span> $1</h2>')
+                      .replace(/# (.*)/g, '<h1 class="text-2xl font-bold text-white mt-8 mb-4 flex items-center gap-2"><span class="text-[#ff6b00]/50">#</span> $1</h1>')
+                      // Bold text
+                      .replace(/\*\*(.*?)\*\*/g, '<strong class="text-white bg-[#ff6b00]/10 px-1 rounded">$1</strong>')
+                      // List items with bullet color
+                      .replace(/^- (.*)/gm, '<li class="ml-4 text-gray-300 flex items-start gap-2"><span class="text-[#ff6b00] mt-1.5">•</span><span>$1</span></li>')
+                      // Checkboxes
+                      .replace(/\[ \] (.*)/g, '<div class="flex items-center gap-2 my-1"><span class="w-4 h-4 border-2 border-[#3a3a45] rounded flex items-center justify-center text-white text-xs"></span><span class="text-gray-300">$1</span></div>')
+                      .replace(/\[x\] (.*)/g, '<div class="flex items-center gap-2 my-1"><span class="w-4 h-4 bg-[#22c55e] rounded flex items-center justify-center text-white text-xs">✓</span><span class="line-through text-gray-500">$1</span></div>')
                   }}
                 />
                 {status === "streaming" && (
-                  <span className="inline-block w-1.5 h-4 bg-[#ff6b00] ml-0.5 animate-pulse" />
+                  <span className="inline-block w-2 h-5 bg-[#22c55e] ml-1 animate-pulse rounded-sm" />
                 )}
               </div>
             </div>
@@ -535,8 +565,8 @@ function FeatureCard({
   description: string;
 }) {
   return (
-    <div className="p-4 rounded-xl bg-[#1a1a24] border border-[#2a2a35]">
-      <div className="w-10 h-10 rounded-lg bg-[#ff6b00]/10 flex items-center justify-center text-[#ff6b00] mb-3">
+    <div className="p-4 rounded-xl bg-[#1a1a24] border border-[#2a2a35] hover:border-[#3a3a45] hover:bg-[#1f1f2a] transition-all duration-300 group">
+      <div className="w-10 h-10 rounded-lg bg-[#ff6b00]/10 flex items-center justify-center text-[#ff6b00] mb-3 group-hover:bg-[#ff6b00]/20 transition-colors duration-300">
         {icon}
       </div>
       <h3 className="font-medium text-white mb-1">{title}</h3>
