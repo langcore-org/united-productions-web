@@ -108,7 +108,7 @@ export const authOptions: NextAuthOptions = {
    * イベントハンドラ
    */
   events: {
-    async signIn({ user }: { user: Record<string, unknown> }) {
+    async signIn({ user }) {
       console.log(`User signed in: ${user.email}`);
     },
     async signOut({ token }: { token: Record<string, unknown> }) {
@@ -124,13 +124,6 @@ export const authOptions: NextAuthOptions = {
 
   /**
    * カスタムページ設定
-   */
-  pages: {
-    signIn: "/auth/signin",
-    error: "/auth/error",
-  },
-};
- * カスタムページ設定
    */
   pages: {
     signIn: "/auth/signin",
