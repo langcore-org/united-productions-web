@@ -3,12 +3,14 @@
  * 
  * POST /api/llm/chat
  * 非同期チャット完了を行うエンドポイント
+ * キャッシュとレート制限対応
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createLLMClient, isValidProvider } from '@/lib/llm/factory';
 import { DEFAULT_PROVIDER } from '@/lib/llm/config';
+import { getCachedLLMResponse, cacheLLMResponse } from '@/lib/llm/cache';
 import type { LLMMessage, LLMProvider } from '@/lib/llm/types';
 
 /**
@@ -78,17 +80,34 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       provider = DEFAULT_PROVIDER;
     }
 
+    // キャッシュをチェック
+    const cachedResponse = await getCachedLLMResponse(messages as LLMMessage[], provider);
+    if (cachedResponse) {
+      // キャッシュヒット時はキャッシュから返却
+      return NextResponse.json({
+        content: cachedResponse.content,
+        thinking: cachedResponse.thinking ?? null,
+        usage: cachedResponse.usage ?? null,
+        cached: true,
+        cachedAt: new Date().toISOString(),
+      });
+    }
+
     // LLMクライアントの作成
     const client = createLLMClient(provider);
 
     // チャット完了の実行
     const response = await client.chat(messages as LLMMessage[]);
 
+    // レスポンスをキャッシュに保存
+    await cacheLLMResponse(messages as LLMMessage[], provider, response);
+
     // レスポンスの返却
     return NextResponse.json({
       content: response.content,
       thinking: response.thinking ?? null,
       usage: response.usage ?? null,
+      cached: false,
     });
 
   } catch (error) {
