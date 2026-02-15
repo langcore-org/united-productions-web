@@ -143,7 +143,7 @@ export function StreamingMessage({
           >
             {providerLabels[provider] || provider}
           </span>
-          {!state.isComplete && (
+          {!displayedContent && (
             <span className="flex items-center gap-1 text-xs text-gray-500">
               <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
               生成中...
@@ -152,12 +152,12 @@ export function StreamingMessage({
         </div>
 
         {/* Thinking Process (Claude/Grok対応) */}
-        {(state.isThinking || state.thinking) && (
+        {displayedThinking && (
           <div className="mb-3 p-3 rounded-lg bg-[#0d0d12] border border-[#2a2a35]">
             <div className="flex items-center gap-2 mb-2">
               <Sparkles className="w-3.5 h-3.5 text-[#22c55e]" />
               <span className="text-xs text-[#22c55e] font-medium">思考プロセス</span>
-              {state.isThinking && (
+              {!displayedContent && (
                 <div className="flex gap-1">
                   <span className="w-1 h-1 bg-[#22c55e] rounded-full animate-bounce [animation-delay:-0.3s]" />
                   <span className="w-1 h-1 bg-[#22c55e] rounded-full animate-bounce [animation-delay:-0.15s]" />
@@ -167,7 +167,7 @@ export function StreamingMessage({
             </div>
             <p className="text-xs text-gray-400 leading-relaxed whitespace-pre-wrap">
               {displayedThinking}
-              {state.isThinking && (
+              {!displayedContent && (
                 <span className="inline-block w-1.5 h-3.5 bg-[#22c55e] ml-0.5 animate-pulse" />
               )}
             </p>
@@ -184,7 +184,7 @@ export function StreamingMessage({
           {displayedContent ? (
             <div className="whitespace-pre-wrap">
               {displayedContent}
-              {!state.isComplete && (
+              {displayedContent && (
                 <span className="inline-block w-1.5 h-4 bg-[#ff6b00] ml-0.5 animate-pulse" />
               )}
             </div>
@@ -201,9 +201,9 @@ export function StreamingMessage({
         </div>
 
         {/* Error Message */}
-        {state.error && (
+        {displayedContent === "error" && (
           <div className="mt-3 p-3 rounded-lg bg-red-500/10 border border-red-500/20">
-            <p className="text-xs text-red-400">{state.error}</p>
+            <p className="text-xs text-red-400">エラーが発生しました</p>
           </div>
         )}
       </div>

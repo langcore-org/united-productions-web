@@ -8,7 +8,7 @@
 
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { getToken } from 'next-auth/jwt';
+// import { getToken } from 'next-auth/jwt';
 import { checkRateLimit, incrementRateLimit, getRateLimitHeaders } from '@/lib/rate-limit';
 import { FREE_TIER_LIMITS } from '@/lib/llm/config';
 import type { LLMProvider } from '@/lib/llm/types';

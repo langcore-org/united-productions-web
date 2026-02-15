@@ -4,6 +4,20 @@
 
 AI HubはVercelプラットフォームへのデプロイを前提として設計されています。
 
+## 進捗
+
+| 項目 | 状態 | 備考 |
+|------|------|------|
+| 1. リポジトリの準備 |  |  |
+| 2. Vercelプロジェクトの作成 |  |  |
+| 3. 環境変数の設定 | ✅ 済 | .env.local → Vercel 反映済み |
+| 4. データベースのセットアップ（Neon） |  |  |
+| 5. Google OAuth の設定（本番URI） |  |  |
+| 6. デプロイ実行 |  |  |
+| 7. デプロイ後の確認 |  |  |
+
+※ 状態が完了したら `✅ 済` を記入し、必要なら備考に日付やメモを追記してください。
+
 ## 前提条件
 
 - Vercelアカウント
@@ -56,9 +70,13 @@ vercel
 
 ### 3. 環境変数の設定
 
-Vercel Dashboardで以下の環境変数を設定します：
+ローカルで `.env.local` を用意したうえで、次のいずれかの方法で Vercel に反映します。
 
-#### 必須環境変数
+#### 方法A: Vercel Dashboard で手動設定
+
+[Vercel Dashboard](https://vercel.com/dashboard) → プロジェクト → Settings → Environment Variables で、以下を追加します。
+
+**必須環境変数**
 
 | 変数名 | 値 | 取得方法 |
 |-------|-----|---------|
@@ -71,12 +89,31 @@ Vercel Dashboardで以下の環境変数を設定します：
 | `UPSTASH_REDIS_REST_TOKEN` | Upstash Redisトークン | Upstash Console |
 | `GEMINI_API_KEY` | Google AI Studio APIキー | AI Studio |
 
-#### オプション環境変数
+**オプション環境変数**
 
 | 変数名 | 値 | 取得方法 |
 |-------|-----|---------|
 | `XAI_API_KEY` | xAI APIキー | xAI Console |
 | `PERPLEXITY_API_KEY` | Perplexity APIキー | Perplexity Settings |
+
+#### 方法B: ローカル .env.local から一括設定（Vercel CLI）
+
+すでに `.env.local` に値が入っている場合、CLI で本番環境に一括追加できます。リポジトリルートでプロジェクトをリンクしたうえで実行してください。
+
+```bash
+# プロジェクトをリンク（未設定の場合）
+vercel link
+
+# .env.local の各行を Vercel の production に追加（コメント・空行は除く）
+grep -v '^#' .env.local | grep -v '^$' | while IFS='=' read -r key value; do
+  # 値の前後のクォートを削除
+  value=$(echo "$value" | sed -e 's/^"//' -e 's/"$//' -e "s/^'//" -e "s/'$//")
+  echo -n "$value" | vercel env add "$key" production
+done
+```
+
+- **注意**: `NEXTAUTH_URL` は初回デプロイ後に本番URL（例: `https://your-app.vercel.app`）に更新してください。Dashboard または `vercel env rm NEXTAUTH_URL production && echo -n "https://your-app.vercel.app" | vercel env add NEXTAUTH_URL production` で変更できます。
+- テンプレートは [.env.example](../.env.example) を参照。`cp .env.example .env.local` のあと、必要な値を編集してから上記を実行します。
 
 ### 4. データベースのセットアップ
 

@@ -5,7 +5,7 @@
  * Google Workspace SSO認証 + Drive API連携
  */
 
-import { NextAuthOptions } from "next-auth";
+import type { NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "./prisma";
@@ -82,7 +82,7 @@ export const authOptions: NextAuthOptions = {
      * セッションコールバック
      * JWTからセッションに必要な情報を追加
      */
-    async session({ session, token }) {
+    async session({ session, token }: { session: Record<string, unknown> & { user?: Record<string, unknown> }; token: Record<string, unknown> }) {
       if (token && session.user) {
         session.user.id = token.userId as string;
         session.accessToken = token.accessToken as string;
@@ -108,10 +108,10 @@ export const authOptions: NextAuthOptions = {
    * イベントハンドラ
    */
   events: {
-    async signIn({ user }) {
+    async signIn({ user }: { user: Record<string, unknown> }) {
       console.log(`User signed in: ${user.email}`);
     },
-    async signOut({ token }) {
+    async signOut({ token }: { token: Record<string, unknown> }) {
       console.log(`User signed out: ${token.email}`);
     },
   },
@@ -124,6 +124,13 @@ export const authOptions: NextAuthOptions = {
 
   /**
    * カスタムページ設定
+   */
+  pages: {
+    signIn: "/auth/signin",
+    error: "/auth/error",
+  },
+};
+ * カスタムページ設定
    */
   pages: {
     signIn: "/auth/signin",
