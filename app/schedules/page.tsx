@@ -251,8 +251,8 @@ export default function SchedulesPage() {
 
   return (
     <div className="min-h-screen bg-[#0d0d12] text-gray-100">
-      {/* Header */}
-      <header className="border-b border-[#2a2a35] bg-[#1a1a24]">
+      {/* Sticky Header */}
+      <header className="sticky top-0 z-50 border-b border-[#2a2a35] bg-[#0d0d12]/95 backdrop-blur-sm">
         <div className="px-6 py-4">
           <div className="flex items-center justify-between">
             <div>
@@ -292,27 +292,28 @@ export default function SchedulesPage() {
           </div>
         </div>
 
-        {/* Tabs */}
-        <div className="flex px-6 border-t border-[#2a2a35]">
-          {(["master", "actor", "staff", "vehicle"] as TabType[]).map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={cn(
-                "flex items-center gap-2 px-4 py-3 text-sm font-medium",
-                "border-b-2 transition-colors",
-                activeTab === tab
-                  ? "border-[#ff6b00] text-[#ff6b00]"
-                  : "border-transparent text-gray-400 hover:text-gray-200"
-              )}
-            >
-              {getTabIcon(tab)}
-              {getTabLabel(tab)}
-              {tab !== "master" && generateResults[tab as ScheduleGenerateType] && (
-                <span className="w-2 h-2 rounded-full bg-[#22c55e]" />
-              )}
-            </button>
-          ))}
+        {/* Pill Tabs */}
+        <div className="px-6 pb-4">
+          <div className="flex items-center gap-1 p-1 rounded-full bg-[#1a1a24] border border-[#2a2a35] w-fit">
+            {(["master", "actor", "staff", "vehicle"] as TabType[]).map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={cn(
+                  "flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-full transition-all",
+                  activeTab === tab
+                    ? "bg-[#2a2a35] text-white"
+                    : "text-gray-400 hover:text-gray-200 hover:bg-[#252530]"
+                )}
+              >
+                {getTabIcon(tab)}
+                {getTabLabel(tab)}
+                {tab !== "master" && generateResults[tab as ScheduleGenerateType] && (
+                  <span className="w-2 h-2 rounded-full bg-[#22c55e]" />
+                )}
+              </button>
+            ))}
+          </div>
         </div>
       </header>
 
@@ -353,54 +354,49 @@ export default function SchedulesPage() {
               </button>
             </div>
 
+            {/* Grok-style Input Area */}
             <div className="relative">
               <textarea
                 value={masterSchedule}
                 onChange={(e) => setMasterSchedule(e.target.value)}
                 placeholder="マスタースケジュールを入力してください..."
                 className={cn(
-                  "w-full h-[calc(100vh-280px)] min-h-[400px] p-4 rounded-xl",
+                  "w-full h-[calc(100vh-340px)] min-h-[360px] p-5 rounded-2xl",
                   "bg-[#1a1a24] border border-[#2a2a35]",
                   "text-sm text-gray-200 placeholder-gray-600",
-                  "focus:outline-none focus:border-[#ff6b00]/50",
+                  "focus:outline-none focus:border-[#ff6b00] focus:ring-1 focus:ring-[#ff6b00]/30",
+                  "transition-all duration-200",
                   "resize-none font-mono leading-relaxed"
                 )}
               />
-              <div className="absolute bottom-3 right-3 text-xs text-gray-500">
+              <div className="absolute bottom-4 right-4 text-xs text-gray-500">
                 {masterSchedule.length} 文字
               </div>
             </div>
 
-            {/* Generate Buttons */}
-            <div className="grid grid-cols-3 gap-3">
+            {/* Grok-style Generate Buttons */}
+            <div className="flex items-center gap-2">
               {(["actor", "staff", "vehicle"] as ScheduleGenerateType[]).map((type) => (
                 <button
                   key={type}
                   onClick={() => handleGenerate(type)}
                   disabled={loading[type] || !masterSchedule.trim()}
                   className={cn(
-                    "flex flex-col items-center gap-2 p-4 rounded-xl",
+                    "flex items-center gap-2 px-4 py-2.5 rounded-full",
                     "bg-[#1a1a24] border border-[#2a2a35]",
-                    "hover:border-[#ff6b00]/50 transition-all",
+                    "hover:border-[#ff6b00]/50 hover:bg-[#ff6b00]/5",
                     "disabled:opacity-50 disabled:cursor-not-allowed",
-                    "group"
+                    "transition-all duration-200"
                   )}
                 >
-                  <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-[#ff6b00]/10 group-hover:bg-[#ff6b00]/20 transition-colors">
-                    {loading[type] ? (
-                      <Loader2 className="w-5 h-5 text-[#ff6b00] animate-spin" />
-                    ) : (
-                      <Sparkles className="w-5 h-5 text-[#ff6b00]" />
-                    )}
-                  </div>
-                  <div className="text-center">
-                    <div className="text-sm font-medium text-gray-200">
-                      {getGenerateTypeLabel(type)}
-                    </div>
-                    <div className="text-xs text-gray-500 mt-0.5">
-                      {getGenerateTypeDescription(type)}
-                    </div>
-                  </div>
+                  {loading[type] ? (
+                    <Loader2 className="w-4 h-4 text-[#ff6b00] animate-spin" />
+                  ) : (
+                    <Sparkles className="w-4 h-4 text-[#ff6b00]" />
+                  )}
+                  <span className="text-sm font-medium text-gray-200">
+                    {getGenerateTypeLabel(type)}
+                  </span>
                 </button>
               ))}
             </div>
@@ -422,15 +418,16 @@ export default function SchedulesPage() {
               </h2>
             </div>
 
+            {/* Grok-style Code Block Result */}
             <div
               className={cn(
-                "h-[calc(100vh-200px)] min-h-[500px] rounded-xl overflow-hidden",
-                "bg-[#1a1a24] border border-[#2a2a35]"
+                "h-[calc(100vh-260px)] min-h-[440px] rounded-2xl overflow-hidden",
+                "bg-[#0d0d12] border border-[#2a2a35]"
               )}
             >
               {activeTab === "master" ? (
                 // Master Preview
-                <div className="h-full p-4 overflow-auto">
+                <div className="h-full p-5 overflow-auto">
                   <pre className="text-sm text-gray-300 whitespace-pre-wrap font-mono leading-relaxed">
                     {masterSchedule || (
                       <span className="text-gray-600">
@@ -442,33 +439,54 @@ export default function SchedulesPage() {
               ) : (
                 // Generated Content Preview
                 <div className="h-full flex flex-col">
-                  {generateResults[activeTab] ? (
+                  {loading[activeTab as ScheduleGenerateType] ? (
+                    // Grok-style Loading State
+                    <div className="h-full flex flex-col items-center justify-center text-gray-500">
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="relative">
+                          <Loader2 className="w-6 h-6 text-[#22c55e] animate-spin" />
+                          <div className="absolute inset-0 w-6 h-6 bg-[#22c55e]/20 blur-xl rounded-full" />
+                        </div>
+                        <span className="text-[#22c55e] font-medium">思考中...</span>
+                      </div>
+                      <p className="text-xs text-gray-600">
+                        {getGenerateTypeLabel(activeTab as ScheduleGenerateType)}を生成しています
+                      </p>
+                    </div>
+                  ) : generateResults[activeTab] ? (
                     <>
-                      <div className="flex-1 p-4 overflow-auto">
+                      <div className="flex items-center justify-between px-4 py-2 border-b border-[#2a2a35] bg-[#1a1a24]">
+                        <span className="text-xs text-gray-500 font-mono">
+                          {getTabLabel(activeTab)}.md
+                        </span>
+                        <button
+                          onClick={() => handleExport("markdown")}
+                          className="flex items-center gap-1 text-xs text-[#ff6b00] hover:text-[#ff8533] transition-colors"
+                        >
+                          <Download className="w-3 h-3" />
+                          ダウンロード
+                        </button>
+                      </div>
+                      <div className="flex-1 p-5 overflow-auto">
                         <pre className="text-sm text-gray-300 whitespace-pre-wrap font-mono leading-relaxed">
                           {generateResults[activeTab]}
                         </pre>
                       </div>
-                      <div className="px-4 py-2 border-t border-[#2a2a35] bg-[#0d0d12]">
+                      <div className="px-4 py-2 border-t border-[#2a2a35] bg-[#1a1a24]">
                         <div className="flex items-center justify-between text-xs text-gray-500">
                           <span>
                             {generateResults[activeTab].length} 文字
                           </span>
-                          <button
-                            onClick={() => handleExport("markdown")}
-                            className="flex items-center gap-1 text-[#ff6b00] hover:text-[#ff8533] transition-colors"
-                          >
-                            <Download className="w-3 h-3" />
-                            ダウンロード
-                          </button>
                         </div>
                       </div>
                     </>
                   ) : (
                     <div className="h-full flex flex-col items-center justify-center text-gray-500">
-                      <Sparkles className="w-12 h-12 mb-4 opacity-50" />
+                      <div className="w-12 h-12 rounded-2xl bg-[#1a1a24] border border-[#2a2a35] flex items-center justify-center mb-4">
+                        <Sparkles className="w-5 h-5 text-gray-600" />
+                      </div>
                       <p className="text-sm">
-                        「{getGenerateTypeLabel(activeTab)}」ボタンをクリックして生成
+                        「{getGenerateTypeLabel(activeTab as ScheduleGenerateType)}」をクリックして生成
                       </p>
                     </div>
                   )}
