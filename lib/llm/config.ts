@@ -141,6 +141,7 @@ export const PROJECT_DEFAULT_PROVIDERS: Record<string, LLMProvider> = {
 
 /**
  * Google AI Studio 無料枠設定
+ * https://ai.google.dev/pricing?hl=ja
  */
 export const GEMINI_FREE_TIER = {
   'gemini-2.5-flash-lite': {
@@ -151,7 +152,68 @@ export const GEMINI_FREE_TIER = {
     rpm: 30,
     rpd: 1500,
   },
-};
+} as const;
+
+/**
+ * 無料枠制限設定（全プロバイダー）
+ * 各プロバイダーの無料枠またはデフォルト制限
+ */
+export const FREE_TIER_LIMITS: Record<LLMProvider, { rpm: number; rpd: number }> = {
+  // Google AI Studio 無料枠: 30 RPM / 1,500 RPD
+  'gemini-2.5-flash-lite': { rpm: 30, rpd: 1500 },
+  'gemini-3.0-flash': { rpm: 30, rpd: 1500 },
+  // xAI Grok: デフォルト制限（有料API前提）
+  'grok-4.1-fast': { rpm: 60, rpd: 10000 },
+  'grok-4': { rpm: 60, rpd: 10000 },
+  // OpenAI: デフォルト制限（有料API前提）
+  'gpt-4o-mini': { rpm: 60, rpd: 10000 },
+  'gpt-5': { rpm: 60, rpd: 10000 },
+  // Anthropic: デフォルト制限（有料API前提）
+  'claude-sonnet-4.5': { rpm: 60, rpd: 10000 },
+  'claude-opus-4.6': { rpm: 60, rpd: 10000 },
+  // Perplexity: デフォルト制限（有料API前提）
+  'perplexity-sonar': { rpm: 60, rpd: 10000 },
+  'perplexity-sonar-pro': { rpm: 60, rpd: 10000 },
+} as const;
+
+/**
+ * Upstash Redis 無料枠設定
+ * https://upstash.com/pricing
+ */
+export const UPSTASH_FREE_TIER = {
+  /** 1日あたりの最大コマンド数 */
+  maxCommandsPerDay: 10000,
+  /** 1秒あたりの最大リクエスト数 */
+  maxRequestsPerSecond: 100,
+  /** ストレージ容量（MB） */
+  storageMB: 256,
+  /** 最大キー数 */
+  maxKeys: 10000,
+} as const;
+
+/**
+ * キャッシュ設定
+ */
+export const CACHE_CONFIG = {
+  /** LLMレスポンスキャッシュ有効期限（秒）: 24時間 */
+  ttlSeconds: 24 * 60 * 60,
+  /** 最大キャッシュサイズ（キー数） */
+  maxKeys: UPSTASH_FREE_TIER.maxKeys,
+  /** キャッシュキープレフィックス */
+  keyPrefix: 'aihub:llm:',
+} as const;
+
+/**
+ * レート制限設定
+ */
+export const RATE_LIMIT_CONFIG = {
+  /** 識別子の種類 */
+  identifierType: 'ip', // 'ip' | 'user' | 'session'
+  /** レート制限超過時のリトライ間隔（秒） */
+  retryAfterSeconds: 60,
+  /** ヘッダーに制限情報を含めるか */
+  includeHeaders: true,
+} as const;
 
 /**
  * プロバイダー一覧を取得
