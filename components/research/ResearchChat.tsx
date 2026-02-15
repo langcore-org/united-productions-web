@@ -245,6 +245,7 @@ export function ResearchChat({ className }: ResearchChatProps) {
   }, [activeAgent, messages, provider]);
 
   // 従来の非ストリーミング処理（フォールバック）
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleNonStream = useCallback(async (userMessage: Message) => {
     try {
       const response = await fetch("/api/research", {
@@ -553,12 +554,11 @@ export function ResearchChat({ className }: ResearchChatProps) {
 function StreamingMessageBubble({
   content,
   thinking,
-  isThinking,
   provider,
 }: {
   content: string;
   thinking: string;
-  isThinking: boolean;
+  isThinking?: boolean;
   provider: LLMProvider;
 }) {
   const contentRef = useRef<HTMLDivElement>(null);

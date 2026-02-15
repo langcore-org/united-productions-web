@@ -29,6 +29,7 @@ type TabType = "master" | "actor" | "staff" | "vehicle";
 /**
  * 生成結果
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 interface GenerateResult {
   type: ScheduleGenerateType;
   content: string;

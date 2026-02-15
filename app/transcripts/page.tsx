@@ -11,7 +11,6 @@ import {
   Check,
   FileText,
   Users,
-  MessageSquare,
   Scissors,
   AlignLeft,
   Square,
@@ -21,30 +20,13 @@ import {
 type ProcessingStatus = "idle" | "streaming" | "completed" | "error";
 
 const SUPPORTED_PROVIDERS: LLMProvider[] = [
-  "gemini-25-flash-lite",
-  "gemini-30-flash",
-  "grok-41-fast",
+  "gemini-2.5-flash-lite",
+  "gemini-3.0-flash",
+  "grok-4.1-fast",
   "grok-4",
 ];
 
-const DEFAULT_PROVIDER: LLMProvider = "gemini-25-flash-lite";
-
-// プロバイダーID変換
-const convertProvider = (uiProvider: LLMProvider): string => {
-  const mapping: Record<LLMProvider, string> = {
-    "gemini-25-flash-lite": "gemini-2.5-flash-lite",
-    "gemini-30-flash": "gemini-3.0-flash",
-    "grok-41-fast": "grok-4.1-fast",
-    "grok-4": "grok-4",
-    "gpt-4o-mini": "gpt-4o-mini",
-    "gpt-5": "gpt-5",
-    "claude-sonnet-45": "claude-sonnet-4.5",
-    "claude-opus-46": "claude-opus-4.6",
-    "perplexity-sonar": "perplexity-sonar",
-    "perplexity-sonar-pro": "perplexity-sonar-pro",
-  };
-  return mapping[uiProvider] || uiProvider;
-};
+const DEFAULT_PROVIDER: LLMProvider = "gemini-2.5-flash-lite";
 
 export default function TranscriptsPage() {
   const [transcript, setTranscript] = useState("");
@@ -118,7 +100,7 @@ Premiere Proの書き起こしテキストを、放送用のNA原稿形式に整
               content: `以下のPremiere Pro書き起こしテキストをNA原稿形式に整形してください：\n\n${transcript}`,
             },
           ],
-          provider: convertProvider(provider),
+          provider: provider,
         }),
         signal: abortController.signal,
       });
@@ -486,7 +468,4 @@ function FeatureCard({
   );
 }
 
-// cn関数をインポートできない場合のフォールバック
-function cn(...classes: (string | boolean | undefined)[]) {
-  return classes.filter(Boolean).join(" ");
-}
+

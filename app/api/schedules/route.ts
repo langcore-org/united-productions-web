@@ -10,7 +10,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { createGeminiClient } from "@/lib/llm/clients/gemini";
 import {
   createScheduleGenerateMessages,
-  ScheduleGenerateType,
 } from "@/prompts/schedule-generate";
 import { z } from "zod";
 

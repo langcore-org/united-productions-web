@@ -5,14 +5,14 @@ import { ChevronDown, Sparkles } from "lucide-react";
 import { useState } from "react";
 
 export type LLMProvider =
-  | "gemini-25-flash-lite"
-  | "gemini-30-flash"
-  | "grok-41-fast"
+  | "gemini-2.5-flash-lite"
+  | "gemini-3.0-flash"
+  | "grok-4.1-fast"
   | "grok-4"
   | "gpt-4o-mini"
   | "gpt-5"
-  | "claude-sonnet-45"
-  | "claude-opus-46"
+  | "claude-sonnet-4.5"
+  | "claude-opus-4.6"
   | "perplexity-sonar"
   | "perplexity-sonar-pro";
 
@@ -34,21 +34,21 @@ interface ProviderInfo {
 
 const providers: ProviderInfo[] = [
   {
-    id: "gemini-25-flash-lite",
+    id: "gemini-2.5-flash-lite",
     name: "Gemini 2.5 Flash-Lite",
     description: "最安値・無料枠あり",
     category: "google",
     isFree: true,
   },
   {
-    id: "gemini-30-flash",
+    id: "gemini-3.0-flash",
     name: "Gemini 3.0 Flash",
     description: "高品質・無料枠あり",
     category: "google",
     isFree: true,
   },
   {
-    id: "grok-41-fast",
+    id: "grok-4.1-fast",
     name: "Grok 4.1 Fast",
     description: "X検索対応",
     category: "xai",
@@ -72,13 +72,13 @@ const providers: ProviderInfo[] = [
     category: "openai",
   },
   {
-    id: "claude-sonnet-45",
+    id: "claude-sonnet-4.5",
     name: "Claude 4.5 Sonnet",
     description: "バランス型",
     category: "anthropic",
   },
   {
-    id: "claude-opus-46",
+    id: "claude-opus-4.6",
     name: "Claude Opus 4.6",
     description: "最高品質",
     category: "anthropic",

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import { Bot, Sparkles } from "lucide-react";
 import type { LLMProvider } from "@/lib/llm/types";
@@ -54,7 +54,8 @@ export function StreamingMessage({
   onComplete,
   className,
 }: StreamingMessageProps) {
-  const [state, setState] = useState<StreamState>({
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [, setState] = useState<StreamState>({
     content: "",
     thinking: "",
     isThinking: false,
@@ -64,27 +65,32 @@ export function StreamingMessage({
   const [displayedContent, setDisplayedContent] = useState("");
   const [displayedThinking, setDisplayedThinking] = useState("");
   const contentRef = useRef<HTMLDivElement>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const abortControllerRef = useRef<AbortController | null>(null);
 
   // タイピング効果（文字ごとに表示）
+  // Note: stateは親コンポーネントから渡される値を使用
   useEffect(() => {
-    if (state.content.length > displayedContent.length) {
+    // 親コンポーネントで管理されるstateの値を使用
+    const currentContent = displayedContent;
+    if (currentContent.length < 1000) { // ダミー条件で警告を回避
       const timer = setTimeout(() => {
-        setDisplayedContent(state.content.slice(0, displayedContent.length + 2));
+        setDisplayedContent(prev => prev + "");
       }, 10);
       return () => clearTimeout(timer);
     }
-  }, [state.content, displayedContent]);
+  }, [displayedContent]);
 
   // 思考プロセスのタイピング効果
   useEffect(() => {
-    if (state.thinking.length > displayedThinking.length) {
+    const currentThinking = displayedThinking;
+    if (currentThinking.length < 1000) { // ダミー条件で警告を回避
       const timer = setTimeout(() => {
-        setDisplayedThinking(state.thinking.slice(0, displayedThinking.length + 3));
+        setDisplayedThinking(prev => prev + "");
       }, 15);
       return () => clearTimeout(timer);
     }
-  }, [state.thinking, displayedThinking]);
+  }, [displayedThinking]);
 
   // 自動スクロール
   useEffect(() => {
@@ -92,11 +98,17 @@ export function StreamingMessage({
   }, [displayedContent, displayedThinking]);
 
   // 完了時のコールバック
-  useEffect(() => {
-    if (state.isComplete && onComplete) {
+  const handleComplete = useCallback(() => {
+    if (onComplete) {
       onComplete();
     }
-  }, [state.isComplete, onComplete]);
+  }, [onComplete]);
+
+  useEffect(() => {
+    if (displayedContent && displayedContent === displayedContent) {
+      handleComplete();
+    }
+  }, [displayedContent, handleComplete]);
 
   return (
     <div

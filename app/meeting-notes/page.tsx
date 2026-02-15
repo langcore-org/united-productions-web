@@ -51,30 +51,13 @@ const templates: TemplateOption[] = [
 ];
 
 const SUPPORTED_PROVIDERS: LLMProvider[] = [
-  "gemini-25-flash-lite",
-  "gemini-30-flash",
-  "grok-41-fast",
+  "gemini-2.5-flash-lite",
+  "gemini-3.0-flash",
+  "grok-4.1-fast",
   "grok-4",
 ];
 
-const DEFAULT_PROVIDER: LLMProvider = "gemini-25-flash-lite";
-
-// プロバイダーID変換
-const convertProvider = (uiProvider: LLMProvider): string => {
-  const mapping: Record<LLMProvider, string> = {
-    "gemini-25-flash-lite": "gemini-2.5-flash-lite",
-    "gemini-30-flash": "gemini-3.0-flash",
-    "grok-41-fast": "grok-4.1-fast",
-    "grok-4": "grok-4",
-    "gpt-4o-mini": "gpt-4o-mini",
-    "gpt-5": "gpt-5",
-    "claude-sonnet-45": "claude-sonnet-4.5",
-    "claude-opus-46": "claude-opus-4.6",
-    "perplexity-sonar": "perplexity-sonar",
-    "perplexity-sonar-pro": "perplexity-sonar-pro",
-  };
-  return mapping[uiProvider] || uiProvider;
-};
+const DEFAULT_PROVIDER: LLMProvider = "gemini-2.5-flash-lite";
 
 export default function MeetingNotesPage() {
   const [selectedTemplate, setSelectedTemplate] = useState<MeetingTemplate>("meeting");
@@ -116,7 +99,7 @@ export default function MeetingNotesPage() {
               content: `以下のZoom文字起こしテキストを${selectedTemplate === "meeting" ? "会議用" : "面談用"}テンプレートで整形してください：\n\n${transcript}`,
             },
           ],
-          provider: convertProvider(provider),
+          provider: provider,
         }),
         signal: abortController.signal,
       });
@@ -383,7 +366,7 @@ export default function MeetingNotesPage() {
           ) : (
             <button
               onClick={handleProcess}
-              disabled={!transcript.trim() || status === "streaming"}
+              disabled={!transcript.trim()}
               className={cn(
                 "flex items-center gap-3 px-8 py-4 rounded-xl font-medium transition-all duration-200",
                 !transcript.trim()

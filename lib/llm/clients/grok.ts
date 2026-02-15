@@ -192,7 +192,7 @@ export class GrokClient implements LLMClient {
             if (content) {
               yield content;
             }
-          } catch (e) {
+          } catch {
             // Ignore JSON parse errors for malformed chunks
             continue;
           }
@@ -211,7 +211,7 @@ export class GrokClient implements LLMClient {
               if (content) {
                 yield content;
               }
-            } catch (e) {
+            } catch {
               // Ignore JSON parse errors
             }
           }

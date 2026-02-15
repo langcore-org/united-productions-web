@@ -14,9 +14,6 @@ const globalForPrisma = globalThis as unknown as {
 };
 
 // PrismaClientが存在しない場合（@prisma/clientが生成されていない場合）のフォールバック
-declare const global: typeof globalThis & {
-  prisma?: PrismaClient;
-};
 
 // 動的にPrismaClientを取得または作成
 function getPrismaClient(): PrismaClient {
@@ -30,7 +27,7 @@ function getPrismaClient(): PrismaClient {
       globalForPrisma.prisma = client;
     }
     return client;
-  } catch (error) {
+  } catch {
     // Prisma Clientが生成されていない場合のフォールバック
     console.warn("Prisma Client not generated yet. Using mock client.");
     // モッククライアントを返す（開発時のみ）

@@ -192,7 +192,7 @@ export class PerplexityClient implements LLMClient {
     const reader = response.body.getReader();
     const decoder = new TextDecoder();
     let citations: string[] = [];
-    let citationsSent = false;
+    const citationsSent = false;
 
     try {
       while (true) {

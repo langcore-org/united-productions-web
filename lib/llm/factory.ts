@@ -5,7 +5,7 @@
  * Wave 2で各クライアントが実装された後、実際のインスタンス生成が有効になる
  */
 
-import { LLMProvider, LLMClient, LLMMessage, LLMResponse } from './types';
+import { LLMProvider, LLMClient, LLMResponse } from './types';
 import { getProviderInfo } from './config';
 import { GeminiClient } from './clients/gemini';
 import { PerplexityClient } from './clients/perplexity';
@@ -18,14 +18,14 @@ import { GrokClient } from './clients/grok';
 class NotImplementedClient implements LLMClient {
   constructor(private provider: LLMProvider) {}
 
-  async chat(messages: LLMMessage[]): Promise<LLMResponse> {
+  async chat(): Promise<LLMResponse> {
     throw new Error(
       `Provider "${this.provider}" is not implemented yet. ` +
       `It will be available in Wave 2.`
     );
   }
 
-  async *stream(messages: LLMMessage[]): AsyncIterable<string> {
+  async *stream(): AsyncIterable<string> {
     throw new Error(
       `Provider "${this.provider}" streaming is not implemented yet. ` +
       `It will be available in Wave 2.`
@@ -74,6 +74,7 @@ export function createLLMClient(provider: LLMProvider): LLMClient {
       
     default:
       // 型安全性のため、never型で網羅性チェック
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const _exhaustiveCheck: never = provider;
       throw new Error(`Unknown provider: ${provider}`);
   }

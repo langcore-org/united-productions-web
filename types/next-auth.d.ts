@@ -4,7 +4,7 @@
  * カスタムセッションとJWTの型を拡張
  */
 
-import NextAuth from "next-auth";
+// NextAuth型拡張
 
 declare module "next-auth" {
   /**

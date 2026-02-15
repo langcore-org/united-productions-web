@@ -5,13 +5,11 @@
  * @google/generative-aiライブラリを使用
  */
 
-import { GoogleGenerativeAI, GenerativeModel, Content } from '@google/generative-ai';
+import { GoogleGenerativeAI, Content } from '@google/generative-ai';
 import {
   LLMClient,
   LLMMessage,
-  LLMMessageRole,
   LLMResponse,
-  LLMProvider,
 } from '../types';
 
 /**

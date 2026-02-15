@@ -79,40 +79,72 @@ Swarm: 依存関係を解決しながら並列処理 → 短時間で完了
 
 ---
 
+## 📊 現在の開発状況
+
+### Wave 1: 基盤レイヤー ✅ 完了
+
+| エージェント | 状態 | 成果物 |
+|-------------|------|--------|
+| `ui-research` | ✅ 完了 | Grok UI分析済み、カラーパレット・コンポーネント仕様抽出 |
+| `database-schema` | ✅ 完了 | `prisma/schema.prisma` 作成済み、マイグレーション完了 |
+| `auth-api` | ✅ 完了 | NextAuth.js 実装済み、Google OAuth連携完了 |
+| `llm-factory` | ✅ 完了 | 複数LLM統合基盤完成、統一インターフェース実装 |
+
+### Wave 2: UI/LLM連携レイヤー ✅ 完了
+
+| エージェント | 状態 | 成果物 |
+|-------------|------|--------|
+| `design-system` | ✅ 完了 | shadcn/ui + カスタムテーマ適用、Grok UI風コンポーネント |
+| `llm-gemini` | ✅ 完了 | Gemini 2.5 Flash-Lite 対応実装 |
+| `llm-grok` | ✅ 完了 | Grok 4.1 Fast 対応実装 |
+| `llm-perplexity` | ✅ 完了 | Perplexity Sonar 対応実装 |
+
+### Wave 3: 機能実装レイヤー 🔄 進行中
+
+| エージェント | 状態 | 作業内容 |
+|-------------|------|----------|
+| `pj-a-meeting` | 🔄 進行中 | 議事録機能実装中 |
+| `pj-b-transcript` | 🔄 進行中 | 書き起こし機能実装中 |
+| `pj-c-research` | 🔄 進行中 | リサーチ機能実装中 |
+| `pj-d-schedule` | ⏳ 未開始 | ロケスケ機能（Wave 3後半で開始予定） |
+| `google-drive` | ⏳ 未開始 | Drive連携（pj-c-researchと並行で検討） |
+
+---
+
 ## 🔗 依存関係グラフ
 
-### Wave 1: 基盤レイヤー（独立して並列実行）
+### Wave 1: 基盤レイヤー（完了済み）
 
 ```mermaid
 flowchart TD
-    subgraph Wave1["Wave 1 - 基盤構築（並列実行）"]
-        A[ui-research<br/>UI分析]
-        B[database-schema<br/>DB設計]
-        C[auth-api<br/>認証実装]
-        D[llm-factory<br/>LLM統合基盤]
+    subgraph Wave1["Wave 1 - 基盤構築 ✅ 完了"]
+        A[ui-research<br/>UI分析 ✅]
+        B[database-schema<br/>DB設計 ✅]
+        C[auth-api<br/>認証実装 ✅]
+        D[llm-factory<br/>LLM統合基盤 ✅]
     end
     
-    style Wave1 fill:#4a4a4a,stroke:#999,color:#fff
-    style A fill:#666,stroke:#999,color:#fff
-    style B fill:#666,stroke:#999,color:#fff
-    style C fill:#666,stroke:#999,color:#fff
-    style D fill:#666,stroke:#999,color:#fff
+    style Wave1 fill:#2d5a2d,stroke:#4caf50,color:#fff
+    style A fill:#4caf50,stroke:#81c784,color:#fff
+    style B fill:#4caf50,stroke:#81c784,color:#fff
+    style C fill:#4caf50,stroke:#81c784,color:#fff
+    style D fill:#4caf50,stroke:#81c784,color:#fff
 ```
 
-### Wave 2: UI/LLM連携レイヤー
+### Wave 2: UI/LLM連携レイヤー（完了済み）
 
 ```mermaid
 flowchart TD
-    subgraph Wave1["Wave 1 - 完了"]
+    subgraph Wave1["Wave 1 - 完了 ✅"]
         A[ui-research]
         D[llm-factory]
     end
     
-    subgraph Wave2["Wave 2 - UI/LLM連携（並列実行）"]
-        E[design-system<br/>デザインシステム]
-        F[llm-gemini<br/>Gemini連携]
-        G[llm-grok<br/>Grok連携]
-        H[llm-perplexity<br/>Perplexity連携]
+    subgraph Wave2["Wave 2 - UI/LLM連携 ✅ 完了"]
+        E[design-system<br/>デザインシステム ✅]
+        F[llm-gemini<br/>Gemini 2.5 Flash-Lite ✅]
+        G[llm-grok<br/>Grok 4.1 Fast ✅]
+        H[llm-perplexity<br/>Perplexity Sonar ✅]
     end
     
     A --> E
@@ -120,21 +152,21 @@ flowchart TD
     D --> G
     D --> H
     
-    style Wave1 fill:#3a3a3a,stroke:#888,color:#ccc
-    style Wave2 fill:#4a4a4a,stroke:#999,color:#fff
-    style A fill:#555,stroke:#888,color:#ccc
-    style D fill:#555,stroke:#888,color:#ccc
-    style E fill:#666,stroke:#999,color:#fff
-    style F fill:#666,stroke:#999,color:#fff
-    style G fill:#666,stroke:#999,color:#fff
-    style H fill:#666,stroke:#999,color:#fff
+    style Wave1 fill:#2d5a2d,stroke:#4caf50,color:#fff
+    style Wave2 fill:#2d5a2d,stroke:#4caf50,color:#fff
+    style A fill:#4caf50,stroke:#81c784,color:#fff
+    style D fill:#4caf50,stroke:#81c784,color:#fff
+    style E fill:#4caf50,stroke:#81c784,color:#fff
+    style F fill:#4caf50,stroke:#81c784,color:#fff
+    style G fill:#4caf50,stroke:#81c784,color:#fff
+    style H fill:#4caf50,stroke:#81c784,color:#fff
 ```
 
-### Wave 3: 機能実装レイヤー
+### Wave 3: 機能実装レイヤー（進行中）
 
 ```mermaid
 flowchart TD
-    subgraph Wave2["Wave 2 - 完了"]
+    subgraph Wave2["Wave 2 - 完了 ✅"]
         E[design-system]
         F[llm-gemini]
         G[llm-grok]
@@ -142,12 +174,12 @@ flowchart TD
         C[auth-api]
     end
     
-    subgraph Wave3["Wave 3 - 機能実装（並列実行）"]
-        I[pj-a-meeting<br/>議事録機能]
-        J[pj-b-transcript<br/>書き起こし機能]
-        K[pj-c-research<br/>リサーチ機能]
-        L[pj-d-schedule<br/>ロケスケ機能]
-        M[google-drive<br/>Drive連携]
+    subgraph Wave3["Wave 3 - 機能実装 🔄 進行中"]
+        I[pj-a-meeting<br/>議事録機能 🔄]
+        J[pj-b-transcript<br/>書き起こし機能 🔄]
+        K[pj-c-research<br/>リサーチ機能 🔄]
+        L[pj-d-schedule<br/>ロケスケ機能 ⏳]
+        M[google-drive<br/>Drive連携 ⏳]
     end
     
     E --> I
@@ -162,25 +194,25 @@ flowchart TD
     C --> M
     M -.-> K
     
-    style Wave2 fill:#3a3a3a,stroke:#888,color:#ccc
-    style Wave3 fill:#4a4a4a,stroke:#999,color:#fff
-    style E fill:#555,stroke:#888,color:#ccc
-    style F fill:#555,stroke:#888,color:#ccc
-    style G fill:#555,stroke:#888,color:#ccc
-    style H fill:#555,stroke:#888,color:#ccc
-    style C fill:#555,stroke:#888,color:#ccc
-    style I fill:#666,stroke:#999,color:#fff
-    style J fill:#666,stroke:#999,color:#fff
-    style K fill:#666,stroke:#999,color:#fff
-    style L fill:#666,stroke:#999,color:#fff
-    style M fill:#666,stroke:#999,color:#fff
+    style Wave2 fill:#2d5a2d,stroke:#4caf50,color:#fff
+    style Wave3 fill:#5a4a2d,stroke:#ff9800,color:#fff
+    style E fill:#4caf50,stroke:#81c784,color:#fff
+    style F fill:#4caf50,stroke:#81c784,color:#fff
+    style G fill:#4caf50,stroke:#81c784,color:#fff
+    style H fill:#4caf50,stroke:#81c784,color:#fff
+    style C fill:#4caf50,stroke:#81c784,color:#fff
+    style I fill:#ff9800,stroke:#ffb74d,color:#000
+    style J fill:#ff9800,stroke:#ffb74d,color:#000
+    style K fill:#ff9800,stroke:#ffb74d,color:#000
+    style L fill:#666,stroke:#999,color:#ccc
+    style M fill:#666,stroke:#999,color:#ccc
 ```
 
-### Wave 4: 統合・最適化
+### Wave 4: 統合・最適化（未開始）
 
 ```mermaid
 flowchart TD
-    subgraph Wave3["Wave 3 - 完了"]
+    subgraph Wave3["Wave 3 - 進行中 🔄"]
         I[pj-a-meeting]
         J[pj-b-transcript]
         K[pj-c-research]
@@ -188,7 +220,7 @@ flowchart TD
         M[google-drive]
     end
     
-    subgraph Wave4["Wave 4 - 統合・最適化"]
+    subgraph Wave4["Wave 4 - 統合・最適化 ⏳"]
         N[optimization<br/>キャッシュ/最適化]
         O[testing<br/>E2Eテスト]
     end
@@ -203,36 +235,36 @@ flowchart TD
     L --> O
     M --> O
     
-    style Wave3 fill:#3a3a3a,stroke:#888,color:#ccc
-    style Wave4 fill:#4a4a4a,stroke:#999,color:#fff
-    style I fill:#555,stroke:#888,color:#ccc
-    style J fill:#555,stroke:#888,color:#ccc
-    style K fill:#555,stroke:#888,color:#ccc
-    style L fill:#555,stroke:#888,color:#ccc
-    style M fill:#555,stroke:#888,color:#ccc
-    style N fill:#666,stroke:#999,color:#fff
-    style O fill:#666,stroke:#999,color:#fff
+    style Wave3 fill:#5a4a2d,stroke:#ff9800,color:#fff
+    style Wave4 fill:#3a3a3a,stroke:#888,color:#ccc
+    style I fill:#ff9800,stroke:#ffb74d,color:#000
+    style J fill:#ff9800,stroke:#ffb74d,color:#000
+    style K fill:#ff9800,stroke:#ffb74d,color:#000
+    style L fill:#666,stroke:#999,color:#ccc
+    style M fill:#666,stroke:#999,color:#ccc
+    style N fill:#444,stroke:#777,color:#ccc
+    style O fill:#444,stroke:#777,color:#ccc
 ```
 
 ### 全体依存関係図
 
 ```mermaid
 flowchart TB
-    subgraph W1["Wave 1"]
+    subgraph W1["Wave 1 ✅"]
         A[ui-research]
         B[database-schema]
         C[auth-api]
         D[llm-factory]
     end
     
-    subgraph W2["Wave 2"]
+    subgraph W2["Wave 2 ✅"]
         E[design-system]
         F[llm-gemini]
         G[llm-grok]
         H[llm-perplexity]
     end
     
-    subgraph W3["Wave 3"]
+    subgraph W3["Wave 3 🔄"]
         I[pj-a-meeting]
         J[pj-b-transcript]
         K[pj-c-research]
@@ -240,7 +272,7 @@ flowchart TB
         M[google-drive]
     end
     
-    subgraph W4["Wave 4"]
+    subgraph W4["Wave 4 ⏳"]
         N[optimization]
         O[testing]
     end
@@ -260,23 +292,23 @@ flowchart TB
     I & J & K & L --> N & O
     M --> O
     
-    style W1 fill:#5a5a5a,stroke:#aaa,color:#fff
-    style W2 fill:#4a4a4a,stroke:#999,color:#fff
-    style W3 fill:#3a3a3a,stroke:#888,color:#ccc
+    style W1 fill:#2d5a2d,stroke:#4caf50,color:#fff
+    style W2 fill:#2d5a2d,stroke:#4caf50,color:#fff
+    style W3 fill:#5a4a2d,stroke:#ff9800,color:#fff
     style W4 fill:#2a2a2a,stroke:#777,color:#ccc
-    style A fill:#777,stroke:#aaa,color:#fff
-    style B fill:#777,stroke:#aaa,color:#fff
-    style C fill:#777,stroke:#aaa,color:#fff
-    style D fill:#777,stroke:#aaa,color:#fff
-    style E fill:#666,stroke:#999,color:#fff
-    style F fill:#666,stroke:#999,color:#fff
-    style G fill:#666,stroke:#999,color:#fff
-    style H fill:#666,stroke:#999,color:#fff
-    style I fill:#555,stroke:#888,color:#ccc
-    style J fill:#555,stroke:#888,color:#ccc
-    style K fill:#555,stroke:#888,color:#ccc
-    style L fill:#555,stroke:#888,color:#ccc
-    style M fill:#555,stroke:#888,color:#ccc
+    style A fill:#4caf50,stroke:#81c784,color:#fff
+    style B fill:#4caf50,stroke:#81c784,color:#fff
+    style C fill:#4caf50,stroke:#81c784,color:#fff
+    style D fill:#4caf50,stroke:#81c784,color:#fff
+    style E fill:#4caf50,stroke:#81c784,color:#fff
+    style F fill:#4caf50,stroke:#81c784,color:#fff
+    style G fill:#4caf50,stroke:#81c784,color:#fff
+    style H fill:#4caf50,stroke:#81c784,color:#fff
+    style I fill:#ff9800,stroke:#ffb74d,color:#000
+    style J fill:#ff9800,stroke:#ffb74d,color:#000
+    style K fill:#ff9800,stroke:#ffb74d,color:#000
+    style L fill:#666,stroke:#999,color:#ccc
+    style M fill:#666,stroke:#999,color:#ccc
     style N fill:#444,stroke:#777,color:#ccc
     style O fill:#444,stroke:#777,color:#ccc
 ```
@@ -285,42 +317,42 @@ flowchart TB
 
 ## 🚀 並列実行の進め方
 
-### Wave 1: 基盤構築（独立タスクを一斉起動）
+### Wave 1: 基盤構築（独立タスクを一斉起動）✅ 完了
 
 **即座に並列実行可能:**
 
-| エージェント | 依存 | 作業内容 |
-|-------------|------|----------|
-| `ui-research` | なし | Grok UI分析、カラーパレット抽出 |
-| `database-schema` | なし | Prismaスキーマ、マイグレーション |
-| `auth-api` | なし | NextAuth.js認証実装 |
-| `llm-factory` | なし | LLM統合インターフェース |
+| エージェント | 依存 | 作業内容 | 状態 |
+|-------------|------|----------|------|
+| `ui-research` | なし | Grok UI分析、カラーパレット抽出 | ✅ 完了 |
+| `database-schema` | なし | Prismaスキーマ、マイグレーション | ✅ 完了 |
+| `auth-api` | なし | NextAuth.js認証実装 | ✅ 完了 |
+| `llm-factory` | なし | LLM統合インターフェース | ✅ 完了 |
 
-**完了条件**: Gemini 2.5 Flash-Lite で動作確認
+**完了条件**: Gemini 2.5 Flash-Lite で動作確認 ✅
 
-### Wave 2: UI/LLM連携（Wave 1 完了後に並列実行）
+### Wave 2: UI/LLM連携（Wave 1 完了後に並列実行）✅ 完了
 
 **Wave 1の成果を使って並列実行:**
 
-| エージェント | 依存 | 作業内容 |
-|-------------|------|----------|
-| `design-system` | ui-research | shadcn/uiカスタマイズ |
-| `llm-gemini` | llm-factory | Gemini連携実装 |
-| `llm-grok` | llm-factory | Grok連携実装 |
-| `llm-perplexity` | llm-factory | Perplexity連携実装 |
+| エージェント | 依存 | 作業内容 | 状態 |
+|-------------|------|----------|------|
+| `design-system` | ui-research | shadcn/uiカスタマイズ | ✅ 完了 |
+| `llm-gemini` | llm-factory | Gemini 2.5 Flash-Lite連携 | ✅ 完了 |
+| `llm-grok` | llm-factory | Grok 4.1 Fast連携 | ✅ 完了 |
+| `llm-perplexity` | llm-factory | Perplexity Sonar連携 | ✅ 完了 |
 
-**完了条件**: LLM切り替えが動作
+**完了条件**: LLM切り替えが動作 ✅
 
-### Wave 3: 機能実装（Wave 2 完了後に並列実行）
+### Wave 3: 機能実装（Wave 2 完了後に並列実行）🔄 進行中
 
 **基盤（Wave 1+2）が整ったら全て並列実行:**
 
-| エージェント | 依存 | 作業内容 |
-|-------------|------|----------|
-| `pj-a-meeting` | design-system, llm-gemini | 議事録機能 |
-| `pj-b-transcript` | design-system, llm-gemini | 書き起こし機能 |
-| `pj-c-research` | design-system, llm-grok, llm-perplexity, google-drive | リサーチ機能 |
-| `pj-d-schedule` | design-system, llm-gemini | ロケスケ機能 |
+| エージェント | 依存 | 作業内容 | 状態 |
+|-------------|------|----------|------|
+| `pj-a-meeting` | design-system, llm-gemini | 議事録機能 | 🔄 進行中 |
+| `pj-b-transcript` | design-system, llm-gemini | 書き起こし機能 | 🔄 進行中 |
+| `pj-c-research` | design-system, llm-grok, llm-perplexity, google-drive | リサーチ機能 | 🔄 進行中 |
+| `pj-d-schedule` | design-system, llm-gemini | ロケスケ機能 | ⏳ 未開始 |
 
 **Orchestrator指示例:**
 ```
@@ -333,74 +365,52 @@ flowchart TB
 各PJは独立して開発可能です。
 ```
 
-### Wave 4: 統合・最適化（必要に応じて）
+### Wave 4: 統合・最適化（必要に応じて）⏳ 未開始
 
-| エージェント | 依存 | 作業内容 |
-|-------------|------|----------|
-| `google-drive` | auth-api | Drive連携（pj-cが必要なら先に） |
-| `optimization` | 全機能 | キャッシュ、パフォーマンス最適化 |
-| `testing` | 全機能 | E2Eテスト、統合テスト |
+| エージェント | 依存 | 作業内容 | 状態 |
+|-------------|------|----------|------|
+| `google-drive` | auth-api | Drive連携（pj-cが必要なら先に） | ⏳ 未開始 |
+| `optimization` | 全機能 | キャッシュ、パフォーマンス最適化 | ⏳ 未開始 |
+| `testing` | 全機能 | E2Eテスト、統合テスト | ⏳ 未開始 |
+
+---
+
+## 📋 次のアクション
+
+### 即座に実行可能
+
+Wave 3の進行中タスクは継続して開発を進めます：
+
+1. **pj-a-meeting** - 議事録機能の残りの実装を完了
+2. **pj-b-transcript** - 書き起こし機能の残りの実装を完了
+3. **pj-c-research** - リサーチ機能の残りの実装を完了
+
+### Wave 3後半で開始予定
+
+以下のタスクは、進行中のタスクが一定の段階に達したら並列で開始：
+
+| エージェント | 開始条件 | 作業内容 |
+|-------------|----------|----------|
+| `pj-d-schedule` | pj-a/pj-b/pj-cのUIパターン確定後 | ロケスケ機能実装 |
+| `google-drive` | pj-c-researchのDrive連携要件確定後 | Drive API連携実装 |
+
+### Wave 4計画
+
+Wave 3の全機能が完了したら開始：
+
+| フェーズ | タスク | 目的 |
+|----------|--------|------|
+| 統合 | `optimization` | キャッシュ戦略、パフォーマンス最適化 |
+| 品質保証 | `testing` | E2Eテスト、統合テスト実装 |
+| デプロイ | `deployment` | Vercel本番デプロイ、ドメイン設定 |
 
 ---
 
 ## 👤 人間の介入ポイント
 
-以下のタイミングで**人間（Orchestrator/開発者）の判断・操作が必要**です。
+詳細は別ドキュメントを参照してください。
 
-### Wave 1 開始前（必須）
-
-| 項目 | 内容 | 担当 |
-|------|------|------|
-| **APIキー取得** | Google AI Studio で Gemini APIキーを取得 | 開発者 |
-| **APIキー取得** | xAI で Grok APIキーを取得（$25無料クレジット） | 開発者 |
-| **APIキー取得** | Perplexity APIキーを取得（必要なら） | 開発者 |
-| **環境変数設定** | `.env.local` に APIキーを設定 | 開発者 |
-| **Google Cloud設定** | Google OAuth クライアントID/シークレット取得 | 開発者 |
-| **リポジトリ準備** | GitHubリポジトリ作成、アクセス権設定 | 開発者 |
-
-**エージェントはここで待機**: APIキー未取得の場合は Wave 1 を開始できません。
-
-### Wave 1 中（判断が必要な場合）
-
-| 項目 | 内容 | 判断基準 |
-|------|------|----------|
-| **UIデザイン確定** | ui-research の成果を確認・承認 | デザインに問題があれば修正指示 |
-| **DB設計レビュー** | database-schema の Prismaスキーマ確認 | モデル定義に問題があれば修正 |
-| **認証設定** | Google Workspace SSO の動作確認 | ログインテストが必要 |
-
-### Wave 2〜3 中（並列開発中）
-
-| 項目 | 内容 | 対応 |
-|------|------|------|
-| **コンフリクト解消** | 複数エージェントが同じファイルを編集 | 人間が優先順位を決定 |
-| **仕様変更** | 開発中に要件が変わった場合 | 人間が判断してエージェントに指示 |
-| **エラー対応** | 解決困難なエラーが発生 | 人間が原因調査・対策指示 |
-| **LLM選定変更** | モデル切り替えの判断 | コスト/性能トレードオフの判断 |
-
-### Wave 3 完了時（必須）
-
-| 項目 | 内容 | 担当 |
-|------|------|------|
-| **動作確認** | 全機能の動作テスト | 開発者/テスター |
-| **承認** | 機能の仕様通りの動作を確認 | 開発者/ステークホルダー |
-| **有料API判断** | 無料枠超過時の課金判断 | 開発者/管理者 |
-
-### Wave 4 中（必須）
-
-| 項目 | 内容 | 担当 |
-|------|------|------|
-| **Vercelデプロイ** | 本番環境へのデプロイ実行 | 開発者 |
-| **ドメイン設定** | カスタムドメインの設定 | 開発者 |
-| **監視設定** | エラー監視、アラート設定 | 開発者 |
-
-### 継続的な介入（運用時）
-
-| 項目 | 内容 | 頻度 |
-|------|------|------|
-| **コスト監視** | 月額コストの確認 | 月1回 |
-| **API使用率** | Google AI Studio 無料枠の確認 | 週1回 |
-| **アクセス権管理** | 新規ユーザー/退職者の対応 | 随時 |
-| **バグ報告対応** | ユーザーからの不具合報告 | 随時 |
+→ **[人間の介入ポイント](./human-intervention-points.md)**
 
 ---
 
@@ -437,7 +447,7 @@ flowchart TB
 
 ### 実際の起動例
 
-**Wave 1: ui-research（依存なし）**
+**Wave 1: ui-research（依存なし）✅ 完了**
 ```markdown
 ## タスク: Grok UI分析
 
@@ -454,15 +464,15 @@ flowchart TB
 3. design-systemドキュメント作成
 
 ### 完了条件
-- [ ] カラーパレット定義（HEX/Tailwind対応表）
-- [ ] 主要コンポーネント仕様（MessageBubble, LLMSelector等）
-- [ ] docs/ui-analysis.md作成
+- [x] カラーパレット定義（HEX/Tailwind対応表）
+- [x] 主要コンポーネント仕様（MessageBubble, LLMSelector等）
+- [x] docs/ui-analysis.md作成
 
 ### 次のWaveで使用される
 - design-systemエージェントの入力資料
 ```
 
-**Wave 2: design-system（依存あり）**
+**Wave 2: design-system（依存あり）✅ 完了**
 ```markdown
 ## タスク: デザインシステム構築
 
@@ -483,15 +493,15 @@ flowchart TB
 4. レイアウトコンポーネント（Sidebar, Header）実装
 
 ### 完了条件
-- [ ] Tailwind設定更新
-- [ ] UIコンポーネント実装
-- [ ] ストーリーブック（必要なら）
+- [x] Tailwind設定更新
+- [x] UIコンポーネント実装
+- [x] ストーリーブック（必要なら）
 
 ### 次のWaveで使用される
 - pj-a/pj-b/pj-c/pj-d全てのUI実装で使用
 ```
 
-**Wave 3: pj-c-research（複数依存）**
+**Wave 3: pj-c-research（複数依存）🔄 進行中**
 ```markdown
 ## タスク: PJ-C リサーチ・考査機能実装
 

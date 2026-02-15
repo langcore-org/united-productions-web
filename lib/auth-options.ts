@@ -94,7 +94,7 @@ export const authOptions: NextAuthOptions = {
      * サインインコールバック
      * 特定ドメインの制限などが必要な場合に実装
      */
-    async signIn({ user, account, profile }) {
+    async signIn() {
       // 必要に応じてドメイン制限を実装
       // 例: United Productionsのドメインのみ許可
       // if (user.email && !user.email.endsWith("@united-productions.jp")) {
@@ -108,7 +108,7 @@ export const authOptions: NextAuthOptions = {
    * イベントハンドラ
    */
   events: {
-    async signIn({ user, account, profile }) {
+    async signIn({ user }) {
       console.log(`User signed in: ${user.email}`);
     },
     async signOut({ token }) {

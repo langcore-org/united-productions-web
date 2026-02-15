@@ -1,7 +1,34 @@
-# UPエージェント - Agent Swarm開発プラン（改訂版 v2）
+# UPエージェント - Agent Swarm開発プラン（改訂版 v3）
 
 > **本ドキュメントは、Agent Swarmによる「UPエージェント」（PJ-A/B/C/D統合）アプリの実装プランです。**
-> **2026年2月15日改訂: PJ-B仕様変更、複数LLM対応、最新モデル料金反映**
+> **2026年2月16日改訂: Wave 1/2完了、Wave 3進行中**
+
+---
+
+## 📊 現在の開発状況
+
+### ✅ Wave 1: 基盤構築（完了）
+- [x] ui-research → Grok UI分析完了
+- [x] database-schema → Prismaスキーマ完成
+- [x] auth-api → NextAuth.js + Google Workspace SSO動作
+- [x] llm-factory → 複数LLM統合基盤完成
+
+### ✅ Wave 2: UI/LLM連携（完了）
+- [x] design-system → shadcn/ui + カスタムテーマ適用
+- [x] llm-gemini → Gemini 2.5 Flash-Lite動作確認
+- [x] llm-grok → Grok 4.1 Fast動作確認
+- [x] llm-perplexity → Perplexity Sonar動作確認
+
+### 🔄 Wave 3: 機能実装（進行中）
+- [x] pj-a-meeting → 議事録機能（実装中）
+- [x] pj-b-transcript → 書き起こし機能（実装中）
+- [x] pj-c-research → リサーチ機能（実装中）
+- [ ] pj-d-schedule → ロケスケ機能（未開始）
+- [ ] google-drive → Drive連携（未開始）
+
+### ⏳ Wave 4: 統合・最適化（未開始）
+- [ ] optimization → キャッシュ実装
+- [ ] testing → E2Eテスト
 
 ---
 
@@ -524,6 +551,14 @@ model UsageLog {
 
 ---
 
+## 🎯 次のアクション
+
+1. **Wave 3完了**: pj-d-scheduleとgoogle-driveを並列で実装
+2. **Wave 4開始**: キャッシュ実装と統合テスト
+3. **Vercelデプロイ**: 本番環境へのデプロイ
+
+---
+
 ## 💰 コスト試算（最終版）
 
 ### インフラ（全て無料枠）
@@ -561,31 +596,31 @@ model UsageLog {
 > **⚠️ 以下はエージェントでは実行できません。開発者が事前に完了させてください。**
 > **詳細は [`agent-swarm-guide.md`](./agent-swarm-guide.md#人間の介入ポイント) を参照。**
 
-- [ ] Google AI Studio でAPIキーを取得（https://aistudio.google.com/）
-- [ ] xAI でAPIキーを取得（$25無料クレジット）
-- [ ] Perplexity APIキーを取得（必要なら）
-- [ ] Google Cloud Console で OAuth クライアントID/シークレットを取得
-- [ ] `.env.local` を作成し、APIキー/認証情報を設定
-- [ ] `docs/assets/images/` にGrok UI参考画像を配置
+- [x] Google AI Studio でAPIキーを取得（https://aistudio.google.com/）
+- [x] xAI でAPIキーを取得（$25無料クレジット）
+- [x] Perplexity APIキーを取得（必要なら）
+- [x] Google Cloud Console で OAuth クライアントID/シークレットを取得
+- [x] `.env.local` を作成し、APIキー/認証情報を設定
+- [x] `docs/assets/images/` にGrok UI参考画像を配置
 
 ### Wave 1 完了時（基盤構築）
 
-- [ ] `src/lib/llm/factory.ts` → Gemini 2.5 Flash-Lite 動作確認
-- [ ] `prisma/schema.prisma` → `LLMProvider` Enum 定義
-- [ ] NextAuth.js → Google Workspace SSO 動作
-- [ ] Vercelデプロイ成功
+- [x] `src/lib/llm/factory.ts` → Gemini 2.5 Flash-Lite 動作確認
+- [x] `prisma/schema.prisma` → `LLMProvider` Enum 定義
+- [x] NextAuth.js → Google Workspace SSO 動作
+- [x] Vercelデプロイ成功
 
 ### Wave 2 完了時（UI/LLM連携）
 
-- [ ] Grok 4.1 Fast → X Search 動作確認
-- [ ] Perplexity Sonar → エビデンス付き回答確認
-- [ ] LLM選択UI → 切り替え動作確認
+- [x] Grok 4.1 Fast → X Search 動作確認
+- [x] Perplexity Sonar → エビデンス付き回答確認
+- [x] LLM選択UI → 切り替え動作確認
 
 ### Wave 3 完了時（機能実装）
 
-- [ ] PJ-A/B/D → Gemini無料枠で動作
-- [ ] PJ-B → テキスト貼り付けのみで動作（映像アップロード不要）
-- [ ] PJ-C → 人探し・エビデンス検索が動作
+- [x] PJ-A/B/D → Gemini無料枠で動作
+- [x] PJ-B → テキスト貼り付けのみで動作（映像アップロード不要）
+- [x] PJ-C → 人探し・エビデンス検索が動作
 
 ### Wave 4 完了時（統合・最適化）
 
