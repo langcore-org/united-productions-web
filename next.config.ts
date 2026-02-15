@@ -1,22 +1,12 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // ビルド設定
   typescript: {
     ignoreBuildErrors: true,
   },
-  
-  // 画像設定
   images: {
     unoptimized: true,
   },
-  
-  // 実験的機能
-  experimental: {
-    serverComponentsExternalPackages: ["@prisma/client"],
-  },
-  
-  // ヘッダー設定
   async headers() {
     return [
       {
