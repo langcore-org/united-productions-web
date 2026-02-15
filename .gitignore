@@ -38,3 +38,14 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# docs assets (large files, local only)
+/docs/assets
+
+# video files
+*.mp4
+*.mov
+*.webm
+*.avi
+*.mkv
+*.m4v
