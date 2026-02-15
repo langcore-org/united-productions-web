@@ -8,6 +8,7 @@
 
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { getToken } from 'next-auth/jwt';
 import { checkRateLimit, incrementRateLimit, getRateLimitHeaders } from '@/lib/rate-limit';
 import { FREE_TIER_LIMITS } from '@/lib/llm/config';
 import type { LLMProvider } from '@/lib/llm/types';
@@ -112,10 +113,55 @@ function createRateLimitResponse(result: Awaited<ReturnType<typeof checkRateLimi
 }
 
 /**
+ * 認証が必要なパス
+ */
+const PROTECTED_PATHS = [
+  '/meeting-notes',
+  '/transcripts',
+  '/research',
+  '/schedules',
+  '/settings',
+];
+
+/**
+ * 認証関連パス（リダイレクト対象外）
+ */
+const AUTH_PATHS = [
+  '/auth/signin',
+  '/auth/error',
+];
+
+/**
  * メインミドルウェア関数
  */
 export async function middleware(request: NextRequest): Promise<NextResponse> {
   const url = new URL(request.url);
+
+  // 認証チェック
+  const isProtectedPath = PROTECTED_PATHS.some(path =>
+    url.pathname.startsWith(path)
+  );
+  const isAuthPath = AUTH_PATHS.some(path =>
+    url.pathname.startsWith(path)
+  );
+
+  // セッショントークンを取得
+  const token = await getToken({ 
+    req: request, 
+    secret: process.env.NEXTAUTH_SECRET 
+  });
+
+  // 未認証で保護されたパスにアクセスした場合はサインインページへ
+  if (isProtectedPath && !token) {
+    const signInUrl = new URL('/auth/signin', request.url);
+    signInUrl.searchParams.set('callbackUrl', request.url);
+    return NextResponse.redirect(signInUrl);
+  }
+
+  // 認証済みで認証ページにアクセスした場合はトップページへ
+  if (isAuthPath && token) {
+    return NextResponse.redirect(new URL('/', request.url));
+  }
 
   // レート制限対象パスかチェック
   const isRateLimitedPath = RATE_LIMITED_PATHS.some(path =>
