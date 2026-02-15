@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import { LLMSelector, type LLMProvider } from "@/components/ui/LLMSelector";
 import {
@@ -18,10 +18,12 @@ import {
   Briefcase,
   MessageSquare,
   ThumbsUp,
+  Square,
+  Loader2,
 } from "lucide-react";
 
 type MeetingTemplate = "meeting" | "interview";
-type ProcessingStatus = "idle" | "processing" | "completed" | "error";
+type ProcessingStatus = "idle" | "streaming" | "completed" | "error";
 
 interface TemplateOption {
   id: MeetingTemplate;
@@ -51,9 +53,28 @@ const templates: TemplateOption[] = [
 const SUPPORTED_PROVIDERS: LLMProvider[] = [
   "gemini-25-flash-lite",
   "gemini-30-flash",
+  "grok-41-fast",
+  "grok-4",
 ];
 
 const DEFAULT_PROVIDER: LLMProvider = "gemini-25-flash-lite";
+
+// プロバイダーID変換
+const convertProvider = (uiProvider: LLMProvider): string => {
+  const mapping: Record<LLMProvider, string> = {
+    "gemini-25-flash-lite": "gemini-2.5-flash-lite",
+    "gemini-30-flash": "gemini-3.0-flash",
+    "grok-41-fast": "grok-4.1-fast",
+    "grok-4": "grok-4",
+    "gpt-4o-mini": "gpt-4o-mini",
+    "gpt-5": "gpt-5",
+    "claude-sonnet-45": "claude-sonnet-4.5",
+    "claude-opus-46": "claude-opus-4.6",
+    "perplexity-sonar": "perplexity-sonar",
+    "perplexity-sonar-pro": "perplexity-sonar-pro",
+  };
+  return mapping[uiProvider] || uiProvider;
+};
 
 export default function MeetingNotesPage() {
   const [selectedTemplate, setSelectedTemplate] = useState<MeetingTemplate>("meeting");
@@ -64,31 +85,111 @@ export default function MeetingNotesPage() {
   const [provider, setProvider] = useState<LLMProvider>(DEFAULT_PROVIDER);
   const [copied, setCopied] = useState(false);
   const resultRef = useRef<HTMLDivElement>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
-  const handleProcess = async () => {
+  const handleProcess = useCallback(async () => {
     if (!transcript.trim()) return;
 
-    setStatus("processing");
+    setStatus("streaming");
     setError(null);
+    setResult("");
+
+    // AbortControllerの設定
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    const abortController = new AbortController();
+    abortControllerRef.current = abortController;
 
     try {
-      const response = await fetch("/api/meeting-notes", {
+      const response = await fetch("/api/llm/stream", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          transcript,
-          template: selectedTemplate,
-          provider: provider === "gemini-25-flash-lite" ? "gemini-2.5-flash-lite" : "gemini-3.0-flash",
+          messages: [
+            {
+              role: "system",
+              content: getSystemPrompt(selectedTemplate),
+            },
+            {
+              role: "user",
+              content: `以下のZoom文字起こしテキストを${selectedTemplate === "meeting" ? "会議用" : "面談用"}テンプレートで整形してください：\n\n${transcript}`,
+            },
+          ],
+          provider: convertProvider(provider),
         }),
+        signal: abortController.signal,
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || "処理中にエラーが発生しました");
+        throw new Error(errorData.message || `HTTP error: ${response.status}`);
       }
 
-      const data = await response.json();
-      setResult(data.content);
+      const reader = response.body?.getReader();
+      if (!reader) {
+        throw new Error("Response body is not readable");
+      }
+
+      const decoder = new TextDecoder();
+      let buffer = "";
+      let fullContent = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || "";
+
+        for (const line of lines) {
+          const trimmedLine = line.trim();
+          if (!trimmedLine.startsWith("data: ")) continue;
+
+          const data = trimmedLine.slice(6);
+
+          if (data === "[DONE]") {
+            setStatus("completed");
+            break;
+          }
+
+          try {
+            const parsed = JSON.parse(data);
+
+            if (parsed.error) {
+              throw new Error(parsed.error);
+            }
+
+            if (parsed.content) {
+              fullContent += parsed.content;
+              setResult(fullContent);
+            }
+          } catch {
+            continue;
+          }
+        }
+      }
+
+      // 残りのバッファを処理
+      if (buffer.trim()) {
+        const trimmedLine = buffer.trim();
+        if (trimmedLine.startsWith("data: ")) {
+          const data = trimmedLine.slice(6);
+          if (data !== "[DONE]") {
+            try {
+              const parsed = JSON.parse(data);
+              if (parsed.content) {
+                fullContent += parsed.content;
+                setResult(fullContent);
+              }
+            } catch {
+              // Ignore
+            }
+          }
+        }
+      }
+
       setStatus("completed");
       
       // 結果エリアにスクロール
@@ -96,9 +197,24 @@ export default function MeetingNotesPage() {
         resultRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
       }, 100);
     } catch (err) {
+      if (err instanceof Error && err.name === "AbortError") {
+        // ユーザーによるキャンセル
+        setStatus("completed");
+        return;
+      }
       setError(err instanceof Error ? err.message : "不明なエラーが発生しました");
       setStatus("error");
+    } finally {
+      abortControllerRef.current = null;
     }
+  }, [transcript, selectedTemplate, provider]);
+
+  const handleCancel = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+    setStatus("completed");
   };
 
   const handleCopy = async () => {
@@ -126,6 +242,10 @@ export default function MeetingNotesPage() {
     setResult("");
     setStatus("idle");
     setError(null);
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
   };
 
   const currentTemplate = templates.find((t) => t.id === selectedTemplate)!;
@@ -249,32 +369,32 @@ export default function MeetingNotesPage() {
 
         {/* Process Button */}
         <div className="flex justify-center mb-12">
-          <button
-            onClick={handleProcess}
-            disabled={!transcript.trim() || status === "processing"}
-            className={cn(
-              "flex items-center gap-3 px-8 py-4 rounded-xl font-medium transition-all duration-200",
-              !transcript.trim() || status === "processing"
-                ? "bg-[#2a2a35] text-gray-500 cursor-not-allowed"
-                : "bg-[#ff6b00] text-white hover:bg-[#ff8533] shadow-lg shadow-[#ff6b00]/20 hover:shadow-xl hover:shadow-[#ff6b00]/30"
-            )}
-          >
-            {status === "processing" ? (
-              <>
-                <div className="flex gap-1">
-                  <span className="w-1.5 h-1.5 bg-white rounded-full animate-bounce [animation-delay:-0.3s]" />
-                  <span className="w-1.5 h-1.5 bg-white rounded-full animate-bounce [animation-delay:-0.15s]" />
-                  <span className="w-1.5 h-1.5 bg-white rounded-full animate-bounce" />
-                </div>
-                整形中...
-              </>
-            ) : (
-              <>
-                <Sparkles className="w-5 h-5" />
-                AIで整形する
-              </>
-            )}
-          </button>
+          {status === "streaming" ? (
+            <button
+              onClick={handleCancel}
+              className={cn(
+                "flex items-center gap-3 px-8 py-4 rounded-xl font-medium transition-all duration-200",
+                "bg-red-500 text-white hover:bg-red-600 shadow-lg shadow-red-500/20"
+              )}
+            >
+              <Square className="w-5 h-5" />
+              生成を停止
+            </button>
+          ) : (
+            <button
+              onClick={handleProcess}
+              disabled={!transcript.trim() || status === "streaming"}
+              className={cn(
+                "flex items-center gap-3 px-8 py-4 rounded-xl font-medium transition-all duration-200",
+                !transcript.trim()
+                  ? "bg-[#2a2a35] text-gray-500 cursor-not-allowed"
+                  : "bg-[#ff6b00] text-white hover:bg-[#ff8533] shadow-lg shadow-[#ff6b00]/20 hover:shadow-xl hover:shadow-[#ff6b00]/30"
+              )}
+            >
+              <Sparkles className="w-5 h-5" />
+              AIで整形する
+            </button>
+          )}
         </div>
 
         {/* Error Message */}
@@ -285,15 +405,22 @@ export default function MeetingNotesPage() {
         )}
 
         {/* Result Section */}
-        {result && (
+        {(result || status === "streaming") && (
           <section ref={resultRef} className="animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-sm font-medium text-gray-400 uppercase tracking-wider">
                 整形結果
+                {status === "streaming" && (
+                  <span className="ml-2 inline-flex items-center gap-1 text-green-400">
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                    生成中...
+                  </span>
+                )}
               </h2>
               <div className="flex items-center gap-2">
                 <button
                   onClick={handleCopy}
+                  disabled={!result}
                   className={cn(
                     "flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-all duration-200",
                     copied
@@ -315,7 +442,8 @@ export default function MeetingNotesPage() {
                 </button>
                 <button
                   onClick={handleDownload}
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm bg-[#2a2a35] text-gray-400 hover:text-gray-200 hover:bg-[#3a3a45] transition-all duration-200"
+                  disabled={!result}
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm bg-[#2a2a35] text-gray-400 hover:text-gray-200 hover:bg-[#3a3a45] transition-all duration-200 disabled:opacity-50"
                 >
                   <Download className="w-4 h-4" />
                   Markdown保存
@@ -344,6 +472,9 @@ export default function MeetingNotesPage() {
                       .replace(/\[x\] (.*)/g, '<div class="flex items-center gap-2 my-1"><span class="w-4 h-4 bg-[#ff6b00] rounded flex items-center justify-center text-white text-xs">✓</span><span class="line-through text-gray-500">$1</span></div>')
                   }}
                 />
+                {status === "streaming" && (
+                  <span className="inline-block w-1.5 h-4 bg-[#ff6b00] ml-0.5 animate-pulse" />
+                )}
               </div>
             </div>
           </section>
@@ -429,4 +560,81 @@ function FeatureCard({
       <p className="text-sm text-gray-500">{description}</p>
     </div>
   );
+}
+
+/**
+ * テンプレート別システムプロンプト
+ */
+function getSystemPrompt(template: MeetingTemplate): string {
+  if (template === "meeting") {
+    return `あなたは議事録作成の専門家です。Zoomの文字起こしテキストを、以下の形式で整形してください：
+
+## 出力形式
+
+### 会議情報
+- 日時: [抽出または不明]
+- 参加者: [発言者リスト]
+
+### 議題
+1. [議題1]
+2. [議題2]
+...
+
+### 発言要旨
+**[発言者名]**: [要約された発言内容]
+
+### 決定事項
+- [決定事項1]
+- [決定事項2]
+
+### TODO
+- [ ] [担当者]: [タスク内容]
+- [ ] [担当者]: [タスク内容]
+
+### 次回予定
+- 日時: [抽出または不明]
+- 議題: [抽出または不明]
+
+## 注意事項
+- 発言者名は正確に抽出
+- 発言内容は簡潔に要約
+- TODOは具体的で実行可能な形に
+- 不明な情報は「不明」と記載`;
+  } else {
+    return `あなたは面談記録の専門家です。Zoomの文字起こしテキストを、以下の形式で整形してください：
+
+## 出力形式
+
+### 基本情報
+- 面談日: [抽出または不明]
+- 面談相手: [名前を抽出]
+
+### プロフィール
+- 氏名: [抽出]
+- 職業・肩書: [抽出]
+- 所在地: [抽出]
+- 連絡先: [抽出]
+
+### 経歴・背景
+[面談相手の経歴や背景情報を整理]
+
+### 面談内容
+**[トピック]**: [内容の要約]
+
+### 出演に関する意向
+- 出演可否: [可/不可/検討中]
+- 条件・要望: [抽出]
+- 懸念事項: [抽出]
+
+### フォローアップ事項
+- [ ] [担当者]: [タスク内容]
+
+### 備考
+[その他重要な情報]
+
+## 注意事項
+- 個人情報は適切に扱う
+- 出演意向は明確に記録
+- 次のアクションを具体的に`;
+  }
 }
