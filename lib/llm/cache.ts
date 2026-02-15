@@ -244,3 +244,102 @@ export async function getCacheStats(): Promise<{
     return { totalKeys: 0, providers: {} };
   }
 }
+
+// ============================================================================
+// シンプルキャッシュインターフェース
+// ============================================================================
+
+/**
+ * キャッシュからLLMレスポンスを取得
+ *
+ * @param key - プロンプトハッシュを含むキャッシュキー
+ * @returns キャッシュされたレスポンス（存在しない場合はnull）
+ */
+export async function getCachedResponse(key: string): Promise<LLMResponse | null> {
+  const redis = getRedisClientOrNull();
+  if (!redis) {
+    return null;
+  }
+
+  try {
+    const cacheKey = createCacheKey('llm', key);
+    const data = await redis.get<string>(cacheKey);
+
+    if (!data) {
+      return null;
+    }
+
+    const entry: CacheEntry = JSON.parse(data);
+    return entry.response;
+  } catch (error) {
+    console.error('Failed to get cached response:', error);
+    return null;
+  }
+}
+
+/**
+ * LLMレスポンスをキャッシュに保存
+ *
+ * @param key - プロンプトハッシュを含むキャッシュキー
+ * @param response - LLMレスポンス
+ * @param ttl - 有効期限（秒）、省略時は24時間
+ */
+export async function setCachedResponse(
+  key: string,
+  response: LLMResponse,
+  ttl?: number
+): Promise<void> {
+  const redis = getRedisClientOrNull();
+  if (!redis) {
+    return;
+  }
+
+  try {
+    const cacheKey = createCacheKey('llm', key);
+    const effectiveTtl = ttl ?? CACHE_TTL.LLM_RESPONSE;
+
+    const entry: CacheEntry = {
+      response,
+      cachedAt: new Date().toISOString(),
+      provider: 'gemini-2.5-flash-lite', // デフォルト値（汎用キャッシュ用）
+      promptHash: key.slice(0, 16),
+    };
+
+    await redis.setex(cacheKey, effectiveTtl, JSON.stringify(entry));
+  } catch (error) {
+    console.error('Failed to set cached response:', error);
+  }
+}
+
+/**
+ * キャッシュをクリア
+ *
+ * @param pattern - 削除するキーのパターン（省略時は全LLMキャッシュ）
+ */
+export async function clearCache(pattern?: string): Promise<void> {
+  const redis = getRedisClientOrNull();
+  if (!redis) {
+    return;
+  }
+
+  try {
+    const searchPattern = pattern
+      ? `aihub:llm:*${pattern}*`
+      : 'aihub:llm:*';
+
+    const keys: string[] = [];
+    let cursor = '0';
+
+    do {
+      const result = await redis.scan(cursor, { match: searchPattern, count: 100 });
+      cursor = result[0];
+      keys.push(...result[1]);
+    } while (cursor !== '0');
+
+    if (keys.length > 0) {
+      await redis.del(...keys);
+    }
+  } catch (error) {
+    console.error('Failed to clear cache:', error);
+  }
+}
