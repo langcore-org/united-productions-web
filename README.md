@@ -17,8 +17,17 @@ AI Hubは、テレビ制作現場の様々な業務をAIで支援する統合プ
 | 認証 | NextAuth.js v4 + Google OAuth |
 | データベース | PostgreSQL (Neon) + Prisma |
 | キャッシュ | Upstash Redis |
-| LLM統合 | Google Gemini, xAI Grok, Perplexity |
+| LLM統合 | Google Gemini, xAI Grok, Perplexity, OpenAI, Anthropic |
 | デプロイ | Vercel |
+
+## 開発状況
+
+| Wave | 内容 | 状態 |
+|------|------|------|
+| Wave 1 | 基盤構築（認証、DB、LLM Factory） | ✅ 完了 |
+| Wave 2 | UI/LLM連携（shadcn/ui、各LLMクライアント） | ✅ 完了 |
+| Wave 3 | 機能実装（PJ-A/B/C/D、Drive連携） | ✅ 完了 |
+| Wave 4 | 統合・最適化（キャッシュ、テスト、デプロイ） | 🔄 進行中 |
 
 ## 機能一覧
 
@@ -183,6 +192,8 @@ npx prisma studio        # DB GUI
 - [アーキテクチャ設計](./docs/ARCHITECTURE.md)
 - [API仕様書](./docs/API.md)
 - [デプロイ手順](./docs/DEPLOYMENT.md)
+- [Google OAuth設定](./docs/GOOGLE_OAUTH_SETUP.md)
+- [実装サマリー](./docs/logs/SUMMARY.md)
 
 ## ライセンス
 

@@ -8,7 +8,7 @@
 
 ## 実装済み機能
 
-### ✅ Wave 1: 基盤構築（完了）
+### ✅ Wave 1: 基盤構築（完了 - 2026年2月）
 
 #### プロジェクト構造
 - Next.js 16 + App Router + TypeScript
@@ -41,11 +41,11 @@
 - レート制限管理（RPM/RPD）
 
 **実装済みクライアント:**
-- ✅ Gemini 2.5 Flash-Lite / 3.0 Flash
-- ✅ Grok 4.1 Fast / Grok 4
-- ✅ Perplexity Sonar / Sonar Pro
-- ⏳ OpenAI GPT-4o-mini / GPT-5（Wave 2）
-- ⏳ Anthropic Claude Sonnet 4.5 / Opus 4.6（Wave 2）
+- ✅ Gemini 2.5 Flash-Lite / 3.0 Flash（動作確認済み）
+- ✅ Grok 4.1 Fast / Grok 4（Grok 4.1 Fast動作確認済み）
+- ✅ Perplexity Sonar / Sonar Pro（Sonar動作確認済み）
+- ✅ OpenAI GPT-4o-mini / GPT-5（実装済み、動作確認待ち）
+- ✅ Anthropic Claude Sonnet 4.5 / Opus 4.6（実装済み、動作確認待ち）
 
 #### APIエンドポイント
 
@@ -186,16 +186,38 @@ agent1/
 | xAI Grok | $0.20-$3.00/1M tokens | PJ-C X検索 |
 | Perplexity | $1.00-$2.00/1M tokens | PJ-C エビデンス検索 |
 
+### ✅ Wave 3: 機能実装（完了 - 2026年2月16日）
+
+| 機能 | 説明 | 状態 |
+|------|------|------|
+| PJ-A: 議事録・文字起こし | Zoom文字起こし→AI整形 | ✅ 完了 |
+| PJ-B: 起こし・NA原稿 | Premiere Pro書き起こし→NA原稿 | ✅ 完了 |
+| PJ-C: リサーチ・考査 | 人探し/エビデンス/ロケ地検索 | ✅ 完了 |
+| PJ-D: ロケスケ管理 | マスター編集→各種表自動生成 | ✅ 完了 |
+| Google Drive連携 | Driveファイル検索・参照 | ✅ 完了 |
+
+### 🔄 Wave 4: 統合・最適化（進行中）
+
+| タスク | 説明 | 状態 |
+|--------|------|------|
+| キャッシュ実装 | Upstash Redisによるレスポンスキャッシュ | ✅ 完了 |
+| E2Eテスト | 統合テスト・品質保証 | ⏳ 未開始 |
+| Vercelデプロイ | 本番環境へのデプロイ | ⏳ 未開始 |
+
 ## 今後のロードマップ
 
-### Wave 2（予定）
-- [ ] OpenAIクライアント実装（GPT-4o-mini, GPT-5）
-- [ ] Anthropicクライアント実装（Claude Sonnet 4.5, Opus 4.6）
-- [ ] ファイルアップロード機能（PDF, 画像）
-- [ ] 高度なエラーハンドリング
+### Wave 4（進行中）
+- [x] LLMレスポンスキャッシュ（Upstash Redis）
+- [ ] E2Eテスト実装
+- [ ] Vercel本番デプロイ
 - [ ] 使用状況ダッシュボード
 
-### Wave 3（予定）
+### Wave 5（予定）
+- [ ] OpenAI/Anthropicクライアントの動作確認
+- [ ] ファイルアップロード機能（PDF, 画像）
+- [ ] 高度なエラーハンドリング
+
+### Wave 6（予定）
 - [ ] チーム機能（権限管理）
 - [ ] プロジェクト共有
 - [ ] Webhook連携
@@ -208,8 +230,14 @@ agent1/
 [DOCS] ARCHITECTURE.md - アーキテクチャ図・設計
 [DOCS] API.md - API仕様書
 [DOCS] DEPLOYMENT.md - デプロイ手順（Vercel）
+[DOCS] GOOGLE_OAUTH_SETUP.md - OAuth設定ガイド
 [DOCS] .env.example - 環境変数テンプレート更新
 [DOCS] docs/logs/SUMMARY.md - 実装サマリー
+[DOCS] docs/initial_dev/ - 開発計画・設計書更新
+[FEATURE] Wave 1: 基盤構築（認証、DB、LLM Factory）
+[FEATURE] Wave 2: UI/LLM連携（shadcn/ui、各LLMクライアント）
+[FEATURE] Wave 3: 機能実装（PJ-A/B/C/D、Drive連携）
+[FEATURE] Wave 4: キャッシュ実装（Upstash Redis）
 ```
 
 ## 開発チーム
@@ -219,4 +247,4 @@ United Productions
 ---
 
 **最終更新日**: 2026年2月16日
-**バージョン**: 0.1.0
+**バージョン**: 0.9.0（Wave 3完了、Wave 4進行中）

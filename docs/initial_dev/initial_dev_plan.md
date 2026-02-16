@@ -19,16 +19,17 @@
 - [x] llm-grok → Grok 4.1 Fast動作確認
 - [x] llm-perplexity → Perplexity Sonar動作確認
 
-### 🔄 Wave 3: 機能実装（進行中）
-- [x] pj-a-meeting → 議事録機能（実装中）
-- [x] pj-b-transcript → 書き起こし機能（実装中）
-- [x] pj-c-research → リサーチ機能（実装中）
-- [ ] pj-d-schedule → ロケスケ機能（未開始）
-- [ ] google-drive → Drive連携（未開始）
+### ✅ Wave 3: 機能実装（完了）
+- [x] pj-a-meeting → 議事録機能（完了）
+- [x] pj-b-transcript → 書き起こし機能（完了）
+- [x] pj-c-research → リサーチ機能（完了）
+- [x] pj-d-schedule → ロケスケ機能（完了）
+- [x] google-drive → Drive連携（完了）
 
-### ⏳ Wave 4: 統合・最適化（未開始）
-- [ ] optimization → キャッシュ実装
-- [ ] testing → E2Eテスト
+### 🔄 Wave 4: 統合・最適化（進行中）
+- [x] optimization → キャッシュ実装（完了）
+- [ ] testing → E2Eテスト（未開始）
+- [ ] deployment → 本番デプロイ（未開始）
 
 ---
 
@@ -526,36 +527,38 @@ model UsageLog {
 
 **完了条件**: LLM切り替えが動作
 
-### Wave 3: 機能実装（Wave 2 完了後に並列実行）
+### Wave 3: 機能実装（Wave 2 完了後に並列実行）✅ 完了
 
-| エージェント | 成果物 | 依存 |
-|-------------|--------|------|
-| `pj-a-meeting` | `src/components/meeting-notes/` | design-system, llm-gemini |
-| `pj-b-transcript` | `src/components/transcripts/` | design-system, llm-gemini |
-| `pj-c-research` | `src/components/research/` | design-system, llm-grok, llm-perplexity |
-| `pj-d-schedule` | `src/components/location-schedule/` | design-system, llm-gemini |
-| `google-drive` | `src/lib/google/drive.ts` | auth-api |
+| エージェント | 成果物 | 依存 | 状態 |
+|-------------|--------|------|------|
+| `pj-a-meeting` | `app/meeting-notes/`, `components/meeting-notes/` | design-system, llm-gemini | ✅ 完了 |
+| `pj-b-transcript` | `app/transcripts/`, `components/transcripts/` | design-system, llm-gemini | ✅ 完了 |
+| `pj-c-research` | `app/research/`, `components/research/` | design-system, llm-grok, llm-perplexity | ✅ 完了 |
+| `pj-d-schedule` | `app/schedules/`, `components/schedules/` | design-system, llm-gemini | ✅ 完了 |
+| `google-drive` | `lib/google/drive.ts` | auth-api | ✅ 完了 |
 
-**完了条件**: 全PJが動作
+**完了条件**: 全PJが動作 ✅
 
-### Wave 4: 統合・最適化（必要に応じて）
+### Wave 4: 統合・最適化（進行中）
 
-| エージェント | 成果物 | 依存 |
-|-------------|--------|------|
-| `optimization` | キャッシュ実装 | 全機能 |
-| `testing` | テスト・バグ修正 | 全機能 |
+| エージェント | 成果物 | 依存 | 状態 |
+|-------------|--------|------|------|
+| `optimization` | キャッシュ実装 | 全機能 | ✅ 完了 |
+| `testing` | テスト・バグ修正 | 全機能 | ⏳ 未開始 |
+| `deployment` | Vercel本番デプロイ | 全機能 | ⏳ 未開始 |
 
-- LLMレスポンスキャッシュ実装
-- 使用量モニタリング
-- バグ修正・最適化
+- ✅ LLMレスポンスキャッシュ実装（Upstash Redis）
+- ✅ 使用量モニタリング（UsageLogモデル）
+- ⏳ E2Eテスト実装
+- ⏳ Vercel本番デプロイ
 
 ---
 
 ## 🎯 次のアクション
 
-1. **Wave 3完了**: pj-d-scheduleとgoogle-driveを並列で実装
-2. **Wave 4開始**: キャッシュ実装と統合テスト
-3. **Vercelデプロイ**: 本番環境へのデプロイ
+1. **Wave 4完了**: E2Eテスト実装
+2. **Vercelデプロイ**: 本番環境へのデプロイ
+3. **運用開始**: チームへの展開
 
 ---
 
@@ -616,11 +619,13 @@ model UsageLog {
 - [x] Perplexity Sonar → エビデンス付き回答確認
 - [x] LLM選択UI → 切り替え動作確認
 
-### Wave 3 完了時（機能実装）
+### Wave 3 完了時（機能実装）✅
 
 - [x] PJ-A/B/D → Gemini無料枠で動作
 - [x] PJ-B → テキスト貼り付けのみで動作（映像アップロード不要）
 - [x] PJ-C → 人探し・エビデンス検索が動作
+- [x] PJ-D → ロケスケ機能が動作
+- [x] Google Drive → Drive連携が動作
 
 ### Wave 4 完了時（統合・最適化）
 

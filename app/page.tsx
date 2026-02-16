@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { cn } from "/lib/utils";
-import { Sidebar } from "/components/layout/Sidebar";
+import { cn } from "@/lib/utils";
+import { Sidebar } from "@/components/layout/Sidebar";
 import { FileText, Mic, Search, Calendar, AtSign, Send } from "lucide-react";
 import Link from "next/link";
 
