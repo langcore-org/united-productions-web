@@ -46,49 +46,57 @@
   --radius-3xl: calc(var(--radius) + 12px);
   --radius-4xl: calc(var(--radius) + 16px);
   
-  /* Grok UI Custom Colors */
-  --color-grok-bg: #0d0d12;
-  --color-grok-card: #1a1a24;
-  --color-grok-border: #2a2a35;
-  --color-grok-accent: #ff6b00;
-  --color-grok-thinking: #22c55e;
-  --color-grok-user: #3b82f6;
+  /* Grok UI Colors - Light Mode Default */
+  --color-grok-bg: #ffffff;
+  --color-grok-sidebar: #f9f9f9;
+  --color-grok-card: #ffffff;
+  --color-grok-border: #e5e5e5;
+  --color-grok-border-hover: #d4d4d4;
+  --color-grok-text: #1a1a1a;
+  --color-grok-text-secondary: #6b7280;
+  --color-grok-text-muted: #9ca3af;
+  --color-grok-accent: #000000;
+  --color-grok-accent-hover: #333333;
+  --color-grok-button-bg: #f3f4f6;
+  --color-grok-button-hover: #e5e7eb;
+  --color-grok-input-bg: #f9f9f9;
+  --color-grok-hover: #f3f4f6;
 }
 
 :root {
-  --radius: 0.625rem;
-  /* Grok UI Dark Theme as Default */
-  --background: #0d0d12;
-  --foreground: #f8f8f8;
-  --card: #1a1a24;
-  --card-foreground: #f8f8f8;
-  --popover: #1a1a24;
-  --popover-foreground: #f8f8f8;
-  --primary: #ff6b00;
+  --radius: 0.75rem;
+  /* Grok UI Light Theme as Default */
+  --background: #ffffff;
+  --foreground: #1a1a1a;
+  --card: #ffffff;
+  --card-foreground: #1a1a1a;
+  --popover: #ffffff;
+  --popover-foreground: #1a1a1a;
+  --primary: #000000;
   --primary-foreground: #ffffff;
-  --secondary: #2a2a35;
-  --secondary-foreground: #f8f8f8;
-  --muted: #2a2a35;
-  --muted-foreground: #9ca3af;
-  --accent: #ff6b00;
+  --secondary: #f3f4f6;
+  --secondary-foreground: #1a1a1a;
+  --muted: #f3f4f6;
+  --muted-foreground: #6b7280;
+  --accent: #000000;
   --accent-foreground: #ffffff;
   --destructive: #ef4444;
-  --border: #2a2a35;
-  --input: #2a2a35;
-  --ring: #ff6b00;
-  --chart-1: #ff6b00;
-  --chart-2: #3b82f6;
+  --border: #e5e5e5;
+  --input: #e5e5e5;
+  --ring: #000000;
+  --chart-1: #000000;
+  --chart-2: #6b7280;
   --chart-3: #22c55e;
   --chart-4: #a855f7;
   --chart-5: #f59e0b;
-  --sidebar: #1a1a24;
-  --sidebar-foreground: #f8f8f8;
-  --sidebar-primary: #ff6b00;
+  --sidebar: #f9f9f9;
+  --sidebar-foreground: #1a1a1a;
+  --sidebar-primary: #000000;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #2a2a35;
-  --sidebar-accent-foreground: #f8f8f8;
-  --sidebar-border: #2a2a35;
-  --sidebar-ring: #ff6b00;
+  --sidebar-accent: #f3f4f6;
+  --sidebar-accent-foreground: #1a1a1a;
+  --sidebar-border: #e5e5e5;
+  --sidebar-ring: #000000;
 }
 
 .dark {
@@ -137,24 +145,76 @@
 /* Grok UI Custom Utilities */
 @layer utilities {
   .grok-bg {
-    background-color: #0d0d12;
+    background-color: #ffffff;
+  }
+  .grok-sidebar {
+    background-color: #f9f9f9;
   }
   .grok-card {
-    background-color: #1a1a24;
+    background-color: #ffffff;
   }
   .grok-border {
-    border-color: #2a2a35;
+    border-color: #e5e5e5;
+  }
+  .grok-text {
+    color: #1a1a1a;
+  }
+  .grok-text-secondary {
+    color: #6b7280;
+  }
+  .grok-text-muted {
+    color: #9ca3af;
   }
   .grok-accent {
-    color: #ff6b00;
+    color: #000000;
   }
   .grok-accent-bg {
-    background-color: #ff6b00;
+    background-color: #000000;
   }
-  .grok-thinking {
-    color: #22c55e;
+  .grok-button-bg {
+    background-color: #f3f4f6;
   }
-  .grok-user {
-    background-color: #3b82f6;
+  .grok-button-hover {
+    background-color: #e5e7eb;
   }
+  .grok-input-bg {
+    background-color: #f9f9f9;
+  }
+  .grok-hover {
+    background-color: #f3f4f6;
+  }
+}
+
+/* Custom Scrollbar - Grok Style */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 3px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+/* Animation for thinking indicator */
+@keyframes pulse-dot {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-pulse-dot {
+  animation: pulse-dot 1.5s ease-in-out infinite;
+}
+
+/* Smooth transitions */
+.transition-grok {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
