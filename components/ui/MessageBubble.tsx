@@ -52,7 +52,7 @@ export function MessageBubble({
   return (
     <div
       className={cn(
-        "flex gap-4 py-4 px-4",
+        "flex gap-3 py-4 px-4",
         isUser ? "flex-row-reverse" : "flex-row",
         className
       )}
@@ -61,7 +61,9 @@ export function MessageBubble({
       <div
         className={cn(
           "flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center",
-          isUser ? "bg-[#3b82f6]" : "bg-[#1a1a24] border border-[#2a2a35]"
+          isUser 
+            ? "bg-[#ff6b00]" 
+            : "bg-[#1a1a24] border border-[#2a2a35]"
         )}
       >
         {isUser ? (
@@ -72,40 +74,37 @@ export function MessageBubble({
       </div>
 
       {/* Content */}
-      <div className={cn("flex-1 max-w-[80%]", isUser ? "items-end" : "items-start")}>
-        {/* Header */}
+      <div className={cn("flex flex-col max-w-[75%]", isUser ? "items-end" : "items-start")}>
+        {/* Message Bubble */}
         <div
           className={cn(
-            "flex items-center gap-2 mb-1",
+            "rounded-2xl px-4 py-3 text-sm leading-relaxed",
+            isUser
+              ? "bg-[#ff6b00] text-white rounded-tr-sm"
+              : "bg-[#1a1a24] border border-[#2a2a35] text-gray-100 rounded-tl-sm"
+          )}
+        >
+          {content}
+        </div>
+
+        {/* Meta Info - Timestamp & Provider */}
+        <div
+          className={cn(
+            "flex items-center gap-2 mt-1.5",
             isUser ? "justify-end" : "justify-start"
           )}
         >
-          <span className="text-sm font-medium text-gray-300">
-            {isUser ? "ユーザー" : "AI Assistant"}
-          </span>
-          {llmProvider && !isUser && (
-            <span className="text-xs px-2 py-0.5 rounded-full bg-[#2a2a35] text-[#ff6b00]">
-              {providerLabels[llmProvider]}
-            </span>
-          )}
           <span className="text-xs text-gray-500">
             {timestamp.toLocaleTimeString("ja-JP", {
               hour: "2-digit",
               minute: "2-digit",
             })}
           </span>
-        </div>
-
-        {/* Message Bubble */}
-        <div
-          className={cn(
-            "rounded-2xl px-4 py-3 text-sm leading-relaxed",
-            isUser
-              ? "bg-[#3b82f6] text-white rounded-tr-sm"
-              : "bg-[#1a1a24] border border-[#2a2a35] text-gray-100 rounded-tl-sm"
+          {llmProvider && !isUser && (
+            <span className="text-xs text-[#ff6b00]">
+              · {providerLabels[llmProvider]}
+            </span>
           )}
-        >
-          {content}
         </div>
 
         {/* Thinking Indicator */}
