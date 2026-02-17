@@ -3,12 +3,39 @@
  * AI Hub - United Productions 制作支援統合プラットフォーム
  * 
  * Google Workspace SSO認証 + Drive API連携
+ * 
+ * 【Vercelプレビュー環境対応】
+ * - NEXTAUTH_URL: 本番環境では自動設定、ローカルでは明示的に設定
+ * - AUTH_TRUST_HOST: Vercel環境でtrueに設定（複数ホスト対応）
  */
 
 import type { NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "./prisma";
+
+/**
+ * 現在のホストURLを取得（Vercelプレビュー環境対応）
+ */
+function getNextAuthUrl(): string {
+  // 1. 明示的に設定されたNEXTAUTH_URLを優先
+  if (process.env.NEXTAUTH_URL) {
+    return process.env.NEXTAUTH_URL;
+  }
+  
+  // 2. Vercel本番環境
+  if (process.env.VERCEL_PROJECT_PRODUCTION_URL) {
+    return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`;
+  }
+  
+  // 3. Vercelプレビュー環境（ブランチデプロイなど）
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`;
+  }
+  
+  // 4. フォールバック（ローカル開発用）
+  return "http://localhost:3000";
+}
 
 /**
  * NextAuth設定オプション
@@ -19,6 +46,9 @@ import { prisma } from "./prisma";
  */
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
+  
+  // Vercel環境で複数ホスト（プレビューURL）を信頼する
+  trustHost: process.env.VERCEL_ENV === "preview" || process.env.VERCEL_ENV === "production" || process.env.AUTH_TRUST_HOST === "true",
   
   providers: [
     GoogleProvider({
