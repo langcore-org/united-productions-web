@@ -7,10 +7,12 @@
  * 【Vercelプレビュー環境対応】
  * - NEXTAUTH_URL: 本番環境では自動設定、ローカルでは明示的に設定
  * - AUTH_TRUST_HOST: Vercel環境でtrueに設定（複数ホスト対応）
+ * - Preview環境ではCredentialsProviderを追加（E2Eテスト用）
  */
 
 import type { NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
+import CredentialsProvider from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "./prisma";
 
@@ -38,9 +40,70 @@ function getNextAuthUrl(): string {
 }
 
 /**
+ * 認証プロバイダーの動的構築
+ * - 通常環境: GoogleProviderのみ
+ * - Preview環境: GoogleProvider + CredentialsProvider（E2Eテスト用）
+ */
+const providers: NextAuthOptions["providers"] = [
+  GoogleProvider({
+    clientId: process.env.GOOGLE_CLIENT_ID!,
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+    authorization: {
+      params: {
+        scope: [
+          "openid",
+          "email",
+          "profile",
+          "https://www.googleapis.com/auth/drive.readonly",
+        ].join(" "),
+        prompt: "consent",
+        access_type: "offline",
+        response_type: "code",
+      },
+    },
+  }),
+];
+
+// Preview環境の場合のみCredentialsProviderを追加
+if (process.env.VERCEL_ENV === "preview") {
+  providers.push(
+    CredentialsProvider({
+      id: "preview-credentials",
+      name: "Preview E2E Credentials",
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" },
+      },
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) {
+          return null;
+        }
+
+        const { email, password } = credentials;
+
+        // 環境変数と照合
+        if (
+          email === process.env.PREVIEW_E2E_USER &&
+          password === process.env.PREVIEW_E2E_PASS
+        ) {
+          return {
+            id: "preview-e2e-user",
+            email,
+            name: "Preview E2E User",
+            role: "e2e",
+          };
+        }
+
+        return null;
+      },
+    })
+  );
+}
+
+/**
  * NextAuth設定オプション
  * 
- * 認証プロバイダー: Google OAuth 2.0
+ * 認証プロバイダー: Google OAuth 2.0 (+ Preview環境ではCredentials)
  * アダプター: Prisma（PostgreSQL）
  * スコープ: openid, email, profile, drive.readonly
  */
@@ -50,25 +113,7 @@ export const authOptions: NextAuthOptions = {
   // Vercel環境で複数ホスト（プレビューURL）を信頼する
   trustHost: process.env.VERCEL_ENV === "preview" || process.env.VERCEL_ENV === "production" || process.env.AUTH_TRUST_HOST === "true",
   
-  providers: [
-    GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-      authorization: {
-        params: {
-          scope: [
-            "openid",
-            "email",
-            "profile",
-            "https://www.googleapis.com/auth/drive.readonly",
-          ].join(" "),
-          prompt: "consent",
-          access_type: "offline",
-          response_type: "code",
-        },
-      },
-    }),
-  ],
+  providers,
 
   /**
    * セッション設定
@@ -96,6 +141,11 @@ export const authOptions: NextAuthOptions = {
           ? account.expires_at * 1000
           : Date.now() + 3600 * 1000;
         token.userId = user.id;
+
+        // Preview Credentialsの場合はroleをセット
+        if (account.provider === "preview-credentials") {
+          token.role = "e2e";
+        }
       }
 
       // アクセストークンが有効期限内ならそのまま返す
@@ -116,6 +166,11 @@ export const authOptions: NextAuthOptions = {
       if (token && session.user) {
         session.user.id = token.userId as string;
         session.accessToken = token.accessToken as string;
+        
+        // token.roleがあればsession.user.roleに渡す
+        if (token.role) {
+          session.user.role = token.role as string;
+        }
       }
       return session;
     },

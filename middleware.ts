@@ -21,17 +21,30 @@ const AUTH_PATHS = [
   '/auth/error',
 ];
 
+// Preview環境判定
+const isPreviewEnv = process.env.VERCEL_ENV === 'preview';
+
 export function middleware(request: NextRequest): NextResponse {
   const url = new URL(request.url);
   const { pathname } = url;
+
+  // Preview Loginページへのアクセス制御
+  if (pathname.startsWith('/preview-login')) {
+    // Preview環境でない場合はアクセスをブロック
+    if (!isPreviewEnv) {
+      // 404ページまたはトップページへリダイレクト
+      return NextResponse.redirect(new URL('/', request.url));
+    }
+  }
 
   // 保護されたパスかチェック
   const isProtectedPath = PROTECTED_PATHS.some(path =>
     pathname.startsWith(path)
   );
-  const isAuthPath = AUTH_PATHS.some(path =>
-    pathname.startsWith(path)
-  );
+  
+  // Preview環境では /preview-login も認証パスとして扱う
+  const isAuthPath = AUTH_PATHS.some(path => pathname.startsWith(path)) ||
+                     (isPreviewEnv && pathname.startsWith('/preview-login'));
 
   // セッションCookieの存在をチェック（簡易認証チェック）
   const sessionCookie = request.cookies.get('next-auth.session-token') || 
@@ -62,5 +75,6 @@ export const config = {
     '/schedules/:path*',
     '/settings/:path*',
     '/auth/:path*',
+    '/preview-login',
   ],
 };
