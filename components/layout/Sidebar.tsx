@@ -8,18 +8,17 @@ import {
   Calendar,
   Settings,
   LogOut,
-  ChevronLeft,
-  ChevronRight,
   History,
   MessageSquare,
   Plus,
-  MoreHorizontal,
-  Trash2,
   Edit3,
+  Trash2,
+  Menu,
+  X,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface SidebarProps {
   className?: string;
@@ -109,40 +108,92 @@ const mockHistory: HistorySection[] = [
 
 export function Sidebar({ className }: SidebarProps) {
   const pathname = usePathname();
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
   const [hoveredHistoryId, setHoveredHistoryId] = useState<string | null>(null);
 
-  return (
-    <aside
-      className={cn(
-        "flex flex-col h-screen bg-[#0d0d12] border-r border-[#2a2a35]/60",
-        "transition-all duration-300 ease-out",
-        isCollapsed ? "w-[68px]" : "w-[280px]",
-        className
-      )}
-    >
-      {/* Logo Area */}
-      <div className="flex items-center h-14 px-3 border-b border-[#2a2a35]/60">
-        <div className="flex items-center gap-2.5 overflow-hidden">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#ff6b00] to-[#ff8533] flex items-center justify-center flex-shrink-0 shadow-lg shadow-[#ff6b00]/20">
-            <span className="text-white font-bold text-sm">UP</span>
-          </div>
-          {!isCollapsed && (
-            <div className="flex flex-col min-w-0">
-              <span className="text-white font-semibold text-sm tracking-tight">AI Hub</span>
-              <span className="text-gray-500 text-[10px] truncate">United Productions</span>
-            </div>
-          )}
-        </div>
-      </div>
+  // 画面サイズが変更された時にサイドバーを閉じる
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 1024) {
+        setIsOpen(false);
+      }
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
-      {/* New Chat Button */}
-      {!isCollapsed && (
-        <div className="px-3 pt-3 pb-2">
+  // ナビゲーション時にサイドバーを閉じる
+  useEffect(() => {
+    setIsOpen(false);
+  }, [pathname]);
+
+  return (
+    <>
+      {/* Hamburger Menu Button */}
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className={cn(
+          "fixed top-4 left-4 z-50 w-10 h-10 rounded-lg",
+          "flex items-center justify-center",
+          "bg-white border border-[#e5e5e5] shadow-sm",
+          "text-[#1a1a1a] hover:bg-[#f9f9f9]",
+          "transition-all duration-200 ease-out",
+          isOpen && "opacity-0 pointer-events-none"
+        )}
+        aria-label="メニューを開く"
+      >
+        <Menu className="w-5 h-5" />
+      </button>
+
+      {/* Overlay */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black/20 z-40"
+          onClick={() => setIsOpen(false)}
+        />
+      )}
+
+      {/* Sidebar */}
+      <aside
+        className={cn(
+          "fixed top-0 left-0 z-50 h-screen w-[280px]",
+          "flex flex-col",
+          "bg-[#f9f9f9] border-r border-[#e5e5e5]",
+          "transition-transform duration-300 ease-out",
+          isOpen ? "translate-x-0" : "-translate-x-full",
+          className
+        )}
+      >
+        {/* Header with Close Button */}
+        <div className="flex items-center justify-between h-14 px-4 border-b border-[#e5e5e5] bg-white">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#ff6b00] to-[#ff8533] flex items-center justify-center flex-shrink-0">
+              <span className="text-white font-bold text-sm">UP</span>
+            </div>
+            <div className="flex flex-col min-w-0">
+              <span className="text-[#1a1a1a] font-semibold text-sm tracking-tight">AI Hub</span>
+              <span className="text-[#6b7280] text-[10px] truncate">United Productions</span>
+            </div>
+          </div>
+          <button
+            onClick={() => setIsOpen(false)}
+            className={cn(
+              "w-8 h-8 rounded-lg flex items-center justify-center",
+              "text-[#6b7280] hover:bg-[#f0f0f0] hover:text-[#1a1a1a]",
+              "transition-all duration-200"
+            )}
+            aria-label="メニューを閉じる"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* New Chat Button */}
+        <div className="px-3 pt-3 pb-2 bg-[#f9f9f9]">
           <button
             className={cn(
               "w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl",
-              "bg-[#1a1a24] hover:bg-[#252532] border border-[#2a2a35]/80",
+              "bg-white hover:bg-[#f0f0f0] border border-[#e5e5e5]",
               "transition-all duration-200 ease-out",
               "group"
             )}
@@ -150,85 +201,58 @@ export function Sidebar({ className }: SidebarProps) {
             <div className="w-5 h-5 rounded-md bg-gradient-to-br from-[#ff6b00] to-[#ff8533] flex items-center justify-center flex-shrink-0">
               <Plus className="w-3 h-3 text-white" />
             </div>
-            <span className="text-sm font-medium text-gray-200">新規チャット</span>
+            <span className="text-sm font-medium text-[#1a1a1a]">新規チャット</span>
           </button>
         </div>
-      )}
 
-      {/* Collapsed New Chat Button */}
-      {isCollapsed && (
-        <div className="flex justify-center py-3">
-          <button
-            className={cn(
-              "w-10 h-10 rounded-xl flex items-center justify-center",
-              "bg-gradient-to-br from-[#ff6b00] to-[#ff8533]",
-              "hover:shadow-lg hover:shadow-[#ff6b00]/25 hover:scale-105",
-              "transition-all duration-200 ease-out"
-            )}
-            title="新規チャット"
-          >
-            <Plus className="w-5 h-5 text-white" />
-          </button>
-        </div>
-      )}
+        {/* Navigation */}
+        <nav className="flex-1 overflow-hidden flex flex-col min-h-0 bg-[#f9f9f9]">
+          {/* Main Nav Items */}
+          <div className="px-2 py-2 space-y-0.5 flex-shrink-0">
+            {navItems.map((item) => {
+              const isActive = pathname === item.href || pathname?.startsWith(item.href + "/");
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={cn(
+                    "flex items-center gap-3 px-3 py-2 rounded-xl",
+                    "transition-all duration-200 ease-out",
+                    "group relative overflow-hidden",
+                    isActive
+                      ? "bg-white text-[#ff6b00] border border-[#e5e5e5]"
+                      : "text-[#6b7280] hover:bg-white hover:text-[#1a1a1a]"
+                  )}
+                >
+                  {/* Active indicator */}
+                  {isActive && (
+                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-[#ff6b00] rounded-r-full" />
+                  )}
+                  <span className={cn(
+                    "flex-shrink-0 transition-transform duration-200",
+                    isActive ? "text-[#ff6b00]" : "group-hover:scale-110"
+                  )}>
+                    {item.icon}
+                  </span>
+                  <span className="text-sm font-medium flex-1 truncate">{item.label}</span>
+                  {item.badge && (
+                    <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-[#ff6b00]/10 text-[#ff6b00] font-medium">
+                      {item.badge}
+                    </span>
+                  )}
+                </Link>
+              );
+            })}
+          </div>
 
-      {/* Navigation */}
-      <nav className="flex-1 overflow-hidden flex flex-col min-h-0">
-        {/* Main Nav Items */}
-        <div className="px-2 py-2 space-y-0.5 flex-shrink-0">
-          {navItems.map((item) => {
-            const isActive = pathname === item.href || pathname?.startsWith(item.href + "/");
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  "flex items-center gap-3 px-3 py-2 rounded-xl",
-                  "transition-all duration-200 ease-out",
-                  "group relative overflow-hidden",
-                  isActive
-                    ? "bg-[#ff6b00]/10 text-[#ff6b00]"
-                    : "text-gray-400 hover:bg-[#1a1a24] hover:text-gray-200"
-                )}
-                title={isCollapsed ? item.label : undefined}
-              >
-                {/* Active indicator */}
-                {isActive && (
-                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-[#ff6b00] rounded-r-full" />
-                )}
-                <span className={cn(
-                  "flex-shrink-0 transition-transform duration-200",
-                  isActive ? "text-[#ff6b00]" : "group-hover:scale-110"
-                )}>
-                  {item.icon}
-                </span>
-                {!isCollapsed && (
-                  <>
-                    <span className="text-sm font-medium flex-1 truncate">{item.label}</span>
-                    {item.badge && (
-                      <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-[#ff6b00]/15 text-[#ff6b00] font-medium">
-                        {item.badge}
-                      </span>
-                    )}
-                  </>
-                )}
-                {isCollapsed && item.badge && (
-                  <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-[#ff6b00]" />
-                )}
-              </Link>
-            );
-          })}
-        </div>
-
-        {/* History Section */}
-        <div className={cn("flex-1 min-h-0 overflow-hidden", isCollapsed ? "mt-2" : "mt-4")}>
-          {!isCollapsed ? (
+          {/* History Section */}
+          <div className="flex-1 min-h-0 overflow-hidden mt-4">
             <div className="h-full flex flex-col">
               {/* History Header */}
               <div className="flex items-center justify-between px-3 mb-2 flex-shrink-0">
                 <div className="flex items-center gap-2">
-                  <History className="w-3.5 h-3.5 text-gray-500" />
-                  <span className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">
+                  <History className="w-3.5 h-3.5 text-[#6b7280]" />
+                  <span className="text-[11px] font-semibold text-[#6b7280] uppercase tracking-wider">
                     履歴
                   </span>
                 </div>
@@ -239,7 +263,7 @@ export function Sidebar({ className }: SidebarProps) {
                 {mockHistory.map((section) => (
                   <div key={section.label}>
                     <div className="px-1.5 mb-1.5">
-                      <span className="text-[10px] font-medium text-gray-600">{section.label}</span>
+                      <span className="text-[10px] font-medium text-[#9ca3af]">{section.label}</span>
                     </div>
                     <div className="space-y-0.5">
                       {section.items.map((item) => (
@@ -252,15 +276,15 @@ export function Sidebar({ className }: SidebarProps) {
                           <button
                             className={cn(
                               "w-full flex items-center gap-2 px-2.5 py-2 rounded-lg",
-                              "text-left text-[13px] text-gray-400",
-                              "hover:bg-[#1a1a24] hover:text-gray-200",
+                              "text-left text-[13px] text-[#6b7280]",
+                              "hover:bg-white hover:text-[#1a1a1a]",
                               "transition-all duration-150 ease-out"
                             )}
                             title={item.title}
                           >
                             <MessageSquare className={cn(
                               "w-3.5 h-3.5 flex-shrink-0 transition-colors duration-150",
-                              hoveredHistoryId === item.id ? "text-[#ff6b00]" : "text-gray-600"
+                              hoveredHistoryId === item.id ? "text-[#ff6b00]" : "text-[#9ca3af]"
                             )} />
                             <span className="truncate flex-1">{item.title}</span>
                           </button>
@@ -268,18 +292,18 @@ export function Sidebar({ className }: SidebarProps) {
                           {/* Hover Actions */}
                           <div className={cn(
                             "absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-0.5",
-                            "bg-[#1a1a24] rounded-md px-1",
+                            "bg-white rounded-md px-1 shadow-sm border border-[#e5e5e5]",
                             "transition-all duration-150",
                             hoveredHistoryId === item.id ? "opacity-100 visible" : "opacity-0 invisible"
                           )}>
                             <button
-                              className="p-1 rounded hover:bg-[#2a2a35] text-gray-500 hover:text-gray-300 transition-colors"
+                              className="p-1 rounded hover:bg-[#f0f0f0] text-[#6b7280] hover:text-[#1a1a1a] transition-colors"
                               title="編集"
                             >
                               <Edit3 className="w-3 h-3" />
                             </button>
                             <button
-                              className="p-1 rounded hover:bg-[#2a2a35] text-gray-500 hover:text-red-400 transition-colors"
+                              className="p-1 rounded hover:bg-[#f0f0f0] text-[#6b7280] hover:text-red-500 transition-colors"
                               title="削除"
                             >
                               <Trash2 className="w-3 h-3" />
@@ -292,96 +316,46 @@ export function Sidebar({ className }: SidebarProps) {
                 ))}
               </div>
             </div>
-          ) : (
-            /* Collapsed History */
-            <div className="flex flex-col items-center pt-2">
-              <div
-                className={cn(
-                  "w-10 h-10 rounded-xl flex items-center justify-center",
-                  "text-gray-500 hover:bg-[#1a1a24] hover:text-gray-300",
-                  "transition-all duration-200 cursor-pointer"
-                )}
-                title="履歴"
-              >
-                <History className="w-[18px] h-[18px]" />
-              </div>
-              {/* History dots indicator */}
-              <div className="flex flex-col items-center gap-1.5 mt-3">
-                {mockHistory.slice(0, 2).flatMap(s => s.items).slice(0, 4).map((item) => (
-                  <div
-                    key={item.id}
-                    className={cn(
-                      "w-1.5 h-1.5 rounded-full",
-                      "bg-gray-700 hover:bg-[#ff6b00]",
-                      "transition-all duration-200 cursor-pointer hover:scale-125"
-                    )}
-                    title={item.title}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-      </nav>
-
-      {/* Bottom Items */}
-      <div className="py-2 px-2 space-y-0.5 border-t border-[#2a2a35]/60 flex-shrink-0">
-        {bottomItems.map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className={cn(
-              "flex items-center gap-3 px-3 py-2 rounded-xl",
-              "text-gray-400 hover:bg-[#1a1a24] hover:text-gray-200",
-              "transition-all duration-200 ease-out group"
-            )}
-            title={isCollapsed ? item.label : undefined}
-          >
-            <span className="flex-shrink-0 group-hover:scale-110 transition-transform duration-200">
-              {item.icon}
-            </span>
-            {!isCollapsed && <span className="text-sm font-medium">{item.label}</span>}
-          </Link>
-        ))}
-      </div>
-
-      {/* Collapse Toggle */}
-      <button
-        onClick={() => setIsCollapsed(!isCollapsed)}
-        className={cn(
-          "flex items-center justify-center h-11",
-          "border-t border-[#2a2a35]/60",
-          "text-gray-500 hover:text-gray-300 hover:bg-[#1a1a24]",
-          "transition-all duration-200 ease-out"
-        )}
-        title={isCollapsed ? "展開" : "折りたたみ"}
-      >
-        {isCollapsed ? (
-          <ChevronRight className="w-4 h-4" />
-        ) : (
-          <div className="flex items-center gap-2">
-            <ChevronLeft className="w-4 h-4" />
-            <span className="text-xs font-medium">折りたたみ</span>
           </div>
-        )}
-      </button>
+        </nav>
 
-      {/* Custom Scrollbar Styles */}
-      <style jsx global>{`
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 4px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: transparent;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: #2a2a35;
-          border-radius: 2px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: #3a3a45;
-        }
-      `}</style>
-    </aside>
+        {/* Bottom Items */}
+        <div className="py-2 px-2 space-y-0.5 border-t border-[#e5e5e5] flex-shrink-0 bg-[#f9f9f9]">
+          {bottomItems.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={cn(
+                "flex items-center gap-3 px-3 py-2 rounded-xl",
+                "text-[#6b7280] hover:bg-white hover:text-[#1a1a1a]",
+                "transition-all duration-200 ease-out group"
+              )}
+            >
+              <span className="flex-shrink-0 group-hover:scale-110 transition-transform duration-200">
+                {item.icon}
+              </span>
+              <span className="text-sm font-medium">{item.label}</span>
+            </Link>
+          ))}
+        </div>
+
+        {/* Custom Scrollbar Styles */}
+        <style jsx global>{`
+          .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+          }
+          .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+          }
+          .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #d1d5db;
+            border-radius: 2px;
+          }
+          .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #9ca3af;
+          }
+        `}</style>
+      </aside>
+    </>
   );
 }

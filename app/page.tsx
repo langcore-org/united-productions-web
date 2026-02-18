@@ -71,7 +71,7 @@ const modeButtons: ModeButton[] = [
 export default function DashboardPage() {
   const [inputValue, setInputValue] = useState("");
   const [isFocused, setIsFocused] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(true);
+  const [isDarkMode, setIsDarkMode] = useState(false);
   const [isVoiceMode, setIsVoiceMode] = useState(false);
 
   // Keyboard shortcut handler
