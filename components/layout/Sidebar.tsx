@@ -13,12 +13,10 @@ import {
   Plus,
   Edit3,
   Trash2,
-  Menu,
-  X,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 interface SidebarProps {
   className?: string;
@@ -108,254 +106,197 @@ const mockHistory: HistorySection[] = [
 
 export function Sidebar({ className }: SidebarProps) {
   const pathname = usePathname();
-  const [isOpen, setIsOpen] = useState(false);
   const [hoveredHistoryId, setHoveredHistoryId] = useState<string | null>(null);
 
-  // 画面サイズが変更された時にサイドバーを閉じる
-  useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth >= 1024) {
-        setIsOpen(false);
-      }
-    };
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
-  // ナビゲーション時にサイドバーを閉じる
-  useEffect(() => {
-    setIsOpen(false);
-  }, [pathname]);
-
   return (
-    <>
-      {/* Hamburger Menu Button */}
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className={cn(
-          "fixed top-4 left-4 z-50 w-10 h-10 rounded-lg",
-          "flex items-center justify-center",
-          "bg-white border border-[#e5e5e5] shadow-sm",
-          "text-[#1a1a1a] hover:bg-[#f9f9f9]",
-          "transition-all duration-200 ease-out",
-          isOpen && "opacity-0 pointer-events-none"
-        )}
-        aria-label="メニューを開く"
-      >
-        <Menu className="w-5 h-5" />
-      </button>
-
-      {/* Overlay */}
-      {isOpen && (
-        <div
-          className="fixed inset-0 bg-black/20 z-40"
-          onClick={() => setIsOpen(false)}
-        />
+    <aside
+      className={cn(
+        "fixed top-0 left-0 z-50 h-screen w-[280px]",
+        "flex flex-col",
+        "bg-[#f9f9f9] border-r border-[#e5e5e5]",
+        className
       )}
-
-      {/* Sidebar */}
-      <aside
-        className={cn(
-          "fixed top-0 left-0 z-50 h-screen w-[280px]",
-          "flex flex-col",
-          "bg-[#f9f9f9] border-r border-[#e5e5e5]",
-          "transition-transform duration-300 ease-out",
-          isOpen ? "translate-x-0" : "-translate-x-full",
-          className
-        )}
-      >
-        {/* Header with Close Button */}
-        <div className="flex items-center justify-between h-14 px-4 border-b border-[#e5e5e5] bg-white">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#ff6b00] to-[#ff8533] flex items-center justify-center flex-shrink-0">
-              <span className="text-white font-bold text-sm">UP</span>
-            </div>
-            <div className="flex flex-col min-w-0">
-              <span className="text-[#1a1a1a] font-semibold text-sm tracking-tight">AI Hub</span>
-              <span className="text-[#6b7280] text-[10px] truncate">United Productions</span>
-            </div>
+    >
+      {/* Header */}
+      <div className="flex items-center h-14 px-4 border-b border-[#e5e5e5] bg-white">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-lg bg-black flex items-center justify-center flex-shrink-0">
+            <span className="text-white font-bold text-sm">UP</span>
           </div>
-          <button
-            onClick={() => setIsOpen(false)}
-            className={cn(
-              "w-8 h-8 rounded-lg flex items-center justify-center",
-              "text-[#6b7280] hover:bg-[#f0f0f0] hover:text-[#1a1a1a]",
-              "transition-all duration-200"
-            )}
-            aria-label="メニューを閉じる"
-          >
-            <X className="w-4 h-4" />
-          </button>
+          <div className="flex flex-col min-w-0">
+            <span className="text-[#1a1a1a] font-semibold text-sm tracking-tight">AI Hub</span>
+            <span className="text-[#6b7280] text-[10px] truncate">United Productions</span>
+          </div>
+        </div>
+      </div>
+
+      {/* New Chat Button */}
+      <div className="px-3 pt-3 pb-2 bg-[#f9f9f9]">
+        <button
+          className={cn(
+            "w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl",
+            "bg-white hover:bg-[#f0f0f0] border border-[#e5e5e5]",
+            "transition-all duration-200 ease-out",
+            "group"
+          )}
+        >
+          <div className="w-5 h-5 rounded-md bg-black flex items-center justify-center flex-shrink-0">
+            <Plus className="w-3 h-3 text-white" />
+          </div>
+          <span className="text-sm font-medium text-[#1a1a1a]">新規チャット</span>
+        </button>
+      </div>
+
+      {/* Navigation */}
+      <nav className="flex-1 overflow-hidden flex flex-col min-h-0 bg-[#f9f9f9]">
+        {/* Main Nav Items */}
+        <div className="px-2 py-2 space-y-0.5 flex-shrink-0">
+          {navItems.map((item) => {
+            const isActive = pathname === item.href || pathname?.startsWith(item.href + "/");
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={cn(
+                  "flex items-center gap-3 px-3 py-2 rounded-xl",
+                  "transition-all duration-200 ease-out",
+                  "group relative overflow-hidden",
+                  isActive
+                    ? "bg-white text-black border border-[#e5e5e5]"
+                    : "text-[#6b7280] hover:bg-white hover:text-[#1a1a1a]"
+                )}
+              >
+                {/* Active indicator */}
+                {isActive && (
+                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-black rounded-r-full" />
+                )}
+                <span className={cn(
+                  "flex-shrink-0 transition-transform duration-200",
+                  isActive ? "text-black" : "group-hover:scale-110"
+                )}>
+                  {item.icon}
+                </span>
+                <span className="text-sm font-medium flex-1 truncate">{item.label}</span>
+                {item.badge && (
+                  <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-black/10 text-black font-medium">
+                    {item.badge}
+                  </span>
+                )}
+              </Link>
+            );
+          })}
         </div>
 
-        {/* New Chat Button */}
-        <div className="px-3 pt-3 pb-2 bg-[#f9f9f9]">
-          <button
-            className={cn(
-              "w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl",
-              "bg-white hover:bg-[#f0f0f0] border border-[#e5e5e5]",
-              "transition-all duration-200 ease-out",
-              "group"
-            )}
-          >
-            <div className="w-5 h-5 rounded-md bg-gradient-to-br from-[#ff6b00] to-[#ff8533] flex items-center justify-center flex-shrink-0">
-              <Plus className="w-3 h-3 text-white" />
-            </div>
-            <span className="text-sm font-medium text-[#1a1a1a]">新規チャット</span>
-          </button>
-        </div>
-
-        {/* Navigation */}
-        <nav className="flex-1 overflow-hidden flex flex-col min-h-0 bg-[#f9f9f9]">
-          {/* Main Nav Items */}
-          <div className="px-2 py-2 space-y-0.5 flex-shrink-0">
-            {navItems.map((item) => {
-              const isActive = pathname === item.href || pathname?.startsWith(item.href + "/");
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={cn(
-                    "flex items-center gap-3 px-3 py-2 rounded-xl",
-                    "transition-all duration-200 ease-out",
-                    "group relative overflow-hidden",
-                    isActive
-                      ? "bg-white text-[#ff6b00] border border-[#e5e5e5]"
-                      : "text-[#6b7280] hover:bg-white hover:text-[#1a1a1a]"
-                  )}
-                >
-                  {/* Active indicator */}
-                  {isActive && (
-                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-[#ff6b00] rounded-r-full" />
-                  )}
-                  <span className={cn(
-                    "flex-shrink-0 transition-transform duration-200",
-                    isActive ? "text-[#ff6b00]" : "group-hover:scale-110"
-                  )}>
-                    {item.icon}
-                  </span>
-                  <span className="text-sm font-medium flex-1 truncate">{item.label}</span>
-                  {item.badge && (
-                    <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-[#ff6b00]/10 text-[#ff6b00] font-medium">
-                      {item.badge}
-                    </span>
-                  )}
-                </Link>
-              );
-            })}
-          </div>
-
-          {/* History Section */}
-          <div className="flex-1 min-h-0 overflow-hidden mt-4">
-            <div className="h-full flex flex-col">
-              {/* History Header */}
-              <div className="flex items-center justify-between px-3 mb-2 flex-shrink-0">
-                <div className="flex items-center gap-2">
-                  <History className="w-3.5 h-3.5 text-[#6b7280]" />
-                  <span className="text-[11px] font-semibold text-[#6b7280] uppercase tracking-wider">
-                    履歴
-                  </span>
-                </div>
+        {/* History Section */}
+        <div className="flex-1 min-h-0 overflow-hidden mt-4">
+          <div className="h-full flex flex-col">
+            {/* History Header */}
+            <div className="flex items-center justify-between px-3 mb-2 flex-shrink-0">
+              <div className="flex items-center gap-2">
+                <History className="w-3.5 h-3.5 text-[#6b7280]" />
+                <span className="text-[11px] font-semibold text-[#6b7280] uppercase tracking-wider">
+                  履歴
+                </span>
               </div>
+            </div>
 
-              {/* History Groups - Scrollable */}
-              <div className="flex-1 overflow-y-auto px-2 space-y-4 custom-scrollbar">
-                {mockHistory.map((section) => (
-                  <div key={section.label}>
-                    <div className="px-1.5 mb-1.5">
-                      <span className="text-[10px] font-medium text-[#9ca3af]">{section.label}</span>
-                    </div>
-                    <div className="space-y-0.5">
-                      {section.items.map((item) => (
-                        <div
-                          key={item.id}
-                          className="group relative"
-                          onMouseEnter={() => setHoveredHistoryId(item.id)}
-                          onMouseLeave={() => setHoveredHistoryId(null)}
-                        >
-                          <button
-                            className={cn(
-                              "w-full flex items-center gap-2 px-2.5 py-2 rounded-lg",
-                              "text-left text-[13px] text-[#6b7280]",
-                              "hover:bg-white hover:text-[#1a1a1a]",
-                              "transition-all duration-150 ease-out"
-                            )}
-                            title={item.title}
-                          >
-                            <MessageSquare className={cn(
-                              "w-3.5 h-3.5 flex-shrink-0 transition-colors duration-150",
-                              hoveredHistoryId === item.id ? "text-[#ff6b00]" : "text-[#9ca3af]"
-                            )} />
-                            <span className="truncate flex-1">{item.title}</span>
-                          </button>
-                          
-                          {/* Hover Actions */}
-                          <div className={cn(
-                            "absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-0.5",
-                            "bg-white rounded-md px-1 shadow-sm border border-[#e5e5e5]",
-                            "transition-all duration-150",
-                            hoveredHistoryId === item.id ? "opacity-100 visible" : "opacity-0 invisible"
-                          )}>
-                            <button
-                              className="p-1 rounded hover:bg-[#f0f0f0] text-[#6b7280] hover:text-[#1a1a1a] transition-colors"
-                              title="編集"
-                            >
-                              <Edit3 className="w-3 h-3" />
-                            </button>
-                            <button
-                              className="p-1 rounded hover:bg-[#f0f0f0] text-[#6b7280] hover:text-red-500 transition-colors"
-                              title="削除"
-                            >
-                              <Trash2 className="w-3 h-3" />
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+            {/* History Groups - Scrollable */}
+            <div className="flex-1 overflow-y-auto px-2 space-y-4 custom-scrollbar">
+              {mockHistory.map((section) => (
+                <div key={section.label}>
+                  <div className="px-1.5 mb-1.5">
+                    <span className="text-[10px] font-medium text-[#9ca3af]">{section.label}</span>
                   </div>
-                ))}
-              </div>
+                  <div className="space-y-0.5">
+                    {section.items.map((item) => (
+                      <div
+                        key={item.id}
+                        className="group relative"
+                        onMouseEnter={() => setHoveredHistoryId(item.id)}
+                        onMouseLeave={() => setHoveredHistoryId(null)}
+                      >
+                        <button
+                          className={cn(
+                            "w-full flex items-center gap-2 px-2.5 py-2 rounded-lg",
+                            "text-left text-[13px] text-[#6b7280]",
+                            "hover:bg-white hover:text-[#1a1a1a]",
+                            "transition-all duration-150 ease-out"
+                          )}
+                          title={item.title}
+                        >
+                          <MessageSquare className={cn(
+                            "w-3.5 h-3.5 flex-shrink-0 transition-colors duration-150",
+                            hoveredHistoryId === item.id ? "text-black" : "text-[#9ca3af]"
+                          )} />
+                          <span className="truncate flex-1">{item.title}</span>
+                        </button>
+                        
+                        {/* Hover Actions */}
+                        <div className={cn(
+                          "absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-0.5",
+                          "bg-white rounded-md px-1 shadow-sm border border-[#e5e5e5]",
+                          "transition-all duration-150",
+                          hoveredHistoryId === item.id ? "opacity-100 visible" : "opacity-0 invisible"
+                        )}>
+                          <button
+                            className="p-1 rounded hover:bg-[#f0f0f0] text-[#6b7280] hover:text-[#1a1a1a] transition-colors"
+                            title="編集"
+                          >
+                            <Edit3 className="w-3 h-3" />
+                          </button>
+                          <button
+                            className="p-1 rounded hover:bg-[#f0f0f0] text-[#6b7280] hover:text-red-500 transition-colors"
+                            title="削除"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
-        </nav>
-
-        {/* Bottom Items */}
-        <div className="py-2 px-2 space-y-0.5 border-t border-[#e5e5e5] flex-shrink-0 bg-[#f9f9f9]">
-          {bottomItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                "flex items-center gap-3 px-3 py-2 rounded-xl",
-                "text-[#6b7280] hover:bg-white hover:text-[#1a1a1a]",
-                "transition-all duration-200 ease-out group"
-              )}
-            >
-              <span className="flex-shrink-0 group-hover:scale-110 transition-transform duration-200">
-                {item.icon}
-              </span>
-              <span className="text-sm font-medium">{item.label}</span>
-            </Link>
-          ))}
         </div>
+      </nav>
 
-        {/* Custom Scrollbar Styles */}
-        <style jsx global>{`
-          .custom-scrollbar::-webkit-scrollbar {
-            width: 4px;
-          }
-          .custom-scrollbar::-webkit-scrollbar-track {
-            background: transparent;
-          }
-          .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #d1d5db;
-            border-radius: 2px;
-          }
-          .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: #9ca3af;
-          }
-        `}</style>
-      </aside>
-    </>
+      {/* Bottom Items */}
+      <div className="py-2 px-2 space-y-0.5 border-t border-[#e5e5e5] flex-shrink-0 bg-[#f9f9f9]">
+        {bottomItems.map((item) => (
+          <Link
+            key={item.href}
+            href={item.href}
+            className={cn(
+              "flex items-center gap-3 px-3 py-2 rounded-xl",
+              "text-[#6b7280] hover:bg-white hover:text-[#1a1a1a]",
+              "transition-all duration-200 ease-out group"
+            )}
+          >
+            <span className="flex-shrink-0 group-hover:scale-110 transition-transform duration-200">
+              {item.icon}
+            </span>
+            <span className="text-sm font-medium">{item.label}</span>
+          </Link>
+        ))}
+      </div>
+
+      {/* Custom Scrollbar Styles */}
+      <style jsx global>{`
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: #d1d5db;
+          border-radius: 2px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: #9ca3af;
+        }
+      `}</style>
+    </aside>
   );
 }
