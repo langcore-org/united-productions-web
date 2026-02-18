@@ -118,32 +118,6 @@ export default function DashboardPage() {
     )}>
       
       <div className="flex-1 flex flex-col overflow-hidden relative">
-        {/* Theme Toggle - Top Right */}
-        <div className="absolute top-4 right-6 z-10">
-          <button
-            onClick={() => /* toggle theme via ThemeProvider */}
-            className={cn(
-              "flex items-center gap-2 px-3 py-2 rounded-full text-sm font-medium",
-              "transition-all duration-300",
-              isDarkMode 
-                ? "bg-[#1a1a24] text-gray-300 hover:bg-[#252532] border border-[#2a2a35]" 
-                : "bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-200"
-            )}
-          >
-            {isDarkMode ? (
-              <>
-                <Sun className="w-4 h-4" />
-                <span className="hidden sm:inline">ライト</span>
-              </>
-            ) : (
-              <>
-                <Moon className="w-4 h-4" />
-                <span className="hidden sm:inline">ダーク</span>
-              </>
-            )}
-          </button>
-        </div>
-
         {/* Main Content - Centered */}
         <main className="flex-1 flex flex-col items-center justify-center px-6">
           {/* Logo Section - Minimal Centered (Grok Style) */}

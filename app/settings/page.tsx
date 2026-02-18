@@ -769,7 +769,9 @@ export default function SettingsPage() {
             </div>
           </div>
         </main>
+                </div>
+        </main>
       </div>
-        </AppLayout>
+    </AppLayout>
   );
 }
