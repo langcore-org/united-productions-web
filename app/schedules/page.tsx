@@ -250,13 +250,13 @@ export default function SchedulesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0d0d12] text-gray-100">
+    <div >
       {/* Sticky Header */}
-      <header className="sticky top-0 z-50 border-b border-[#2a2a35] bg-[#0d0d12]/95 backdrop-blur-sm">
+      <header className="sticky top-0 z-50 border-b border-gray-200 bg-white/95 backdrop-blur-sm">
         <div className="px-6 py-4">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-xl font-semibold text-white">ロケスケ管理</h1>
+              <h1 className="text-xl font-semibold text-gray-900">ロケスケ管理</h1>
               <p className="text-sm text-gray-400 mt-1">
                 マスタースケジュールから自動生成
               </p>
@@ -267,7 +267,7 @@ export default function SchedulesPage() {
                 disabled={!masterSchedule && !generateResults[activeTab as ScheduleGenerateType]}
                 className={cn(
                   "flex items-center gap-2 px-3 py-2 rounded-lg text-sm",
-                  "border border-[#2a2a35] bg-[#1a1a24]",
+                  "border border-gray-200 bg-white",
                   "hover:border-[#ff6b00]/50 transition-colors",
                   "disabled:opacity-50 disabled:cursor-not-allowed"
                 )}
@@ -280,7 +280,7 @@ export default function SchedulesPage() {
                 disabled={!masterSchedule && !generateResults[activeTab as ScheduleGenerateType]}
                 className={cn(
                   "flex items-center gap-2 px-3 py-2 rounded-lg text-sm",
-                  "border border-[#2a2a35] bg-[#1a1a24]",
+                  "border border-gray-200 bg-white",
                   "hover:border-[#ff6b00]/50 transition-colors",
                   "disabled:opacity-50 disabled:cursor-not-allowed"
                 )}
@@ -294,7 +294,7 @@ export default function SchedulesPage() {
 
         {/* Pill Tabs */}
         <div className="px-6 pb-4">
-          <div className="flex items-center gap-1 p-1 rounded-full bg-[#1a1a24] border border-[#2a2a35] w-fit">
+          <div className="flex items-center gap-1 p-1 rounded-full bg-white border border-gray-200 w-fit">
             {(["master", "actor", "staff", "vehicle"] as TabType[]).map((tab) => (
               <button
                 key={tab}
@@ -302,8 +302,8 @@ export default function SchedulesPage() {
                 className={cn(
                   "flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-full transition-all",
                   activeTab === tab
-                    ? "bg-[#2a2a35] text-white"
-                    : "text-gray-400 hover:text-gray-200 hover:bg-[#252530]"
+                    ? "bg-gray-100 text-gray-900"
+                    : "text-gray-400 hover:text-gray-800 hover:bg-gray-100"
                 )}
               >
                 {getTabIcon(tab)}
@@ -341,7 +341,7 @@ export default function SchedulesPage() {
           {/* Left Column: Master Schedule */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-sm font-medium text-gray-300 flex items-center gap-2">
+              <h2 className="text-sm font-medium text-gray-700 flex items-center gap-2">
                 <ClipboardList className="w-4 h-4 text-[#ff6b00]" />
                 マスタースケジュール
               </h2>
@@ -362,8 +362,8 @@ export default function SchedulesPage() {
                 placeholder="マスタースケジュールを入力してください..."
                 className={cn(
                   "w-full h-[calc(100vh-340px)] min-h-[360px] p-5 rounded-2xl",
-                  "bg-[#1a1a24] border border-[#2a2a35]",
-                  "text-sm text-gray-200 placeholder-gray-600",
+                  "bg-white border border-gray-200",
+                  "text-sm text-gray-800 placeholder-gray-400",
                   "focus:outline-none focus:border-[#ff6b00] focus:ring-1 focus:ring-[#ff6b00]/30",
                   "transition-all duration-200",
                   "resize-none font-mono leading-relaxed"
@@ -383,7 +383,7 @@ export default function SchedulesPage() {
                   disabled={loading[type] || !masterSchedule.trim()}
                   className={cn(
                     "flex items-center gap-2 px-4 py-2.5 rounded-full",
-                    "bg-[#1a1a24] border border-[#2a2a35]",
+                    "bg-white border border-gray-200",
                     "hover:border-[#ff6b00]/50 hover:bg-[#ff6b00]/5",
                     "disabled:opacity-50 disabled:cursor-not-allowed",
                     "transition-all duration-200"
@@ -394,7 +394,7 @@ export default function SchedulesPage() {
                   ) : (
                     <Sparkles className="w-4 h-4 text-[#ff6b00]" />
                   )}
-                  <span className="text-sm font-medium text-gray-200">
+                  <span className="text-sm font-medium text-gray-800">
                     {getGenerateTypeLabel(type)}
                   </span>
                 </button>
@@ -405,7 +405,7 @@ export default function SchedulesPage() {
           {/* Right Column: Preview */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-sm font-medium text-gray-300 flex items-center gap-2">
+              <h2 className="text-sm font-medium text-gray-700 flex items-center gap-2">
                 {getTabIcon(activeTab)}
                 <span className={activeTab === "master" ? "text-[#ff6b00]" : ""}>
                   {getTabLabel(activeTab)}
@@ -422,13 +422,13 @@ export default function SchedulesPage() {
             <div
               className={cn(
                 "h-[calc(100vh-260px)] min-h-[440px] rounded-2xl overflow-hidden",
-                "bg-[#0d0d12] border border-[#2a2a35]"
+                "bg-gray-50 border border-gray-200"
               )}
             >
               {activeTab === "master" ? (
                 // Master Preview
                 <div className="h-full p-5 overflow-auto">
-                  <pre className="text-sm text-gray-300 whitespace-pre-wrap font-mono leading-relaxed">
+                  <pre className="text-sm text-gray-700 whitespace-pre-wrap font-mono leading-relaxed">
                     {masterSchedule || (
                       <span className="text-gray-600">
                         マスタースケジュールを入力してください...
@@ -455,7 +455,7 @@ export default function SchedulesPage() {
                     </div>
                   ) : generateResults[activeTab] ? (
                     <>
-                      <div className="flex items-center justify-between px-4 py-2 border-b border-[#2a2a35] bg-[#1a1a24]">
+                      <div className="flex items-center justify-between px-4 py-2 border-b border-gray-200 bg-white">
                         <span className="text-xs text-gray-500 font-mono">
                           {getTabLabel(activeTab)}.md
                         </span>
@@ -468,11 +468,11 @@ export default function SchedulesPage() {
                         </button>
                       </div>
                       <div className="flex-1 p-5 overflow-auto">
-                        <pre className="text-sm text-gray-300 whitespace-pre-wrap font-mono leading-relaxed">
+                        <pre className="text-sm text-gray-700 whitespace-pre-wrap font-mono leading-relaxed">
                           {generateResults[activeTab]}
                         </pre>
                       </div>
-                      <div className="px-4 py-2 border-t border-[#2a2a35] bg-[#1a1a24]">
+                      <div className="px-4 py-2 border-t border-gray-200 bg-white">
                         <div className="flex items-center justify-between text-xs text-gray-500">
                           <span>
                             {generateResults[activeTab].length} 文字
@@ -482,7 +482,7 @@ export default function SchedulesPage() {
                     </>
                   ) : (
                     <div className="h-full flex flex-col items-center justify-center text-gray-500">
-                      <div className="w-12 h-12 rounded-2xl bg-[#1a1a24] border border-[#2a2a35] flex items-center justify-center mb-4">
+                      <div className="w-12 h-12 rounded-2xl bg-white border border-gray-200 flex items-center justify-center mb-4">
                         <Sparkles className="w-5 h-5 text-gray-600" />
                       </div>
                       <p className="text-sm">

@@ -236,9 +236,9 @@ export default function MeetingNotesPage() {
   const currentTemplate = templates.find((t) => t.id === selectedTemplate)!;
 
   return (
-    <div className="min-h-screen bg-[#0d0d12] text-gray-100">
+    <div >
       {/* Header - Sticky */}
-      <header className="sticky top-0 z-50 border-b border-[#2a2a35] bg-[#0d0d12]/80 backdrop-blur-xl">
+      <header className="sticky top-0 z-50 border-b border-gray-200 bg-white/80 backdrop-blur-xl">
         <div className="max-w-6xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -246,7 +246,7 @@ export default function MeetingNotesPage() {
                 <FileText className="w-5 h-5 text-[#ff6b00]" />
               </div>
               <div>
-                <h1 className="text-xl font-semibold text-white">議事録・文字起こし</h1>
+                <h1 className="text-xl font-semibold text-gray-900">議事録・文字起こし</h1>
                 <p className="text-sm text-gray-500">Zoom文字起こしをAIで整形</p>
               </div>
             </div>
@@ -263,7 +263,7 @@ export default function MeetingNotesPage() {
       <div className="max-w-6xl mx-auto px-6 py-8">
         {/* Template Selection */}
         <section className="mb-8">
-          <h2 className="text-sm font-medium text-gray-400 mb-4 uppercase tracking-wider">
+          <h2 className="text-sm font-medium text-gray-600 mb-4 uppercase tracking-wider">
             テンプレート選択
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -276,12 +276,12 @@ export default function MeetingNotesPage() {
                   "hover:scale-[1.02] hover:shadow-lg hover:shadow-black/20",
                   selectedTemplate === template.id
                     ? "border-[#ff6b00] bg-gradient-to-br from-[#ff6b00]/10 to-[#ff6b00]/5 shadow-lg shadow-[#ff6b00]/10"
-                    : "border-[#2a2a35] bg-[#1a1a24] hover:border-[#3a3a45] hover:bg-[#1f1f2a]"
+                    : "border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50"
                 )}
               >
                 {selectedTemplate === template.id && (
                   <div className="absolute top-4 right-4 w-5 h-5 rounded-full bg-[#ff6b00] flex items-center justify-center shadow-lg shadow-[#ff6b00]/30">
-                    <Check className="w-3 h-3 text-white" />
+                    <Check className="w-3 h-3 text-gray-900" />
                   </div>
                 )}
                 <div className="flex items-center gap-3 mb-3">
@@ -290,13 +290,13 @@ export default function MeetingNotesPage() {
                       "w-10 h-10 rounded-lg flex items-center justify-center transition-all duration-300",
                       selectedTemplate === template.id
                         ? "bg-[#ff6b00]/20 text-[#ff6b00] shadow-inner"
-                        : "bg-[#2a2a35] text-gray-400 group-hover:bg-[#3a3a45]"
+                        : "bg-gray-100 text-gray-600 group-hover:bg-[#3a3a45]"
                     )}
                   >
                     {template.icon}
                   </div>
                   <div>
-                    <h3 className="font-semibold text-white">{template.name}</h3>
+                    <h3 className="font-semibold text-gray-900">{template.name}</h3>
                     <p className="text-sm text-gray-500">{template.description}</p>
                   </div>
                 </div>
@@ -308,7 +308,7 @@ export default function MeetingNotesPage() {
                         "text-xs px-2.5 py-1 rounded-full transition-colors duration-300",
                         selectedTemplate === template.id
                           ? "bg-[#ff6b00]/10 text-[#ff6b00] border border-[#ff6b00]/20"
-                          : "bg-[#2a2a35] text-gray-400"
+                          : "bg-gray-100 text-gray-500"
                       )}
                     >
                       {feature}
@@ -323,7 +323,7 @@ export default function MeetingNotesPage() {
         {/* Input Section */}
         <section className="mb-8">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-sm font-medium text-gray-400 uppercase tracking-wider">
+            <h2 className="text-sm font-medium text-gray-600 uppercase tracking-wider">
               Zoom文字起こしテキスト
             </h2>
             {transcript && (
@@ -345,8 +345,8 @@ export default function MeetingNotesPage() {
               }`}
               className={cn(
                 "w-full h-[300px] p-5 rounded-2xl resize-none",
-                "bg-[#1a1a24] border-2 border-[#2a2a35]",
-                "text-gray-200 placeholder-gray-600",
+                "bg-white border-2 border-gray-200",
+                "text-gray-800 placeholder-gray-400",
                 "focus:outline-none focus:border-[#ff6b00] focus:ring-2 focus:ring-[#ff6b00]/10",
                 "transition-all duration-300",
                 "text-sm leading-relaxed"
@@ -378,7 +378,7 @@ export default function MeetingNotesPage() {
               className={cn(
                 "flex items-center gap-3 px-8 py-4 rounded-xl font-medium transition-all duration-300",
                 !transcript.trim()
-                  ? "bg-[#2a2a35] text-gray-500 cursor-not-allowed"
+                  ? "bg-gray-100 text-gray-500 cursor-not-allowed"
                   : "bg-gradient-to-r from-[#ff6b00] to-[#ff8533] text-white hover:from-[#ff8533] hover:to-[#ff6b00] shadow-lg shadow-[#ff6b00]/20 hover:shadow-xl hover:shadow-[#ff6b00]/30 hover:scale-[1.02]"
               )}
             >
@@ -400,7 +400,7 @@ export default function MeetingNotesPage() {
           <section ref={resultRef} className="animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
-                <h2 className="text-sm font-medium text-gray-400 uppercase tracking-wider">
+                <h2 className="text-sm font-medium text-gray-600 uppercase tracking-wider">
                   整形結果
                 </h2>
                 {status === "streaming" && (
@@ -418,7 +418,7 @@ export default function MeetingNotesPage() {
                     "flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-all duration-200",
                     copied
                       ? "bg-[#22c55e]/20 text-[#22c55e] border border-[#22c55e]/30"
-                      : "bg-[#2a2a35] text-gray-400 hover:text-gray-200 hover:bg-[#3a3a45] border border-transparent"
+                      : "bg-gray-100 text-gray-600 hover:text-gray-800 hover:bg-[#3a3a45] border border-transparent"
                   )}
                 >
                   {copied ? (
@@ -436,14 +436,14 @@ export default function MeetingNotesPage() {
                 <button
                   onClick={handleDownload}
                   disabled={!result}
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm bg-[#2a2a35] text-gray-400 hover:text-gray-200 hover:bg-[#3a3a45] transition-all duration-200 disabled:opacity-50 border border-transparent hover:border-[#3a3a45]"
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm bg-gray-100 text-gray-600 hover:text-gray-800 hover:bg-[#3a3a45] transition-all duration-200 disabled:opacity-50 border border-transparent hover:border-gray-300"
                 >
                   <Download className="w-4 h-4" />
                   Markdown保存
                 </button>
                 <button
                   onClick={handleReset}
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm bg-[#2a2a35] text-gray-400 hover:text-gray-200 hover:bg-[#3a3a45] transition-all duration-200 border border-transparent hover:border-[#3a3a45]"
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm bg-gray-100 text-gray-600 hover:text-gray-800 hover:bg-[#3a3a45] transition-all duration-200 border border-transparent hover:border-gray-300"
                 >
                   <RotateCcw className="w-4 h-4" />
                   新規作成
@@ -452,9 +452,9 @@ export default function MeetingNotesPage() {
             </div>
             
             {/* Code Block Style Result */}
-            <div className="bg-[#1a1a24] border border-[#2a2a35] rounded-2xl overflow-hidden shadow-xl shadow-black/20">
+            <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-xl shadow-black/20">
               {/* Window Header */}
-              <div className="flex items-center justify-between px-4 py-3 bg-[#252532] border-b border-[#2a2a35]">
+              <div className="flex items-center justify-between px-4 py-3 bg-gray-50 border-b border-gray-200">
                 <div className="flex items-center gap-2">
                   <Terminal className="w-4 h-4 text-gray-500" />
                   <span className="text-xs text-gray-500 font-mono">meeting-notes.md</span>
@@ -469,7 +469,7 @@ export default function MeetingNotesPage() {
               {/* Content */}
               <div className="p-6">
                 <div
-                  className="text-gray-200 leading-relaxed whitespace-pre-wrap font-mono text-sm"
+                  className="text-gray-800 leading-relaxed whitespace-pre-wrap font-mono text-sm"
                   dangerouslySetInnerHTML={{
                     __html: result
                       // Headers with syntax highlighting
@@ -495,8 +495,8 @@ export default function MeetingNotesPage() {
 
         {/* Feature Preview */}
         {!result && status === "idle" && (
-          <section className="mt-12 border-t border-[#2a2a35] pt-8">
-            <h2 className="text-sm font-medium text-gray-400 mb-6 uppercase tracking-wider">
+          <section className="mt-12 border-t border-gray-200 pt-8">
+            <h2 className="text-sm font-medium text-gray-600 mb-6 uppercase tracking-wider">
               出力プレビュー
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -565,7 +565,7 @@ function FeatureCard({
   description: string;
 }) {
   return (
-    <div className="p-4 rounded-xl bg-[#1a1a24] border border-[#2a2a35] hover:border-[#3a3a45] hover:bg-[#1f1f2a] transition-all duration-300 group">
+    <div className="p-4 rounded-xl bg-white border border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-all duration-300 group">
       <div className="w-10 h-10 rounded-lg bg-[#ff6b00]/10 flex items-center justify-center text-[#ff6b00] mb-3 group-hover:bg-[#ff6b00]/20 transition-colors duration-300">
         {icon}
       </div>

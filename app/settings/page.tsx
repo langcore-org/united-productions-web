@@ -2,8 +2,8 @@
 
 import { useState, useRef } from "react";
 import { cn } from "@/lib/utils";
-import { Sidebar } from "@/components/layout/Sidebar";
-import { Header } from "@/components/layout/Header";
+import { AppLayout } from "@/components/layout/AppLayout";
+
 import { LLMSelector, LLMProvider } from "@/components/ui/LLMSelector";
 import {
   User,
@@ -103,17 +103,17 @@ function SettingsCard({
   return (
     <div
       className={cn(
-        "bg-[#1a1a24] border border-[#2a2a35] rounded-xl overflow-hidden",
+        "bg-white border border-gray-200 rounded-xl overflow-hidden",
         className
       )}
     >
-      <div className="px-6 py-4 border-b border-[#2a2a35]">
+      <div className="px-6 py-4 border-b border-gray-200">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-lg bg-[#ff6b00]/10 flex items-center justify-center">
             <span className="text-[#ff6b00]">{icon}</span>
           </div>
           <div>
-            <h2 className="text-lg font-semibold text-white">{title}</h2>
+            <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
             {description && (
               <p className="text-sm text-gray-500">{description}</p>
             )}
@@ -139,7 +139,7 @@ function Toggle({ checked, onChange, label, description }: ToggleProps) {
   return (
     <div className="flex items-center justify-between">
       <div className="flex-1">
-        {label && <p className="text-sm font-medium text-gray-200">{label}</p>}
+        {label && <p className="text-sm font-medium text-gray-800">{label}</p>}
         {description && (
           <p className="text-xs text-gray-500 mt-0.5">{description}</p>
         )}
@@ -148,7 +148,7 @@ function Toggle({ checked, onChange, label, description }: ToggleProps) {
         onClick={() => onChange(!checked)}
         className={cn(
           "relative w-11 h-6 rounded-full transition-colors duration-200",
-          checked ? "bg-[#ff6b00]" : "bg-[#2a2a35]"
+          checked ? "bg-[#ff6b00]" : "bg-gray-100"
         )}
       >
         <span
@@ -207,7 +207,7 @@ function ProfileSection() {
             onClick={handleAvatarClick}
             className={cn(
               "relative w-20 h-20 rounded-full overflow-hidden cursor-pointer",
-              "bg-[#2a2a35] border-2 border-[#2a2a35]",
+              "bg-gray-100 border-2 border-gray-200",
               "hover:border-[#ff6b00]/50 transition-colors"
             )}
           >
@@ -223,7 +223,7 @@ function ProfileSection() {
               </div>
             )}
             <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
-              <Camera className="w-5 h-5 text-white" />
+              <Camera className="w-5 h-5 text-gray-900" />
             </div>
           </div>
           <input
@@ -234,7 +234,7 @@ function ProfileSection() {
             className="hidden"
           />
           <div>
-            <p className="text-sm font-medium text-gray-200">プロフィール画像</p>
+            <p className="text-sm font-medium text-gray-800">プロフィール画像</p>
             <p className="text-xs text-gray-500 mt-0.5">
               JPG、PNG、GIF形式（最大2MB）
             </p>
@@ -249,7 +249,7 @@ function ProfileSection() {
 
         {/* Display Name */}
         <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-300">表示名</label>
+          <label className="text-sm font-medium text-gray-700">表示名</label>
           {isEditing ? (
             <div className="flex items-center gap-2">
               <input
@@ -260,7 +260,7 @@ function ProfileSection() {
                 }
                 className={cn(
                   "flex-1 px-3 py-2 rounded-lg",
-                  "bg-[#0d0d12] border border-[#2a2a35]",
+                  "bg-gray-50 border border-gray-200",
                   "text-white text-sm",
                   "focus:outline-none focus:border-[#ff6b00]/50"
                 )}
@@ -273,14 +273,14 @@ function ProfileSection() {
               </button>
               <button
                 onClick={() => setIsEditing(false)}
-                className="p-2 rounded-lg bg-[#2a2a35] text-gray-400 hover:text-white transition-colors"
+                className="p-2 rounded-lg bg-gray-100 text-gray-600 hover:text-gray-900 transition-colors"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
           ) : (
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-200">{profile.displayName}</span>
+              <span className="text-sm text-gray-800">{profile.displayName}</span>
               <button
                 onClick={() => setIsEditing(true)}
                 className="text-sm text-[#ff6b00] hover:underline"
@@ -293,10 +293,10 @@ function ProfileSection() {
 
         {/* Email */}
         <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-300">メールアドレス</label>
-          <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#0d0d12] border border-[#2a2a35]">
+          <label className="text-sm font-medium text-gray-700">メールアドレス</label>
+          <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-50 border border-gray-200">
             <Mail className="w-4 h-4 text-gray-500" />
-            <span className="text-sm text-gray-400">{profile.email}</span>
+            <span className="text-sm text-gray-600">{profile.email}</span>
           </div>
           <p className="text-xs text-gray-500">
             メールアドレスは管理者のみが変更できます
@@ -341,7 +341,7 @@ function LLMSection() {
       <div className="space-y-6">
         {/* Default Model */}
         <div className="space-y-3">
-          <label className="text-sm font-medium text-gray-300">
+          <label className="text-sm font-medium text-gray-700">
             デフォルトモデル
           </label>
           <LLMSelector
@@ -360,7 +360,7 @@ function LLMSection() {
         {/* API Keys */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <label className="text-sm font-medium text-gray-300">APIキー</label>
+            <label className="text-sm font-medium text-gray-700">APIキー</label>
             <span className="text-xs text-gray-500">
               個別のAPIキーを設定できます
             </span>
@@ -368,7 +368,7 @@ function LLMSection() {
 
           {Object.entries(PROVIDER_LABELS).map(([key, label]) => (
             <div key={key} className="space-y-2">
-              <label className="text-xs text-gray-400">{label}</label>
+              <label className="text-xs text-gray-600">{label}</label>
               <div className="flex items-center gap-2">
                 <div className="flex-1 relative">
                   <input
@@ -378,14 +378,14 @@ function LLMSection() {
                     placeholder={`${label} APIキーを入力`}
                     className={cn(
                       "w-full px-3 py-2 pr-10 rounded-lg",
-                      "bg-[#0d0d12] border border-[#2a2a35]",
-                      "text-white text-sm placeholder:text-gray-600",
+                      "bg-gray-50 border border-gray-200",
+                      "text-white text-sm placeholder:text-gray-400",
                       "focus:outline-none focus:border-[#ff6b00]/50"
                     )}
                   />
                   <button
                     onClick={() => toggleShowKey(key)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
                   >
                     {showKeys[key] ? (
                       <span className="text-xs">非表示</span>
@@ -461,9 +461,9 @@ function NotificationSection() {
       <div className="space-y-6">
         {/* Email Notifications */}
         <div className="space-y-4">
-          <div className="flex items-center gap-2 pb-2 border-b border-[#2a2a35]">
-            <Mail className="w-4 h-4 text-gray-400" />
-            <span className="text-sm font-medium text-gray-300">
+          <div className="flex items-center gap-2 pb-2 border-b border-gray-200">
+            <Mail className="w-4 h-4 text-gray-600" />
+            <span className="text-sm font-medium text-gray-700">
               メール通知
             </span>
           </div>
@@ -474,7 +474,7 @@ function NotificationSection() {
             description="重要な更新をメールで受け取ります"
           />
           {settings.email.enabled && (
-            <div className="pl-4 space-y-3 border-l-2 border-[#2a2a35]">
+            <div className="pl-4 space-y-3 border-l-2 border-gray-200">
               <Toggle
                 checked={settings.email.meetingNotes}
                 onChange={(checked) =>
@@ -509,9 +509,9 @@ function NotificationSection() {
 
         {/* Push Notifications */}
         <div className="space-y-4">
-          <div className="flex items-center gap-2 pb-2 border-b border-[#2a2a35]">
-            <MessageSquare className="w-4 h-4 text-gray-400" />
-            <span className="text-sm font-medium text-gray-300">
+          <div className="flex items-center gap-2 pb-2 border-b border-gray-200">
+            <MessageSquare className="w-4 h-4 text-gray-600" />
+            <span className="text-sm font-medium text-gray-700">
               プッシュ通知
             </span>
           </div>
@@ -522,7 +522,7 @@ function NotificationSection() {
             description="ブラウザでプッシュ通知を受け取ります"
           />
           {settings.push.enabled && (
-            <div className="pl-4 space-y-3 border-l-2 border-[#2a2a35]">
+            <div className="pl-4 space-y-3 border-l-2 border-gray-200">
               <Toggle
                 checked={settings.push.meetingNotes}
                 onChange={(checked) =>
@@ -589,9 +589,9 @@ function DataManagementSection() {
       <div className="space-y-6">
         {/* Export Data */}
         <div className="space-y-4">
-          <div className="flex items-center gap-2 pb-2 border-b border-[#2a2a35]">
-            <Download className="w-4 h-4 text-gray-400" />
-            <span className="text-sm font-medium text-gray-300">データエクスポート</span>
+          <div className="flex items-center gap-2 pb-2 border-b border-gray-200">
+            <Download className="w-4 h-4 text-gray-600" />
+            <span className="text-sm font-medium text-gray-700">データエクスポート</span>
           </div>
           <p className="text-sm text-gray-500">
             作成したデータをJSON形式でエクスポートできます
@@ -613,12 +613,12 @@ function DataManagementSection() {
                 }
                 className={cn(
                   "flex items-center justify-between px-4 py-3 rounded-lg",
-                  "bg-[#0d0d12] border border-[#2a2a35]",
-                  "hover:border-[#ff6b00]/50 hover:bg-[#1f1f2a]",
+                  "bg-gray-50 border border-gray-200",
+                  "hover:border-[#ff6b00]/50 hover:bg-gray-50",
                   "transition-colors duration-200"
                 )}
               >
-                <span className="text-sm text-gray-300">{item.label}</span>
+                <span className="text-sm text-gray-700">{item.label}</span>
                 <Download className="w-4 h-4 text-gray-500" />
               </button>
             ))}
@@ -627,7 +627,7 @@ function DataManagementSection() {
 
         {/* Delete Data */}
         <div className="space-y-4">
-          <div className="flex items-center gap-2 pb-2 border-b border-[#2a2a35]">
+          <div className="flex items-center gap-2 pb-2 border-b border-gray-200">
             <Trash2 className="w-4 h-4 text-red-400" />
             <span className="text-sm font-medium text-red-400">データ削除</span>
           </div>
@@ -659,7 +659,7 @@ function DataManagementSection() {
                   </button>
                 ) : (
                   <div className="mt-3 space-y-3">
-                    <p className="text-xs text-gray-400">
+                    <p className="text-xs text-gray-600">
                       確認のため「削除」と入力してください
                     </p>
                     <div className="flex items-center gap-2">
@@ -670,8 +670,8 @@ function DataManagementSection() {
                         placeholder="削除"
                         className={cn(
                           "flex-1 px-3 py-2 rounded-lg",
-                          "bg-[#0d0d12] border border-red-500/30",
-                          "text-white text-sm placeholder:text-gray-600",
+                          "bg-gray-50 border border-red-500/30",
+                          "text-white text-sm placeholder:text-gray-400",
                           "focus:outline-none focus:border-red-500"
                         )}
                       />
@@ -680,7 +680,7 @@ function DataManagementSection() {
                         disabled={deleteConfirmText !== "削除"}
                         className={cn(
                           "px-4 py-2 rounded-lg text-sm font-medium",
-                          "bg-red-500 text-white",
+                          "bg-red-500 text-gray-900",
                           "hover:bg-red-600 transition-colors",
                           "disabled:opacity-50 disabled:cursor-not-allowed"
                         )}
@@ -692,7 +692,7 @@ function DataManagementSection() {
                           setShowDeleteConfirm(false);
                           setDeleteConfirmText("");
                         }}
-                        className="px-4 py-2 rounded-lg text-sm text-gray-400 hover:text-white transition-colors"
+                        className="px-4 py-2 rounded-lg text-sm text-gray-600 hover:text-gray-900 transition-colors"
                       >
                         キャンセル
                       </button>
@@ -713,15 +713,16 @@ function DataManagementSection() {
 // ============================================
 export default function SettingsPage() {
   return (
-    <div className="flex min-h-screen bg-[#0d0d12]">
-      <Sidebar />
+    <AppLayout>
+    <div >
+      
       <div className="flex-1 flex flex-col overflow-hidden">
-        <Header />
+        
         <main className="flex-1 overflow-y-auto">
           <div className="max-w-4xl mx-auto px-6 py-8">
             {/* Page Header */}
             <div className="mb-8">
-              <h1 className="text-2xl font-bold text-white">設定</h1>
+              <h1 className="text-2xl font-bold text-gray-900">設定</h1>
               <p className="text-gray-500 mt-1">
                 アカウントとアプリケーションの設定を管理します
               </p>
@@ -750,17 +751,17 @@ export default function SettingsPage() {
             </div>
 
             {/* Footer */}
-            <div className="mt-12 pt-6 border-t border-[#2a2a35]">
+            <div className="mt-12 pt-6 border-t border-gray-200">
               <div className="flex items-center justify-between text-sm text-gray-500">
                 <span>AI Hub v1.0.0</span>
                 <div className="flex items-center gap-4">
-                  <a href="#" className="hover:text-gray-300 transition-colors">
+                  <a href="#" className="hover:text-gray-700 transition-colors">
                     利用規約
                   </a>
-                  <a href="#" className="hover:text-gray-300 transition-colors">
+                  <a href="#" className="hover:text-gray-700 transition-colors">
                     プライバシーポリシー
                   </a>
-                  <a href="#" className="hover:text-gray-300 transition-colors">
+                  <a href="#" className="hover:text-gray-700 transition-colors">
                     ヘルプ
                   </a>
                 </div>
@@ -769,6 +770,6 @@ export default function SettingsPage() {
           </div>
         </main>
       </div>
-    </div>
+        </AppLayout>
   );
 }

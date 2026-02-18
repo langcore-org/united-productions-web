@@ -1,5 +1,5 @@
 import { Metadata } from "next";
-import { Sidebar } from "@/components/layout/Sidebar";
+import { AppLayout } from "@/components/layout/AppLayout";
 
 export const metadata: Metadata = {
   title: "議事録・文字起こし - AI Hub",
@@ -11,12 +11,5 @@ export default function MeetingNotesLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return (
-    <div className="flex min-h-screen bg-[#0d0d12]">
-      <Sidebar />
-      <main className="flex-1 overflow-auto">
-        {children}
-      </main>
-    </div>
-  );
+  return <AppLayout>{children}</AppLayout>;
 }

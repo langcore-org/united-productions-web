@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
-import { Sidebar } from "@/components/layout/Sidebar";
+import { AppLayout } from "@/components/layout/AppLayout";
 import { 
   FileText, 
   Mic, 
@@ -71,7 +71,7 @@ const modeButtons: ModeButton[] = [
 export default function DashboardPage() {
   const [inputValue, setInputValue] = useState("");
   const [isFocused, setIsFocused] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  // Theme is managed by ThemeProvider
   const [isVoiceMode, setIsVoiceMode] = useState(false);
 
   // Keyboard shortcut handler
@@ -111,16 +111,17 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className={cn(
+    <AppLayout>
+      <div className={cn(
       "flex min-h-screen transition-colors duration-500",
       isDarkMode ? "bg-[#0a0a0f]" : "bg-white"
     )}>
-      <Sidebar />
+      
       <div className="flex-1 flex flex-col overflow-hidden relative">
         {/* Theme Toggle - Top Right */}
         <div className="absolute top-4 right-6 z-10">
           <button
-            onClick={() => setIsDarkMode(!isDarkMode)}
+            onClick={() => /* toggle theme via ThemeProvider */}
             className={cn(
               "flex items-center gap-2 px-3 py-2 rounded-full text-sm font-medium",
               "transition-all duration-300",
@@ -376,6 +377,7 @@ export default function DashboardPage() {
           </div>
         </main>
       </div>
-    </div>
+          </div>
+    </AppLayout>
   );
 }
