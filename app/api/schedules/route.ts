@@ -2,16 +2,18 @@
  * ロケスケジュール API エンドポイント
  * 
  * エンドポイント:
- * - POST /api/schedules/generate - スケジュール自動生成
- * - POST /api/schedules/export - エクスポート（Markdown/CSV）
+ * - POST /api/schedules?action=generate - スケジュール自動生成
+ * - POST /api/schedules?action=export - エクスポート（Markdown/CSV）
  */
 
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { createGeminiClient } from "@/lib/llm/clients/gemini";
 import {
   createScheduleGenerateMessages,
 } from "@/prompts/schedule-generate";
-import { z } from "zod";
+import { requireAuth } from "@/lib/api/auth";
+import { handleApiError } from "@/lib/api/utils";
 
 /**
  * 生成リクエストスキーマ
@@ -32,7 +34,7 @@ const exportRequestSchema = z.object({
 });
 
 /**
- * POST /api/schedules/generate
+ * POST /api/schedules?action=generate
  * スケジュールを自動生成
  */
 async function handleGenerate(request: NextRequest) {
@@ -63,34 +65,12 @@ async function handleGenerate(request: NextRequest) {
     });
   } catch (error) {
     console.error("Schedule generation error:", error);
-
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "バリデーションエラー",
-          details: error.issues,
-        },
-        { status: 400 }
-      );
-    }
-
-    const errorMessage =
-      error instanceof Error ? error.message : "不明なエラーが発生しました";
-
-    return NextResponse.json(
-      {
-        success: false,
-        error: "スケジュール生成に失敗しました",
-        message: errorMessage,
-      },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }
 
 /**
- * POST /api/schedules/export
+ * POST /api/schedules?action=export
  * スケジュールをエクスポート
  */
 async function handleExport(request: NextRequest) {
@@ -128,29 +108,7 @@ async function handleExport(request: NextRequest) {
     });
   } catch (error) {
     console.error("Export error:", error);
-
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "バリデーションエラー",
-          details: error.issues,
-        },
-        { status: 400 }
-      );
-    }
-
-    const errorMessage =
-      error instanceof Error ? error.message : "不明なエラーが発生しました";
-
-    return NextResponse.json(
-      {
-        success: false,
-        error: "エクスポートに失敗しました",
-        message: errorMessage,
-      },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }
 
@@ -197,6 +155,12 @@ function markdownTableToCsv(markdown: string): string {
  * アクションによって処理を振り分け
  */
 export async function POST(request: NextRequest) {
+  // 認証チェック
+  const authResult = await requireAuth(request);
+  if (authResult instanceof NextResponse) {
+    return authResult;
+  }
+
   const { searchParams } = new URL(request.url);
   const action = searchParams.get("action");
 

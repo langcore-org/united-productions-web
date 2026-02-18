@@ -11,6 +11,8 @@ import { z } from 'zod';
 import { createLLMClient, isValidProvider } from '@/lib/llm/factory';
 import { DEFAULT_PROVIDER } from '@/lib/llm/config';
 import { getCachedLLMResponse, cacheLLMResponse } from '@/lib/llm/cache';
+import { requireAuth } from '@/lib/api/auth';
+import { handleApiError } from '@/lib/api/utils';
 import type { LLMMessage, LLMProvider } from '@/lib/llm/types';
 
 /**
@@ -46,6 +48,12 @@ export type ChatRequest = z.infer<typeof chatRequestSchema>;
  */
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
+    // 認証チェック
+    const authResult = await requireAuth(request);
+    if (authResult instanceof NextResponse) {
+      return authResult;
+    }
+
     // リクエストボディのパース
     const body = await request.json();
 
@@ -54,7 +62,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     if (!validationResult.success) {
       return NextResponse.json(
         {
-          error: 'Invalid request',
+          error: 'リクエストが無効です',
           details: validationResult.error.format(),
         },
         { status: 400 }
@@ -69,8 +77,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       if (!isValidProvider(requestedProvider)) {
         return NextResponse.json(
           {
-            error: 'Invalid provider',
-            message: `Provider "${requestedProvider}" is not supported`,
+            error: '無効なプロバイダーです',
+            message: `プロバイダー "${requestedProvider}" はサポートされていません`,
           },
           { status: 400 }
         );
@@ -112,37 +120,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   } catch (error) {
     console.error('LLM Chat API Error:', error);
-
-    // エラーの種類に応じたレスポンス
-    if (error instanceof Error) {
-      // NotImplementedClientのエラー（Wave 2で実装予定）
-      if (error.message.includes('not implemented yet')) {
-        return NextResponse.json(
-          {
-            error: 'Provider not implemented',
-            message: error.message,
-          },
-          { status: 501 }
-        );
-      }
-
-      // その他のエラー
-      return NextResponse.json(
-        {
-          error: 'Internal server error',
-          message: error.message,
-        },
-        { status: 500 }
-      );
-    }
-
-    // 不明なエラー
-    return NextResponse.json(
-      {
-        error: 'Internal server error',
-        message: 'An unexpected error occurred',
-      },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }

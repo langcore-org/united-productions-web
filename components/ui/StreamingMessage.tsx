@@ -1,96 +1,48 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, memo } from "react";
 import { cn } from "@/lib/utils";
 import { Bot, Sparkles } from "lucide-react";
 import type { LLMProvider } from "@/lib/llm/types";
+import { PROVIDER_LABELS, PROVIDER_COLORS } from "@/lib/llm/constants";
 
 interface StreamingMessageProps {
   provider: LLMProvider;
+  content?: string;
+  thinking?: string;
+  isComplete?: boolean;
   onComplete?: () => void;
   className?: string;
 }
-
-interface StreamState {
-  content: string;
-  thinking: string;
-  isThinking: boolean;
-  isComplete: boolean;
-  error: string | null;
-}
-
-const providerLabels: Record<string, string> = {
-  "gemini-2.5-flash-lite": "Gemini 2.5 Flash-Lite",
-  "gemini-3.0-flash": "Gemini 3.0 Flash",
-  "grok-4.1-fast": "Grok 4.1 Fast",
-  "grok-4": "Grok 4",
-  "gpt-4o-mini": "GPT-4o-mini",
-  "gpt-5": "GPT-5",
-  "claude-sonnet-4.5": "Claude 4.5 Sonnet",
-  "claude-opus-4.6": "Claude Opus 4.6",
-  "perplexity-sonar": "Perplexity Sonar",
-  "perplexity-sonar-pro": "Perplexity Sonar Pro",
-};
-
-const providerColors: Record<string, string> = {
-  "gemini-2.5-flash-lite": "#4285f4",
-  "gemini-3.0-flash": "#4285f4",
-  "grok-4.1-fast": "#ff6b00",
-  "grok-4": "#ff6b00",
-  "gpt-4o-mini": "#10a37f",
-  "gpt-5": "#10a37f",
-  "claude-sonnet-4.5": "#d4a574",
-  "claude-opus-4.6": "#d4a574",
-  "perplexity-sonar": "#22c55e",
-  "perplexity-sonar-pro": "#22c55e",
-};
 
 /**
  * ストリーミングメッセージコンポーネント
  * SSE (Server-Sent Events) を使用してリアルタイムにLLMレスポンスを表示
  */
-export function StreamingMessage({
+export const StreamingMessage = memo(function StreamingMessage({
   provider,
+  content = "",
+  thinking = "",
+  isComplete = false,
   onComplete,
   className,
 }: StreamingMessageProps) {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [, setState] = useState<StreamState>({
-    content: "",
-    thinking: "",
-    isThinking: false,
-    isComplete: false,
-    error: null,
-  });
-  const [displayedContent, setDisplayedContent] = useState("");
-  const [displayedThinking, setDisplayedThinking] = useState("");
+  const [displayedContent, setDisplayedContent] = useState(content);
+  const [displayedThinking, setDisplayedThinking] = useState(thinking);
   const contentRef = useRef<HTMLDivElement>(null);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const abortControllerRef = useRef<AbortController | null>(null);
 
-  // タイピング効果（文字ごとに表示）
-  // Note: stateは親コンポーネントから渡される値を使用
+  // 親から渡されたcontent/thinkingが変わったら表示を更新
   useEffect(() => {
-    // 親コンポーネントで管理されるstateの値を使用
-    const currentContent = displayedContent;
-    if (currentContent.length < 1000) { // ダミー条件で警告を回避
-      const timer = setTimeout(() => {
-        setDisplayedContent(prev => prev + "");
-      }, 10);
-      return () => clearTimeout(timer);
+    if (content !== displayedContent) {
+      setDisplayedContent(content);
     }
-  }, [displayedContent]);
+  }, [content, displayedContent]);
 
-  // 思考プロセスのタイピング効果
   useEffect(() => {
-    const currentThinking = displayedThinking;
-    if (currentThinking.length < 1000) { // ダミー条件で警告を回避
-      const timer = setTimeout(() => {
-        setDisplayedThinking(prev => prev + "");
-      }, 15);
-      return () => clearTimeout(timer);
+    if (thinking !== displayedThinking) {
+      setDisplayedThinking(thinking);
     }
-  }, [displayedThinking]);
+  }, [thinking, displayedThinking]);
 
   // 自動スクロール
   useEffect(() => {
@@ -99,16 +51,14 @@ export function StreamingMessage({
 
   // 完了時のコールバック
   const handleComplete = useCallback(() => {
-    if (onComplete) {
+    if (isComplete && onComplete) {
       onComplete();
     }
-  }, [onComplete]);
+  }, [isComplete, onComplete]);
 
   useEffect(() => {
-    if (displayedContent && displayedContent === displayedContent) {
-      handleComplete();
-    }
-  }, [displayedContent, handleComplete]);
+    handleComplete();
+  }, [handleComplete]);
 
   return (
     <div
@@ -128,7 +78,7 @@ export function StreamingMessage({
       >
         <Bot
           className="w-4 h-4"
-          style={{ color: providerColors[provider] || "#ff6b00" }}
+          style={{ color: PROVIDER_COLORS[provider] || "#ff6b00" }}
         />
       </div>
 
@@ -139,11 +89,11 @@ export function StreamingMessage({
           <span className="text-sm font-medium text-gray-300">AI Assistant</span>
           <span
             className="text-xs px-2 py-0.5 rounded-full bg-[#2a2a35]"
-            style={{ color: providerColors[provider] || "#ff6b00" }}
+            style={{ color: PROVIDER_COLORS[provider] || "#ff6b00" }}
           >
-            {providerLabels[provider] || provider}
+            {PROVIDER_LABELS[provider] || provider}
           </span>
-          {!displayedContent && (
+          {!isComplete && (
             <span className="flex items-center gap-1 text-xs text-gray-500">
               <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
               生成中...
@@ -157,7 +107,7 @@ export function StreamingMessage({
             <div className="flex items-center gap-2 mb-2">
               <Sparkles className="w-3.5 h-3.5 text-[#22c55e]" />
               <span className="text-xs text-[#22c55e] font-medium">思考プロセス</span>
-              {!displayedContent && (
+              {!isComplete && (
                 <div className="flex gap-1">
                   <span className="w-1 h-1 bg-[#22c55e] rounded-full animate-bounce [animation-delay:-0.3s]" />
                   <span className="w-1 h-1 bg-[#22c55e] rounded-full animate-bounce [animation-delay:-0.15s]" />
@@ -167,7 +117,7 @@ export function StreamingMessage({
             </div>
             <p className="text-xs text-gray-400 leading-relaxed whitespace-pre-wrap">
               {displayedThinking}
-              {!displayedContent && (
+              {!isComplete && (
                 <span className="inline-block w-1.5 h-3.5 bg-[#22c55e] ml-0.5 animate-pulse" />
               )}
             </p>
@@ -184,7 +134,7 @@ export function StreamingMessage({
           {displayedContent ? (
             <div className="whitespace-pre-wrap">
               {displayedContent}
-              {displayedContent && (
+              {!isComplete && (
                 <span className="inline-block w-1.5 h-4 bg-[#ff6b00] ml-0.5 animate-pulse" />
               )}
             </div>
@@ -199,23 +149,33 @@ export function StreamingMessage({
             </div>
           )}
         </div>
-
-        {/* Error Message */}
-        {displayedContent === "error" && (
-          <div className="mt-3 p-3 rounded-lg bg-red-500/10 border border-red-500/20">
-            <p className="text-xs text-red-400">エラーが発生しました</p>
-          </div>
-        )}
       </div>
     </div>
   );
+});
+
+interface StreamState {
+  content: string;
+  thinking: string;
+  isThinking: boolean;
+  isComplete: boolean;
+  error: string | null;
+}
+
+interface UseLLMStreamReturn extends StreamState {
+  startStream: (
+    messages: Array<{ role: "user" | "assistant" | "system"; content: string }>,
+    provider: LLMProvider
+  ) => Promise<void>;
+  cancelStream: () => void;
+  resetStream: () => void;
 }
 
 /**
  * ストリーミングフック
  * SSE接続を管理し、リアルタイムでコンテンツを更新
  */
-export function useLLMStream() {
+export function useLLMStream(): UseLLMStreamReturn {
   const [state, setState] = useState<StreamState>({
     content: "",
     thinking: "",
@@ -225,7 +185,7 @@ export function useLLMStream() {
   });
   const abortControllerRef = useRef<AbortController | null>(null);
 
-  const startStream = async (
+  const startStream = useCallback(async (
     messages: Array<{ role: "user" | "assistant" | "system"; content: string }>,
     provider: LLMProvider
   ) => {
@@ -351,16 +311,16 @@ export function useLLMStream() {
         isComplete: true,
       }));
     }
-  };
+  }, []);
 
-  const cancelStream = () => {
+  const cancelStream = useCallback(() => {
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
       abortControllerRef.current = null;
     }
-  };
+  }, []);
 
-  const resetStream = () => {
+  const resetStream = useCallback(() => {
     cancelStream();
     setState({
       content: "",
@@ -369,7 +329,7 @@ export function useLLMStream() {
       isComplete: false,
       error: null,
     });
-  };
+  }, [cancelStream]);
 
   return {
     ...state,

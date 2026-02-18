@@ -9,6 +9,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createGeminiClient } from '@/lib/llm/clients/gemini';
 import { getTranscriptSystemPrompt, createUserPrompt } from '@/prompts/transcript-format';
+import { requireAuth } from '@/lib/api/auth';
+import { handleApiError } from '@/lib/api/utils';
 import type { LLMMessage } from '@/lib/llm/types';
 
 /**
@@ -47,6 +49,12 @@ export interface TranscriptResponse {
  */
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
+    // 認証チェック
+    const authResult = await requireAuth(request);
+    if (authResult instanceof NextResponse) {
+      return authResult;
+    }
+
     // リクエストボディのパース
     const body = await request.json();
 
@@ -55,7 +63,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     if (!validationResult.success) {
       return NextResponse.json(
         {
-          error: 'Invalid request',
+          error: 'リクエストが無効です',
           details: validationResult.error.format(),
         },
         { status: 400 }
@@ -90,48 +98,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   } catch (error) {
     console.error('Transcript API Error:', error);
-
-    // エラーの種類に応じたレスポンス
-    if (error instanceof Error) {
-      // APIキー関連のエラー
-      if (error.message.includes('GEMINI_API_KEY')) {
-        return NextResponse.json(
-          {
-            error: 'Configuration error',
-            message: 'API key is not configured',
-          },
-          { status: 500 }
-        );
-      }
-
-      // Gemini APIエラー
-      if (error.message.includes('Gemini API error')) {
-        return NextResponse.json(
-          {
-            error: 'LLM API error',
-            message: error.message,
-          },
-          { status: 502 }
-        );
-      }
-
-      // その他のエラー
-      return NextResponse.json(
-        {
-          error: 'Internal server error',
-          message: error.message,
-        },
-        { status: 500 }
-      );
-    }
-
-    // 不明なエラー
-    return NextResponse.json(
-      {
-        error: 'Internal server error',
-        message: 'An unexpected error occurred',
-      },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }

@@ -8,8 +8,18 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { createLLMClient } from "@/lib/llm/factory";
+import { requireAuth } from "@/lib/api/auth";
+import { handleApiError, LLMError } from "@/lib/api/utils";
 import { LLMProvider, LLMMessage } from "@/lib/llm/types";
+
+const researchRequestSchema = z.object({
+  agentType: z.enum(["people", "evidence", "location"] as const),
+  query: z.string().min(1, "クエリを入力してください"),
+  provider: z.string().optional(),
+  stream: z.boolean().optional().default(false),
+});
 
 export type ResearchAgentType = "people" | "evidence" | "location";
 
@@ -86,23 +96,24 @@ X（Twitter）検索を活用して、依頼された人物を特定してくだ
  */
 export async function POST(request: NextRequest) {
   try {
-    const body: ResearchRequest = await request.json();
-    const { agentType, query, provider, stream = false } = body;
+    // 認証チェック
+    const authResult = await requireAuth(request);
+    if (authResult instanceof NextResponse) {
+      return authResult;
+    }
 
-    // バリデーション
-    if (!agentType || !query) {
+    const body = await request.json();
+    
+    // Zodバリデーション
+    const validationResult = researchRequestSchema.safeParse(body);
+    if (!validationResult.success) {
       return NextResponse.json(
-        { error: "agentType and query are required" },
+        { error: "バリデーションエラー", details: validationResult.error.errors },
         { status: 400 }
       );
     }
 
-    if (!["people", "evidence", "location"].includes(agentType)) {
-      return NextResponse.json(
-        { error: "Invalid agentType. Must be 'people', 'evidence', or 'location'" },
-        { status: 400 }
-      );
-    }
+    const { agentType, query, provider, stream = false } = validationResult.data;
 
     // プロバイダー決定
     const selectedProvider = provider || AGENT_DEFAULT_PROVIDERS[agentType];
@@ -138,7 +149,11 @@ export async function POST(request: NextRequest) {
             controller.enqueue(encoder.encode("data: [DONE]\n\n"));
             controller.close();
           } catch (error) {
-            controller.error(error);
+            const errorMessage = error instanceof Error ? error.message : "ストリーミングエラー";
+            controller.enqueue(
+              encoder.encode(`data: ${JSON.stringify({ error: errorMessage })}\n\n`)
+            );
+            controller.close();
           }
         },
       });
@@ -178,12 +193,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(result);
   } catch (error) {
     console.error("Research API error:", error);
-    return NextResponse.json(
-      {
-        error: "Internal server error",
-        message: error instanceof Error ? error.message : "Unknown error",
-      },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }

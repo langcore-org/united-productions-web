@@ -10,6 +10,7 @@ import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { createLLMClient, isValidProvider } from '@/lib/llm/factory';
 import { DEFAULT_PROVIDER } from '@/lib/llm/config';
+import { requireAuth } from '@/lib/api/auth';
 import type { LLMMessage, LLMProvider } from '@/lib/llm/types';
 
 /**
@@ -80,6 +81,12 @@ function createStreamResponse(iterator: AsyncIterable<string>): Response {
  */
 export async function POST(request: NextRequest): Promise<Response> {
   try {
+    // 認証チェック（セッションのみ検証、レスポンスは返さない）
+    const authResult = await requireAuth(request);
+    if (authResult instanceof Response) {
+      return authResult;
+    }
+
     // リクエストボディのパース
     const body = await request.json();
 
@@ -88,7 +95,7 @@ export async function POST(request: NextRequest): Promise<Response> {
     if (!validationResult.success) {
       return new Response(
         JSON.stringify({
-          error: 'Invalid request',
+          error: 'リクエストが無効です',
           details: validationResult.error.format(),
         }),
         {
@@ -106,8 +113,8 @@ export async function POST(request: NextRequest): Promise<Response> {
       if (!isValidProvider(requestedProvider)) {
         return new Response(
           JSON.stringify({
-            error: 'Invalid provider',
-            message: `Provider "${requestedProvider}" is not supported`,
+            error: '無効なプロバイダーです',
+            message: `プロバイダー "${requestedProvider}" はサポートされていません`,
           }),
           {
             status: 400,
@@ -131,27 +138,12 @@ export async function POST(request: NextRequest): Promise<Response> {
 
   } catch (error) {
     console.error('LLM Stream API Error:', error);
-
-    const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
-
-    // NotImplementedClientのエラー（Wave 2で実装予定）
-    if (errorMessage.includes('not implemented yet')) {
-      return new Response(
-        JSON.stringify({
-          error: 'Provider not implemented',
-          message: errorMessage,
-        }),
-        {
-          status: 501,
-          headers: { 'Content-Type': 'application/json' },
-        }
-      );
-    }
-
-    // その他のエラー
+    
+    const errorMessage = error instanceof Error ? error.message : '予期しないエラーが発生しました';
+    
     return new Response(
       JSON.stringify({
-        error: 'Internal server error',
+        error: '内部サーバーエラー',
         message: errorMessage,
       }),
       {
