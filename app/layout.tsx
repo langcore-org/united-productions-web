@@ -28,9 +28,9 @@ export default async function RootLayout({
   const session = await getServerSession(authOptions) as import("next-auth").Session | null;
 
   return (
-    <html lang="ja" className="dark">
+    <html lang="ja">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[#0d0d12] text-white min-h-screen`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-white text-gray-900 min-h-screen`}
       >
         <SessionProvider session={session}>
           {children}
