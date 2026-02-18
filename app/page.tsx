@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useTheme } from "@/components/providers/ThemeProvider";
 import { cn } from "@/lib/utils";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { 
@@ -71,8 +72,8 @@ const modeButtons: ModeButton[] = [
 export default function DashboardPage() {
   const [inputValue, setInputValue] = useState("");
   const [isFocused, setIsFocused] = useState(false);
-  // Theme is managed by ThemeProvider
   const [isVoiceMode, setIsVoiceMode] = useState(false);
+  const { isDarkMode } = useTheme();
 
   // Keyboard shortcut handler
   useEffect(() => {
@@ -85,16 +86,6 @@ export default function DashboardPage() {
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
-
-  // Theme toggle handler - sync with sidebar
-  useEffect(() => {
-    // Apply theme to document for global consistency
-    if (isDarkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, [isDarkMode]);
 
   const handleSend = () => {
     if (inputValue.trim()) {
