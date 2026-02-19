@@ -2,7 +2,6 @@
 
 import { cn } from "@/lib/utils";
 import {
-  Plus,
   MessageSquare,
   Search,
   FileText,
@@ -19,10 +18,9 @@ import {
   ChevronDown,
   Edit3,
   Trash2,
-  Tv,
 } from "lucide-react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 
 interface SidebarProps {
@@ -92,11 +90,6 @@ const navItems = [
 
 const bottomItems = [
   {
-    icon: <Tv className="w-[18px] h-[18px]" />,
-    label: "番組設定",
-    href: "/settings/program",
-  },
-  {
     icon: <Settings className="w-[18px] h-[18px]" />,
     label: "管理画面",
     href: "/admin/settings",
@@ -105,7 +98,6 @@ const bottomItems = [
 
 export function Sidebar({ className }: SidebarProps) {
   const pathname = usePathname();
-  const router = useRouter();
   const [expandedMenus, setExpandedMenus] = useState<Set<string>>(new Set());
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
 
