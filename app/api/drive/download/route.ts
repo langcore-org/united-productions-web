@@ -6,6 +6,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
+import type { Session } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
 
 const DRIVE_API_BASE = "https://www.googleapis.com/drive/v3";
@@ -14,8 +15,8 @@ export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    if (!(session as any)?.accessToken) {
+    const typedSession = session as Session | null;
+    if (!typedSession?.accessToken) {
       return NextResponse.json(
         { error: "認証が必要です" },
         { status: 401 }
@@ -37,7 +38,7 @@ export async function GET(request: NextRequest) {
       `${DRIVE_API_BASE}/files/${fileId}?fields=id,name,mimeType,size`,
       {
         headers: {
-          Authorization: `Bearer ${(session as any).accessToken}`,
+          Authorization: `Bearer ${typedSession.accessToken}`,
         },
       }
     );
@@ -56,7 +57,7 @@ export async function GET(request: NextRequest) {
       `${DRIVE_API_BASE}/files/${fileId}?alt=media`,
       {
         headers: {
-          Authorization: `Bearer ${(session as any).accessToken}`,
+          Authorization: `Bearer ${typedSession.accessToken}`,
         },
       }
     );

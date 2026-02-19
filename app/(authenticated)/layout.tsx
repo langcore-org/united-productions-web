@@ -1,4 +1,5 @@
 import { getServerSession } from "next-auth/next";
+import type { Session } from "next-auth";
 import { redirect } from "next/navigation";
 import { authOptions } from "@/lib/auth-options";
 
@@ -9,8 +10,8 @@ export default async function AuthenticatedLayout({
 }) {
   const session = await getServerSession(authOptions);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  if (!(session as any)?.user?.id) {
+  const typedSession = session as Session | null;
+  if (!typedSession?.user?.id) {
     redirect("/auth/signin");
   }
 

@@ -5,6 +5,39 @@
  * サーバーサイドでのみ実行されます。
  */
 
+// 動的インポート用の型定義
+interface PDFParseResult {
+  text: string;
+  numpages: number;
+  info?: {
+    Author?: string;
+  };
+}
+
+interface PDFParseModule {
+  default: (buffer: Buffer) => Promise<PDFParseResult>;
+}
+
+interface MammothResult {
+  value: string;
+}
+
+interface MammothModule {
+  extractRawText: (options: { buffer: Buffer }) => Promise<MammothResult>;
+}
+
+interface XLSXWorkbook {
+  SheetNames: string[];
+  Sheets: Record<string, unknown>;
+}
+
+interface XLSXModule {
+  read: (buffer: Buffer, options: { type: "buffer" }) => XLSXWorkbook;
+  utils: {
+    sheet_to_csv: (sheet: unknown) => string;
+  };
+}
+
 export interface ParsedDocument {
   text: string;
   fileType: string;
@@ -23,8 +56,7 @@ export interface ParsedDocument {
 export async function parsePDF(buffer: Buffer): Promise<ParsedDocument> {
   try {
     // pdf-parseは動的インポート（サーバーサイドのみ）
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const pdfParse: any = await import("pdf-parse");
+    const pdfParse = await import("pdf-parse") as unknown as PDFParseModule;
     const result = await pdfParse.default(buffer);
     
     return {
@@ -49,8 +81,7 @@ export async function parsePDF(buffer: Buffer): Promise<ParsedDocument> {
 export async function parseWord(buffer: Buffer): Promise<ParsedDocument> {
   try {
     // mammothを使用してWordファイルを解析
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const mammoth: any = await import("mammoth");
+    const mammoth = await import("mammoth") as unknown as MammothModule;
     const result = await mammoth.extractRawText({ buffer });
     
     return {
@@ -72,14 +103,12 @@ export async function parseWord(buffer: Buffer): Promise<ParsedDocument> {
 export async function parseExcel(buffer: Buffer): Promise<ParsedDocument> {
   try {
     // xlsxを使用してExcelファイルを解析
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const XLSX: any = await import("xlsx");
+    const XLSX = await import("xlsx") as unknown as XLSXModule;
     const workbook = XLSX.read(buffer, { type: "buffer" });
     
     // 全シートのテキストを結合
     let text = "";
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    workbook.SheetNames.forEach((sheetName: any) => {
+    workbook.SheetNames.forEach((sheetName) => {
       const sheet = workbook.Sheets[sheetName];
       const sheetText = XLSX.utils.sheet_to_csv(sheet);
       text += `\n--- ${sheetName} ---\n${sheetText}`;

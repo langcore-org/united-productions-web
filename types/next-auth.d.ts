@@ -1,44 +1,23 @@
+import type { DefaultSession } from "next-auth";
+
 /**
- * NextAuth.js 型拡張
- * 
- * カスタムセッションとJWTの型を拡張
+ * NextAuth Session 型の拡張
+ * JWTコールバックで設定したカスタムフィールドを型定義
  */
-
-// NextAuth型拡張
-
 declare module "next-auth" {
-  /**
-   * 拡張されたセッション型
-   */
-  interface Session {
+  interface Session extends DefaultSession {
     user: {
       id: string;
-      name?: string | null;
-      email?: string | null;
-      image?: string | null;
       role?: string;
-    };
+    } & DefaultSession["user"];
     accessToken?: string;
   }
 
-  /**
-   * 拡張されたユーザー型
-   */
-  interface User {
-    id: string;
-    role?: string;
-  }
-}
-
-declare module "next-auth/jwt" {
-  /**
-   * 拡張されたJWT型
-   */
   interface JWT {
-    userId?: string;
     accessToken?: string;
     refreshToken?: string;
     accessTokenExpires?: number;
+    userId?: string;
     role?: string;
   }
 }

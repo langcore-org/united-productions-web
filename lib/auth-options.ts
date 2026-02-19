@@ -160,8 +160,7 @@ export const authOptions: AuthOptions = {
      * セッションコールバック
      * JWTからセッションに必要な情報を追加
      */
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    async session({ session, token }: { session: any; token: any }) {
+    async session({ session, token }) {
       if (token && session.user) {
         session.user.id = token.userId as string;
         session.accessToken = token.accessToken as string;

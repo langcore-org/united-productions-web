@@ -60,15 +60,17 @@ export interface DriveSearchOptions {
  * @returns アクセストークン
  * @throws 認証エラー
  */
+import type { Session } from "next-auth";
+
 async function getAccessToken(): Promise<string> {
   const session = await getServerSession(authOptions);
+  const typedSession = session as Session | null;
   
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  if (!(session as any)?.accessToken) {
+  if (!typedSession?.accessToken) {
     throw new Error("Google Driveアクセスのための認証が必要です");
   }
   
-  return (session as any).accessToken;
+  return typedSession.accessToken;
 }
 
 /**

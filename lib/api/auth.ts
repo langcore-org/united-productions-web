@@ -5,6 +5,7 @@
  */
 
 import { getServerSession } from "next-auth/next";
+import type { Session } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 import { authOptions } from "@/lib/auth-options";
 
@@ -31,8 +32,8 @@ export async function requireAuth(
   try {
     const session = await getServerSession(authOptions);
     
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    if (!(session as any)?.user?.id) {
+    const typedSession = session as Session | null;
+    if (!typedSession?.user?.id) {
       return NextResponse.json(
         { error: "認証が必要です。ログインしてください。" },
         { status: 401 }
@@ -40,10 +41,8 @@ export async function requireAuth(
     }
 
     return {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      user: (session as any).user as AuthenticatedUser,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      userId: (session as any).user.id,
+      user: typedSession.user as AuthenticatedUser,
+      userId: typedSession.user.id,
     };
   } catch (error) {
     console.error("認証チェックエラー:", error);
@@ -65,16 +64,14 @@ export async function optionalAuth(
   try {
     const session = await getServerSession(authOptions);
     
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    if (!(session as any)?.user?.id) {
+    const typedSession = session as Session | null;
+    if (!typedSession?.user?.id) {
       return null;
     }
 
     return {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      user: (session as any).user as AuthenticatedUser,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      userId: (session as any).user.id,
+      user: typedSession.user as AuthenticatedUser,
+      userId: typedSession.user.id,
     };
   } catch (error) {
     console.error("認証チェックエラー:", error);
