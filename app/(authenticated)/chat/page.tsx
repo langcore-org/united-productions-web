@@ -306,7 +306,7 @@ const defaultChatData = {
 // マークダウン風のテキストをレンダリングするコンポーネント
 function MarkdownContent({ content }: { content: string }) {
   const lines = content.split("\n");
-  const elements: JSX.Element[] = [];
+  const elements: React.ReactElement[] = [];
   let key = 0;
 
   for (let i = 0; i < lines.length; i++) {
