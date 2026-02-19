@@ -2,6 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import { useRef, useEffect } from "react";
+import { AlertCircle, X } from "lucide-react";
 import { ChatMessage } from "./ChatMessage";
 import { ChatInput } from "./ChatInput";
 import { EmptyState } from "./EmptyState";
@@ -66,6 +67,23 @@ export function ChatUI({
                 showThinking={showThinking}
                 provider={provider}
               />
+            )}
+
+            {/* Error Message */}
+            {streamState?.error && (
+              <div className="flex gap-4">
+                <div className="flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center bg-red-100">
+                  <AlertCircle className="w-4 h-4 text-red-600" />
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <span className="text-sm font-medium text-red-600">エラー</span>
+                  </div>
+                  <div className="relative px-4 py-3 text-sm leading-relaxed rounded-2xl bg-red-50 text-red-800 border border-red-200 rounded-tl-sm">
+                    <div className="whitespace-pre-wrap">{streamState.error}</div>
+                  </div>
+                </div>
+              </div>
             )}
 
             <div ref={messagesEndRef} />

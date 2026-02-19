@@ -25,6 +25,7 @@ import {
   Brain,
   Terminal,
   FolderOpen,
+  AlertCircle,
 } from "lucide-react";
 import { DriveUploadButton, DriveFileSelectButton } from "@/components/meeting-notes/GoogleDriveButtons";
 
@@ -382,8 +383,14 @@ export default function MeetingNotesPage() {
 
         {/* Error Message */}
         {error && (
-          <div className="mb-8 p-4 rounded-xl bg-red-50 border border-red-200 text-red-600">
-            <p className="text-sm">{error}</p>
+          <div className="mb-8 p-4 rounded-xl bg-red-50 border border-red-200">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-medium text-red-800">エラーが発生しました</p>
+                <p className="text-sm text-red-600 mt-1">{error}</p>
+              </div>
+            </div>
           </div>
         )}
 
