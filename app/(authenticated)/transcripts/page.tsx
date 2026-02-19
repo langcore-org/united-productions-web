@@ -571,22 +571,3 @@ Premiere Proの書き起こしテキストを、放送用のNA原稿形式に整
   );
 }
 
-function FeatureCard({
-  icon,
-  title,
-  description,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  description: string;
-}) {
-  return (
-    <div className="p-4 rounded-xl bg-white border border-gray-200 hover:border-gray-300 transition-colors group">
-      <div className="w-10 h-10 rounded-lg bg-[#ff6b00]/10 flex items-center justify-center text-[#ff6b00] mb-3 group-hover:bg-[#ff6b00]/15 transition-colors">
-        {icon}
-      </div>
-      <h3 className="font-medium text-white mb-1">{title}</h3>
-      <p className="text-sm text-gray-500">{description}</p>
-    </div>
-  );
-}
