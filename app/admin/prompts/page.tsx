@@ -60,11 +60,18 @@ export default function AdminPromptsPage() {
       if (result.success) {
         setPrompts(result.data);
       } else {
-        setMessage({ type: "error", text: "プロンプトの取得に失敗しました" });
+        const errorDetail = result.details ? ` (${result.details})` : "";
+        setMessage({ 
+          type: "error", 
+          text: `プロンプトの取得に失敗しました${errorDetail}` 
+        });
       }
     } catch (error) {
       console.error("Failed to fetch prompts:", error);
-      setMessage({ type: "error", text: "プロンプトの取得に失敗しました" });
+      setMessage({ 
+        type: "error", 
+        text: "プロンプトの取得に失敗しました（ネットワークエラー）" 
+      });
     } finally {
       setLoading(false);
     }
