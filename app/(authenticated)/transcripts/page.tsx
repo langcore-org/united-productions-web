@@ -3,6 +3,7 @@
 import { useState, useRef, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import { LLMSelector, type LLMProvider } from "@/components/ui/LLMSelector";
+import { FeatureCard } from "@/components/ui/FeatureCard";
 import {
   Mic,
   Sparkles,
