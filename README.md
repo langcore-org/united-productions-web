@@ -27,74 +27,126 @@ AI Hubは、テレビ制作現場の様々な業務をAIで支援する統合プ
 | Wave 1 | 基盤構築（認証、DB、LLM Factory） | ✅ 完了 |
 | Wave 2 | UI/LLM連携（shadcn/ui、各LLMクライアント） | ✅ 完了 |
 | Wave 3 | 機能実装（PJ-A/B/C/D、Drive連携） | ✅ 完了 |
-| Wave 4 | 統合・最適化（キャッシュ、テスト、デプロイ） | 🔄 進行中 |
+| Wave 4 | サイドバーナビゲーション・FeatureChat実装 | ✅ 完了 |
+| Wave 5 | 統合・最適化（キャッシュ、テスト、デプロイ） | 🔄 進行中 |
 
 ## 機能一覧
 
-### PJ-A: 議事録・文字起こし
-- Zoom文字起こしテキストをAIで整形
-- 会議用・面談用テンプレート
-- 自動要約・TODO抽出
+### サイドバーナビゲーション
 
-### PJ-B: 起こし・NA原稿
-- Premiere Pro書き起こしテキストからNA原稿生成
-- 話者分離・タイムコード整理
+```
+├── リサーチ（折りたたみメニュー）
+│   ├── 出演者リサーチ → /research/cast
+│   ├── 場所リサーチ   → /research/location
+│   ├── 情報リサーチ   → /research/info
+│   └── エビデンスリサーチ → /research/evidence
+├── 議事録作成         → /minutes
+├── 新企画立案         → /proposal
+├── 文字起こし（折りたたみメニュー）
+│   ├── フォーマット変換 → /transcript
+│   └── NA原稿作成     → /transcript/na
+└── 番組設定           → /settings/program
+```
 
-### PJ-C: リサーチ・考査
-- **人探しエージェント**: X検索を活用した人物特定 (Grok)
-- **エビデンス確認エージェント**: 事実検証・ソース付き回答 (Perplexity)
-- **ロケ地探しエージェント**: 撮影場所の提案・検索 (Perplexity)
+### リサーチ機能 (PJ-C)
 
-### PJ-D: ロケスケ管理
+| 機能 | パス | 説明 |
+|------|------|------|
+| **出演者リサーチ** | `/research/cast` | 企画に適した出演者候補を提案。プロフィール、出演実績、相性分析を含む |
+| **場所リサーチ** | `/research/location` | ロケ地候補と撮影条件を調査。アクセス、許可要件、周辺情報を含む |
+| **情報リサーチ** | `/research/info` | テーマに関する情報を収集・整理。信頼性の高い情報源を提示 |
+| **エビデンスリサーチ** | `/research/evidence` | 情報の真偽を検証。ファクトチェック・一次情報源を特定 |
+
+### 議事録・文字起こし (PJ-A/PJ-B)
+
+| 機能 | パス | 説明 |
+|------|------|------|
+| **議事録作成** | `/minutes` | 文字起こしから構造化された議事録を作成。TODO・決定事項を抽出 |
+| **新企画立案** | `/proposal` | 番組情報と過去企画を基に新しい企画案を提案 |
+| **文字起こし変換** | `/transcript` | テキスト整形・フォーマット変換。フィラー除去、段落分け |
+| **NA原稿作成** | `/transcript/na` | ナレーション原稿を作成。Wordコピー対応のプレーンテキスト出力 |
+
+### 番組設定
+
+| 機能 | パス | 説明 |
+|------|------|------|
+| **番組設定** | `/settings/program` | 番組情報・過去企画を管理。新企画立案で使用 |
+
+### ロケスケ管理 (PJ-D)
+
 - マスタースケジュールからの自動生成
 - 演者別スケジュール・香盤表・車両表
 - Markdown/CSVエクスポート
+
+## FeatureChat コンポーネント
+
+各機能ページで共通して使用するチャットUIコンポーネントです。
+
+```typescript
+interface FeatureChatProps {
+  featureId: string;          // 機能識別子
+  title: string;              // ページタイトル
+  systemPrompt: string;       // システムプロンプト
+  placeholder: string;        // 入力欄プレースホルダー
+  inputLabel?: string;        // 入力エリアラベル
+  outputFormat?: "markdown" | "plaintext";
+}
+```
+
+**特徴:**
+- ストリーミングレスポンス対応（SSE）
+- 会話履歴の自動保存（Prisma）
+- plaintextモード時のWordコピー機能
+- 各機能別のシステムプロンプト切り替え
 
 ## ディレクトリ構成
 
 ```
 .
-├── app/                    # Next.js App Router
-│   ├── api/               # API Routes
-│   │   ├── auth/          # NextAuth.js認証
-│   │   ├── llm/           # LLM関連API
-│   │   ├── meeting-notes/ # 議事録API
-│   │   ├── research/      # リサーチAPI
-│   │   ├── schedules/     # スケジュールAPI
-│   │   └── transcripts/   # 文字起こしAPI
-│   ├── auth/              # 認証ページ
-│   ├── meeting-notes/     # 議事録ページ
-│   ├── research/          # リサーチページ
-│   ├── schedules/         # スケジュールページ
-│   ├── transcripts/       # 文字起こしページ
-│   ├── layout.tsx         # ルートレイアウト
-│   └── page.tsx           # ダッシュボード
-├── components/            # Reactコンポーネント
-│   ├── layout/           # レイアウトコンポーネント
-│   ├── providers/        # プロバイダー
-│   ├── research/         # リサーチ関連
-│   └── ui/               # UIコンポーネント
-├── lib/                   # ユーティリティ・ライブラリ
-│   ├── llm/              # LLM統合
-│   │   ├── clients/      # 各LLMクライアント
-│   │   ├── cache.ts      # LLMレスポンスキャッシュ
-│   │   ├── config.ts     # LLM設定・価格情報
-│   │   ├── factory.ts    # LLMクライアントFactory
-│   │   └── types.ts      # LLM型定義
-│   ├── auth-options.ts   # NextAuth設定
-│   ├── prisma.ts         # Prismaクライアント
-│   ├── rate-limit.ts     # レート制限
-│   └── utils.ts          # ユーティリティ
-├── prompts/               # LLMプロンプト
-│   ├── meeting-format.ts # 議事録整形プロンプト
-│   ├── schedule-generate.ts # スケジュール生成プロンプト
-│   └── transcript-format.ts # 文字起こし整形プロンプト
-├── prisma/                # Prismaスキーマ・マイグレーション
-├── types/                 # グローバル型定義
-└── docs/                  # ドキュメント
-    ├── ARCHITECTURE.md   # アーキテクチャ設計
-    ├── API.md            # API仕様書
-    └── DEPLOYMENT.md     # デプロイ手順
+├── app/                          # Next.js App Router
+│   ├── (authenticated)/          # 認証必須ページ
+│   │   ├── research/
+│   │   │   ├── cast/page.tsx     # 出演者リサーチ
+│   │   │   ├── location/page.tsx # 場所リサーチ
+│   │   │   ├── info/page.tsx     # 情報リサーチ
+│   │   │   └── evidence/page.tsx # エビデンスリサーチ
+│   │   ├── minutes/page.tsx      # 議事録作成
+│   │   ├── proposal/page.tsx     # 新企画立案
+│   │   ├── transcript/
+│   │   │   ├── page.tsx          # 文字起こし変換
+│   │   │   └── na/page.tsx       # NA原稿作成
+│   │   └── settings/
+│   │       └── program/page.tsx  # 番組設定
+│   ├── api/
+│   │   ├── auth/                 # NextAuth.js認証
+│   │   ├── chat/
+│   │   │   └── feature/route.ts  # 機能別チャットAPI
+│   │   ├── llm/                  # LLM関連API
+│   │   └── settings/
+│   │       └── program/route.ts  # 番組設定API
+│   └── auth/                     # 認証ページ
+├── components/
+│   ├── layout/
+│   │   └── Sidebar.tsx           # サイドバー（折りたたみ対応）
+│   └── ui/
+│       └── FeatureChat.tsx       # 共通チャットUI
+├── lib/
+│   ├── prompts/                  # プロンプト定数
+│   │   ├── research-cast.ts
+│   │   ├── research-location.ts
+│   │   ├── research-info.ts
+│   │   ├── research-evidence.ts
+│   │   ├── minutes.ts
+│   │   ├── proposal.ts
+│   │   ├── transcript.ts
+│   │   └── na-script.ts
+│   └── llm/                      # LLM統合
+├── prisma/
+│   └── schema.prisma             # Prismaスキーマ
+└── docs/                         # ドキュメント
+    ├── ARCHITECTURE.md           # アーキテクチャ設計
+    ├── API.md                    # API仕様書
+    └── IMPROVEMENT_PLAN.md       # 改善プラン
 ```
 
 ## 環境構築
@@ -193,7 +245,7 @@ npx prisma studio        # DB GUI
 - [API仕様書](./docs/API.md)
 - [デプロイ手順](./docs/DEPLOYMENT.md)
 - [Google OAuth設定](./docs/GOOGLE_OAUTH_SETUP.md)
-- [実装サマリー](./docs/logs/SUMMARY.md)
+- [改善プラン](./docs/IMPROVEMENT_PLAN.md)
 
 ## ライセンス
 

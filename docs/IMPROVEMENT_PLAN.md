@@ -286,5 +286,173 @@ export const CATEGORY_COLORS: Record<string, string>
 
 ---
 
+## ✅ 追加実装（2026-02-19）- サイドバーナビゲーション
+
+### 新機能実装
+
+| # | 項目 | 対象ファイル | 状態 |
+|---|------|-------------|------|
+| 14 | サイドバー折りたたみメニュー | `components/layout/Sidebar.tsx` | ✅ 完了 |
+| 15 | FeatureChatコンポーネント | `components/ui/FeatureChat.tsx` | ✅ 完了 |
+| 16 | プロンプト定数ファイル群 | `lib/prompts/*.ts` (8ファイル) | ✅ 完了 |
+| 17 | 機能別ページ作成 | `app/(authenticated)/*` (9ページ) | ✅ 完了 |
+| 18 | チャットAPIエンドポイント | `/api/chat/feature` | ✅ 完了 |
+| 19 | 番組設定APIエンドポイント | `/api/settings/program` | ✅ 完了 |
+| 20 | Prismaスキーマ拡張 | `prisma/schema.prisma` | ✅ 完了 |
+
+### 実装詳細
+
+#### 14. サイドバー折りたたみメニュー
+
+**新機能:**
+- リサーチメニュー（折りたたみ）
+  - 出演者リサーチ → /research/cast
+  - 場所リサーチ → /research/location
+  - 情報リサーチ → /research/info
+  - エビデンスリサーチ → /research/evidence
+- 文字起こしメニュー（折りたたみ）
+  - NA原稿作成 → /transcript/na
+- 追加トップレベル項目
+  - 議事録作成 → /minutes
+  - 新企画立案 → /proposal
+- localStorageでの開閉状態永続化
+
+**追加アイコン:**
+- Users, MapPin, Info, Shield, Lightbulb, FileEdit
+- ChevronDown, ChevronRight（折りたたみ用）
+- Tv（番組設定用）
+
+#### 15. FeatureChatコンポーネント
+
+**機能:**
+```typescript
+interface FeatureChatProps {
+  featureId: string;          // 機能識別子
+  title: string;              // ページタイトル
+  systemPrompt: string;       // システムプロンプト
+  placeholder: string;        // 入力欄プレースホルダー
+  inputLabel?: string;        // 入力エリアラベル
+  outputFormat?: "markdown" | "plaintext";
+}
+```
+
+**特徴:**
+- ストリーミングレスポンス対応（SSE）
+- 会話履歴の自動保存（Prisma/ResearchChatモデル）
+- plaintextモード時のWordコピー機能
+- 各機能別のシステムプロンプト切り替え
+
+#### 16. プロンプト定数ファイル群
+
+**作成ファイル:**
+```
+lib/prompts/
+├── research-cast.ts      # 出演者リサーチ
+├── research-location.ts  # 場所リサーチ
+├── research-info.ts      # 情報リサーチ
+├── research-evidence.ts  # エビデンスリサーチ
+├── minutes.ts            # 議事録作成
+├── proposal.ts           # 新企画立案（動的生成）
+├── transcript.ts         # 文字起こし変換
+└── na-script.ts          # NA原稿作成
+```
+
+#### 17. 機能別ページ作成
+
+**新規ページ:**
+| ページ | パス | 機能 |
+|--------|------|------|
+| 出演者リサーチ | /research/cast | 企画に適した出演者候補を提案 |
+| 場所リサーチ | /research/location | ロケ地候補と撮影条件を調査 |
+| 情報リサーチ | /research/info | テーマに関する情報を収集・整理 |
+| エビデンスリサーチ | /research/evidence | 情報の真偽を検証 |
+| 議事録作成 | /minutes | 文字起こしから議事録を作成 |
+| 新企画立案 | /proposal | 番組情報を基に新企画を提案 |
+| 文字起こし変換 | /transcript | テキスト整形・フォーマット変換 |
+| NA原稿作成 | /transcript/na | ナレーション原稿を作成 |
+| 番組設定 | /settings/program | 番組情報・過去企画を管理 |
+
+#### 18. チャットAPIエンドポイント
+
+**`/api/chat/feature`:**
+- `GET /api/chat/feature?featureId={featureId}` - 会話履歴取得
+- `POST /api/chat/feature` - 会話履歴保存
+
+**featureId一覧:**
+- research-cast, research-location, research-info, research-evidence
+- minutes, proposal, transcript, transcript-na
+
+#### 19. 番組設定APIエンドポイント
+
+**`/api/settings/program`:**
+- `GET` - 現在の番組設定を取得
+- `POST` - 番組設定を保存
+
+**用途:**
+新企画立案（proposal）で使用。システムプロンプトに動的に挿入され、番組特性に合わせた企画提案を実現。
+
+#### 20. Prismaスキーマ拡張
+
+**追加モデル:**
+```prisma
+model ProgramSettings {
+  id             String   @id @default(cuid())
+  userId         String   @unique
+  programInfo    String   @db.Text
+  pastProposals  String   @db.Text
+  updatedAt      DateTime @updatedAt
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+```
+
+**Userモデルに追加:**
+```prisma
+model User {
+  // ... existing fields
+  programSettings ProgramSettings?
+}
+```
+
+---
+
+## 📁 新規作成ファイル一覧（サイドバー実装）
+
+| ファイルパス | 説明 |
+|-------------|------|
+| `components/ui/FeatureChat.tsx` | 共通チャットUIコンポーネント |
+| `components/ui/button.tsx` | shadcn/ui Button |
+| `components/ui/textarea.tsx` | shadcn/ui Textarea |
+| `components/ui/card.tsx` | shadcn/ui Card |
+| `lib/prompts/research-cast.ts` | 出演者リサーチプロンプト |
+| `lib/prompts/research-location.ts` | 場所リサーチプロンプト |
+| `lib/prompts/research-info.ts` | 情報リサーチプロンプト |
+| `lib/prompts/research-evidence.ts` | エビデンスリサーチプロンプト |
+| `lib/prompts/minutes.ts` | 議事録作成プロンプト |
+| `lib/prompts/proposal.ts` | 新企画立案プロンプト |
+| `lib/prompts/transcript.ts` | 文字起こし変換プロンプト |
+| `lib/prompts/na-script.ts` | NA原稿作成プロンプト |
+| `app/(authenticated)/research/cast/page.tsx` | 出演者リサーチページ |
+| `app/(authenticated)/research/location/page.tsx` | 場所リサーチページ |
+| `app/(authenticated)/research/info/page.tsx` | 情報リサーチページ |
+| `app/(authenticated)/research/evidence/page.tsx` | エビデンスリサーチページ |
+| `app/(authenticated)/minutes/page.tsx` | 議事録作成ページ |
+| `app/(authenticated)/proposal/page.tsx` | 新企画立案ページ |
+| `app/(authenticated)/transcript/page.tsx` | 文字起こし変換ページ |
+| `app/(authenticated)/transcript/na/page.tsx` | NA原稿作成ページ |
+| `app/(authenticated)/settings/program/page.tsx` | 番組設定ページ |
+| `app/api/chat/feature/route.ts` | チャットAPI |
+| `app/api/settings/program/route.ts` | 番組設定API |
+
+---
+
+## 🔧 修正ファイル一覧（サイドバー実装）
+
+| ファイルパス | 修正内容 |
+|-------------|----------|
+| `components/layout/Sidebar.tsx` | 折りたたみメニュー実装、ナビゲーション項目追加 |
+| `prisma/schema.prisma` | ProgramSettingsモデル追加 |
+
+---
+
 *最終更新日: 2026-02-19*
-*ステータス: 全改善項目完了*
+*ステータス: 全改善項目完了 + サイドバーナビゲーション実装完了*

@@ -11,18 +11,37 @@ flowchart TB
     subgraph Client["クライアント層"]
         direction TB
         Dashboard["ダッシュボード"]
-        Meeting["議事録ページ"]
-        Research["リサーチページ"]
+        Meeting["議事録作成"]
+        Minutes["議事録作成"]
+        Proposal["新企画立案"]
+        Research["リサーチ"]
+        ResearchCast["出演者リサーチ"]
+        ResearchLocation["場所リサーチ"]
+        ResearchInfo["情報リサーチ"]
+        ResearchEvidence["エビデンスリサーチ"]
+        Transcript["文字起こし変換"]
+        TranscriptNa["NA原稿作成"]
         Schedule["ロケスケページ"]
+        ProgramSettings["番組設定"]
         
         Dashboard --> ReactComponents
         Meeting --> ReactComponents
+        Minutes --> ReactComponents
+        Proposal --> ReactComponents
         Research --> ReactComponents
+        ResearchCast --> ReactComponents
+        ResearchLocation --> ReactComponents
+        ResearchInfo --> ReactComponents
+        ResearchEvidence --> ReactComponents
+        Transcript --> ReactComponents
+        TranscriptNa --> ReactComponents
         Schedule --> ReactComponents
+        ProgramSettings --> ReactComponents
         
         subgraph ReactComponents["React Components"]
             direction TB
             SCC["Server/Client Components"]
+            FeatureChat["FeatureChat<br/>共通チャットUI"]
         end
     end
     
@@ -36,6 +55,8 @@ flowchart TB
             MeetingAPI["/api/meeting-notes"]
             ResearchAPI["/api/research"]
             ScheduleAPI["/api/schedules"]
+            ChatFeatureAPI["/api/chat/feature"]
+            SettingsAPI["/api/settings/program"]
         end
         
         subgraph MiddlewareLayer["Middleware"]
@@ -73,9 +94,14 @@ flowchart TB
         
         subgraph PromptMgmt["Prompt Management"]
             direction LR
-            MeetingFmt["Meeting Format"]
-            TranscriptFmt["Transcript Format"]
-            ScheduleGen["Schedule Generate"]
+            ResearchCastPrompt["Research Cast Prompt"]
+            ResearchLocationPrompt["Research Location Prompt"]
+            ResearchInfoPrompt["Research Info Prompt"]
+            ResearchEvidencePrompt["Research Evidence Prompt"]
+            MinutesPrompt["Minutes Prompt"]
+            ProposalPrompt["Proposal Prompt<br/>(動的生成)"]
+            TranscriptPrompt["Transcript Prompt"]
+            NaScriptPrompt["NA Script Prompt"]
         end
     end
     
@@ -90,6 +116,7 @@ flowchart TB
             ResearchChats["ResearchChats"]
             Schedules["Schedules"]
             UsageLogs["UsageLogs"]
+            ProgramSettingsDB["ProgramSettings"]
         end
         
         subgraph UpstashRedis["Upstash Redis"]
@@ -124,12 +151,12 @@ flowchart TB
     classDef external fill:#1f1f1f,stroke:#909090,stroke-width:2px,color:#f0f0f0
     classDef highlight fill:#4a4a4a,stroke:#ffffff,stroke-width:2px,color:#ffffff
     
-    class Dashboard,Meeting,Research,Schedule,ReactComponents client
-    class Router,Endpoints,MiddlewareLayer,LLM,MeetingAPI,ResearchAPI,ScheduleAPI,Auth,NextAuth api
-    class LLMFactory,Clients,CacheRate,PromptMgmt,MeetingFmt,TranscriptFmt,ScheduleGen,Gemini,Grok,Perplexity,OpenAI,ResponseCache,RateLimiter service
-    class Data,PostgreSQL,UpstashRedis,Users,MeetingNotes,Transcripts,ResearchChats,Schedules,UsageLogs,LLMCache,RateLimit,SessionStore data
+    class Dashboard,Meeting,Minutes,Proposal,Research,ResearchCast,ResearchLocation,ResearchInfo,ResearchEvidence,Transcript,TranscriptNa,Schedule,ProgramSettings,ReactComponents client
+    class Router,Endpoints,MiddlewareLayer,LLM,MeetingAPI,ResearchAPI,ScheduleAPI,ChatFeatureAPI,SettingsAPI,Auth,NextAuth api
+    class LLMFactory,Clients,CacheRate,PromptMgmt,Gemini,Grok,Perplexity,OpenAI,ResponseCache,RateLimiter,ResearchCastPrompt,ResearchLocationPrompt,ResearchInfoPrompt,ResearchEvidencePrompt,MinutesPrompt,ProposalPrompt,TranscriptPrompt,NaScriptPrompt service
+    class Data,PostgreSQL,UpstashRedis,Users,MeetingNotes,Transcripts,ResearchChats,Schedules,UsageLogs,ProgramSettingsDB,LLMCache,RateLimit,SessionStore data
     class External,GoogleOAuth,XAI,PerplexityAPI,GeminiAPI,UpstashAPI external
-    class SCC highlight
+    class SCC,FeatureChat highlight
 ```
 
 ## 設計原則
@@ -176,16 +203,86 @@ export function createLLMClient(provider: LLMProvider): LLMClient {
 }
 ```
 
-### 3. キャッシュ戦略
+### 3. FeatureChat パターン
+
+各機能ページで共通して使用するチャットUIを `FeatureChat` コンポーネントとして実装しています。
+
+```typescript
+// components/ui/FeatureChat.tsx
+interface FeatureChatProps {
+  featureId: string;          // 機能識別子
+  title: string;              // ページタイトル
+  systemPrompt: string;       // システムプロンプト
+  placeholder: string;        // 入力欄プレースホルダー
+  inputLabel?: string;        // 入力エリアラベル
+  outputFormat?: "markdown" | "plaintext";  // 出力形式
+}
+```
+
+**特徴:**
+- ストリーミングレスポンス対応
+- 会話履歴の自動保存（Prisma）
+- plaintextモード時のWordコピー機能
+- 各機能別のシステムプロンプト切り替え
+
+### 4. Prompt Management
+
+システムプロンプトは `lib/prompts/` ディレクトリで管理しています。
+
+```
+lib/prompts/
+├── research-cast.ts      # 出演者リサーチ
+├── research-location.ts  # 場所リサーチ
+├── research-info.ts      # 情報リサーチ
+├── research-evidence.ts  # エビデンスリサーチ
+├── minutes.ts            # 議事録作成
+├── proposal.ts           # 新企画立案（動的生成）
+├── transcript.ts         # 文字起こし変換
+└── na-script.ts          # NA原稿作成
+```
+
+### 5. キャッシュ戦略
 
 - **LLMレスポンスキャッシュ**: 同一プロンプトの重複リクエストを削減（TTL: 24時間）
 - **レート制限**: プロバイダー別のAPI制限を管理（RPM/RPD）
 
-### 4. 認証・認可
+### 6. 認証・認可
 
 - **NextAuth.js**: Google OAuth 2.0によるSSO
 - **JWTセッション**: ステートレス認証
 - **Prisma Adapter**: ユーザーデータの永続化
+
+## ページ構成
+
+### サイドバーナビゲーション
+
+```
+├── リサーチ（折りたたみ）
+│   ├── 出演者リサーチ     → /research/cast
+│   ├── 場所リサーチ       → /research/location
+│   ├── 情報リサーチ       → /research/info
+│   └── エビデンスリサーチ → /research/evidence
+├── 議事録作成             → /minutes
+├── 新企画立案             → /proposal
+├── 文字起こし（折りたたみ）
+│   ├── フォーマット変換   → /transcript
+│   └── NA原稿作成         → /transcript/na
+└── 番組設定               → /settings/program
+```
+
+### 各機能ページ
+
+| ページ | パス | 説明 |
+|--------|------|------|
+| 出演者リサーチ | `/research/cast` | 企画に適した出演者候補を提案 |
+| 場所リサーチ | `/research/location` | ロケ地候補と撮影条件を調査 |
+| 情報リサーチ | `/research/info` | テーマに関する情報を収集・整理 |
+| エビデンスリサーチ | `/research/evidence` | 情報の真偽を検証 |
+| 議事録作成 | `/minutes` | 文字起こしから議事録を作成 |
+| 新企画立案 | `/proposal` | 番組情報を基に新企画を提案 |
+| 文字起こし変換 | `/transcript` | テキスト整形・フォーマット変換 |
+| NA原稿作成 | `/transcript/na` | ナレーション原稿を作成（Wordコピー対応） |
+| 番組設定 | `/settings/program` | 番組情報・過去企画を管理 |
 
 ## データモデル
 
@@ -231,6 +328,15 @@ erDiagram
         datetime createdAt
     }
     
+    RESEARCH_MESSAGE {
+        string id PK
+        string chatId FK
+        string role
+        string content
+        string thinking
+        datetime createdAt
+    }
+    
     LOCATION_SCHEDULE {
         string id PK
         string userId FK
@@ -239,14 +345,36 @@ erDiagram
         datetime createdAt
     }
     
+    PROGRAM_SETTINGS {
+        string id PK
+        string userId FK
+        string programInfo
+        string pastProposals
+        datetime updatedAt
+    }
+    
+    USAGE_LOG {
+        string id PK
+        string userId FK
+        string provider
+        int inputTokens
+        int outputTokens
+        float cost
+        json metadata
+        datetime createdAt
+    }
+    
     USER ||--o{ MEETING_NOTE : "creates"
     USER ||--o{ TRANSCRIPT : "creates"
     USER ||--o{ RESEARCH_CHAT : "has"
     USER ||--o{ LOCATION_SCHEDULE : "creates"
+    USER ||--o{ PROGRAM_SETTINGS : "has"
+    USER ||--o{ USAGE_LOG : "generates"
+    RESEARCH_CHAT ||--o{ RESEARCH_MESSAGE : "contains"
 
     %% スタイリング - モノトーン
     classDef entity fill:#2a2a2a,stroke:#e0e0e0,stroke-width:2px,color:#f0f0f0
-    class USER,MEETING_NOTE,TRANSCRIPT,RESEARCH_CHAT,LOCATION_SCHEDULE entity
+    class USER,MEETING_NOTE,TRANSCRIPT,RESEARCH_CHAT,RESEARCH_MESSAGE,LOCATION_SCHEDULE,PROGRAM_SETTINGS,USAGE_LOG entity
 ```
 
 ### 主要モデル
@@ -257,7 +385,9 @@ erDiagram
 | `MeetingNote` | 議事録データ（PJ-A） |
 | `Transcript` | NA原稿データ（PJ-B） |
 | `ResearchChat` | リサーチチャット履歴（PJ-C） |
+| `ResearchMessage` | チャットメッセージ |
 | `LocationSchedule` | ロケスケジュール（PJ-D） |
+| `ProgramSettings` | 番組設定（新企画立案で使用） |
 | `UsageLog` | LLM使用ログ |
 
 ## セキュリティ設計
@@ -314,6 +444,7 @@ sequenceDiagram
 | 画像最適化 | Next.js Imageコンポーネント |
 | フォント最適化 | next/font（Geist） |
 | コード分割 | 動的インポート（必要に応じて） |
+| ストリーミング | Server-Sent Eventsによるリアルタイムレスポンス |
 
 ### スケーリング
 
@@ -437,5 +568,6 @@ flowchart LR
 ### 拡張ポイント
 
 - `lib/llm/clients/`: 新しいLLMクライアントを追加
+- `lib/prompts/`: 新しい機能のプロンプトを追加
 - `app/api/`: 新しいAPIエンドポイントを追加
 - `prisma/schema.prisma`: データモデルの拡張
