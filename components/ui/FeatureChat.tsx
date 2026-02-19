@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Send, Copy, Check, Loader2 } from "lucide-react";
 import { useLLMStream, StreamingMessage } from "./StreamingMessage";
 import { MessageBubble } from "./MessageBubble";
+import { DEFAULT_PROVIDER } from "@/lib/llm/config";
 import type { LLMProvider } from "@/lib/llm/types";
 
 export interface Message {
@@ -25,6 +26,8 @@ export interface FeatureChatProps {
   inputLabel?: string;
   outputFormat?: "markdown" | "plaintext";
   className?: string;
+  /** 使用するLLMプロバイダー（未指定時はデフォルト） */
+  provider?: LLMProvider;
 }
 
 export function FeatureChat({
@@ -35,6 +38,7 @@ export function FeatureChat({
   inputLabel,
   outputFormat = "markdown",
   className,
+  provider = DEFAULT_PROVIDER,
 }: FeatureChatProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -122,7 +126,7 @@ export function FeatureChat({
         ...conversationHistory,
         { role: "user", content: userMessage.content },
       ],
-      "grok-4.1-fast"
+      provider
     );
   };
 
@@ -134,7 +138,7 @@ export function FeatureChat({
         role: "assistant",
         content,
         timestamp: new Date(),
-        llmProvider: "grok-4.1-fast",
+        llmProvider: provider,
       };
       setMessages((prev) => [...prev, assistantMessage]);
       resetStream();
@@ -225,7 +229,7 @@ export function FeatureChat({
 
           {isStreaming && (
             <StreamingMessage
-              provider="grok-4.1-fast"
+              provider={provider}
               content={content}
               thinking={thinking}
               isComplete={false}

@@ -8,6 +8,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { GrokClient } from '@/lib/llm/clients/grok';
+import { resolveProvider } from '@/lib/llm/utils';
 import { getPromptFromDB, PROMPT_KEYS } from '@/lib/prompts/db';
 import type { MeetingTemplate } from '@/prompts/meeting-format';
 import { createApiHandler } from '@/lib/api/handler';
@@ -16,7 +17,7 @@ import type { LLMMessage } from '@/lib/llm/types';
 const meetingNotesRequestSchema = z.object({
   transcript: z.string().min(1, '文字起こしテキストを入力してください'),
   template: z.enum(['meeting', 'interview'] as const),
-  provider: z.enum(['grok-4.1-fast', 'grok-4'] as const).optional(),
+  provider: z.string().optional(), // デフォルトは resolveProvider() を使用
 });
 
 export type MeetingNotesRequest = z.infer<typeof meetingNotesRequestSchema>;
@@ -50,7 +51,7 @@ export const POST = createApiHandler(
   async ({ data }) => {
     const { transcript, template, provider: requestedProvider } = data;
     
-    const provider = requestedProvider ?? 'grok-4.1-fast';
+    const provider = resolveProvider(requestedProvider, 'PJ-A');
     
     // DBからプロンプトを取得（フォールバック付き）
     const promptKey = template === 'meeting' 

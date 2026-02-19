@@ -2,6 +2,7 @@
 
 import { useState, useRef, useCallback } from "react";
 import { cn } from "@/lib/utils";
+import { DEFAULT_PROVIDER } from "@/lib/llm/config";
 import type { LLMProvider } from "@/lib/llm/types";
 import { FeatureCard } from "@/components/ui/FeatureCard";
 import {
@@ -22,7 +23,7 @@ import {
 
 type ProcessingStatus = "idle" | "streaming" | "completed" | "error";
 
-const DEFAULT_PROVIDER: LLMProvider = "gemini-2.5-flash-lite";
+// デフォルトプロバイダーは lib/llm/config.ts の DEFAULT_PROVIDER を使用
 
 // 話者カラーマッピング
 const SPEAKER_COLORS: Record<string, { bg: string; text: string; border: string; glow: string }> = {

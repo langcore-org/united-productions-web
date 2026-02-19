@@ -9,6 +9,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { GrokClient } from "@/lib/llm/clients/grok";
+import { resolveProvider } from "@/lib/llm/utils";
 import { getPromptFromDB, PROMPT_KEYS } from "@/lib/prompts/db";
 import type { LLMMessage } from "@/lib/llm/types";
 import { requireAuth } from "@/lib/api/auth";
@@ -41,8 +42,8 @@ async function handleGenerate(request: NextRequest) {
     const body = await request.json();
     const validatedData = generateRequestSchema.parse(body);
 
-    // Grok 4.1 Fast クライアントを作成
-    const client = new GrokClient("grok-4.1-fast");
+    // LLMクライアントを作成（PJ-Dのデフォルトプロバイダーを使用）
+    const client = new GrokClient(resolveProvider(undefined, 'PJ-D'));
 
     // DBからプロンプトを取得
     const systemPrompt = await getPromptFromDB(PROMPT_KEYS.SCHEDULE_SYSTEM);

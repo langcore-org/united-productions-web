@@ -8,6 +8,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { GrokClient } from '@/lib/llm/clients/grok';
+import { resolveProvider } from '@/lib/llm/utils';
 import { getPromptFromDB, PROMPT_KEYS } from '@/lib/prompts/db';
 import { createUserPrompt } from '@/prompts/transcript-format';
 import { createApiHandler } from '@/lib/api/handler';
@@ -15,7 +16,7 @@ import type { LLMMessage } from '@/lib/llm/types';
 
 const transcriptRequestSchema = z.object({
   transcript: z.string().min(1, '書き起こしテキストを入力してください'),
-  provider: z.enum(['grok-4.1-fast', 'grok-4'] as const).optional(),
+  provider: z.string().optional(), // デフォルトは resolveProvider() を使用
 });
 
 export type TranscriptRequest = z.infer<typeof transcriptRequestSchema>;
@@ -48,7 +49,7 @@ export const POST = createApiHandler(
   async ({ data }) => {
     const { transcript, provider: requestedProvider } = data;
     
-    const provider = requestedProvider ?? 'grok-4.1-fast';
+    const provider = resolveProvider(requestedProvider, 'PJ-B');
     
     // DBからプロンプトを取得
     const systemPrompt = await getPromptFromDB(PROMPT_KEYS.TRANSCRIPT_FORMAT);
