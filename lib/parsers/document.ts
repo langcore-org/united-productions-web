@@ -56,7 +56,8 @@ export interface ParsedDocument {
 export async function parsePDF(buffer: Buffer): Promise<ParsedDocument> {
   try {
     // pdf-parseは動的インポート（サーバーサイドのみ）
-    const pdfParse = await import("pdf-parse") as unknown as PDFParseModule;
+    const pdfParseModule = await eval('import("pdf-parse")');
+    const pdfParse = pdfParseModule as unknown as PDFParseModule;
     const result = await pdfParse.default(buffer);
     
     return {
@@ -81,7 +82,8 @@ export async function parsePDF(buffer: Buffer): Promise<ParsedDocument> {
 export async function parseWord(buffer: Buffer): Promise<ParsedDocument> {
   try {
     // mammothを使用してWordファイルを解析
-    const mammoth = await import("mammoth") as unknown as MammothModule;
+    const mammothModule = await eval('import("mammoth")');
+    const mammoth = mammothModule as unknown as MammothModule;
     const result = await mammoth.extractRawText({ buffer });
     
     return {
@@ -103,7 +105,8 @@ export async function parseWord(buffer: Buffer): Promise<ParsedDocument> {
 export async function parseExcel(buffer: Buffer): Promise<ParsedDocument> {
   try {
     // xlsxを使用してExcelファイルを解析
-    const XLSX = await import("xlsx") as unknown as XLSXModule;
+    const xlsxModule = await eval('import("xlsx")');
+    const XLSX = xlsxModule as unknown as XLSXModule;
     const workbook = XLSX.read(buffer, { type: "buffer" });
     
     // 全シートのテキストを結合
