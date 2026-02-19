@@ -7,7 +7,6 @@ import {
   FileText, 
   Mic, 
   Search, 
-  Calendar, 
   AtSign, 
   Send, 
   Sparkles,
@@ -25,28 +24,28 @@ interface ModeButton {
 
 const modeButtons: ModeButton[] = [
   {
-    id: "deepsearch",
+    id: "research",
     label: "リサーチ",
     icon: <Search className="w-4 h-4" />,
-    href: "/research",
+    href: "/chat?gem=research-cast",
   },
   {
-    id: "meeting-notes",
+    id: "minutes",
     label: "議事録",
     icon: <FileText className="w-4 h-4" />,
-    href: "/meeting-notes",
+    href: "/chat?gem=minutes",
   },
   {
-    id: "transcripts",
-    label: "起こし・NA",
+    id: "na-script",
+    label: "NA原稿",
     icon: <Mic className="w-4 h-4" />,
-    href: "/transcripts",
+    href: "/chat?gem=na-script",
   },
   {
-    id: "schedules",
-    label: "ロケスケ",
-    icon: <Calendar className="w-4 h-4" />,
-    href: "/schedules",
+    id: "proposal",
+    label: "新企画立案",
+    icon: <Sparkles className="w-4 h-4" />,
+    href: "/chat?gem=proposal",
   },
 ];
 
@@ -95,9 +94,7 @@ export default function DashboardPage() {
                   ADコパイロット
                 </h1>
               </div>
-              <p className="text-sm text-gray-500">
-                AD Production
-              </p>
+              {/* ロゴ下のサブタイトル削除 */}
             </div>
 
             {/* Search/Input Bar */}
@@ -157,9 +154,7 @@ export default function DashboardPage() {
                       <span className="hidden sm:inline">添付</span>
                     </button>
 
-                    <div className="hidden md:flex items-center gap-1 text-xs text-gray-400">
-                      <span>⌘K でフォーカス</span>
-                    </div>
+                    {/* キーボードショートカット表示削除 */}
                   </div>
 
                   {inputValue.length > 0 && (
