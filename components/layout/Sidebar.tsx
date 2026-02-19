@@ -167,7 +167,7 @@ export function Sidebar({ className }: SidebarProps) {
       )}
     >
       {/* Header - アイコンのみ */}
-      <div className="flex items-center justify-center h-14 px-4 bg-white">
+      <div className="flex items-center h-14 px-4 bg-[#f9f9f9]">
         <div className="w-8 h-8 rounded-lg bg-black flex items-center justify-center flex-shrink-0">
           <span className="text-white font-bold text-sm">UP</span>
         </div>
