@@ -174,17 +174,14 @@ export function Sidebar({ className }: SidebarProps) {
         className
       )}
     >
-      {/* Header */}
-      <div className="flex items-center h-14 px-4 border-b border-[#e5e5e5] bg-white">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-black flex items-center justify-center flex-shrink-0">
-            <span className="text-white font-bold text-sm">UP</span>
-          </div>
-          <span className="text-[#1a1a1a] font-semibold text-sm tracking-tight">ADコパイロット</span>
+      {/* Header - アイコンのみ */}
+      <div className="flex items-center justify-center h-14 px-4 bg-white">
+        <div className="w-8 h-8 rounded-lg bg-black flex items-center justify-center flex-shrink-0">
+          <span className="text-white font-bold text-sm">UP</span>
         </div>
       </div>
 
-      {/* New Chat Button */}
+      {/* New Chat Button -->
       <div className="px-3 pt-3 pb-2 bg-[#f9f9f9]">
         <button
           onClick={() => router.push("/chat")}
