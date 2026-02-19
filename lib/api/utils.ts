@@ -6,25 +6,9 @@
 
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
+import { LLMError } from "@/lib/llm/errors";
 
-/**
- * LLMエラーの種別
- */
-export type LLMErrorCode = "RATE_LIMIT" | "AUTH" | "TIMEOUT" | "UNKNOWN" | "VALIDATION";
-
-/**
- * LLMエラークラス
- */
-export class LLMError extends Error {
-  constructor(
-    message: string,
-    public code: LLMErrorCode = "UNKNOWN",
-    public statusCode: number = 500
-  ) {
-    super(message);
-    this.name = "LLMError";
-  }
-}
+export { LLMError } from "@/lib/llm/errors";
 
 /**
  * APIエラーをハンドリングして適切なレスポンスを返す
