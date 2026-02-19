@@ -34,14 +34,14 @@ interface NotificationSettings {
     meetingNotes: boolean;
     transcripts: boolean;
     research: boolean;
-    schedules: boolean;
+    // schedules: boolean; // 削除
   };
   push: {
     enabled: boolean;
     meetingNotes: boolean;
     transcripts: boolean;
     research: boolean;
-    schedules: boolean;
+    // schedules: boolean; // 削除
   };
 }
 
@@ -283,14 +283,14 @@ function NotificationSection() {
       meetingNotes: true,
       transcripts: true,
       research: false,
-      schedules: true,
+      // schedules: true, // 削除
     },
     push: {
       enabled: true,
       meetingNotes: true,
       transcripts: false,
       research: true,
-      schedules: true,
+      // schedules: true, // 削除
     },
   });
 
@@ -358,13 +358,7 @@ function NotificationSection() {
                 }
                 label="リサーチ・考査"
               />
-              <Toggle
-                checked={settings.email.schedules}
-                onChange={(checked) =>
-                  updateEmailSetting("schedules", checked)
-                }
-                label="ロケスケ管理"
-              />
+              {/* ロケスケ設定は削除 */}
             </div>
           )}
         </div>
@@ -406,13 +400,7 @@ function NotificationSection() {
                 }
                 label="リサーチ・考査"
               />
-              <Toggle
-                checked={settings.push.schedules}
-                onChange={(checked) =>
-                  updatePushSetting("schedules", checked)
-                }
-                label="ロケスケ管理"
-              />
+              {/* ロケスケ設定は削除 */}
             </div>
           )}
         </div>
@@ -428,7 +416,7 @@ function DataManagementSection() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
 
-  const handleExport = (type: "all" | "meeting-notes" | "transcripts" | "research" | "schedules") => {
+  const handleExport = (type: "all" | "meeting-notes" | "transcripts" | "research") => {
     console.log(`Exporting ${type}...`);
   };
 
@@ -462,13 +450,13 @@ function DataManagementSection() {
               { id: "meeting-notes", label: "議事録・文字起こし" },
               { id: "transcripts", label: "起こし・NA原稿" },
               { id: "research", label: "リサーチ・考査" },
-              { id: "schedules", label: "ロケスケ管理" },
+              // { id: "schedules", label: "ロケスケ管理" }, // 削除
             ].map((item) => (
               <button
                 key={item.id}
                 onClick={() =>
                   handleExport(
-                    item.id as "all" | "meeting-notes" | "transcripts" | "research" | "schedules"
+                    item.id as "all" | "meeting-notes" | "transcripts" | "research"
                   )
                 }
                 className={cn(

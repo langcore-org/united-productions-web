@@ -135,8 +135,8 @@ export const PROJECT_DEFAULT_PROVIDERS: Record<string, LLMProvider> = {
   'PJ-A': 'grok-4.1-fast',      // 議事録整形
   'PJ-B': 'grok-4.1-fast',      // 書き起こし整形
   'PJ-C-people': 'grok-4.1-fast',       // 人探し（X検索）
-  'PJ-C-evidence': 'grok-4.1-fast',  // エビデンス検索（一時的にgrokで統一）
-  'PJ-D': 'grok-4.1-fast',      // ロケスケ
+  'PJ-C-evidence': 'grok-4.1-fast',  // エビデンス検索
+  // PJ-D（ロケスケ）は削除
 };
 
 /**

@@ -16,8 +16,7 @@ import {
   FileText, 
   Mic, 
   Users, 
-  Shield, 
-  Calendar,
+  Shield,
   Sparkles,
   CheckCircle,
   XCircle,
@@ -56,13 +55,7 @@ const FEATURES = [
     icon: Shield,
     path: "/chat?gem=research-evidence",
   },
-  {
-    id: "PJ-D",
-    name: "ロケスケジュール",
-    description: "マスタースケジュールから個別スケジュールを生成",
-    icon: Calendar,
-    path: "/schedules",
-  },
+  // PJ-D（ロケスケジュール）は削除
 ];
 
 // プロバイダー情報を取得

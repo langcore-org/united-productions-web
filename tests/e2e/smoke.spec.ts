@@ -50,16 +50,6 @@ test.describe('認証済みユーザー', () => {
     await expect(page.locator('body')).toContainText('起こし');
   });
 
-  test('ロケスケページにアクセスできる', async ({ page }) => {
-    await page.goto('/schedules');
-    
-    // ページが正常に表示されることを確認
-    await expect(page).toHaveURL('/schedules');
-    
-    // スケジュール関連の要素が表示されていることを確認
-    await expect(page.locator('body')).toContainText('ロケスケ');
-  });
-
   test('設定ページにアクセスできる', async ({ page }) => {
     await page.goto('/settings');
     
@@ -82,7 +72,7 @@ test.describe('認証済みユーザー', () => {
       { selector: 'text=議事録', url: '/meeting-notes' },
       { selector: 'text=起こし', url: '/transcripts' },
       { selector: 'text=リサーチ', url: '/research' },
-      { selector: 'text=ロケスケ', url: '/schedules' },
+      // { selector: 'text=ロケスケ', url: '/schedules' }, // 削除
     ];
     
     for (const link of navLinks) {

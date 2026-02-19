@@ -251,67 +251,6 @@ const DEFAULT_PROMPTS = [
 5. **実行上の注意点**`,
     category: "document",
   },
-  {
-    id: "prompt_schedule_system",
-    key: "SCHEDULE_SYSTEM",
-    name: "ロケスケジュール基本",
-    description: "ロケスケジュール生成の基本プロンプト",
-    content: `あなたはテレビ制作のロケスケジュール管理の専門家です。
-マスタースケジュールから、指定された形式のスケジュール表を生成してください。
-
-【重要なルール】
-1. 入力された情報を正確に反映
-2. 時刻、場所、担当者名は特に正確に転記
-3. 不足情報は「未定」と記載
-4. マークダウンのテーブル記法を使用`,
-    category: "schedule",
-  },
-  {
-    id: "prompt_schedule_actor",
-    key: "SCHEDULE_ACTOR",
-    name: "演者別スケジュール",
-    description: "マスタースケジュールから演者別スケジュールを生成",
-    content: `演者別のスケジュール表を生成してください。
-
-【出力項目】
-1. 演者名
-2. 集合時刻・場所
-3. 移動手段
-4. 現場到着時刻
-5. 本番時間
-6. 移動先
-7. 備考（衣装、持ち物など）`,
-    category: "schedule",
-  },
-  {
-    id: "prompt_schedule_staff",
-    key: "SCHEDULE_STAFF",
-    name: "香盤表（スタッフ動き）",
-    description: "マスタースケジュールから香盤表を生成",
-    content: `香盤表（スタッフ動き表）を生成してください。
-
-【出力項目】
-1. 時間帯（縦軸）
-2. スタッフ職種（横軸）
-3. 各スタッフの動き`,
-    category: "schedule",
-  },
-  {
-    id: "prompt_schedule_vehicle",
-    key: "SCHEDULE_VEHICLE",
-    name: "車両表",
-    description: "マスタースケジュールから車両表を生成",
-    content: `車両表を生成してください。
-
-【出力項目】
-1. 車両番号・種別
-2. 運転手・車掌
-3. 乗車人员
-4. 行程
-5. 時刻
-6. 用途`,
-    category: "schedule",
-  },
 ];
 
 /**
@@ -366,11 +305,7 @@ export const PROMPT_KEYS = {
   // Document
   PROPOSAL: "PROPOSAL",
   
-  // Schedule
-  SCHEDULE_SYSTEM: "SCHEDULE_SYSTEM",
-  SCHEDULE_ACTOR: "SCHEDULE_ACTOR",
-  SCHEDULE_STAFF: "SCHEDULE_STAFF",
-  SCHEDULE_VEHICLE: "SCHEDULE_VEHICLE",
+  // ロケスケは削除
 } as const;
 
 export type PromptKey = keyof typeof PROMPT_KEYS;
@@ -382,7 +317,7 @@ export const PROMPT_CATEGORIES = {
   transcript: "起こし・NA",
   research: "リサーチ",
   document: "ドキュメント",
-  schedule: "ロケスケ",
+  // schedule: "ロケスケ", // 削除
 } as const;
 
 export type PromptCategory = keyof typeof PROMPT_CATEGORIES;

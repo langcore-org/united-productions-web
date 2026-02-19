@@ -11,7 +11,7 @@ const PROTECTED_PATHS = [
   '/meeting-notes',
   '/transcripts',
   '/research',
-  '/schedules',
+  // '/schedules', // 削除
   '/settings',
 ];
 
@@ -72,7 +72,7 @@ export const config = {
     '/meeting-notes/:path*',
     '/transcripts/:path*',
     '/research/:path*',
-    '/schedules/:path*',
+    // '/schedules/:path*', // 削除
     '/settings/:path*',
     '/auth/:path*',
     '/preview-login',

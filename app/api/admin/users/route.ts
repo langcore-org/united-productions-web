@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
               meetingNotes: true,
               transcripts: true,
               researchChats: true,
-              schedules: true,
+              // schedules: true, // 削除
             },
           },
         },
@@ -71,12 +71,11 @@ export async function GET(request: NextRequest) {
             meetingNotes: user._count.meetingNotes,
             transcripts: user._count.transcripts,
             researchChats: user._count.researchChats,
-            schedules: user._count.schedules,
+            // schedules: user._count.schedules, // 削除
             total:
               user._count.meetingNotes +
               user._count.transcripts +
-              user._count.researchChats +
-              user._count.schedules,
+              user._count.researchChats,
           },
         })),
         pagination: {

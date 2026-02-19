@@ -14,7 +14,7 @@ import {
   FileText,
   Mic,
   MessageSquare,
-  Calendar,
+  // Calendar, // 削除
   Mail,
   User,
 } from "lucide-react";
@@ -30,7 +30,7 @@ interface UserData {
     meetingNotes: number;
     transcripts: number;
     researchChats: number;
-    schedules: number;
+    // schedules: number; // 削除
     total: number;
   };
 }
@@ -206,12 +206,7 @@ export default function AdminUsersPage() {
                       label="リサーチ"
                       color="bg-pink-100 text-pink-800"
                     />
-                    <StatBadge
-                      icon={Calendar}
-                      count={user.usage.schedules}
-                      label="ロケスケ"
-                      color="bg-green-100 text-green-800"
-                    />
+                    {/* ロケスケ統計は削除 */}
                     <div className="ml-4 pl-4 border-l">
                       <div className="text-2xl font-bold text-gray-900">
                         {user.usage.total}

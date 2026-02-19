@@ -10,7 +10,6 @@ import {
   FileText,
   Search,
   Mic,
-  Calendar,
   MessageSquare,
   Save,
   Edit3,
@@ -26,7 +25,7 @@ const CATEGORIES: Record<string, { label: string; icon: React.ElementType; color
   transcript: { label: "起こし・NA", icon: Mic, color: "bg-teal-100 text-teal-800" },
   research: { label: "リサーチ", icon: Search, color: "bg-pink-100 text-pink-800" },
   document: { label: "ドキュメント", icon: FileText, color: "bg-orange-100 text-orange-800" },
-  schedule: { label: "ロケスケ", icon: Calendar, color: "bg-green-100 text-green-800" },
+  // schedule: { label: "ロケスケ", icon: Calendar, color: "bg-green-100 text-green-800" }, // 削除
 };
 
 interface Prompt {
