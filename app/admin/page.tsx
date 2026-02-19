@@ -21,7 +21,8 @@ import {
   CheckCircle,
   XCircle,
   DollarSign,
-  ChevronRight
+  ChevronRight,
+  Activity
 } from "lucide-react";
 import Link from "next/link";
 
@@ -101,7 +102,7 @@ export default function AdminPage() {
         </div>
 
         {/* 管理メニュー */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <Link href="/admin/users">
             <Card className="hover:shadow-md transition-shadow cursor-pointer border-l-4 border-l-blue-500">
               <CardContent className="p-6">
@@ -132,6 +133,25 @@ export default function AdminPage() {
                     <div>
                       <h3 className="font-semibold text-gray-900">プロンプト管理</h3>
                       <p className="text-sm text-gray-500">AIプロンプトの編集</p>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-5 h-5 text-gray-400" />
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+
+          <Link href="/admin/usage">
+            <Card className="hover:shadow-md transition-shadow cursor-pointer border-l-4 border-l-red-500">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-red-100 flex items-center justify-center">
+                      <Activity className="w-5 h-5 text-red-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-gray-900">使用量・コスト</h3>
+                      <p className="text-sm text-gray-500">API使用状況の監視</p>
                     </div>
                   </div>
                   <ChevronRight className="w-5 h-5 text-gray-400" />
