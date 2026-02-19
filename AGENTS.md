@@ -130,6 +130,60 @@ grep -rn "export.*Session" node_modules/next-auth/core/types.d.ts
 
 ---
 
+## 📝 型安全性の向上パターン
+
+### `as any` の除去方法
+
+型安全性を損なう `as any` は以下の方法で段階的に除去する。
+
+#### 方法1: モジュール拡張（推奨）
+外部ライブラリの型が不足している場合、`types/` ディレクトリで拡張する。
+
+```typescript
+// types/next-auth.d.ts
+import type { DefaultSession } from "next-auth";
+
+declare module "next-auth" {
+  interface Session extends DefaultSession {
+    user: {
+      id: string;
+      role?: string;
+    } & DefaultSession["user"];
+    accessToken?: string;
+  }
+}
+```
+
+#### 方法2: 明示的なインターフェース定義
+動的インポートの戻り値に型を付ける。
+
+```typescript
+// ❌ 禁止
+const pdfParse: any = await import("pdf-parse");
+
+// ✅ 正しい
+interface PDFParseModule {
+  default: (buffer: Buffer) => Promise<{ text: string; numpages: number }>;
+}
+const pdfParse = await import("pdf-parse") as unknown as PDFParseModule;
+```
+
+#### 方法3: 型ガード関数
+型の絞り込みに使用する。
+
+```typescript
+function isAuthenticatedSession(session: Session | null): session is Session & { user: { id: string } } {
+  return !!session?.user?.id;
+}
+```
+
+### 実績
+- **2026-02-19**: コードベースから `as any` を完全除去（17箇所 → 0箇所）
+- **手法**: モジュール拡張 + 明示的インターフェース
+- **結果**: ビルド成功、型安全性向上
+
+---
+
 ## 📦 パッケージインストールのルール
 
 - `npm install` はタイムアウトリスクがあるため、並列処理で他の作業も進める
