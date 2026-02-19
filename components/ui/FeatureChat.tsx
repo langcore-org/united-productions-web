@@ -203,7 +203,7 @@ export function FeatureChat({
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-6 py-4 flex flex-col justify-end">
+      <div className="flex-1 overflow-y-auto px-6 py-4 flex flex-col justify-start">
           {isLoadingHistory && (
             <div className="flex items-center justify-center py-8">
               <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
