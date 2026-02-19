@@ -22,16 +22,16 @@ export function AppLayout({
 
   return (
     <div className={cn(
-      "min-h-screen bg-white text-gray-900",
+      "h-screen overflow-hidden bg-white text-gray-900",
       className
     )}>
-      {/* Sidebar */}
+      {/* Sidebar (fixed positioning) */}
       <Sidebar onCollapseChange={setIsSidebarCollapsed} />
 
-      {/* Main Content - サイドバー幅に応じてマージンを調整 */}
-      <main 
+      {/* Main Content - サイドバー幅に応じてマージンを調整、h-screen で高さを確定させる */}
+      <main
         className={cn(
-          "min-h-screen transition-all duration-300 ease-in-out",
+          "h-screen overflow-hidden transition-all duration-300 ease-in-out",
           isSidebarCollapsed ? "ml-[64px]" : "ml-[240px]"
         )}
       >
