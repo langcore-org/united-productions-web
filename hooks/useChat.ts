@@ -3,6 +3,9 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { ChatMessageType, ChatStreamState } from "@/components/chat";
 import { LLMProvider } from "@/lib/llm/types";
+import { createClientLogger } from "@/lib/logger";
+
+const logger = createClientLogger("useChat");
 
 interface UseChatOptions {
   systemPrompt: string;
@@ -38,6 +41,12 @@ export function useChat(options: UseChatOptions) {
 
   const handleStream = useCallback(
     async (userMessage: ChatMessageType) => {
+      const requestId = `client_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      logger.info(`[${requestId}] Starting stream handler`, {
+        provider,
+        messageCount: messages.length + 1,
+      });
+
       setIsStreaming(true);
       setStreamState({
         content: "",
@@ -54,44 +63,70 @@ export function useChat(options: UseChatOptions) {
       abortControllerRef.current = abortController;
 
       try {
+        const requestBody = {
+          messages: [
+            {
+              role: "system" as const,
+              content: systemPrompt,
+            },
+            ...messages.map((m) => ({
+              role: m.role,
+              content: m.content,
+            })),
+            { role: "user" as const, content: userMessage.content },
+          ],
+          provider,
+        };
+
+        logger.info(`[${requestId}] Sending request`, { endpoint: apiEndpoint });
+        logger.debug(`[${requestId}] Request body`, { body: requestBody });
+
         const response = await fetch(apiEndpoint, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            messages: [
-              {
-                role: "system" as const,
-                content: systemPrompt,
-              },
-              ...messages.map((m) => ({
-                role: m.role,
-                content: m.content,
-              })),
-              { role: "user" as const, content: userMessage.content },
-            ],
-            provider,
-          }),
+          body: JSON.stringify(requestBody),
           signal: abortController.signal,
         });
 
+        logger.info(`[${requestId}] Response received`, { status: response.status });
+
         if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || `HTTP error: ${response.status}`);
+          let errorData: { error?: string; message?: string; requestId?: string } = {};
+          try {
+            errorData = await response.json();
+          } catch {
+            // JSONパース失敗時は無視
+          }
+          
+          const errorMessage = errorData.message || errorData.error || `HTTP error: ${response.status}`;
+          logger.error(`[${requestId}] HTTP error`, { 
+            status: response.status, 
+            error: errorMessage,
+            serverRequestId: errorData.requestId,
+          });
+          throw new Error(errorMessage);
         }
 
         const reader = response.body?.getReader();
         if (!reader) {
+          logger.error(`[${requestId}] Response body is not readable`);
           throw new Error("Response body is not readable");
         }
+
+        logger.info(`[${requestId}] Starting to read stream`);
 
         const decoder = new TextDecoder();
         let buffer = "";
         let fullContent = "";
         let fullThinking = "";
+        let chunkCount = 0;
 
         while (true) {
           const { done, value } = await reader.read();
-          if (done) break;
+          if (done) {
+            logger.info(`[${requestId}] Stream reader done`, { chunkCount });
+            break;
+          }
 
           buffer += decoder.decode(value, { stream: true });
           const lines = buffer.split("\n");
@@ -104,6 +139,7 @@ export function useChat(options: UseChatOptions) {
             const data = trimmedLine.slice(6);
 
             if (data === "[DONE]") {
+              logger.info(`[${requestId}] Stream done marker received`);
               setStreamState((prev) => ({ ...prev, isComplete: true }));
               break;
             }
@@ -112,6 +148,7 @@ export function useChat(options: UseChatOptions) {
               const parsed = JSON.parse(data);
 
               if (parsed.error) {
+                logger.error(`[${requestId}] Error in stream data`, { error: parsed.error });
                 setStreamState((prev) => ({ ...prev, error: parsed.error }));
                 break;
               }
@@ -126,6 +163,7 @@ export function useChat(options: UseChatOptions) {
               }
 
               if (parsed.content) {
+                chunkCount++;
                 fullContent += parsed.content;
                 setStreamState((prev) => ({
                   ...prev,
@@ -133,7 +171,8 @@ export function useChat(options: UseChatOptions) {
                   isThinking: false,
                 }));
               }
-            } catch {
+            } catch (parseError) {
+              logger.warn(`[${requestId}] Failed to parse SSE data`, { data, error: parseError });
               continue;
             }
           }
@@ -157,6 +196,12 @@ export function useChat(options: UseChatOptions) {
           }
         }
 
+        logger.info(`[${requestId}] Stream completed`, { 
+          contentLength: fullContent.length,
+          thinkingLength: fullThinking.length,
+          chunkCount,
+        });
+
         setMessages((prev) => [
           ...prev,
           {
@@ -172,23 +217,36 @@ export function useChat(options: UseChatOptions) {
         setStreamState((prev) => ({ ...prev, isComplete: true }));
       } catch (error) {
         if (error instanceof Error && error.name === "AbortError") {
+          logger.info(`[${requestId}] Stream aborted by user`);
           return;
         }
+        
+        const errorMessage = error instanceof Error ? error.message : "Unknown error";
+        logger.error(`[${requestId}] Stream error`, { error: errorMessage });
+        
         setStreamState((prev) => ({
           ...prev,
-          error: error instanceof Error ? error.message : "Unknown error",
+          error: errorMessage,
           isComplete: true,
         }));
       } finally {
         setIsStreaming(false);
         abortControllerRef.current = null;
+        logger.info(`[${requestId}] Stream handler completed`);
       }
     },
     [messages, provider, systemPrompt, apiEndpoint]
   );
 
   const handleSubmit = async () => {
-    if (!input.trim() || isLoading || isStreaming) return;
+    if (!input.trim() || isLoading || isStreaming) {
+      logger.warn("Submit prevented", { 
+        hasInput: !!input.trim(), 
+        isLoading, 
+        isStreaming 
+      });
+      return;
+    }
 
     const userMessage: ChatMessageType = {
       id: Date.now().toString(),
@@ -197,16 +255,25 @@ export function useChat(options: UseChatOptions) {
       timestamp: new Date(),
     };
 
+    logger.info("Submitting message", { contentLength: userMessage.content.length });
+
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
     setIsLoading(true);
 
-    await handleStream(userMessage);
-
-    setIsLoading(false);
+    try {
+      await handleStream(userMessage);
+    } catch (error) {
+      logger.error("Submit error", { error });
+    } finally {
+      setIsLoading(false);
+      logger.info("Submit completed");
+    }
   };
 
   const handleCancel = () => {
+    logger.info("Cancelling stream");
+    
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
       abortControllerRef.current = null;
@@ -236,6 +303,7 @@ export function useChat(options: UseChatOptions) {
   };
 
   const clearMessages = () => {
+    logger.info("Clearing messages");
     setMessages([]);
     setStreamState({
       content: "",

@@ -9,6 +9,9 @@
 
 import { LLMClient, LLMMessage, LLMResponse, LLMProvider } from '../types';
 import { getProviderInfo } from '../config';
+import { createClientLogger } from '@/lib/logger';
+
+const logger = createClientLogger('PerplexityClient');
 
 /**
  * Perplexity APIレスポンスの型
@@ -83,10 +86,13 @@ export class PerplexityClient implements LLMClient {
     this.apiKey = process.env.PERPLEXITY_API_KEY || '';
 
     if (!this.apiKey) {
+      logger.error('PERPLEXITY_API_KEY is not set');
       throw new Error(
         'PERPLEXITY_API_KEY is not set. Please set it in your environment variables.'
       );
     }
+    
+    logger.info('PerplexityClient initialized', { provider, model: MODEL_MAPPING[provider] });
   }
 
   /**
@@ -95,6 +101,8 @@ export class PerplexityClient implements LLMClient {
    * @returns LLMレスポンス（ソースURL含む）
    */
   async chat(messages: LLMMessage[]): Promise<LLMResponse> {
+    logger.info('Starting chat request', { messageCount: messages.length, model: MODEL_MAPPING[this.provider] });
+    
     const requestBody: PerplexityApiRequest = {
       model: MODEL_MAPPING[this.provider],
       messages: messages.map((msg) => ({
@@ -116,6 +124,7 @@ export class PerplexityClient implements LLMClient {
 
     if (!response.ok) {
       const errorText = await response.text();
+      logger.error('Perplexity API error', { status: response.status, error: errorText });
       throw new Error(
         `Perplexity API error: ${response.status} ${response.statusText} - ${errorText}`
       );
@@ -142,6 +151,14 @@ export class PerplexityClient implements LLMClient {
       (inputTokens / 1000000) * providerInfo.inputPrice +
       (outputTokens / 1000000) * providerInfo.outputPrice;
 
+    logger.info('Chat request completed', {
+      inputTokens,
+      outputTokens,
+      cost: cost.toFixed(6),
+      contentLength: content.length,
+      citationCount: data.citations?.length || 0,
+    });
+
     return {
       content,
       usage: {
@@ -158,6 +175,8 @@ export class PerplexityClient implements LLMClient {
    * @returns 文字列の非同期イテレータ
    */
   async *stream(messages: LLMMessage[]): AsyncIterable<string> {
+    logger.info('Starting stream request', { messageCount: messages.length, model: MODEL_MAPPING[this.provider] });
+    
     const requestBody: PerplexityApiRequest = {
       model: MODEL_MAPPING[this.provider],
       messages: messages.map((msg) => ({
@@ -180,19 +199,26 @@ export class PerplexityClient implements LLMClient {
 
     if (!response.ok) {
       const errorText = await response.text();
+      logger.error('Perplexity API streaming error', { status: response.status, error: errorText });
       throw new Error(
         `Perplexity API error: ${response.status} ${response.statusText} - ${errorText}`
       );
     }
 
     if (!response.body) {
+      logger.error('Response body is null');
       throw new Error('Response body is null');
     }
+
+    logger.info('Starting to read stream');
 
     const reader = response.body.getReader();
     const decoder = new TextDecoder();
     let citations: string[] = [];
     const citationsSent = false;
+
+    let chunkCount = 0;
+    let totalLength = 0;
 
     try {
       while (true) {
@@ -205,8 +231,10 @@ export class PerplexityClient implements LLMClient {
             for (let i = 0; i < citations.length; i++) {
               sourcesSection += `[${i + 1}] ${citations[i]}\n`;
             }
+            totalLength += sourcesSection.length;
             yield sourcesSection;
           }
+          logger.info('Stream completed', { chunkCount, totalLength, citationCount: citations.length });
           break;
         }
 
@@ -232,6 +260,8 @@ export class PerplexityClient implements LLMClient {
               // コンテンツチャンクを抽出
               const content = parsed.choices[0]?.delta?.content;
               if (content) {
+                chunkCount++;
+                totalLength += content.length;
                 yield content;
               }
             } catch {

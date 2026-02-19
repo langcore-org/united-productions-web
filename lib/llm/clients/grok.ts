@@ -8,6 +8,9 @@
 
 import { LLMClient, LLMMessage, LLMResponse, LLMProvider } from '../types';
 import { getProviderInfo } from '../config';
+import { createClientLogger } from '@/lib/logger';
+
+const logger = createClientLogger('GrokClient');
 
 /**
  * xAI APIレスポンス型
@@ -65,9 +68,11 @@ export class GrokClient implements LLMClient {
     
     const apiKey = process.env.XAI_API_KEY;
     if (!apiKey) {
+      logger.error('XAI_API_KEY environment variable is not set');
       throw new Error('XAI_API_KEY environment variable is not set');
     }
     this.apiKey = apiKey;
+    logger.info('GrokClient initialized', { provider, model: this.model });
   }
 
   /**
@@ -88,6 +93,8 @@ export class GrokClient implements LLMClient {
    * チャット完了を取得
    */
   async chat(messages: LLMMessage[]): Promise<LLMResponse> {
+    logger.info('Starting chat request', { messageCount: messages.length, model: this.model });
+    
     const response = await fetch(`${this.baseUrl}/chat/completions`, {
       method: 'POST',
       headers: {
@@ -105,6 +112,7 @@ export class GrokClient implements LLMClient {
 
     if (!response.ok) {
       const errorText = await response.text();
+      logger.error('xAI API error', { status: response.status, error: errorText });
       throw new Error(`xAI API error: ${response.status} ${errorText}`);
     }
 
@@ -124,6 +132,13 @@ export class GrokClient implements LLMClient {
       ).toFixed(6)
     );
 
+    logger.info('Chat request completed', {
+      inputTokens,
+      outputTokens,
+      cost: cost.toFixed(6),
+      contentLength: content.length,
+    });
+
     return {
       content,
       usage: {
@@ -138,6 +153,8 @@ export class GrokClient implements LLMClient {
    * ストリーミングレスポンスを取得
    */
   async *stream(messages: LLMMessage[]): AsyncIterable<string> {
+    logger.info('Starting stream request', { messageCount: messages.length, model: this.model });
+    
     const response = await fetch(`${this.baseUrl}/chat/completions`, {
       method: 'POST',
       headers: {
@@ -156,21 +173,31 @@ export class GrokClient implements LLMClient {
 
     if (!response.ok) {
       const errorText = await response.text();
+      logger.error('xAI API streaming error', { status: response.status, error: errorText });
       throw new Error(`xAI API error: ${response.status} ${errorText}`);
     }
 
     const reader = response.body?.getReader();
     if (!reader) {
+      logger.error('Response body is not readable');
       throw new Error('Response body is not readable');
     }
+
+    logger.info('Starting to read stream');
 
     const decoder = new TextDecoder();
     let buffer = '';
 
+    let chunkCount = 0;
+    let totalLength = 0;
+
     try {
       while (true) {
         const { done, value } = await reader.read();
-        if (done) break;
+        if (done) {
+          logger.info('Stream completed', { chunkCount, totalLength });
+          break;
+        }
 
         buffer += decoder.decode(value, { stream: true });
         const lines = buffer.split('\n');
@@ -190,6 +217,8 @@ export class GrokClient implements LLMClient {
             const chunk: XAIStreamChunk = JSON.parse(data);
             const content = chunk.choices[0]?.delta?.content;
             if (content) {
+              chunkCount++;
+              totalLength += content.length;
               yield content;
             }
           } catch {
