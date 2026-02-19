@@ -209,26 +209,14 @@ export function Sidebar({ className, onCollapseChange }: SidebarProps) {
         className
       )}
     >
-      {/* Header - アイコン + 折りたたみボタン */}
+      {/* Header - アイコンのみ */}
       <div className={cn(
         "flex items-center h-14 bg-[#f9f9f9]",
-        isCollapsed ? "px-2 justify-center" : "px-4 justify-between"
+        isCollapsed ? "px-2 justify-center" : "px-4"
       )}>
         <div className="w-8 h-8 rounded-lg bg-black flex items-center justify-center flex-shrink-0">
           <span className="text-white font-bold text-sm">UP</span>
         </div>
-        {!isCollapsed && (
-          <button
-            onClick={toggleCollapse}
-            className={cn(
-              "p-1.5 rounded-lg transition-colors duration-200",
-              "text-[#6b7280] hover:text-[#1a1a1a] hover:bg-white"
-            )}
-            title="サイドバーを縮小"
-          >
-            <PanelLeft className="w-5 h-5" />
-          </button>
-        )}
       </div>
 
       {/* New Chat Button */}
@@ -440,21 +428,6 @@ export function Sidebar({ className, onCollapseChange }: SidebarProps) {
         "py-2 space-y-0.5 border-t border-[#e5e5e5] flex-shrink-0 bg-[#f9f9f9]",
         isCollapsed ? "px-1.5" : "px-2"
       )}>
-        {/* 展開ボタン - 折りたたみ時のみ表示 */}
-        {isCollapsed && (
-          <button
-            onClick={toggleCollapse}
-            className={cn(
-              "w-10 h-10 flex items-center justify-center rounded-xl mx-auto",
-              "transition-all duration-200 ease-out group",
-              "text-[#6b7280] hover:bg-white hover:text-[#1a1a1a]"
-            )}
-            title="サイドバーを展開"
-          >
-            <PanelLeft className="w-[18px] h-[18px] rotate-180" />
-          </button>
-        )}
-        
         {bottomItems.map((item) => (
           <Link
             key={item.href}
@@ -496,6 +469,27 @@ export function Sidebar({ className, onCollapseChange }: SidebarProps) {
             <span className="text-sm font-medium">ログアウト</span>
           )}
         </Link>
+
+        {/* 展開/縮小ボタン - 常に一番下 */}
+        <button
+          onClick={toggleCollapse}
+          className={cn(
+            "flex items-center rounded-xl transition-all duration-200 ease-out group",
+            isCollapsed ? "w-10 h-10 justify-center p-0 mx-auto" : "gap-3 px-3 py-2",
+            "text-[#6b7280] hover:bg-white hover:text-[#1a1a1a]"
+          )}
+          title={isCollapsed ? "サイドバーを展開" : "サイドバーを縮小"}
+        >
+          <span className="flex-shrink-0 transition-transform duration-200 group-hover:scale-110">
+            <PanelLeft className={cn(
+              "w-[18px] h-[18px] transition-transform duration-200",
+              isCollapsed ? "" : "rotate-180"
+            )} />
+          </span>
+          {!isCollapsed && (
+            <span className="text-sm font-medium">サイドバーを縮小</span>
+          )}
+        </button>
       </div>
     </aside>
   );
