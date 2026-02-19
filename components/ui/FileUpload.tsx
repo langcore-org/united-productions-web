@@ -1,22 +1,23 @@
 /**
  * ファイルアップロードコンポーネント
- * ドラッグ&ドロップ対応
+ * ドラッグ&ドロップ対応 + Google Drive連携
  */
 
 "use client";
 
 import { useCallback, useState } from "react";
 import { Button } from "@/components/ui/button";
-
 import { useFileUpload } from "@/hooks/useFileUpload";
 import { cn } from "@/lib/utils";
-import { Upload, File, X, Loader2, Check } from "lucide-react";
+import { Upload, File, X, Loader2, Check, FolderOpen } from "lucide-react";
+import { GoogleDrivePicker } from "./GoogleDrivePicker";
 
 interface FileUploadProps {
   onUpload: (text: string, filename: string) => void;
   accept?: Record<string, string[]>;
   maxSize?: number;
   className?: string;
+  enableGoogleDrive?: boolean; // Google Drive連携を有効にするか
 }
 
 const DEFAULT_ACCEPT = {
@@ -37,15 +38,36 @@ function formatBytes(bytes: number): string {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
 }
 
+// MIMEタイプをGoogle Drive API用に変換
+function getGoogleDriveMimeTypes(accept: Record<string, string[]>): string[] {
+  const mimeTypes: string[] = [];
+  
+  // 通常のMIMEタイプ
+  Object.keys(accept).forEach(mime => {
+    mimeTypes.push(mime);
+  });
+  
+  // Google Workspaceファイルも追加
+  mimeTypes.push(
+    "application/vnd.google-apps.document",      // Google Docs
+    "application/vnd.google-apps.spreadsheet",   // Google Sheets
+    "application/vnd.google-apps.presentation"   // Google Slides
+  );
+  
+  return mimeTypes;
+}
+
 export function FileUpload({
   onUpload,
   accept = DEFAULT_ACCEPT,
   maxSize = MAX_FILE_SIZE,
   className,
+  enableGoogleDrive = true,
 }: FileUploadProps) {
   const [isDragOver, setIsDragOver] = useState(false);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
+  const [showDrivePicker, setShowDrivePicker] = useState(false);
 
   const { uploadFile, isUploading, progress, error, reset } = useFileUpload({
     onSuccess: (text, filename) => {
@@ -117,6 +139,20 @@ export function FileUpload({
     setUploadedFile(null);
     setValidationError(null);
     reset();
+  };
+
+  // Google Driveからファイルを選択
+  const handleDriveSelect = (file: { id: string; name: string; mimeType: string }, content: string) => {
+    setShowDrivePicker(false);
+    
+    // ファイル名を設定
+    setUploadedFile({
+      name: file.name,
+      size: content.length,
+    } as File);
+    
+    // 内容を親コンポーネントに渡す
+    onUpload(content, file.name);
   };
 
   const formatFileSize = (bytes: number) => {
@@ -193,6 +229,22 @@ export function FileUpload({
         </label>
       </div>
 
+      {/* Google Drive選択ボタン */}
+      {enableGoogleDrive && (
+        <div className="flex justify-center">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setShowDrivePicker(true)}
+            disabled={isUploading}
+            className="gap-2"
+          >
+            <FolderOpen className="h-4 w-4" />
+            Google Driveから選択
+          </Button>
+        </div>
+      )}
+
       {/* エラーメッセージ */}
       {(validationError || error) && (
         <div className="flex items-center gap-2 text-sm text-destructive">
@@ -248,8 +300,15 @@ export function FileUpload({
           )}
         </div>
       )}
+
+      {/* Google Drive Picker */}
+      {showDrivePicker && (
+        <GoogleDrivePicker
+          onSelect={handleDriveSelect}
+          onCancel={() => setShowDrivePicker(false)}
+          accept={getGoogleDriveMimeTypes(accept)}
+        />
+      )}
     </div>
   );
 }
-
-
