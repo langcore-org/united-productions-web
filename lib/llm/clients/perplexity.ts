@@ -65,8 +65,8 @@ const MODEL_MAPPING: Record<LLMProvider, string> = {
   // 他のプロバイダーは使用しない
   'gemini-2.5-flash-lite': '',
   'gemini-3.0-flash': '',
-  'grok-4.1-fast': '',
-  'grok-4': '',
+  'grok-4-1-fast-reasoning': '',
+  'grok-4-0709': '',
   'gpt-4o-mini': '',
   'gpt-5': '',
   'claude-sonnet-4.5': '',

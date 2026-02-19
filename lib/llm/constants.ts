@@ -12,8 +12,8 @@ import { LLMProvider } from "./types";
 export const PROVIDER_LABELS: Record<LLMProvider, string> = {
   "gemini-2.5-flash-lite": "Gemini 2.5 Flash-Lite",
   "gemini-3.0-flash": "Gemini 3.0 Flash",
-  "grok-4.1-fast": "Grok 4.1 Fast",
-  "grok-4": "Grok 4",
+  "grok-4-1-fast-reasoning": "Grok 4.1 Fast",
+  "grok-4-0709": "Grok 4",
   "gpt-4o-mini": "GPT-4o-mini",
   "gpt-5": "GPT-5",
   "claude-sonnet-4.5": "Claude 4.5 Sonnet",
@@ -28,8 +28,8 @@ export const PROVIDER_LABELS: Record<LLMProvider, string> = {
 export const PROVIDER_COLORS: Record<LLMProvider, string> = {
   "gemini-2.5-flash-lite": "#4285f4",
   "gemini-3.0-flash": "#4285f4",
-  "grok-4.1-fast": "#ff6b00",
-  "grok-4": "#ff6b00",
+  "grok-4-1-fast-reasoning": "#ff6b00",
+  "grok-4-0709": "#ff6b00",
   "gpt-4o-mini": "#10a37f",
   "gpt-5": "#10a37f",
   "claude-sonnet-4.5": "#d4a574",
@@ -43,7 +43,7 @@ export const PROVIDER_COLORS: Record<LLMProvider, string> = {
  */
 export const PROVIDER_CATEGORIES: Record<string, LLMProvider[]> = {
   google: ["gemini-2.5-flash-lite", "gemini-3.0-flash"],
-  xai: ["grok-4.1-fast", "grok-4"],
+  xai: ["grok-4-1-fast-reasoning", "grok-4-0709"],
   openai: ["gpt-4o-mini", "gpt-5"],
   anthropic: ["claude-sonnet-4.5", "claude-opus-4.6"],
   perplexity: ["perplexity-sonar", "perplexity-sonar-pro"],

@@ -9,10 +9,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createLLMClient, isValidProvider } from '@/lib/llm/factory';
-import { DEFAULT_PROVIDER } from '@/lib/llm/config';
 import { getCachedLLMResponse, cacheLLMResponse } from '@/lib/llm/cache';
 import { requireAuth } from '@/lib/api/auth';
 import { handleApiError } from '@/lib/api/utils';
+import { getDefaultLLMProvider } from '@/lib/settings/db';
 import type { LLMMessage, LLMProvider } from '@/lib/llm/types';
 
 /**
@@ -85,7 +85,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       }
       provider = requestedProvider;
     } else {
-      provider = DEFAULT_PROVIDER;
+      // 管理画面で設定されたグローバルデフォルト（DB）を使用
+      provider = await getDefaultLLMProvider();
     }
 
     // キャッシュをチェック

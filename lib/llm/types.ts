@@ -12,8 +12,8 @@
 export type LLMProvider =
   | 'gemini-2.5-flash-lite'
   | 'gemini-3.0-flash'
-  | 'grok-beta'      // xAI APIで実際に使えるモデル
-  | 'grok-2-1212'    // xAI APIで実際に使えるモデル
+  | 'grok-4-1-fast-reasoning'  // xAI Grok 4.1 Fast（推論モード）
+  | 'grok-4-0709'              // xAI Grok 4 標準版
   | 'gpt-4o-mini'
   | 'gpt-5'
   | 'claude-sonnet-4.5'

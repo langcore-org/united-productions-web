@@ -11,7 +11,7 @@ import React from "react";
  * エージェント別デフォルトプロバイダー
  */
 export const AGENT_DEFAULT_PROVIDERS: Record<ResearchAgentType, LLMProvider> = {
-  people: "grok-4.1-fast",
+  people: "grok-4-1-fast-reasoning",
   evidence: "perplexity-sonar",
   location: "perplexity-sonar",
 };
@@ -20,9 +20,9 @@ export const AGENT_DEFAULT_PROVIDERS: Record<ResearchAgentType, LLMProvider> = {
  * エージェント別サポートプロバイダー
  */
 export const AGENT_SUPPORTED_PROVIDERS: Record<ResearchAgentType, LLMProvider[]> = {
-  people: ["grok-4.1-fast", "grok-4"],
+  people: ["grok-4-1-fast-reasoning", "grok-4-0709"],
   evidence: ["perplexity-sonar", "perplexity-sonar-pro"],
-  location: ["perplexity-sonar", "perplexity-sonar-pro", "grok-4.1-fast", "grok-4"],
+  location: ["perplexity-sonar", "perplexity-sonar-pro", "grok-4-1-fast-reasoning", "grok-4-0709"],
 };
 
 /**

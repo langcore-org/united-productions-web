@@ -64,8 +64,8 @@ export function getProviderDisplayName(provider: LLMProvider): string {
   const names: Record<string, string> = {
     "gemini-2.5-flash-lite": "Gemini 2.5 Flash-Lite",
     "gemini-3.0-flash": "Gemini 3.0 Flash",
-    "grok-4.1-fast": "Grok 4.1 Fast",
-    "grok-4": "Grok 4",
+    "grok-4-1-fast-reasoning": "Grok 4.1 Fast",
+    "grok-4-0709": "Grok 4",
     "gpt-4o-mini": "GPT-4o Mini",
     "gpt-5": "GPT-5",
     "claude-sonnet-4.5": "Claude 4.5 Sonnet",

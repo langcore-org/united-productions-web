@@ -16,9 +16,40 @@ import {
   DEFAULT_SETTINGS,
   validateSetting,
 } from "@/lib/settings/types";
+import {
+  SYSTEM_SETTING_KEYS,
+  getSystemSetting,
+  setSystemSetting,
+  deleteSystemSetting,
+} from "@/lib/settings/db";
 
-// インメモリストレージ（実際の実装ではDBに置き換え）
+// インメモリストレージ（DB非対応の設定はここで管理）
 let currentSettings: SettingItem[] = [...DEFAULT_SETTINGS];
+
+/**
+ * DB永続化対象の設定（settingId → DBキー）
+ * ここに追加するだけでDB保存対象になる
+ */
+const DB_PERSISTED_SETTINGS: Record<string, typeof SYSTEM_SETTING_KEYS[keyof typeof SYSTEM_SETTING_KEYS]> = {
+  'llm-default-provider': SYSTEM_SETTING_KEYS.DEFAULT_LLM_PROVIDER,
+};
+
+/**
+ * DB永続化設定をインメモリ設定に反映して返す
+ */
+async function getSettingsWithDb(settings: SettingItem[]): Promise<SettingItem[]> {
+  const merged = [...settings];
+  for (const [settingId, dbKey] of Object.entries(DB_PERSISTED_SETTINGS)) {
+    const dbValue = await getSystemSetting(dbKey);
+    if (dbValue !== null) {
+      const idx = merged.findIndex(s => s.id === settingId);
+      if (idx !== -1) {
+        merged[idx] = { ...merged[idx], value: dbValue };
+      }
+    }
+  }
+  return merged;
+}
 
 /**
  * GET /api/admin/settings
@@ -33,7 +64,10 @@ export async function GET(request: NextRequest): Promise<Response> {
       return authResult;
     }
 
-    // 設定を返す（secretな値はマスク）
+    // DB永続化設定をマージしてから返す
+    const mergedSettings = await getSettingsWithDb(currentSettings);
+    currentSettings = mergedSettings;
+
     const safeSettings = currentSettings.map((setting) => ({
       ...setting,
       value: setting.secret ? "********" : setting.value,
@@ -122,11 +156,17 @@ export async function POST(request: NextRequest): Promise<Response> {
         continue;
       }
 
-      // 設定を更新
+      // 設定を更新（インメモリ）
       currentSettings[settingIndex] = {
         ...setting,
         value: update.value,
       };
+
+      // DB永続化対象の設定はDBにも保存
+      const dbKey = DB_PERSISTED_SETTINGS[update.id];
+      if (dbKey) {
+        await setSystemSetting(dbKey, String(update.value));
+      }
     }
 
     logger.info(`[${requestId}] Settings updated`, { 
@@ -168,11 +208,16 @@ export async function PUT(request: NextRequest): Promise<Response> {
       return authResult;
     }
 
-    // デフォルトに戻す
+    // デフォルトに戻す（インメモリ）
     currentSettings = DEFAULT_SETTINGS.map((setting) => ({
       ...setting,
       value: setting.defaultValue,
     }));
+
+    // DB永続化設定も削除（デフォルト値にリセット）
+    for (const dbKey of Object.values(DB_PERSISTED_SETTINGS)) {
+      await deleteSystemSetting(dbKey);
+    }
 
     logger.info(`[${requestId}] Settings reset to default`);
 

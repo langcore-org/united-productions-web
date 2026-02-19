@@ -54,8 +54,8 @@ export function createLLMClient(provider: LLMProvider): LLMClient {
     case 'gemini-3.0-flash':
       return new GeminiClient(provider);
       
-    case 'grok-4.1-fast':
-    case 'grok-4':
+    case 'grok-4-1-fast-reasoning':
+    case 'grok-4-0709':
       return new GrokClient(provider);
       
     case 'gpt-4o-mini':
@@ -90,8 +90,8 @@ export function isValidProvider(provider: string): provider is LLMProvider {
   const validProviders: LLMProvider[] = [
     'gemini-2.5-flash-lite',
     'gemini-3.0-flash',
-    'grok-4.1-fast',
-    'grok-4',
+    'grok-4-1-fast-reasoning',
+    'grok-4-0709',
     'gpt-4o-mini',
     'gpt-5',
     'claude-sonnet-4.5',
@@ -124,7 +124,7 @@ export function getSameVendorProviders(provider: LLMProvider): LLMProvider[] {
   
   const vendorMap: Record<string, LLMProvider[]> = {
     'Google': ['gemini-2.5-flash-lite', 'gemini-3.0-flash'],
-    'xAI': ['grok-4.1-fast', 'grok-4'],
+    'xAI': ['grok-4-1-fast-reasoning', 'grok-4-0709'],
     'OpenAI': ['gpt-4o-mini', 'gpt-5'],
     'Anthropic': ['claude-sonnet-4.5', 'claude-opus-4.6'],
     'Perplexity': ['perplexity-sonar', 'perplexity-sonar-pro'],

@@ -33,25 +33,25 @@ export const PROVIDER_CONFIG: Record<LLMProvider, ProviderInfo> = {
     recommendedFor: ['高品質タスク', '複雑な推論'],
     isAvailable: true,
   },
-  'grok-beta': {
-    id: 'grok-beta',
-    name: 'Grok Beta',
+  'grok-4-1-fast-reasoning': {
+    id: 'grok-4-1-fast-reasoning',
+    name: 'Grok 4.1 Fast',
     provider: 'xAI',
-    description: 'xAIベータ版モデル。',
-    inputPrice: 5.00,
-    outputPrice: 15.00,
-    contextLength: 131072,
+    description: 'Grok 4.1高速推論モデル。X検索対応。2Mコンテキスト。',
+    inputPrice: 0.20,
+    outputPrice: 0.50,
+    contextLength: 2000000,
     recommendedFor: ['PJ-C', '人探し', 'X検索', 'リアルタイム情報'],
     isAvailable: true,
   },
-  'grok-2-1212': {
-    id: 'grok-2-1212',
-    name: 'Grok 2',
+  'grok-4-0709': {
+    id: 'grok-4-0709',
+    name: 'Grok 4',
     provider: 'xAI',
-    description: 'xAI高性能モデル。',
-    inputPrice: 2.00,
-    outputPrice: 10.00,
-    contextLength: 131072,
+    description: 'Grok 4標準版。高品質推論。256kコンテキスト。',
+    inputPrice: 3.00,
+    outputPrice: 15.00,
+    contextLength: 256000,
     recommendedFor: ['高品質タスク', '複雑なタスク'],
     isAvailable: true,
   },
@@ -126,16 +126,16 @@ export const PROVIDER_CONFIG: Record<LLMProvider, ProviderInfo> = {
 /**
  * デフォルトプロバイダー
  */
-export const DEFAULT_PROVIDER: LLMProvider = 'grok-beta';
+export const DEFAULT_PROVIDER: LLMProvider = 'grok-4-1-fast-reasoning';
 
 /**
  * PJ別デフォルトプロバイダー
  */
 export const PROJECT_DEFAULT_PROVIDERS: Record<string, LLMProvider> = {
-  'PJ-A': 'grok-beta',      // 議事録整形
-  'PJ-B': 'grok-beta',      // 書き起こし整形
-  'PJ-C-people': 'grok-beta',       // 人探し（X検索）
-  'PJ-C-evidence': 'grok-beta',  // エビデンス検索
+  'PJ-A': 'grok-4-1-fast-reasoning',      // 議事録整形
+  'PJ-B': 'grok-4-1-fast-reasoning',      // 書き起こし整形
+  'PJ-C-people': 'grok-4-1-fast-reasoning',       // 人探し（X検索）
+  'PJ-C-evidence': 'grok-4-1-fast-reasoning',  // エビデンス検索
   // PJ-D（ロケスケ）は削除
 };
 
@@ -163,8 +163,8 @@ export const FREE_TIER_LIMITS: Record<LLMProvider, { rpm: number; rpd: number }>
   'gemini-2.5-flash-lite': { rpm: 30, rpd: 1500 },
   'gemini-3.0-flash': { rpm: 30, rpd: 1500 },
   // xAI Grok: デフォルト制限（有料API前提）
-  'grok-beta': { rpm: 60, rpd: 10000 },
-  'grok-2-1212': { rpm: 60, rpd: 10000 },
+  'grok-4-1-fast-reasoning': { rpm: 60, rpd: 10000 },
+  'grok-4-0709': { rpm: 60, rpd: 10000 },
   // OpenAI: デフォルト制限（有料API前提）
   'gpt-4o-mini': { rpm: 60, rpd: 10000 },
   'gpt-5': { rpm: 60, rpd: 10000 },

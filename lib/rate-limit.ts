@@ -31,8 +31,8 @@ export const DEFAULT_RATE_LIMITS: Record<string, RateLimitConfig> = {
   'gemini-2.5-flash-lite': { rpm: 30, rpd: 1500 },
   'gemini-3.0-flash': { rpm: 30, rpd: 1500 },
   // xAI（デフォルト制限）
-  'grok-4.1-fast': { rpm: 60, rpd: 10000 },
-  'grok-4': { rpm: 60, rpd: 10000 },
+  'grok-4-1-fast-reasoning': { rpm: 60, rpd: 10000 },
+  'grok-4-0709': { rpm: 60, rpd: 10000 },
   // OpenAI（デフォルト制限）
   'gpt-4o-mini': { rpm: 60, rpd: 10000 },
   'gpt-5': { rpm: 60, rpd: 10000 },

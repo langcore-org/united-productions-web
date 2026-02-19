@@ -15,16 +15,16 @@ datasource db {
 // ============================================
 
 enum LLMProvider {
-  GEMINI_25_FLASH_LITE  // デフォルト（無料枠）
-  GEMINI_30_FLASH       // 高品質（無料枠）
-  GROK_41_FAST          // X検索
-  GROK_4                // 最高品質
-  GPT_4O_MINI           // コスパ
-  GPT_5                 // フラッグシップ
-  CLAUDE_SONNET_45      // バランス
-  CLAUDE_OPUS_46        // 最高品質
-  PERPLEXITY_SONAR      // エビデンス検索
-  PERPLEXITY_SONAR_PRO  // 高品質検索
+  GEMINI_25_FLASH_LITE     // デフォルト（無料枠）
+  GEMINI_30_FLASH          // 高品質（無料枠）
+  GROK_4_1_FAST_REASONING  // Grok 4.1 Fast（推論）
+  GROK_4_0709              // Grok 4 標準版
+  GPT_4O_MINI              // コスパ
+  GPT_5                    // フラッグシップ
+  CLAUDE_SONNET_45         // バランス
+  CLAUDE_OPUS_46           // 最高品質
+  PERPLEXITY_SONAR         // エビデンス検索
+  PERPLEXITY_SONAR_PRO     // 高品質検索
 }
 
 // ============================================
@@ -139,7 +139,7 @@ model ResearchChat {
   userId      String
   user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   agentType   String            // PEOPLE | LOCATION | EVIDENCE
-  llmProvider LLMProvider       @default(GROK_41_FAST)
+  llmProvider LLMProvider       @default(GROK_4_1_FAST_REASONING)
   messages    ResearchMessage[]
   results     Json?
   createdAt   DateTime          @default(now())
@@ -204,6 +204,16 @@ model ProgramSettings {
   pastProposals  String   @db.Text
   updatedAt      DateTime @updatedAt
   user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ============================================
+// システム設定（KVストア）
+// ============================================
+
+model SystemSettings {
+  key       String   @id   // キー（例: "llm.defaultProvider"）
+  value     String         // 値（文字列）
+  updatedAt DateTime @updatedAt
 }
 
 // ============================================

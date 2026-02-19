@@ -2,7 +2,7 @@ import { ResearchAgentType } from "@/types/research";
 import type { LLMProvider } from "@/lib/llm/types";
 
 export const AGENT_DEFAULT_PROVIDERS: Record<ResearchAgentType, LLMProvider> = {
-  people: "grok-4.1-fast",
+  people: "grok-4-1-fast-reasoning",
   evidence: "perplexity-sonar",
   location: "perplexity-sonar",
 };

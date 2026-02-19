@@ -2,7 +2,7 @@
  * Grok LLM Client
  *
  * xAI APIを使用したLLMクライアント実装
- * 対応モデル: grok-4.1-fast, grok-4
+ * 対応モデル: grok-4-1-fast-reasoning, grok-4-0709
  * X Searchツール使用可能
  */
 
@@ -80,10 +80,10 @@ export class GrokClient implements LLMClient {
    */
   private getModelName(provider: LLMProvider): string {
     switch (provider) {
-      case 'grok-beta':
-        return 'grok-beta';  // xAI APIで実際に使えるモデル
-      case 'grok-2-1212':
-        return 'grok-2-1212';  // xAI APIで実際に使えるモデル
+      case 'grok-4-1-fast-reasoning':
+        return 'grok-4-1-fast-reasoning';
+      case 'grok-4-0709':
+        return 'grok-4-0709';
       default:
         throw new Error(`Unsupported Grok provider: ${provider}`);
     }
