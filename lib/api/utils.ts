@@ -4,7 +4,7 @@
  * API Routesでの共通処理をまとめます。
  */
 
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { ZodError } from "zod";
 import { LLMError } from "@/lib/llm/errors";
 
@@ -21,7 +21,7 @@ export function handleApiError(error: unknown): NextResponse {
     return NextResponse.json(
       { 
         error: "バリデーションエラー", 
-        details: error.errors.map(e => ({
+        details: error.issues.map(e => ({
           path: e.path.join("."),
           message: e.message,
         }))

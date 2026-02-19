@@ -1,4 +1,11 @@
 import { ResearchAgentType } from "@/types/research";
+import type { LLMProvider } from "@/lib/llm/types";
+
+export const AGENT_DEFAULT_PROVIDERS: Record<ResearchAgentType, LLMProvider> = {
+  people: "grok-4.1-fast",
+  evidence: "perplexity-sonar",
+  location: "perplexity-sonar",
+};
 
 export const AGENT_SYSTEM_PROMPTS: Record<ResearchAgentType, string> = {
   people: `あなたはテレビ制作の人探しエージェントです。

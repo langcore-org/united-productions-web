@@ -9,7 +9,8 @@ export default async function AuthenticatedLayout({
 }) {
   const session = await getServerSession(authOptions);
 
-  if (!session?.user?.id) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  if (!(session as any)?.user?.id) {
     redirect("/auth/signin");
   }
 

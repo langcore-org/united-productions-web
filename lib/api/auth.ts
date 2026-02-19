@@ -31,7 +31,8 @@ export async function requireAuth(
   try {
     const session = await getServerSession(authOptions);
     
-    if (!session?.user?.id) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if (!(session as any)?.user?.id) {
       return NextResponse.json(
         { error: "認証が必要です。ログインしてください。" },
         { status: 401 }
@@ -39,8 +40,10 @@ export async function requireAuth(
     }
 
     return {
-      user: session.user as AuthenticatedUser,
-      userId: session.user.id,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      user: (session as any).user as AuthenticatedUser,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      userId: (session as any).user.id,
     };
   } catch (error) {
     console.error("認証チェックエラー:", error);
@@ -62,13 +65,16 @@ export async function optionalAuth(
   try {
     const session = await getServerSession(authOptions);
     
-    if (!session?.user?.id) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if (!(session as any)?.user?.id) {
       return null;
     }
 
     return {
-      user: session.user as AuthenticatedUser,
-      userId: session.user.id,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      user: (session as any).user as AuthenticatedUser,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      userId: (session as any).user.id,
     };
   } catch (error) {
     console.error("認証チェックエラー:", error);

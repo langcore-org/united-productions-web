@@ -46,7 +46,7 @@ function parseVttTime(timeStr: string): number {
  */
 function extractSpeaker(text: string): [string, string | undefined] {
   // Zoom VTT形式: "話者名: 発言内容" または "話者名：発言内容"
-  const match = text.match(/^([^:：]+)[:：]\s*(.+)$/s);
+  const match = text.match(/^([^:：]+)[:：]\s*([\s\S]+)$/);
   if (match) {
     const speaker = match[1].trim();
     const content = match[2].trim();

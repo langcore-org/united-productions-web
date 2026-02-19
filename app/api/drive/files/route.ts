@@ -109,7 +109,8 @@ export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     
-    if (!session?.accessToken) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if (!(session as any)?.accessToken) {
       return NextResponse.json(
         { error: "認証が必要です" },
         { status: 401 }
@@ -146,7 +147,7 @@ export async function GET(request: NextRequest) {
       `${DRIVE_API_BASE}/files?pageSize=${pageSize}&q=${encodeURIComponent(q)}&fields=files(id,name,mimeType,size,modifiedTime,webViewLink)`,
       {
         headers: {
-          Authorization: `Bearer ${session.accessToken}`,
+          Authorization: `Bearer ${(session as any).accessToken}`,
         },
       }
     );
@@ -179,7 +180,8 @@ export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     
-    if (!session?.accessToken) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if (!(session as any)?.accessToken) {
       return NextResponse.json(
         { error: "認証が必要です" },
         { status: 401 }
@@ -238,7 +240,7 @@ export async function POST(request: NextRequest) {
       {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${session.accessToken}`,
+          Authorization: `Bearer ${(session as any).accessToken}`,
           "Content-Type": "multipart/related; boundary=" + boundary,
         },
         body: body,

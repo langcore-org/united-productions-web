@@ -39,12 +39,12 @@ interface HandlerContext<T> {
  * );
  */
 export function createApiHandler<T>(
-  handler: (ctx: HandlerContext<T>) => Promise<NextResponse>,
+  handler: (ctx: HandlerContext<T>) => Promise<NextResponse | Response>,
   options: HandlerOptions<T> = {}
 ) {
   const { schema, requireAuth: shouldRequireAuth = true } = options;
 
-  return async (request: NextRequest): Promise<NextResponse> => {
+  return async (request: NextRequest): Promise<NextResponse | Response> => {
     try {
       // 認証チェック
       let userId = "";
@@ -67,7 +67,7 @@ export function createApiHandler<T>(
             return NextResponse.json(
               {
                 error: "バリデーションエラー",
-                details: validationResult.error.errors.map((e) => ({
+                details: validationResult.error.issues.map((e) => ({
                   path: e.path.join("."),
                   message: e.message,
                 })),
@@ -92,7 +92,7 @@ export function createApiHandler<T>(
         return NextResponse.json(
           {
             error: "バリデーションエラー",
-            details: error.errors.map((e) => ({
+            details: error.issues.map((e) => ({
               path: e.path.join("."),
               message: e.message,
             })),
@@ -110,7 +110,7 @@ export function createApiHandler<T>(
  * ストリーミングレスポンスを作成
  */
 export function createStreamingResponse(
-  generator: AsyncGenerator<string, void, unknown>
+  generator: AsyncIterable<string>
 ): Response {
   const encoder = new TextEncoder();
 

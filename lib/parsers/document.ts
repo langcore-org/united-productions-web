@@ -23,7 +23,9 @@ export interface ParsedDocument {
 export async function parsePDF(buffer: Buffer): Promise<ParsedDocument> {
   try {
     // pdf-parseは動的インポート（サーバーサイドのみ）
-    const pdfParse = await import("pdf-parse");
+    // @ts-expect-error pdf-parse may not be installed
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const pdfParse: any = await import("pdf-parse");
     const result = await pdfParse.default(buffer);
     
     return {
@@ -48,6 +50,7 @@ export async function parsePDF(buffer: Buffer): Promise<ParsedDocument> {
 export async function parseWord(buffer: Buffer): Promise<ParsedDocument> {
   try {
     // mammothを使用してWordファイルを解析
+    // @ts-expect-error mammoth may not be installed
     const mammoth = await import("mammoth");
     const result = await mammoth.extractRawText({ buffer });
     
@@ -70,12 +73,14 @@ export async function parseWord(buffer: Buffer): Promise<ParsedDocument> {
 export async function parseExcel(buffer: Buffer): Promise<ParsedDocument> {
   try {
     // xlsxを使用してExcelファイルを解析
+    // @ts-expect-error xlsx may not be installed
     const XLSX = await import("xlsx");
     const workbook = XLSX.read(buffer, { type: "buffer" });
     
     // 全シートのテキストを結合
     let text = "";
-    workbook.SheetNames.forEach((sheetName) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    workbook.SheetNames.forEach((sheetName: any) => {
       const sheet = workbook.Sheets[sheetName];
       const sheetText = XLSX.utils.sheet_to_csv(sheet);
       text += `\n--- ${sheetName} ---\n${sheetText}`;

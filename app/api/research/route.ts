@@ -33,7 +33,7 @@ export const POST = createApiHandler(
   async ({ data }) => {
     const { agentType, query, provider, stream = false } = data;
 
-    const selectedProvider = provider || AGENT_DEFAULT_PROVIDERS[agentType as ResearchAgentType];
+    const selectedProvider = (provider as LLMProvider) || AGENT_DEFAULT_PROVIDERS[agentType as ResearchAgentType];
     const client = createLLMClient(selectedProvider);
 
     const messages: LLMMessage[] = [

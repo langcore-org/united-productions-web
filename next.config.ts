@@ -5,10 +5,7 @@ const nextConfig: NextConfig = {
     // CI環境以外では型エラーをチェック（本番デプロイ時は必ず検証）
     ignoreBuildErrors: process.env.SKIP_TYPE_CHECK === "true",
   },
-  eslint: {
-    // CI環境以外ではESLintエラーをチェック
-    ignoreDuringBuilds: process.env.SKIP_LINT === "true",
-  },
+
   images: {
     unoptimized: false, // 画像最適化を有効化（Vercelで推奨）
   },

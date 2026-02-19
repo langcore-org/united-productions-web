@@ -12,6 +12,8 @@ import {
 } from "@/lib/llm/constants";
 import type { LLMProvider } from "@/lib/llm/types";
 
+export type { LLMProvider };
+
 interface LLMSelectorProps {
   value: LLMProvider;
   onChange: (provider: LLMProvider) => void;

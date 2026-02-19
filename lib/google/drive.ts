@@ -63,11 +63,12 @@ export interface DriveSearchOptions {
 async function getAccessToken(): Promise<string> {
   const session = await getServerSession(authOptions);
   
-  if (!session?.accessToken) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  if (!(session as any)?.accessToken) {
     throw new Error("Google Driveアクセスのための認証が必要です");
   }
   
-  return session.accessToken;
+  return (session as any).accessToken;
 }
 
 /**

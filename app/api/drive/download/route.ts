@@ -14,7 +14,8 @@ export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     
-    if (!session?.accessToken) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if (!(session as any)?.accessToken) {
       return NextResponse.json(
         { error: "認証が必要です" },
         { status: 401 }
@@ -36,7 +37,7 @@ export async function GET(request: NextRequest) {
       `${DRIVE_API_BASE}/files/${fileId}?fields=id,name,mimeType,size`,
       {
         headers: {
-          Authorization: `Bearer ${session.accessToken}`,
+          Authorization: `Bearer ${(session as any).accessToken}`,
         },
       }
     );
@@ -55,7 +56,7 @@ export async function GET(request: NextRequest) {
       `${DRIVE_API_BASE}/files/${fileId}?alt=media`,
       {
         headers: {
-          Authorization: `Bearer ${session.accessToken}`,
+          Authorization: `Bearer ${(session as any).accessToken}`,
         },
       }
     );

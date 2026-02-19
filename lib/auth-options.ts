@@ -10,7 +10,7 @@
  * - Preview環境ではCredentialsProviderを追加（E2Eテスト用）
  */
 
-import type { NextAuthOptions } from "next-auth";
+import type { AuthOptions } from "next-auth/core/types";
 import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@auth/prisma-adapter";
@@ -44,7 +44,7 @@ function getNextAuthUrl(): string {
  * - 通常環境: GoogleProviderのみ
  * - Preview環境: GoogleProvider + CredentialsProvider（E2Eテスト用）
  */
-const providers: NextAuthOptions["providers"] = [
+const providers: AuthOptions["providers"] = [
   GoogleProvider({
     clientId: process.env.GOOGLE_CLIENT_ID!,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
@@ -108,11 +108,8 @@ if (process.env.VERCEL_ENV === "preview") {
  * アダプター: Prisma（PostgreSQL）
  * スコープ: openid, email, profile, drive.readonly
  */
-export const authOptions: NextAuthOptions = {
+export const authOptions: AuthOptions = {
   adapter: PrismaAdapter(prisma),
-  
-  // Vercel環境で複数ホスト（プレビューURL）を信頼する
-  trustHost: process.env.VERCEL_ENV === "preview" || process.env.VERCEL_ENV === "production" || process.env.AUTH_TRUST_HOST === "true",
   
   providers,
 
@@ -163,7 +160,8 @@ export const authOptions: NextAuthOptions = {
      * セッションコールバック
      * JWTからセッションに必要な情報を追加
      */
-    async session({ session, token }: { session: Record<string, unknown> & { user?: Record<string, unknown> }; token: Record<string, unknown> }) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    async session({ session, token }: { session: any; token: any }) {
       if (token && session.user) {
         session.user.id = token.userId as string;
         session.accessToken = token.accessToken as string;
