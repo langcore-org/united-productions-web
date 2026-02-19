@@ -92,6 +92,7 @@ model User {
   researchChats   ResearchChat[]
   schedules       LocationSchedule[]
   usageLogs       UsageLog[]
+  programSettings ProgramSettings?
   createdAt       DateTime           @default(now())
   updatedAt       DateTime           @updatedAt
 
@@ -193,4 +194,14 @@ model UsageLog {
   @@index([userId, createdAt])
   @@index([provider, createdAt])
   @@index([createdAt, cost])
+}
+
+// 番組設定
+model ProgramSettings {
+  id             String   @id @default(cuid())
+  userId         String   @unique
+  programInfo    String   @db.Text
+  pastProposals  String   @db.Text
+  updatedAt      DateTime @updatedAt
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
