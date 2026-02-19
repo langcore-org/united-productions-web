@@ -202,9 +202,8 @@ export function FeatureChat({
         )}
       </div>
 
-      {/* Messages - flex-1を削除して自動高調整に */}
-      <div className="flex-1 overflow-y-auto px-6 py-4">
-        <div className="min-h-full flex flex-col justify-end space-y-4">
+      {/* Messages */}
+      <div className="flex-1 overflow-y-auto px-6 py-4 flex flex-col justify-end">
           {isLoadingHistory && (
             <div className="flex items-center justify-center py-8">
               <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
@@ -240,11 +239,10 @@ export function FeatureChat({
           )}
 
           <div ref={messagesEndRef} />
-        </div>
       </div>
 
-      {/* Input Area - 常に下部に固定 */}
-      <div className="border-t border-gray-200 px-6 py-4 bg-gray-50 mt-auto">
+      {/* Input Area */}
+      <div className="border-t border-gray-200 px-6 py-4 bg-gray-50">
         {inputLabel && (
           <label className="block text-sm font-medium text-gray-700 mb-2">
             {inputLabel}
