@@ -202,47 +202,49 @@ export function FeatureChat({
         )}
       </div>
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
-        {isLoadingHistory && (
-          <div className="flex items-center justify-center py-8">
-            <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
-            <span className="ml-2 text-sm text-gray-500">
-              履歴を読み込み中...
-            </span>
-          </div>
-        )}
+      {/* Messages - flex-1を削除して自動高調整に */}
+      <div className="flex-1 overflow-y-auto px-6 py-4">
+        <div className="min-h-full flex flex-col justify-end space-y-4">
+          {isLoadingHistory && (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+              <span className="ml-2 text-sm text-gray-500">
+                履歴を読み込み中...
+              </span>
+            </div>
+          )}
 
-        {messages.map((message) => (
-          <MessageBubble
-            key={message.id}
-            role={message.role}
-            content={message.content}
-            timestamp={message.timestamp}
-            llmProvider={message.llmProvider}
-          />
-        ))}
+          {messages.map((message) => (
+            <MessageBubble
+              key={message.id}
+              role={message.role}
+              content={message.content}
+              timestamp={message.timestamp}
+              llmProvider={message.llmProvider}
+            />
+          ))}
 
-        {isStreaming && (
-          <StreamingMessage
-            provider="gemini-2.5-flash-lite"
-            content={content}
-            thinking={thinking}
-            isComplete={false}
-          />
-        )}
+          {isStreaming && (
+            <StreamingMessage
+              provider="gemini-2.5-flash-lite"
+              content={content}
+              thinking={thinking}
+              isComplete={false}
+            />
+          )}
 
-        {error && (
-          <div className="p-4 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm">
-            エラーが発生しました: {error}
-          </div>
-        )}
+          {error && (
+            <div className="p-4 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm">
+              エラーが発生しました: {error}
+            </div>
+          )}
 
-        <div ref={messagesEndRef} />
+          <div ref={messagesEndRef} />
+        </div>
       </div>
 
-      {/* Input Area */}
-      <div className="border-t border-gray-200 px-6 py-4 bg-gray-50">
+      {/* Input Area - 常に下部に固定 */}
+      <div className="border-t border-gray-200 px-6 py-4 bg-gray-50 mt-auto">
         {inputLabel && (
           <label className="block text-sm font-medium text-gray-700 mb-2">
             {inputLabel}
