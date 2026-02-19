@@ -124,8 +124,8 @@ export function Sidebar({ className }: SidebarProps) {
             <span className="text-white font-bold text-sm">UP</span>
           </div>
           <div className="flex flex-col min-w-0">
-            <span className="text-[#1a1a1a] font-semibold text-sm tracking-tight">AI Hub</span>
-            <span className="text-[#6b7280] text-[10px] truncate">United Productions</span>
+            <span className="text-[#1a1a1a] font-semibold text-sm tracking-tight">ADコパイロット</span>
+            <span className="text-[#6b7280] text-[10px] truncate">AD Production</span>
           </div>
         </div>
       </div>

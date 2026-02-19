@@ -21,8 +21,8 @@ export default function SignInPage() {
           <div className="w-16 h-16 rounded-2xl bg-[#ff6b00] flex items-center justify-center mx-auto mb-4">
             <span className="text-white font-bold text-2xl">UP</span>
           </div>
-          <h1 className="text-2xl font-bold text-white mb-2">AI Hub</h1>
-          <p className="text-gray-400">United Productions 制作支援統合プラットフォーム</p>
+          <h1 className="text-2xl font-bold text-white mb-2">ADコパイロット</h1>
+          <p className="text-gray-400">AD Production 制作支援統合プラットフォーム</p>
         </div>
 
         {/* Sign In Card */}

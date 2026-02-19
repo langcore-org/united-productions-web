@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "AI Hub - United Productions",
+  title: "ADコパイロット - AD Production",
   description: "制作支援統合プラットフォーム",
 };
 

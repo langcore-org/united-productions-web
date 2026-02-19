@@ -2,7 +2,7 @@ import { Metadata } from "next";
 import { AppLayout } from "@/components/layout/AppLayout";
 
 export const metadata: Metadata = {
-  title: "リサーチ・考査 - AI Hub",
+  title: "リサーチ・考査 - ADコパイロット",
   description: "人探し、エビデンス確認、ロケ地探しのためのAIリサーチ機能",
 };
 

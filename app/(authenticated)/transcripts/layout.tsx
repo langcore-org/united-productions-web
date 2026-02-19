@@ -2,7 +2,7 @@ import { Metadata } from "next";
 import { AppLayout } from "@/components/layout/AppLayout";
 
 export const metadata: Metadata = {
-  title: "起こし・NA原稿 - AI Hub",
+  title: "起こし・NA原稿 - ADコパイロット",
   description: "Premiere Pro書き起こしをAIで整形してNA原稿を作成",
 };
 

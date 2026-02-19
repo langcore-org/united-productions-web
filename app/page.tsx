@@ -92,11 +92,11 @@ export default function DashboardPage() {
                   <Sparkles className="w-6 h-6 text-white" />
                 </div>
                 <h1 className="text-4xl font-semibold tracking-tight text-gray-900">
-                  AI Hub
+                  ADコパイロット
                 </h1>
               </div>
               <p className="text-sm text-gray-500">
-                United Productions
+                AD Production
               </p>
             </div>
 
