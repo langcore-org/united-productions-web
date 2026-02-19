@@ -3,7 +3,6 @@
 import { cn } from "@/lib/utils";
 import {
   FileText,
-  Mic,
   Search,
   Settings,
   LogOut,
@@ -21,6 +20,8 @@ import {
   ChevronDown,
   ChevronRight,
   Tv,
+  PanelLeft,
+  PanelLeftClose,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -28,6 +29,8 @@ import { useState, useEffect } from "react";
 
 interface SidebarProps {
   className?: string;
+  isCollapsed?: boolean;
+  onToggle?: () => void;
 }
 
 interface NavItem {
@@ -62,39 +65,39 @@ const navItems: NavItem[] = [
     children: [
       {
         icon: <Users className="w-[16px] h-[16px]" />,
-        label: "出演者リサーチ",
+        label: "出演者",
         href: "/research/cast",
       },
       {
         icon: <MapPin className="w-[16px] h-[16px]" />,
-        label: "場所リサーチ",
+        label: "場所",
         href: "/research/location",
       },
       {
         icon: <Info className="w-[16px] h-[16px]" />,
-        label: "情報リサーチ",
+        label: "情報",
         href: "/research/info",
       },
       {
         icon: <Shield className="w-[16px] h-[16px]" />,
-        label: "エビデンスリサーチ",
+        label: "エビデンス",
         href: "/research/evidence",
       },
     ],
   },
   {
     icon: <FileText className="w-[18px] h-[18px]" />,
-    label: "議事録作成",
+    label: "議事録",
     href: "/minutes",
   },
   {
     icon: <Lightbulb className="w-[18px] h-[18px]" />,
-    label: "新企画立案",
+    label: "新企画",
     href: "/proposal",
   },
   {
     icon: <FileEdit className="w-[18px] h-[18px]" />,
-    label: "NA原稿作成",
+    label: "NA原稿",
     href: "/na-script",
   },
 ];
@@ -122,75 +125,80 @@ const mockHistory: HistorySection[] = [
   {
     label: "今日",
     items: [
-      { id: "1", title: "第3回制作会議の議事録作成", timestamp: new Date() },
-      { id: "2", title: "ロケ地候補のリサーチ", timestamp: new Date() },
-      { id: "3", title: "出演者インタビュー文字起こし", timestamp: new Date() },
+      { id: "1", title: "制作会議の議事録", timestamp: new Date() },
+      { id: "2", title: "ロケ地リサーチ", timestamp: new Date() },
+      { id: "3", title: "出演者リサーチ", timestamp: new Date() },
     ],
   },
   {
     label: "昨日",
     items: [
-      { id: "4", title: "脚本の推敲と修正案", timestamp: new Date(Date.now() - 86400000) },
-      { id: "5", title: "予算表の分析", timestamp: new Date(Date.now() - 86400000) },
-    ],
-  },
-  {
-    label: "過去7日間",
-    items: [
-      { id: "6", title: "スタッフスケジュール調整", timestamp: new Date(Date.now() - 3 * 86400000) },
-      { id: "7", title: "機材リストの整理", timestamp: new Date(Date.now() - 5 * 86400000) },
-      { id: "8", title: "前回収録の反省会メモ", timestamp: new Date(Date.now() - 6 * 86400000) },
+      { id: "4", title: "脚本の推敲", timestamp: new Date(Date.now() - 86400000) },
+      { id: "5", title: "予算表分析", timestamp: new Date(Date.now() - 86400000) },
     ],
   },
 ];
 
-// localStorage key
-const COLLAPSED_KEY = "sidebar-collapsed-items";
+// localStorage keys
+const SIDEBAR_COLLAPSED_KEY = "sidebar-collapsed";
+const MENU_COLLAPSED_KEY = "sidebar-menu-collapsed";
 
-export function Sidebar({ className }: SidebarProps) {
+export function Sidebar({ className, isCollapsed = false, onToggle }: SidebarProps) {
   const pathname = usePathname();
   const [hoveredHistoryId, setHoveredHistoryId] = useState<string | null>(null);
-  const [collapsedItems, setCollapsedItems] = useState<Set<string>>(new Set());
+  const [hoveredNavItem, setHoveredNavItem] = useState<string | null>(null);
+  const [expandedMenus, setExpandedMenus] = useState<Set<string>>(new Set());
 
-  // localStorageから開閉状態を読み込む
+  // localStorageからメニューの開閉状態を読み込む
   useEffect(() => {
-    const loadCollapsedState = () => {
+    const loadMenuState = () => {
       try {
-        const saved = localStorage.getItem(COLLAPSED_KEY);
+        const saved = localStorage.getItem(MENU_COLLAPSED_KEY);
         if (saved) {
           const parsed = JSON.parse(saved);
-          setCollapsedItems(new Set(parsed));
+          // 保存されているのはcollapsedなので、expandedはその逆
+          const allMenuLabels = navItems
+            .filter(item => item.children)
+            .map(item => item.label);
+          const collapsedSet = new Set(parsed as string[]);
+          const expandedSet = new Set(
+            allMenuLabels.filter(label => !collapsedSet.has(label))
+          );
+          setExpandedMenus(expandedSet);
         }
       } catch {
-        // 読み込み失敗時はデフォルト（全展開）
+        // 読み込み失敗時はデフォルト
       }
     };
     
-    // requestIdleCallbackまたはsetTimeoutで遅延実行
     if (typeof window !== "undefined") {
-      const timer = setTimeout(loadCollapsedState, 0);
+      const timer = setTimeout(loadMenuState, 0);
       return () => clearTimeout(timer);
     }
   }, []);
 
-  // 開閉状態をlocalStorageに保存
-  const saveCollapsedState = (newSet: Set<string>) => {
+  // メニューの開閉状態をlocalStorageに保存
+  const saveMenuState = (expandedSet: Set<string>) => {
     try {
-      localStorage.setItem(COLLAPSED_KEY, JSON.stringify([...newSet]));
+      const allMenuLabels = navItems
+        .filter(item => item.children)
+        .map(item => item.label);
+      const collapsedSet = allMenuLabels.filter(label => !expandedSet.has(label));
+      localStorage.setItem(MENU_COLLAPSED_KEY, JSON.stringify(collapsedSet));
     } catch {
       // 保存失敗時は無視
     }
   };
 
-  const toggleCollapsed = (label: string) => {
-    const newSet = new Set(collapsedItems);
+  const toggleMenu = (label: string) => {
+    const newSet = new Set(expandedMenus);
     if (newSet.has(label)) {
       newSet.delete(label);
     } else {
       newSet.add(label);
     }
-    setCollapsedItems(newSet);
-    saveCollapsedState(newSet);
+    setExpandedMenus(newSet);
+    saveMenuState(newSet);
   };
 
   // アクティブ状態の判定
@@ -200,7 +208,7 @@ export function Sidebar({ className }: SidebarProps) {
     return false;
   };
 
-  // 親メニューがアクティブかどうか（子要素でアクティブな場合もtrue）
+  // 親メニューがアクティブかどうか
   const isParentActive = (item: NavItem) => {
     if (isActive(item.href)) return true;
     if (item.children) {
@@ -209,6 +217,151 @@ export function Sidebar({ className }: SidebarProps) {
     return false;
   };
 
+  // 縮小時のナビアイテム（ツールチップ付き）
+  const CompactNavItem = ({ item }: { item: NavItem }) => {
+    const active = isActive(item.href);
+    const isHovered = hoveredNavItem === item.href;
+
+    return (
+      <div className="relative">
+        <Link
+          href={item.href}
+          className={cn(
+            "flex items-center justify-center w-10 h-10 rounded-xl mx-auto",
+            "transition-all duration-200 ease-out",
+            active
+              ? "bg-white text-black shadow-sm border border-[#e5e5e5]"
+              : "text-[#6b7280] hover:bg-white hover:text-[#1a1a1a]"
+          )}
+          onMouseEnter={() => setHoveredNavItem(item.href)}
+          onMouseLeave={() => setHoveredNavItem(null)}
+        >
+          {item.icon}
+        </Link>
+        
+        {/* ツールチップ */}
+        {isHovered && (
+          <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded-md whitespace-nowrap z-50">
+            {item.label}
+            <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-full border-4 border-transparent border-r-gray-900" />
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // 縮小時の親メニュー（子要素がある場合）
+  const CompactParentNavItem = ({ item }: { item: NavItem }) => {
+    const active = isParentActive(item);
+    const isHovered = hoveredNavItem === item.href;
+    const isExpanded = expandedMenus.has(item.label);
+
+    return (
+      <div className="relative">
+        <button
+          onClick={() => toggleMenu(item.label)}
+          className={cn(
+            "flex items-center justify-center w-10 h-10 rounded-xl mx-auto",
+            "transition-all duration-200 ease-out",
+            active
+              ? "bg-white text-black shadow-sm border border-[#e5e5e5]"
+              : "text-[#6b7280] hover:bg-white hover:text-[#1a1a1a]"
+          )}
+          onMouseEnter={() => setHoveredNavItem(item.href)}
+          onMouseLeave={() => setHoveredNavItem(null)}
+        >
+          {item.icon}
+        </button>
+        
+        {/* ツールチップ */}
+        {isHovered && !isExpanded && (
+          <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded-md whitespace-nowrap z-50">
+            {item.label}
+            <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-full border-4 border-transparent border-r-gray-900" />
+          </div>
+        )}
+
+        {/* 展開時の子メニュー（ポップアップ風） */}
+        {isExpanded && item.children && (
+          <div className="absolute left-full top-0 ml-2 py-2 bg-white rounded-xl shadow-lg border border-[#e5e5e5] min-w-[160px] z-40">
+            <div className="px-3 py-1.5 text-xs font-semibold text-gray-400 uppercase">
+              {item.label}
+            </div>
+            {item.children.map((child) => (
+              <Link
+                key={child.href}
+                href={child.href}
+                className={cn(
+                  "flex items-center gap-2 px-3 py-2 mx-1 rounded-lg",
+                  "transition-all duration-150",
+                  isActive(child.href)
+                    ? "bg-gray-100 text-black font-medium"
+                    : "text-gray-600 hover:bg-gray-50"
+                )}
+              >
+                <span className="flex-shrink-0">{child.icon}</span>
+                <span className="text-sm">{child.label}</span>
+              </Link>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // ============ 縮小表示 ============
+  if (isCollapsed) {
+    return (
+      <aside
+        className={cn(
+          "fixed top-0 left-0 z-50 h-screen w-[72px]",
+          "flex flex-col",
+          "bg-[#f9f9f9] border-r border-[#e5e5e5]",
+          className
+        )}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-center h-14 border-b border-[#e5e5e5] bg-white">
+          <div className="w-8 h-8 rounded-lg bg-black flex items-center justify-center flex-shrink-0">
+            <span className="text-white font-bold text-sm">UP</span>
+          </div>
+        </div>
+
+        {/* Toggle Button */}
+        <div className="flex justify-center py-2">
+          <button
+            onClick={onToggle}
+            className="p-2 rounded-lg hover:bg-white text-gray-500 hover:text-gray-900 transition-colors"
+            title="サイドバーを展開"
+          >
+            <PanelLeft className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Navigation */}
+        <nav className="flex-1 overflow-y-auto py-2 space-y-1">
+          {navItems.map((item) => (
+            <div key={item.href} className="py-1">
+              {item.children ? (
+                <CompactParentNavItem item={item} />
+              ) : (
+                <CompactNavItem item={item} />
+              )}
+            </div>
+          ))}
+        </nav>
+
+        {/* Bottom Items */}
+        <div className="py-2 space-y-1 border-t border-[#e5e5e5] bg-[#f9f9f9]">
+          {bottomItems.map((item) => (
+            <CompactNavItem key={item.href} item={item} />
+          ))}
+        </div>
+      </aside>
+    );
+  }
+
+  // ============ 展開表示 ============
   return (
     <aside
       className={cn(
@@ -220,7 +373,7 @@ export function Sidebar({ className }: SidebarProps) {
     >
       {/* Header */}
       <div className="flex items-center h-14 px-4 border-b border-[#e5e5e5] bg-white">
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2.5 flex-1 min-w-0">
           <div className="w-8 h-8 rounded-lg bg-black flex items-center justify-center flex-shrink-0">
             <span className="text-white font-bold text-sm">UP</span>
           </div>
@@ -229,6 +382,13 @@ export function Sidebar({ className }: SidebarProps) {
             <span className="text-[#6b7280] text-[10px] truncate">AD Production</span>
           </div>
         </div>
+        <button
+          onClick={onToggle}
+          className="p-2 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
+          title="サイドバーを縮小"
+        >
+          <PanelLeftClose className="w-5 h-5" />
+        </button>
       </div>
 
       {/* New Chat Button */}
@@ -255,14 +415,14 @@ export function Sidebar({ className }: SidebarProps) {
           {navItems.map((item) => {
             const hasChildren = !!item.children;
             const isItemActive = isParentActive(item);
-            const isCollapsed = collapsedItems.has(item.label);
+            const isExpanded = expandedMenus.has(item.label);
 
             return (
               <div key={item.href}>
                 {/* Parent Item */}
                 {hasChildren ? (
                   <button
-                    onClick={() => toggleCollapsed(item.label)}
+                    onClick={() => toggleMenu(item.label)}
                     className={cn(
                       "w-full flex items-center gap-3 px-3 py-2 rounded-xl",
                       "transition-all duration-200 ease-out",
@@ -272,7 +432,6 @@ export function Sidebar({ className }: SidebarProps) {
                         : "text-[#6b7280] hover:bg-white hover:text-[#1a1a1a]"
                     )}
                   >
-                    {/* Active indicator */}
                     {isItemActive && (
                       <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-black rounded-r-full" />
                     )}
@@ -293,10 +452,10 @@ export function Sidebar({ className }: SidebarProps) {
                       </span>
                     )}
                     <span className="flex-shrink-0">
-                      {isCollapsed ? (
-                        <ChevronRight className="w-4 h-4" />
-                      ) : (
+                      {isExpanded ? (
                         <ChevronDown className="w-4 h-4" />
+                      ) : (
+                        <ChevronRight className="w-4 h-4" />
                       )}
                     </span>
                   </button>
@@ -312,7 +471,6 @@ export function Sidebar({ className }: SidebarProps) {
                         : "text-[#6b7280] hover:bg-white hover:text-[#1a1a1a]"
                     )}
                   >
-                    {/* Active indicator */}
                     {isActive(item.href) && (
                       <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-black rounded-r-full" />
                     )}
@@ -336,7 +494,7 @@ export function Sidebar({ className }: SidebarProps) {
                 )}
 
                 {/* Child Items */}
-                {hasChildren && !isCollapsed && (
+                {hasChildren && isExpanded && (
                   <div className="ml-4 mt-1 space-y-0.5 border-l-2 border-[#e5e5e5] pl-3">
                     {item.children?.map((child) => (
                       <Link
@@ -374,7 +532,6 @@ export function Sidebar({ className }: SidebarProps) {
         {/* History Section */}
         <div className="flex-1 min-h-0 overflow-hidden mt-4">
           <div className="h-full flex flex-col">
-            {/* History Header */}
             <div className="flex items-center justify-between px-3 mb-2 flex-shrink-0">
               <div className="flex items-center gap-2">
                 <History className="w-3.5 h-3.5 text-[#6b7280]" />
@@ -384,7 +541,6 @@ export function Sidebar({ className }: SidebarProps) {
               </div>
             </div>
 
-            {/* History Groups - Scrollable */}
             <div className="flex-1 overflow-y-auto px-2 space-y-4 custom-scrollbar">
               {mockHistory.map((section) => (
                 <div key={section.label}>
@@ -417,7 +573,6 @@ export function Sidebar({ className }: SidebarProps) {
                           <span className="truncate flex-1">{item.title}</span>
                         </button>
 
-                        {/* Hover Actions */}
                         <div
                           className={cn(
                             "absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-0.5",
