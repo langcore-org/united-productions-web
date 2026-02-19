@@ -47,7 +47,7 @@ export class GeminiClient implements LLMClient {
     'gemini-2.5-flash-lite' | 'gemini-3.0-flash',
     string
   > = {
-    'gemini-2.5-flash-lite': 'gemini-2.0-flash-lite-001',
+    'gemini-2.5-flash-lite': 'gemini-2.0-flash',
     'gemini-3.0-flash': 'gemini-2.5-flash',
   };
 
@@ -61,6 +61,15 @@ export class GeminiClient implements LLMClient {
     config?: Partial<Omit<GeminiClientConfig, 'apiKey'>>
   ) {
     const apiKey = process.env.GEMINI_API_KEY;
+    
+    // デバッグログ
+    logger.info('GeminiClient constructor called', { 
+      provider, 
+      envKeyExists: !!apiKey,
+      envKeyPrefix: apiKey ? `${apiKey.substring(0, 10)}...` : 'none',
+      envKeyLength: apiKey?.length ?? 0,
+    });
+    
     if (!apiKey) {
       logger.error('GEMINI_API_KEY environment variable is not set');
       throw new Error('GEMINI_API_KEY environment variable is not set');
@@ -222,7 +231,17 @@ export class GeminiClient implements LLMClient {
       logger.info('Stream completed', { chunkCount, totalLength });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      logger.error('Gemini API streaming error', { error: errorMessage, errorObject: error });
+      const errorDetails = error instanceof Error && 'status' in error 
+        ? { status: (error as Error & { status: number }).status, message: errorMessage }
+        : { message: errorMessage };
+      
+      logger.error('Gemini API streaming error', { 
+        error: errorMessage, 
+        errorDetails,
+        model: this.model,
+        provider: this.provider,
+      });
+      
       throw new Error(`Gemini API streaming error: ${errorMessage}`);
     }
   }

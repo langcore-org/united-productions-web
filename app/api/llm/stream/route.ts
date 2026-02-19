@@ -54,9 +54,18 @@ function createStreamResponse(iterator: AsyncIterable<string>, requestId: string
       } catch (error) {
         // エラーをSSE形式で送信
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-        logger.error(`[${requestId}] Stream error`, { error: errorMessage });
+        const errorStack = error instanceof Error ? error.stack : undefined;
         
-        const data = JSON.stringify({ error: errorMessage });
+        logger.error(`[${requestId}] Stream error`, { 
+          error: errorMessage,
+          stack: errorStack,
+          requestId,
+        });
+        
+        const data = JSON.stringify({ 
+          error: errorMessage,
+          debug: { requestId },
+        });
         controller.enqueue(encoder.encode(`data: ${data}\n\n`));
         controller.close();
       }
@@ -88,6 +97,13 @@ function createStreamResponse(iterator: AsyncIterable<string>, requestId: string
  */
 export async function POST(request: NextRequest): Promise<Response> {
   const requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  
+  // デバッグ: 環境変数確認
+  logger.info(`[${requestId}] Debug: Environment check`, {
+    geminiKeyExists: !!process.env.GEMINI_API_KEY,
+    geminiKeyPrefix: process.env.GEMINI_API_KEY ? `${process.env.GEMINI_API_KEY.substring(0, 10)}...` : 'none',
+    nodeEnv: process.env.NODE_ENV,
+  });
   
   try {
     // 認証チェック（セッションのみ検証、レスポンスは返さない）
