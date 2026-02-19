@@ -29,7 +29,6 @@ import {
 import { MINUTES_SYSTEM_PROMPT } from "@/lib/prompts/minutes";
 import { getProposalSystemPrompt } from "@/lib/prompts/proposal";
 import { TRANSCRIPT_SYSTEM_PROMPT } from "@/lib/prompts/transcript";
-import { NA_SCRIPT_SYSTEM_PROMPT } from "@/lib/prompts/na-script";
 
 /**
  * 機能IDからシステムプロンプトを取得
@@ -59,10 +58,8 @@ async function getSystemPrompt(
         settings?.pastProposals || ""
       );
     }
-    case "transcript":
+    case "na-script":
       return TRANSCRIPT_SYSTEM_PROMPT;
-    case "transcript-na":
-      return NA_SCRIPT_SYSTEM_PROMPT;
     default:
       throw new Error(`Unknown featureId: ${featureId}`);
   }

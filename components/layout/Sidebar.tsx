@@ -88,16 +88,9 @@ const navItems: NavItem[] = [
     href: "/proposal",
   },
   {
-    icon: <Mic className="w-[18px] h-[18px]" />,
-    label: "文字起こし",
-    href: "/transcript",
-    children: [
-      {
-        icon: <FileEdit className="w-[16px] h-[16px]" />,
-        label: "NA原稿作成",
-        href: "/transcript/na",
-      },
-    ],
+    icon: <FileEdit className="w-[18px] h-[18px]" />,
+    label: "NA原稿作成",
+    href: "/na-script",
   },
 ];
 
