@@ -8,7 +8,8 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { GrokClient } from '@/lib/llm/clients/grok';
-import { getSystemPrompt, MeetingTemplate } from '@/prompts/meeting-format';
+import { getPromptFromDB, PROMPT_KEYS } from '@/lib/prompts/db';
+import type { MeetingTemplate } from '@/prompts/meeting-format';
 import { createApiHandler } from '@/lib/api/handler';
 import type { LLMMessage } from '@/lib/llm/types';
 
@@ -50,7 +51,17 @@ export const POST = createApiHandler(
     const { transcript, template, provider: requestedProvider } = data;
     
     const provider = requestedProvider ?? 'grok-4.1-fast';
-    const systemPrompt = getSystemPrompt(template as MeetingTemplate);
+    
+    // DBからプロンプトを取得（フォールバック付き）
+    const promptKey = template === 'meeting' 
+      ? PROMPT_KEYS.MEETING_FORMAT_MEETING 
+      : PROMPT_KEYS.MEETING_FORMAT_INTERVIEW;
+    const systemPrompt = await getPromptFromDB(promptKey) ?? '';
+    
+    if (!systemPrompt) {
+      throw new Error(`System prompt not found for template: ${template}`);
+    }
+    
     const client = new GrokClient(provider);
 
     const messages: LLMMessage[] = [

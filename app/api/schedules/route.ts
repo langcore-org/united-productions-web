@@ -9,9 +9,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { GrokClient } from "@/lib/llm/clients/grok";
-import {
-  createScheduleGenerateMessages,
-} from "@/prompts/schedule-generate";
+import { getPromptFromDB, PROMPT_KEYS } from "@/lib/prompts/db";
+import type { LLMMessage } from "@/lib/llm/types";
 import { requireAuth } from "@/lib/api/auth";
 import { handleApiError } from "@/lib/api/utils";
 
@@ -45,12 +44,33 @@ async function handleGenerate(request: NextRequest) {
     // Grok 4.1 Fast クライアントを作成
     const client = new GrokClient("grok-4.1-fast");
 
-    // プロンプトを作成
-    const messages = createScheduleGenerateMessages({
-      masterSchedule: validatedData.masterSchedule,
-      type: validatedData.type,
-      additionalInstructions: validatedData.additionalInstructions,
-    });
+    // DBからプロンプトを取得
+    const systemPrompt = await getPromptFromDB(PROMPT_KEYS.SCHEDULE_SYSTEM);
+    const typePromptKey = {
+      actor: PROMPT_KEYS.SCHEDULE_ACTOR,
+      staff: PROMPT_KEYS.SCHEDULE_STAFF,
+      vehicle: PROMPT_KEYS.SCHEDULE_VEHICLE,
+    }[validatedData.type];
+    const typePrompt = await getPromptFromDB(typePromptKey);
+    
+    if (!systemPrompt || !typePrompt) {
+      throw new Error('System prompt not found');
+    }
+    
+    const additionalInstructions = validatedData.additionalInstructions
+      ? `\n\n【追加指示】\n${validatedData.additionalInstructions}`
+      : "";
+    
+    const messages: LLMMessage[] = [
+      {
+        role: "system",
+        content: systemPrompt,
+      },
+      {
+        role: "user",
+        content: `${typePrompt}${additionalInstructions}\n\n---\n\n【マスタースケジュール】\n\n${validatedData.masterSchedule}`,
+      },
+    ];
 
     // LLMで生成
     const response = await client.chat(messages);

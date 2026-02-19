@@ -8,7 +8,8 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { GrokClient } from '@/lib/llm/clients/grok';
-import { getTranscriptSystemPrompt, createUserPrompt } from '@/prompts/transcript-format';
+import { getPromptFromDB, PROMPT_KEYS } from '@/lib/prompts/db';
+import { createUserPrompt } from '@/prompts/transcript-format';
 import { createApiHandler } from '@/lib/api/handler';
 import type { LLMMessage } from '@/lib/llm/types';
 
@@ -48,7 +49,13 @@ export const POST = createApiHandler(
     const { transcript, provider: requestedProvider } = data;
     
     const provider = requestedProvider ?? 'grok-4.1-fast';
-    const systemPrompt = getTranscriptSystemPrompt();
+    
+    // DBからプロンプトを取得
+    const systemPrompt = await getPromptFromDB(PROMPT_KEYS.TRANSCRIPT_FORMAT);
+    if (!systemPrompt) {
+      throw new Error('System prompt not found');
+    }
+    
     const client = new GrokClient(provider);
 
     const messages: LLMMessage[] = [
