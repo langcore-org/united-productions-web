@@ -2,9 +2,10 @@
 
 import { useState, useEffect, useRef, useCallback, memo } from "react";
 import { cn } from "@/lib/utils";
-import { Bot, Sparkles } from "lucide-react";
+import { Bot, Sparkles, ChevronDown, ChevronUp } from "lucide-react";
 import type { LLMProvider } from "@/lib/llm/types";
 import { PROVIDER_LABELS, PROVIDER_COLORS } from "@/lib/llm/constants";
+import { MarkdownRenderer } from "./MarkdownRenderer";
 
 interface StreamingMessageProps {
   provider: LLMProvider;
@@ -29,6 +30,7 @@ export const StreamingMessage = memo(function StreamingMessage({
 }: StreamingMessageProps) {
   const [displayedContent, setDisplayedContent] = useState(content);
   const [displayedThinking, setDisplayedThinking] = useState(thinking);
+  const [showThinking, setShowThinking] = useState(true);
   const contentRef = useRef<HTMLDivElement>(null);
 
   // 親から渡されたcontent/thinkingが変わったら表示を更新
@@ -60,11 +62,14 @@ export const StreamingMessage = memo(function StreamingMessage({
     handleComplete();
   }, [handleComplete]);
 
+  const hasThinking = displayedThinking && displayedThinking.length > 0;
+  const hasContent = displayedContent && displayedContent.length > 0;
+
   return (
     <div
       ref={contentRef}
       className={cn(
-        "flex gap-4 py-4 px-4",
+        "flex gap-3 py-4 px-4",
         "flex-row",
         className
       )}
@@ -72,8 +77,8 @@ export const StreamingMessage = memo(function StreamingMessage({
       {/* Avatar */}
       <div
         className={cn(
-          "flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center",
-          "bg-[#1a1a24] border border-[#2a2a35]"
+          "flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center shadow-lg",
+          "bg-gradient-to-br from-[#2a2a35] to-[#1a1a24] border border-[#3a3a45]"
         )}
       >
         <Bot
@@ -85,10 +90,10 @@ export const StreamingMessage = memo(function StreamingMessage({
       {/* Content */}
       <div className="flex-1 max-w-[80%] items-start">
         {/* Header */}
-        <div className="flex items-center gap-2 mb-1 justify-start">
+        <div className="flex items-center gap-2 mb-1.5">
           <span className="text-sm font-medium text-gray-300">AI Assistant</span>
           <span
-            className="text-xs px-2 py-0.5 rounded-full bg-[#2a2a35]"
+            className="text-xs px-2 py-0.5 rounded-full bg-[#2a2a35] border border-[#3a3a45]"
             style={{ color: PROVIDER_COLORS[provider] || "#ff6b00" }}
           >
             {PROVIDER_LABELS[provider] || provider}
@@ -101,45 +106,64 @@ export const StreamingMessage = memo(function StreamingMessage({
           )}
         </div>
 
-        {/* Thinking Process (Claude/Grok対応) */}
-        {displayedThinking && (
-          <div className="mb-3 p-3 rounded-lg bg-[#0d0d12] border border-[#2a2a35]">
-            <div className="flex items-center gap-2 mb-2">
-              <Sparkles className="w-3.5 h-3.5 text-[#22c55e]" />
-              <span className="text-xs text-[#22c55e] font-medium">思考プロセス</span>
+        {/* Thinking Process */}
+        {hasThinking && (
+          <div className="mb-3">
+            <button
+              onClick={() => setShowThinking(!showThinking)}
+              className="flex items-center gap-1.5 text-xs text-[#22c55e] hover:text-[#4ade80] transition-colors mb-2"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>思考プロセス</span>
+              {showThinking ? (
+                <ChevronUp className="w-3.5 h-3.5" />
+              ) : (
+                <ChevronDown className="w-3.5 h-3.5" />
+              )}
               {!isComplete && (
-                <div className="flex gap-1">
+                <div className="flex gap-1 ml-1">
                   <span className="w-1 h-1 bg-[#22c55e] rounded-full animate-bounce [animation-delay:-0.3s]" />
                   <span className="w-1 h-1 bg-[#22c55e] rounded-full animate-bounce [animation-delay:-0.15s]" />
                   <span className="w-1 h-1 bg-[#22c55e] rounded-full animate-bounce" />
                 </div>
               )}
-            </div>
-            <p className="text-xs text-gray-400 leading-relaxed whitespace-pre-wrap">
-              {displayedThinking}
-              {!isComplete && (
-                <span className="inline-block w-1.5 h-3.5 bg-[#22c55e] ml-0.5 animate-pulse" />
-              )}
-            </p>
+            </button>
+            {showThinking && (
+              <div className="p-3 rounded-lg bg-[#0d0d12] border border-[#2a2a35]">
+                <p className="text-xs text-gray-400 leading-relaxed whitespace-pre-wrap">
+                  {displayedThinking}
+                  {!isComplete && (
+                    <span className="inline-block w-1.5 h-3.5 bg-[#22c55e] ml-0.5 animate-pulse" />
+                  )}
+                </p>
+              </div>
+            )}
           </div>
         )}
 
         {/* Message Content */}
-        <div
-          className={cn(
-            "rounded-2xl px-4 py-3 text-sm leading-relaxed",
-            "bg-[#1a1a24] border border-[#2a2a35] text-gray-100 rounded-tl-sm"
-          )}
-        >
-          {displayedContent ? (
-            <div className="whitespace-pre-wrap">
-              {displayedContent}
+        {hasContent ? (
+          <div
+            className={cn(
+              "rounded-2xl px-5 py-3.5 shadow-lg",
+              "bg-[#1e1e24] border border-[#2a2a35] text-gray-100 rounded-tl-sm"
+            )}
+          >
+            <div className="text-sm leading-relaxed">
+              <MarkdownRenderer content={displayedContent} />
               {!isComplete && (
                 <span className="inline-block w-1.5 h-4 bg-[#ff6b00] ml-0.5 animate-pulse" />
               )}
             </div>
-          ) : (
-            <div className="flex items-center gap-2 text-gray-500">
+          </div>
+        ) : (
+          <div
+            className={cn(
+              "rounded-2xl px-5 py-3.5",
+              "bg-[#1e1e24] border border-[#2a2a35] text-gray-500 rounded-tl-sm"
+            )}
+          >
+            <div className="flex items-center gap-2">
               <div className="flex gap-1">
                 <span className="w-1.5 h-1.5 bg-gray-500 rounded-full animate-bounce [animation-delay:-0.3s]" />
                 <span className="w-1.5 h-1.5 bg-gray-500 rounded-full animate-bounce [animation-delay:-0.15s]" />
@@ -147,8 +171,8 @@ export const StreamingMessage = memo(function StreamingMessage({
               </div>
               <span className="text-xs">考え中...</span>
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );
