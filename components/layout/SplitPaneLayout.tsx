@@ -21,6 +21,19 @@ export function SplitPaneLayout({
   const [ratio, setRatio] = useState(defaultRatio);
   const [isDragging, setIsDragging] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  
+  // refsを使用して最新値を保持し、useEffect依存配列から除外
+  const isDraggingRef = useRef(isDragging);
+  const ratioRef = useRef(ratio);
+
+  // refを状態と同期
+  useEffect(() => {
+    isDraggingRef.current = isDragging;
+  }, [isDragging]);
+
+  useEffect(() => {
+    ratioRef.current = ratio;
+  }, [ratio]);
 
   const handleMouseDown = useCallback(() => {
     setIsDragging(true);
@@ -28,11 +41,14 @@ export function SplitPaneLayout({
 
   const handleMouseUp = useCallback(() => {
     setIsDragging(false);
+    document.body.style.cursor = "";
+    document.body.style.userSelect = "";
   }, []);
 
+  // 依存配列から状態を除外し、refでアクセス（パフォーマンス最適化）
   const handleMouseMove = useCallback(
     (e: MouseEvent) => {
-      if (!isDragging || !containerRef.current) return;
+      if (!isDraggingRef.current || !containerRef.current) return;
 
       const container = containerRef.current;
       const rect = container.getBoundingClientRect();
@@ -48,7 +64,7 @@ export function SplitPaneLayout({
         setRatio(newRatio);
       }
     },
-    [isDragging, minLeftWidth, minRightWidth]
+    [minLeftWidth, minRightWidth] // 状態（isDragging）を除外
   );
 
   useEffect(() => {
@@ -83,8 +99,8 @@ export function SplitPaneLayout({
       {/* Resizer */}
       <div
         className={cn(
-          "w-1 bg-white/10 hover:bg-[#ff6b00]/50 cursor-col-resize transition-colors relative",
-          isDragging && "bg-[#ff6b00]"
+          "w-1 bg-white/10 hover:bg-black/50 cursor-col-resize transition-colors relative",
+          isDragging && "bg-black"
         )}
         onMouseDown={handleMouseDown}
       >
@@ -93,7 +109,7 @@ export function SplitPaneLayout({
             "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2",
             "w-4 h-8 rounded-full bg-[#2a2a35] border border-white/10",
             "flex items-center justify-center",
-            "hover:border-[#ff6b00]/50 transition-colors"
+            "hover:border-black/50 transition-colors"
           )}
         >
           <div className="flex gap-0.5">
