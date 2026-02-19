@@ -1,18 +1,14 @@
-import { FeatureChat } from "@/components/ui/FeatureChat";
-import { GENERAL_CHAT_SYSTEM_PROMPT } from "@/lib/prompts/general-chat";
+import { ChatPage } from "@/components/chat/ChatPage";
 
 export const metadata = {
   title: "チャット - ADコパイロット",
 };
 
-export default function ChatPage() {
-  return (
-    <FeatureChat
-      featureId="general-chat"
-      title="チャット"
-      systemPrompt={GENERAL_CHAT_SYSTEM_PROMPT}
-      placeholder="何か質問や相談があれば、お気軽にどうぞ"
-      outputFormat="markdown"
-    />
-  );
+/**
+ * 通常チャットページ
+ * 
+ * 汎用的なチャット機能を提供
+ */
+export default function GeneralChatPage() {
+  return <ChatPage featureId="general-chat" />;
 }
