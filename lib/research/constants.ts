@@ -2,7 +2,8 @@
  * リサーチ機能の定数
  */
 
-import { ResearchAgentType } from "@/app/api/research/route";
+// ResearchAgentTypeの定義
+type ResearchAgentType = "people" | "location" | "evidence";
 import { LLMProvider } from "@/lib/llm/types";
 import { Users, MapPin, ShieldCheck } from "lucide-react";
 import React from "react";
