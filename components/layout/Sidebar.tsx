@@ -51,6 +51,11 @@ interface HistorySection {
 
 const navItems: NavItem[] = [
   {
+    icon: <MessageSquare className="w-[18px] h-[18px]" />,
+    label: "チャット",
+    href: "/chat",
+  },
+  {
     icon: <Search className="w-[18px] h-[18px]" />,
     label: "リサーチ",
     href: "/research",

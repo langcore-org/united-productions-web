@@ -29,6 +29,7 @@ import {
 import { MINUTES_SYSTEM_PROMPT } from "@/lib/prompts/minutes";
 import { getProposalSystemPrompt } from "@/lib/prompts/proposal";
 import { TRANSCRIPT_SYSTEM_PROMPT } from "@/lib/prompts/transcript";
+import { GENERAL_CHAT_SYSTEM_PROMPT } from "@/lib/prompts/general-chat";
 
 /**
  * 機能IDからシステムプロンプトを取得
@@ -60,6 +61,8 @@ async function getSystemPrompt(
     }
     case "na-script":
       return TRANSCRIPT_SYSTEM_PROMPT;
+    case "general-chat":
+      return GENERAL_CHAT_SYSTEM_PROMPT;
     default:
       throw new Error(`Unknown featureId: ${featureId}`);
   }
