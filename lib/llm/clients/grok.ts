@@ -80,10 +80,10 @@ export class GrokClient implements LLMClient {
    */
   private getModelName(provider: LLMProvider): string {
     switch (provider) {
-      case 'grok-4.1-fast':
-        return 'grok-4.1-fast';
-      case 'grok-4':
-        return 'grok-4';
+      case 'grok-beta':
+        return 'grok-beta';  // xAI APIで実際に使えるモデル
+      case 'grok-2-1212':
+        return 'grok-2-1212';  // xAI APIで実際に使えるモデル
       default:
         throw new Error(`Unsupported Grok provider: ${provider}`);
     }
