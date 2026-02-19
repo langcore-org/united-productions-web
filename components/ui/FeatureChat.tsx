@@ -122,7 +122,7 @@ export function FeatureChat({
         ...conversationHistory,
         { role: "user", content: userMessage.content },
       ],
-      "gemini-2.5-flash-lite"
+      "grok-4.1-fast"
     );
   };
 
@@ -134,7 +134,7 @@ export function FeatureChat({
         role: "assistant",
         content,
         timestamp: new Date(),
-        llmProvider: "gemini-2.5-flash-lite",
+        llmProvider: "grok-4.1-fast",
       };
       setMessages((prev) => [...prev, assistantMessage]);
       resetStream();
@@ -225,7 +225,7 @@ export function FeatureChat({
 
           {isStreaming && (
             <StreamingMessage
-              provider="gemini-2.5-flash-lite"
+              provider="grok-4.1-fast"
               content={content}
               thinking={thinking}
               isComplete={false}
