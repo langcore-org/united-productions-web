@@ -22,6 +22,7 @@ import {
   Tv,
   PanelLeft,
   PanelLeftClose,
+  ShieldCheck,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -107,6 +108,11 @@ const bottomItems: NavItem[] = [
     icon: <Tv className="w-[18px] h-[18px]" />,
     label: "番組設定",
     href: "/settings/program",
+  },
+  {
+    icon: <ShieldCheck className="w-[18px] h-[18px]" />,
+    label: "管理画面",
+    href: "/admin/settings",
   },
   {
     icon: <Settings className="w-[18px] h-[18px]" />,
