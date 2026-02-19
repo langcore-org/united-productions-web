@@ -7,7 +7,6 @@ import {
   FileText,
   Lightbulb,
   Mic,
-  Settings,
   LogOut,
   History,
   Users,
@@ -92,13 +91,7 @@ const navItems = [
   },
 ];
 
-const bottomItems = [
-  {
-    icon: <Settings className="w-[18px] h-[18px]" />,
-    label: "管理画面",
-    href: "/admin/settings",
-  },
-];
+// 管理画面はURL直接アクセス (/admin) のみとする
 
 export function Sidebar({ className, onCollapseChange }: SidebarProps) {
   const pathname = usePathname();
@@ -428,31 +421,6 @@ export function Sidebar({ className, onCollapseChange }: SidebarProps) {
         "py-2 space-y-0.5 border-t border-[#e5e5e5] flex-shrink-0 bg-[#f9f9f9]",
         isCollapsed ? "px-1.5" : "px-2"
       )}>
-        {bottomItems.map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className={cn(
-              "flex items-center rounded-xl transition-all duration-200 ease-out group",
-              isCollapsed ? "w-10 h-10 justify-center p-0 mx-auto" : "gap-3 px-3 py-2",
-              isActive(item.href)
-                ? "bg-white text-black border border-[#e5e5e5]"
-                : "text-[#6b7280] hover:bg-white hover:text-[#1a1a1a]"
-            )}
-            title={isCollapsed ? item.label : undefined}
-          >
-            <span className={cn(
-              "flex-shrink-0 transition-transform duration-200",
-              isActive(item.href) ? "text-black" : "group-hover:scale-110"
-            )}>
-              {item.icon}
-            </span>
-            {!isCollapsed && (
-              <span className="text-sm font-medium">{item.label}</span>
-            )}
-          </Link>
-        ))}
-        
         <Link
           href="/logout"
           className={cn(
