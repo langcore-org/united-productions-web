@@ -21,8 +21,10 @@ import {
   Sparkles,
   CheckCircle,
   XCircle,
-  DollarSign
+  DollarSign,
+  ChevronRight
 } from "lucide-react";
+import Link from "next/link";
 
 // 機能の定義
 const FEATURES = [
@@ -105,25 +107,62 @@ export default function AdminPage() {
           </div>
         </div>
 
-        {/* デフォルトモデル */}
-        <Card className="border-l-4 border-l-orange-500">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-orange-500" />
-              デフォルトモデル
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-4">
-              <Badge 
-                className={`text-lg px-4 py-2 ${getProviderBadgeColor(DEFAULT_PROVIDER)}`}
-              >
-                {defaultProviderInfo.name}
-              </Badge>
-              <span className="text-gray-600">{defaultProviderInfo.description}</span>
-            </div>
-          </CardContent>
-        </Card>
+        {/* 管理メニュー */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Link href="/admin/users">
+            <Card className="hover:shadow-md transition-shadow cursor-pointer border-l-4 border-l-blue-500">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
+                      <Users className="w-5 h-5 text-blue-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-gray-900">ユーザー一覧</h3>
+                      <p className="text-sm text-gray-500">登録ユーザーの管理</p>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-5 h-5 text-gray-400" />
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+
+          <Link href="/admin/prompts">
+            <Card className="hover:shadow-md transition-shadow cursor-pointer border-l-4 border-l-purple-500">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
+                      <FileText className="w-5 h-5 text-purple-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-gray-900">プロンプト管理</h3>
+                      <p className="text-sm text-gray-500">AIプロンプトの編集</p>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-5 h-5 text-gray-400" />
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+
+          <Card className="border-l-4 border-l-orange-500">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center">
+                  <Sparkles className="w-5 h-5 text-orange-600" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900">デフォルトモデル</h3>
+                  <Badge className={`mt-1 ${getProviderBadgeColor(DEFAULT_PROVIDER)}`}>
+                    {defaultProviderInfo.name}
+                  </Badge>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
 
         {/* 機能別モデル設定 */}
         <div>
