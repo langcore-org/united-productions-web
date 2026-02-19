@@ -95,8 +95,9 @@ model User {
   createdAt       DateTime           @default(now())
   updatedAt       DateTime           @updatedAt
 
-  @@index([email])
-  @@index([googleId])
+  // @unique と重複するため削除
+  // @@index([email])
+  // @@index([googleId])
 }
 
 // PJ-A: 議事録・文字起こし
@@ -112,8 +113,9 @@ model MeetingNote {
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
 
+  // 複合インデックスを追加
+  @@index([userId, status, createdAt])
   @@index([userId, createdAt])
-  @@index([status])
 }
 
 // PJ-B: 起こし・NA原稿
@@ -142,9 +144,10 @@ model ResearchChat {
   createdAt   DateTime          @default(now())
   updatedAt   DateTime          @updatedAt
 
+  // 複合インデックスを追加
+  @@index([userId, agentType, createdAt])
   @@index([userId, createdAt])
   @@index([agentType])
-  @@index([llmProvider])
 }
 
 model ResearchMessage {
@@ -157,7 +160,6 @@ model ResearchMessage {
   createdAt DateTime     @default(now())
 
   @@index([chatId, createdAt])
-  @@index([role])
 }
 
 // PJ-D: ロケスケ管理
@@ -186,7 +188,9 @@ model UsageLog {
   metadata      Json?       // 追加情報（エンドポイント、モデル詳細など）
   createdAt     DateTime    @default(now())
 
+  // 複合インデックスを追加
+  @@index([userId, provider, createdAt])
   @@index([userId, createdAt])
   @@index([provider, createdAt])
-  @@index([createdAt])
+  @@index([createdAt, cost])
 }

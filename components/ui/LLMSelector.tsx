@@ -1,20 +1,16 @@
 "use client";
 
+import { memo, useMemo, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import { ChevronDown, Sparkles, Zap, Crown, Brain, Search } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
-
-export type LLMProvider =
-  | "gemini-2.5-flash-lite"
-  | "gemini-3.0-flash"
-  | "grok-4.1-fast"
-  | "grok-4"
-  | "gpt-4o-mini"
-  | "gpt-5"
-  | "claude-sonnet-4.5"
-  | "claude-opus-4.6"
-  | "perplexity-sonar"
-  | "perplexity-sonar-pro";
+import { 
+  PROVIDER_LABELS, 
+  CATEGORY_LABELS, 
+  CATEGORY_COLORS,
+  PROVIDER_CATEGORIES 
+} from "@/lib/llm/constants";
+import type { LLMProvider } from "@/lib/llm/types";
 
 interface LLMSelectorProps {
   value: LLMProvider;
@@ -28,89 +24,27 @@ interface ProviderInfo {
   id: LLMProvider;
   name: string;
   description: string;
-  category: "google" | "xai" | "openai" | "anthropic" | "perplexity";
+  category: keyof typeof PROVIDER_CATEGORIES;
   isFree?: boolean;
   isNew?: boolean;
 }
 
-const providers: ProviderInfo[] = [
-  {
-    id: "gemini-2.5-flash-lite",
-    name: "Gemini 2.5 Flash-Lite",
-    description: "最安値・無料枠あり",
-    category: "google",
-    isFree: true,
-  },
-  {
-    id: "gemini-3.0-flash",
-    name: "Gemini 3.0 Flash",
-    description: "高品質・無料枠あり",
-    category: "google",
-    isFree: true,
-    isNew: true,
-  },
-  {
-    id: "grok-4.1-fast",
-    name: "Grok 4.1 Fast",
-    description: "X検索対応",
-    category: "xai",
-  },
-  {
-    id: "grok-4",
-    name: "Grok 4",
-    description: "最高品質",
-    category: "xai",
-    isNew: true,
-  },
-  {
-    id: "gpt-4o-mini",
-    name: "GPT-4o-mini",
-    description: "コスパ良好",
-    category: "openai",
-  },
-  {
-    id: "gpt-5",
-    name: "GPT-5",
-    description: "最新フラッグシップ",
-    category: "openai",
-    isNew: true,
-  },
-  {
-    id: "claude-sonnet-4.5",
-    name: "Claude 4.5 Sonnet",
-    description: "バランス型",
-    category: "anthropic",
-  },
-  {
-    id: "claude-opus-4.6",
-    name: "Claude Opus 4.6",
-    description: "最高品質",
-    category: "anthropic",
-    isNew: true,
-  },
-  {
-    id: "perplexity-sonar",
-    name: "Perplexity Sonar",
-    description: "エビデンス付き検索",
-    category: "perplexity",
-  },
-  {
-    id: "perplexity-sonar-pro",
-    name: "Perplexity Sonar Pro",
-    description: "高品質検索",
-    category: "perplexity",
-  },
+// プロバイダー情報を定数として定義（コンポーネント外）
+const PROVIDERS: ProviderInfo[] = [
+  { id: "gemini-2.5-flash-lite", name: "Gemini 2.5 Flash-Lite", description: "最安値・無料枠あり", category: "google", isFree: true },
+  { id: "gemini-3.0-flash", name: "Gemini 3.0 Flash", description: "高品質・無料枠あり", category: "google", isFree: true, isNew: true },
+  { id: "grok-4.1-fast", name: "Grok 4.1 Fast", description: "X検索対応", category: "xai" },
+  { id: "grok-4", name: "Grok 4", description: "最高品質", category: "xai", isNew: true },
+  { id: "gpt-4o-mini", name: "GPT-4o-mini", description: "コスパ良好", category: "openai" },
+  { id: "gpt-5", name: "GPT-5", description: "最新フラッグシップ", category: "openai", isNew: true },
+  { id: "claude-sonnet-4.5", name: "Claude 4.5 Sonnet", description: "バランス型", category: "anthropic" },
+  { id: "claude-opus-4.6", name: "Claude Opus 4.6", description: "最高品質", category: "anthropic", isNew: true },
+  { id: "perplexity-sonar", name: "Perplexity Sonar", description: "エビデンス付き検索", category: "perplexity" },
+  { id: "perplexity-sonar-pro", name: "Perplexity Sonar Pro", description: "高品質検索", category: "perplexity" },
 ];
 
-const categoryColors: Record<ProviderInfo["category"], string> = {
-  google: "#4285f4",
-  xai: "#ff6b00",
-  openai: "#10a37f",
-  anthropic: "#d4a574",
-  perplexity: "#22c55e",
-};
-
-const categoryGradients: Record<ProviderInfo["category"], string> = {
+// カテゴリーグラデーション
+const CATEGORY_GRADIENTS: Record<string, string> = {
   google: "from-blue-500/20 to-blue-600/10",
   xai: "from-orange-500/20 to-orange-600/10",
   openai: "from-emerald-500/20 to-emerald-600/10",
@@ -118,20 +52,12 @@ const categoryGradients: Record<ProviderInfo["category"], string> = {
   perplexity: "from-green-500/20 to-green-600/10",
 };
 
-const categoryLabels: Record<ProviderInfo["category"], string> = {
-  google: "Google",
-  xai: "xAI",
-  openai: "OpenAI",
-  anthropic: "Anthropic",
-  perplexity: "Perplexity",
-};
-
-// Provider icon component
-function ProviderIcon({
+// ProviderIconコンポーネントをメモ化
+const ProviderIcon = memo(function ProviderIcon({
   category,
   className,
 }: {
-  category: ProviderInfo["category"];
+  category: keyof typeof PROVIDER_CATEGORIES;
   className?: string;
 }) {
   const iconProps = { className: cn("w-4 h-4", className) };
@@ -147,19 +73,19 @@ function ProviderIcon({
         </svg>
       );
     case "xai":
-      return <Zap {...iconProps} style={{ color: categoryColors.xai }} />;
+      return <Zap {...iconProps} style={{ color: CATEGORY_COLORS.xai }} />;
     case "openai":
-      return <Brain {...iconProps} style={{ color: categoryColors.openai }} />;
+      return <Brain {...iconProps} style={{ color: CATEGORY_COLORS.openai }} />;
     case "anthropic":
-      return <Crown {...iconProps} style={{ color: categoryColors.anthropic }} />;
+      return <Crown {...iconProps} style={{ color: CATEGORY_COLORS.anthropic }} />;
     case "perplexity":
-      return <Search {...iconProps} style={{ color: categoryColors.perplexity }} />;
+      return <Search {...iconProps} style={{ color: CATEGORY_COLORS.perplexity }} />;
     default:
       return null;
   }
-}
+});
 
-export function LLMSelector({
+export const LLMSelector = memo(function LLMSelector({
   value,
   onChange,
   supportedProviders,
@@ -169,18 +95,26 @@ export function LLMSelector({
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const selectedProvider = providers.find((p) => p.id === value);
-  const availableProviders = providers.filter((p) =>
-    supportedProviders.includes(p.id)
+  const selectedProvider = useMemo(() => 
+    PROVIDERS.find((p) => p.id === value),
+    [value]
   );
 
-  const groupedProviders = availableProviders.reduce((acc, provider) => {
-    if (!acc[provider.category]) {
-      acc[provider.category] = [];
-    }
-    acc[provider.category].push(provider);
-    return acc;
-  }, {} as Record<ProviderInfo["category"], ProviderInfo[]>);
+  const availableProviders = useMemo(() => 
+    PROVIDERS.filter((p) => supportedProviders.includes(p.id)),
+    [supportedProviders]
+  );
+
+  const groupedProviders = useMemo(() => 
+    availableProviders.reduce((acc, provider) => {
+      if (!acc[provider.category]) {
+        acc[provider.category] = [];
+      }
+      acc[provider.category].push(provider);
+      return acc;
+    }, {} as Record<ProviderInfo["category"], ProviderInfo[]>),
+    [availableProviders]
+  );
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -193,11 +127,16 @@ export function LLMSelector({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  const handleProviderSelect = useCallback((providerId: LLMProvider) => {
+    onChange(providerId);
+    setIsOpen(false);
+  }, [onChange]);
+
   const isRecommended = value === recommendedProvider;
 
   return (
     <div ref={dropdownRef} className={cn("relative", className)}>
-      {/* Trigger Button - Grok Style */}
+      {/* Trigger Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
@@ -210,20 +149,18 @@ export function LLMSelector({
           isOpen && "border-[#ff6b00]/50 bg-[#1f1f2a]"
         )}
       >
-        {/* Provider Icon */}
         {selectedProvider && (
           <div
             className={cn(
               "flex items-center justify-center w-7 h-7 rounded-lg",
               "bg-gradient-to-br",
-              categoryGradients[selectedProvider.category]
+              CATEGORY_GRADIENTS[selectedProvider.category]
             )}
           >
             <ProviderIcon category={selectedProvider.category} />
           </div>
         )}
 
-        {/* Model Name */}
         <div className="flex flex-col items-start">
           <span className="font-semibold text-gray-100 leading-tight">
             {selectedProvider?.name}
@@ -233,7 +170,6 @@ export function LLMSelector({
           </span>
         </div>
 
-        {/* Badges */}
         <div className="flex items-center gap-1.5 ml-1">
           {selectedProvider?.isFree && (
             <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-green-500/15 text-green-400 border border-green-500/20">
@@ -248,7 +184,6 @@ export function LLMSelector({
           )}
         </div>
 
-        {/* Chevron */}
         <ChevronDown
           className={cn(
             "w-4 h-4 text-gray-500 transition-transform duration-200",
@@ -258,7 +193,7 @@ export function LLMSelector({
         />
       </button>
 
-      {/* Dropdown Menu - Grok Style */}
+      {/* Dropdown Menu */}
       {isOpen && (
         <div
           className={cn(
@@ -270,133 +205,121 @@ export function LLMSelector({
             "animate-in fade-in-0 zoom-in-95 duration-150"
           )}
         >
-          {/* Header */}
           <div className="px-4 py-3 border-b border-[#2a2a35] bg-[#15151d]">
             <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">
               モデルを選択
             </span>
           </div>
 
-          {/* Provider Groups */}
           <div className="max-h-[400px] overflow-y-auto py-2">
-            {(
-              Object.keys(groupedProviders) as ProviderInfo["category"][]
-            ).map((category, categoryIndex) => (
-              <div
-                key={category}
-                className={cn(
-                  "mb-1 last:mb-0",
-                  categoryIndex !== 0 && "mt-2 pt-2 border-t border-[#2a2a35]/50"
-                )}
-              >
-                {/* Category Header */}
-                <div className="px-4 py-2 flex items-center gap-2">
-                  <ProviderIcon category={category} />
-                  <span
-                    className="text-xs font-semibold uppercase tracking-wider"
-                    style={{ color: categoryColors[category] }}
-                  >
-                    {categoryLabels[category]}
-                  </span>
-                </div>
-
-                {/* Provider Items */}
-                {groupedProviders[category].map((provider) => {
-                  const isSelected = value === provider.id;
-                  const isProviderRecommended = provider.id === recommendedProvider;
-
-                  return (
-                    <button
-                      key={provider.id}
-                      onClick={() => {
-                        onChange(provider.id);
-                        setIsOpen(false);
-                      }}
-                      className={cn(
-                        "w-full flex items-center gap-3 px-4 py-3 mx-2 rounded-xl",
-                        "hover:bg-[#2a2a35]/70 transition-all duration-150",
-                        "text-left",
-                        isSelected && "bg-[#2a2a35] hover:bg-[#2a2a35]"
-                      )}
-                      style={{ width: "calc(100% - 16px)" }}
+            {(Object.keys(groupedProviders) as Array<keyof typeof groupedProviders>).map(
+              (category, categoryIndex) => (
+                <div
+                  key={category}
+                  className={cn(
+                    "mb-1 last:mb-0",
+                    categoryIndex !== 0 && "mt-2 pt-2 border-t border-[#2a2a35]/50"
+                  )}
+                >
+                  <div className="px-4 py-2 flex items-center gap-2">
+                    <ProviderIcon category={category} />
+                    <span
+                      className="text-xs font-semibold uppercase tracking-wider"
+                      style={{ color: CATEGORY_COLORS[category] }}
                     >
-                      {/* Selection Indicator */}
-                      <div
+                      {CATEGORY_LABELS[category]}
+                    </span>
+                  </div>
+
+                  {groupedProviders[category].map((provider) => {
+                    const isSelected = value === provider.id;
+                    const isProviderRecommended = provider.id === recommendedProvider;
+
+                    return (
+                      <button
+                        key={provider.id}
+                        onClick={() => handleProviderSelect(provider.id)}
                         className={cn(
-                          "w-1.5 h-1.5 rounded-full flex-shrink-0 transition-all duration-200",
-                          isSelected
-                            ? "bg-[#ff6b00] scale-100"
-                            : "bg-transparent scale-75"
+                          "w-full flex items-center gap-3 px-4 py-3 mx-2 rounded-xl",
+                          "hover:bg-[#2a2a35]/70 transition-all duration-150",
+                          "text-left",
+                          isSelected && "bg-[#2a2a35] hover:bg-[#2a2a35]"
                         )}
-                        style={{
-                          backgroundColor: isSelected
-                            ? "#ff6b00"
-                            : categoryColors[category],
-                          opacity: isSelected ? 1 : 0.4,
-                        }}
-                      />
+                        style={{ width: "calc(100% - 16px)" }}
+                      >
+                        <div
+                          className={cn(
+                            "w-1.5 h-1.5 rounded-full flex-shrink-0 transition-all duration-200",
+                            isSelected
+                              ? "bg-[#ff6b00] scale-100"
+                              : "bg-transparent scale-75"
+                          )}
+                          style={{
+                            backgroundColor: isSelected
+                              ? "#ff6b00"
+                              : CATEGORY_COLORS[category],
+                            opacity: isSelected ? 1 : 0.4,
+                          }}
+                        />
 
-                      {/* Provider Info */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span
-                            className={cn(
-                              "text-sm font-medium truncate",
-                              isSelected ? "text-gray-100" : "text-gray-300"
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span
+                              className={cn(
+                                "text-sm font-medium truncate",
+                                isSelected ? "text-gray-100" : "text-gray-300"
+                              )}
+                            >
+                              {provider.name}
+                            </span>
+
+                            {provider.isNew && (
+                              <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded bg-purple-500/15 text-purple-400 border border-purple-500/20">
+                                NEW
+                              </span>
                             )}
-                          >
-                            {provider.name}
+                            {provider.isFree && (
+                              <span className="text-[9px] font-medium px-1.5 py-0.5 rounded-full bg-green-500/15 text-green-400 border border-green-500/20">
+                                無料
+                              </span>
+                            )}
+                            {isProviderRecommended && (
+                              <span className="flex items-center gap-0.5 text-[9px] font-medium px-1.5 py-0.5 rounded-full bg-[#ff6b00]/15 text-[#ff6b00] border border-[#ff6b00]/20">
+                                <Sparkles className="w-2.5 h-2.5" />
+                                推奨
+                              </span>
+                            )}
+                          </div>
+                          <span className="text-xs text-gray-500">
+                            {provider.description}
                           </span>
-
-                          {/* Badges */}
-                          {provider.isNew && (
-                            <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded bg-purple-500/15 text-purple-400 border border-purple-500/20">
-                              NEW
-                            </span>
-                          )}
-                          {provider.isFree && (
-                            <span className="text-[9px] font-medium px-1.5 py-0.5 rounded-full bg-green-500/15 text-green-400 border border-green-500/20">
-                              無料
-                            </span>
-                          )}
-                          {isProviderRecommended && (
-                            <span className="flex items-center gap-0.5 text-[9px] font-medium px-1.5 py-0.5 rounded-full bg-[#ff6b00]/15 text-[#ff6b00] border border-[#ff6b00]/20">
-                              <Sparkles className="w-2.5 h-2.5" />
-                              推奨
-                            </span>
-                          )}
                         </div>
-                        <span className="text-xs text-gray-500">
-                          {provider.description}
-                        </span>
-                      </div>
 
-                      {/* Selected Checkmark */}
-                      {isSelected && (
-                        <div className="flex items-center justify-center w-5 h-5 rounded-full bg-[#ff6b00]/20 flex-shrink-0">
-                          <svg
-                            className="w-3 h-3 text-[#ff6b00]"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                            strokeWidth={3}
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              d="M5 13l4 4L19 7"
-                            />
-                          </svg>
-                        </div>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            ))}
+                        {isSelected && (
+                          <div className="flex items-center justify-center w-5 h-5 rounded-full bg-[#ff6b00]/20 flex-shrink-0">
+                            <svg
+                              className="w-3 h-3 text-[#ff6b00]"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                              strokeWidth={3}
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M5 13l4 4L19 7"
+                              />
+                            </svg>
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              )
+            )}
           </div>
 
-          {/* Footer */}
           <div className="px-4 py-2.5 border-t border-[#2a2a35] bg-[#15151d]">
             <div className="flex items-center gap-4 text-[10px] text-gray-500">
               <div className="flex items-center gap-1">
@@ -413,4 +336,6 @@ export function LLMSelector({
       )}
     </div>
   );
-}
+});
+
+export default LLMSelector;

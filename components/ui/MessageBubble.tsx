@@ -1,19 +1,10 @@
 "use client";
 
+import { memo } from "react";
 import { cn } from "@/lib/utils";
 import { Bot, User } from "lucide-react";
-
-export type LLMProvider = 
-  | "gemini-2.5-flash-lite"
-  | "gemini-3.0-flash"
-  | "grok-4.1-fast"
-  | "grok-4"
-  | "gpt-4o-mini"
-  | "gpt-5"
-  | "claude-sonnet-4.5"
-  | "claude-opus-4.6"
-  | "perplexity-sonar"
-  | "perplexity-sonar-pro";
+import { PROVIDER_LABELS } from "@/lib/llm/constants";
+import type { LLMProvider } from "@/lib/llm/types";
 
 interface MessageBubbleProps {
   role: "user" | "assistant";
@@ -25,20 +16,7 @@ interface MessageBubbleProps {
   className?: string;
 }
 
-const providerLabels: Record<LLMProvider, string> = {
-  "gemini-2.5-flash-lite": "Gemini 2.5 Flash-Lite",
-  "gemini-3.0-flash": "Gemini 3.0 Flash",
-  "grok-4.1-fast": "Grok 4.1 Fast",
-  "grok-4": "Grok 4",
-  "gpt-4o-mini": "GPT-4o-mini",
-  "gpt-5": "GPT-5",
-  "claude-sonnet-4.5": "Claude 4.5 Sonnet",
-  "claude-opus-4.6": "Claude Opus 4.6",
-  "perplexity-sonar": "Perplexity Sonar",
-  "perplexity-sonar-pro": "Perplexity Sonar Pro",
-};
-
-export function MessageBubble({
+export const MessageBubble = memo(function MessageBubble({
   role,
   content,
   isThinking,
@@ -102,7 +80,7 @@ export function MessageBubble({
           </span>
           {llmProvider && !isUser && (
             <span className="text-xs text-[#ff6b00]">
-              · {providerLabels[llmProvider]}
+              · {PROVIDER_LABELS[llmProvider]}
             </span>
           )}
         </div>
@@ -132,4 +110,6 @@ export function MessageBubble({
       </div>
     </div>
   );
-}
+});
+
+export default MessageBubble;

@@ -22,7 +22,9 @@ import {
   Loader2,
   Brain,
   Terminal,
+  FolderOpen,
 } from "lucide-react";
+import { DriveUploadButton, DriveFileSelectButton } from "@/components/meeting-notes/GoogleDriveButtons";
 
 type MeetingTemplate = "meeting" | "interview";
 type ProcessingStatus = "idle" | "streaming" | "completed" | "error";
@@ -275,13 +277,13 @@ export default function MeetingNotesPage() {
                   "relative p-5 rounded-xl border text-left transition-all duration-300",
                   "hover:scale-[1.02] hover:shadow-lg hover:shadow-black/20",
                   selectedTemplate === template.id
-                    ? "border-[#ff6b00] bg-gradient-to-br from-[#ff6b00]/10 to-[#ff6b00]/5 shadow-lg shadow-[#ff6b00]/10"
+                    ? "border-black bg-gray-50 shadow-lg"
                     : "border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50"
                 )}
               >
                 {selectedTemplate === template.id && (
-                  <div className="absolute top-4 right-4 w-5 h-5 rounded-full bg-[#ff6b00] flex items-center justify-center shadow-lg shadow-[#ff6b00]/30">
-                    <Check className="w-3 h-3 text-gray-900" />
+                  <div className="absolute top-4 right-4 w-5 h-5 rounded-full bg-black flex items-center justify-center">
+                    <Check className="w-3 h-3 text-white" />
                   </div>
                 )}
                 <div className="flex items-center gap-3 mb-3">
@@ -289,8 +291,8 @@ export default function MeetingNotesPage() {
                     className={cn(
                       "w-10 h-10 rounded-lg flex items-center justify-center transition-all duration-300",
                       selectedTemplate === template.id
-                        ? "bg-[#ff6b00]/20 text-[#ff6b00] shadow-inner"
-                        : "bg-gray-100 text-gray-600 group-hover:bg-[#3a3a45]"
+                        ? "bg-black text-white"
+                        : "bg-gray-100 text-gray-600"
                     )}
                   >
                     {template.icon}
@@ -307,7 +309,7 @@ export default function MeetingNotesPage() {
                       className={cn(
                         "text-xs px-2.5 py-1 rounded-full transition-colors duration-300",
                         selectedTemplate === template.id
-                          ? "bg-[#ff6b00]/10 text-[#ff6b00] border border-[#ff6b00]/20"
+                          ? "bg-black text-white border border-black"
                           : "bg-gray-100 text-gray-500"
                       )}
                     >
@@ -347,12 +349,12 @@ export default function MeetingNotesPage() {
                 "w-full h-[300px] p-5 rounded-2xl resize-none",
                 "bg-white border-2 border-gray-200",
                 "text-gray-800 placeholder-gray-400",
-                "focus:outline-none focus:border-[#ff6b00] focus:ring-2 focus:ring-[#ff6b00]/10",
+                "focus:outline-none focus:border-black focus:ring-2 focus:ring-black/5",
                 "transition-all duration-300",
                 "text-sm leading-relaxed"
               )}
             />
-            <div className="absolute bottom-4 right-4 text-xs text-gray-600 bg-[#0d0d12]/80 px-2 py-1 rounded-md">
+            <div className="absolute bottom-4 right-4 text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-md">
               {transcript.length.toLocaleString()} 文字
             </div>
           </div>
@@ -379,7 +381,7 @@ export default function MeetingNotesPage() {
                 "flex items-center gap-3 px-8 py-4 rounded-xl font-medium transition-all duration-300",
                 !transcript.trim()
                   ? "bg-gray-100 text-gray-500 cursor-not-allowed"
-                  : "bg-gradient-to-r from-[#ff6b00] to-[#ff8533] text-white hover:from-[#ff8533] hover:to-[#ff6b00] shadow-lg shadow-[#ff6b00]/20 hover:shadow-xl hover:shadow-[#ff6b00]/30 hover:scale-[1.02]"
+                  : "bg-black text-white hover:bg-gray-800 shadow-lg hover:shadow-xl hover:scale-[1.02]"
               )}
             >
               <Sparkles className="w-5 h-5" />
@@ -390,7 +392,7 @@ export default function MeetingNotesPage() {
 
         {/* Error Message */}
         {error && (
-          <div className="mb-8 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400">
+          <div className="mb-8 p-4 rounded-xl bg-red-50 border border-red-200 text-red-600">
             <p className="text-sm">{error}</p>
           </div>
         )}
@@ -404,9 +406,9 @@ export default function MeetingNotesPage() {
                   整形結果
                 </h2>
                 {status === "streaming" && (
-                  <span className="inline-flex items-center gap-2 text-[#22c55e] bg-[#22c55e]/10 px-3 py-1 rounded-full text-xs border border-[#22c55e]/20">
+                  <span className="inline-flex items-center gap-2 text-green-600 bg-green-50 px-3 py-1 rounded-full text-xs border border-green-200">
                     <Brain className="w-3.5 h-3.5 animate-pulse" />
-                    思考中...
+                    生成中...
                   </span>
                 )}
               </div>
@@ -417,8 +419,8 @@ export default function MeetingNotesPage() {
                   className={cn(
                     "flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-all duration-200",
                     copied
-                      ? "bg-[#22c55e]/20 text-[#22c55e] border border-[#22c55e]/30"
-                      : "bg-gray-100 text-gray-600 hover:text-gray-800 hover:bg-[#3a3a45] border border-transparent"
+                      ? "bg-green-50 text-green-600 border border-green-200"
+                      : "bg-gray-100 text-gray-600 hover:text-black hover:bg-gray-200 border border-transparent"
                   )}
                 >
                   {copied ? (
@@ -433,17 +435,21 @@ export default function MeetingNotesPage() {
                     </>
                   )}
                 </button>
+                <DriveUploadButton
+                  content={result}
+                  filename={`meeting-notes-${new Date().toISOString().split("T")[0]}.md`}
+                />
                 <button
                   onClick={handleDownload}
                   disabled={!result}
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm bg-gray-100 text-gray-600 hover:text-gray-800 hover:bg-[#3a3a45] transition-all duration-200 disabled:opacity-50 border border-transparent hover:border-gray-300"
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm bg-gray-100 text-gray-600 hover:text-black hover:bg-gray-200 transition-all duration-200 disabled:opacity-50 border border-transparent hover:border-gray-300"
                 >
                   <Download className="w-4 h-4" />
                   Markdown保存
                 </button>
                 <button
                   onClick={handleReset}
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm bg-gray-100 text-gray-600 hover:text-gray-800 hover:bg-[#3a3a45] transition-all duration-200 border border-transparent hover:border-gray-300"
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm bg-gray-100 text-gray-600 hover:text-black hover:bg-gray-200 transition-all duration-200 border border-transparent hover:border-gray-300"
                 >
                   <RotateCcw className="w-4 h-4" />
                   新規作成
@@ -451,18 +457,18 @@ export default function MeetingNotesPage() {
               </div>
             </div>
             
-            {/* Code Block Style Result */}
-            <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-xl shadow-black/20">
-              {/* Window Header */}
+            {/* Result */}
+            <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-lg">
+              {/* Header */}
               <div className="flex items-center justify-between px-4 py-3 bg-gray-50 border-b border-gray-200">
                 <div className="flex items-center gap-2">
                   <Terminal className="w-4 h-4 text-gray-500" />
                   <span className="text-xs text-gray-500 font-mono">meeting-notes.md</span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <div className="w-3 h-3 rounded-full bg-[#ff5f56]" />
-                  <div className="w-3 h-3 rounded-full bg-[#ffbd2e]" />
-                  <div className="w-3 h-3 rounded-full bg-[#27c93f]" />
+                  <div className="w-3 h-3 rounded-full bg-gray-300" />
+                  <div className="w-3 h-3 rounded-full bg-gray-300" />
+                  <div className="w-3 h-3 rounded-full bg-gray-300" />
                 </div>
               </div>
               
@@ -472,21 +478,21 @@ export default function MeetingNotesPage() {
                   className="text-gray-800 leading-relaxed whitespace-pre-wrap font-mono text-sm"
                   dangerouslySetInnerHTML={{
                     __html: result
-                      // Headers with syntax highlighting
-                      .replace(/### (.*)/g, '<h3 class="text-lg font-bold text-[#ff6b00] mt-6 mb-3 flex items-center gap-2"><span class="text-[#ff6b00]/50">###</span> $1</h3>')
-                      .replace(/## (.*)/g, '<h2 class="text-xl font-bold text-[#ff8533] mt-8 mb-4 flex items-center gap-2"><span class="text-[#ff8533]/50">##</span> $1</h2>')
-                      .replace(/# (.*)/g, '<h1 class="text-2xl font-bold text-white mt-8 mb-4 flex items-center gap-2"><span class="text-[#ff6b00]/50">#</span> $1</h1>')
+                      // Headers
+                      .replace(/### (.*)/g, '<h3 class="text-lg font-bold text-black mt-6 mb-3">$1</h3>')
+                      .replace(/## (.*)/g, '<h2 class="text-xl font-bold text-black mt-8 mb-4">$1</h2>')
+                      .replace(/# (.*)/g, '<h1 class="text-2xl font-bold text-black mt-8 mb-4">$1</h1>')
                       // Bold text
-                      .replace(/\*\*(.*?)\*\*/g, '<strong class="text-white bg-[#ff6b00]/10 px-1 rounded">$1</strong>')
-                      // List items with bullet color
-                      .replace(/^- (.*)/gm, '<li class="ml-4 text-gray-300 flex items-start gap-2"><span class="text-[#ff6b00] mt-1.5">•</span><span>$1</span></li>')
+                      .replace(/\*\*(.*?)\*\*/g, '<strong class="bg-gray-100 px-1 rounded">$1</strong>')
+                      // List items
+                      .replace(/^- (.*)/gm, '<li class="ml-4 text-gray-700 flex items-start gap-2"><span class="text-gray-400 mt-1.5">•</span><span>$1</span></li>')
                       // Checkboxes
-                      .replace(/\[ \] (.*)/g, '<div class="flex items-center gap-2 my-1"><span class="w-4 h-4 border-2 border-[#3a3a45] rounded flex items-center justify-center text-white text-xs"></span><span class="text-gray-300">$1</span></div>')
-                      .replace(/\[x\] (.*)/g, '<div class="flex items-center gap-2 my-1"><span class="w-4 h-4 bg-[#22c55e] rounded flex items-center justify-center text-white text-xs">✓</span><span class="line-through text-gray-500">$1</span></div>')
+                      .replace(/\[ \] (.*)/g, '<div class="flex items-center gap-2 my-1"><span class="w-4 h-4 border-2 border-gray-300 rounded flex items-center justify-center"></span><span class="text-gray-700">$1</span></div>')
+                      .replace(/\[x\] (.*)/g, '<div class="flex items-center gap-2 my-1"><span class="w-4 h-4 bg-green-500 rounded flex items-center justify-center text-white text-xs">✓</span><span class="line-through text-gray-400">$1</span></div>')
                   }}
                 />
                 {status === "streaming" && (
-                  <span className="inline-block w-2 h-5 bg-[#22c55e] ml-1 animate-pulse rounded-sm" />
+                  <span className="inline-block w-2 h-5 bg-black ml-1 animate-pulse rounded-sm" />
                 )}
               </div>
             </div>
