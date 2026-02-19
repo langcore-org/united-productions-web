@@ -8,14 +8,13 @@ import { getSystemPrompt } from "@/lib/research/prompts";
 
 interface UseResearchChatOptions {
   initialAgent?: ResearchAgentType;
-  initialProvider?: LLMProvider;
 }
 
 export function useResearchChat(options: UseResearchChatOptions = {}) {
-  const { initialAgent = "people", initialProvider = "grok-4.1-fast" } = options;
+  const { initialAgent = "people" } = options;
   
   const [activeAgent, setActiveAgent] = useState<ResearchAgentType>(initialAgent);
-  const [provider, setProvider] = useState<LLMProvider>(initialProvider);
+  const [provider, setProvider] = useState<LLMProvider>(AGENT_DEFAULT_PROVIDERS[initialAgent]);
   const [messages, setMessages] = useState<ResearchMessage[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -302,7 +301,6 @@ export function useResearchChat(options: UseResearchChatOptions = {}) {
     
     // Setters
     setActiveAgent,
-    setProvider,
     setInput,
     
     // Actions

@@ -2,14 +2,14 @@
 
 import { cn } from "@/lib/utils";
 import { FileSpreadsheet, FileText, Trash2 } from "lucide-react";
-import { LLMSelector } from "@/components/ui/LLMSelector";
+
 import { useResearchChat } from "@/hooks/useResearchChat";
 import { AgentTabs } from "./AgentTabs";
 import { ChatInput } from "./ChatInput";
 import { EmptyState } from "./EmptyState";
 import { ChatMessage } from "./message/ChatMessage";
 import { StreamingMessage } from "./message/StreamingMessage";
-import { AGENT_SUPPORTED_PROVIDERS } from "@/lib/research/config";
+
 
 interface ResearchChatProps {
   className?: string;
@@ -26,7 +26,6 @@ export function ResearchChat({ className }: ResearchChatProps) {
     streamState,
     messagesEndRef,
     setActiveAgent,
-    setProvider,
     setInput,
     handleSubmit,
     handleCancel,
@@ -42,13 +41,7 @@ export function ResearchChat({ className }: ResearchChatProps) {
       <header className="flex-none border-b border-gray-200 bg-white p-4">
         <div className="flex items-center justify-between">
           <AgentTabs activeAgent={activeAgent} onChange={setActiveAgent} />
-          <div className="flex items-center gap-3 ml-4">
-            <LLMSelector
-              value={provider}
-              onChange={setProvider}
-              supportedProviders={AGENT_SUPPORTED_PROVIDERS[activeAgent]}
-            />
-          </div>
+
         </div>
       </header>
 

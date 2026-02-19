@@ -2,7 +2,7 @@
 
 import { useState, useRef, useCallback } from "react";
 import { cn } from "@/lib/utils";
-import { LLMSelector, type LLMProvider } from "@/components/ui/LLMSelector";
+import type { LLMProvider } from "@/lib/llm/types";
 import { FeatureCard } from "@/components/ui/FeatureCard";
 import {
   Mic,
@@ -20,13 +20,6 @@ import {
 } from "lucide-react";
 
 type ProcessingStatus = "idle" | "streaming" | "completed" | "error";
-
-const SUPPORTED_PROVIDERS: LLMProvider[] = [
-  "gemini-2.5-flash-lite",
-  "gemini-3.0-flash",
-  "grok-4.1-fast",
-  "grok-4",
-];
 
 const DEFAULT_PROVIDER: LLMProvider = "gemini-2.5-flash-lite";
 
@@ -78,7 +71,7 @@ export default function TranscriptsPage() {
   const [result, setResult] = useState("");
   const [status, setStatus] = useState<ProcessingStatus>("idle");
   const [error, setError] = useState<string | null>(null);
-  const [provider, setProvider] = useState<LLMProvider>(DEFAULT_PROVIDER);
+
   const [copied, setCopied] = useState(false);
   const resultRef = useRef<HTMLDivElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -145,7 +138,7 @@ Premiere Proの書き起こしテキストを、放送用のNA原稿形式に整
               content: `以下のPremiere Pro書き起こしテキストをNA原稿形式に整形してください：\n\n${transcript}`,
             },
           ],
-          provider: provider,
+          provider: DEFAULT_PROVIDER,
         }),
         signal: abortController.signal,
       });
@@ -236,7 +229,7 @@ Premiere Proの書き起こしテキストを、放送用のNA原稿形式に整
     } finally {
       abortControllerRef.current = null;
     }
-  }, [transcript, provider]);
+  }, [transcript]);
 
   const handleCancel = () => {
     if (abortControllerRef.current) {
@@ -296,12 +289,7 @@ Premiere Proの書き起こしテキストを、放送用のNA原稿形式に整
                 <p className="text-sm text-gray-500">Premiere Pro書き起こしをAIで整形</p>
               </div>
             </div>
-            <LLMSelector
-              value={provider}
-              onChange={setProvider}
-              supportedProviders={SUPPORTED_PROVIDERS}
-              recommendedProvider={DEFAULT_PROVIDER}
-            />
+
           </div>
         </div>
       </header>

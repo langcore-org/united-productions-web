@@ -2,7 +2,7 @@
 
 import { useState, useRef, useCallback } from "react";
 import { cn } from "@/lib/utils";
-import { LLMSelector, type LLMProvider } from "@/components/ui/LLMSelector";
+import type { LLMProvider } from "@/lib/llm/types";
 import { FeatureCard } from "@/components/ui/FeatureCard";
 import { sanitizeAndFormatMarkdown } from "@/lib/xss-sanitizer";
 import {
@@ -56,13 +56,6 @@ const templates: TemplateOption[] = [
   },
 ];
 
-const SUPPORTED_PROVIDERS: LLMProvider[] = [
-  "gemini-2.5-flash-lite",
-  "gemini-3.0-flash",
-  "grok-4.1-fast",
-  "grok-4",
-];
-
 const DEFAULT_PROVIDER: LLMProvider = "gemini-2.5-flash-lite";
 
 export default function MeetingNotesPage() {
@@ -71,7 +64,7 @@ export default function MeetingNotesPage() {
   const [result, setResult] = useState("");
   const [status, setStatus] = useState<ProcessingStatus>("idle");
   const [error, setError] = useState<string | null>(null);
-  const [provider, setProvider] = useState<LLMProvider>(DEFAULT_PROVIDER);
+
   const [copied, setCopied] = useState(false);
   const resultRef = useRef<HTMLDivElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -105,7 +98,7 @@ export default function MeetingNotesPage() {
               content: `以下のZoom文字起こしテキストを${selectedTemplate === "meeting" ? "会議用" : "面談用"}テンプレートで整形してください：\n\n${transcript}`,
             },
           ],
-          provider: provider,
+          provider: DEFAULT_PROVIDER,
         }),
         signal: abortController.signal,
       });
@@ -196,7 +189,7 @@ export default function MeetingNotesPage() {
     } finally {
       abortControllerRef.current = null;
     }
-  }, [transcript, selectedTemplate, provider]);
+  }, [transcript, selectedTemplate]);
 
   const handleCancel = () => {
     if (abortControllerRef.current) {
@@ -254,12 +247,7 @@ export default function MeetingNotesPage() {
                 <p className="text-sm text-gray-500">Zoom文字起こしをAIで整形</p>
               </div>
             </div>
-            <LLMSelector
-              value={provider}
-              onChange={setProvider}
-              supportedProviders={SUPPORTED_PROVIDERS}
-              recommendedProvider={DEFAULT_PROVIDER}
-            />
+
           </div>
         </div>
       </header>
