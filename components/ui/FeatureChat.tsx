@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Send, Copy, Check, Loader2 } from "lucide-react";
+import { WordExportButton } from "./WordExportButton";
 import { useLLMStream, StreamingMessage } from "./StreamingMessage";
 import { MessageBubble } from "./MessageBubble";
 import { DEFAULT_PROVIDER } from "@/lib/llm/config";
@@ -184,26 +185,35 @@ export function FeatureChat({
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
         <h1 className="text-lg font-semibold text-gray-900">{title}</h1>
-        {outputFormat === "plaintext" && lastAssistantMessage && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleCopy}
-            className="gap-2"
-          >
-            {isCopied ? (
-              <>
-                <Check className="w-4 h-4" />
-                コピー済み
-              </>
-            ) : (
-              <>
-                <Copy className="w-4 h-4" />
-                Wordにコピー
-              </>
-            )}
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          {outputFormat === "plaintext" && lastAssistantMessage && (
+            <>
+              <WordExportButton
+                content={lastAssistantMessage.content}
+                filename={`${featureId}_${new Date().toISOString().split("T")[0]}`}
+                title={title}
+              />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleCopy}
+                className="gap-2"
+              >
+                {isCopied ? (
+                  <>
+                    <Check className="w-4 h-4" />
+                    コピー済み
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-4 h-4" />
+                    コピー
+                  </>
+                )}
+              </Button>
+            </>
+          )}
+        </div>
       </div>
 
       {/* Messages */}

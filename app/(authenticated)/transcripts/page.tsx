@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { DEFAULT_PROVIDER } from "@/lib/llm/config";
 import type { LLMProvider } from "@/lib/llm/types";
 import { FeatureCard } from "@/components/ui/FeatureCard";
+import { FileUpload } from "@/components/ui/FileUpload";
 import {
   Mic,
   Sparkles,
@@ -343,6 +344,19 @@ Premiere Proの書き起こしテキストを、放送用のNA原稿形式に整
               </button>
             )}
           </div>
+
+          {/* File Upload */}
+          <div className="mb-4">
+            <FileUpload
+              onUpload={(text, filename) => setTranscript(text)}
+              accept={{
+                "text/plain": [".txt"],
+                "text/vtt": [".vtt"],
+                "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [".docx"],
+              }}
+            />
+          </div>
+
           <div className="relative group">
             <textarea
               value={transcript}

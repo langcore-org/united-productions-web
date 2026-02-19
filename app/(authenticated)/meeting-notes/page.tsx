@@ -29,6 +29,8 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { DriveUploadButton, DriveFileSelectButton } from "@/components/meeting-notes/GoogleDriveButtons";
+import { FileUpload } from "@/components/ui/FileUpload";
+import { Label } from "@/components/ui/label";
 
 type MeetingTemplate = "meeting" | "interview";
 type ProcessingStatus = "idle" | "streaming" | "completed" | "error";
@@ -329,6 +331,18 @@ export default function MeetingNotesPage() {
               </button>
             )}
           </div>
+
+          {/* File Upload */}
+          <div className="mb-4">
+            <FileUpload
+              onUpload={(text, filename) => setTranscript(text)}
+              accept={{
+                "text/plain": [".txt"],
+                "text/vtt": [".vtt"],
+              }}
+            />
+          </div>
+
           <div className="relative group">
             <textarea
               value={transcript}
