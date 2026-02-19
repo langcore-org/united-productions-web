@@ -7,7 +7,7 @@
 
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { createGeminiClient } from '@/lib/llm/clients/gemini';
+import { GrokClient } from '@/lib/llm/clients/grok';
 import { getSystemPrompt, MeetingTemplate } from '@/prompts/meeting-format';
 import { createApiHandler } from '@/lib/api/handler';
 import type { LLMMessage } from '@/lib/llm/types';
@@ -15,7 +15,7 @@ import type { LLMMessage } from '@/lib/llm/types';
 const meetingNotesRequestSchema = z.object({
   transcript: z.string().min(1, '文字起こしテキストを入力してください'),
   template: z.enum(['meeting', 'interview'] as const),
-  provider: z.enum(['gemini-2.5-flash-lite', 'gemini-3.0-flash'] as const).optional(),
+  provider: z.enum(['grok-4.1-fast', 'grok-4'] as const).optional(),
 });
 
 export type MeetingNotesRequest = z.infer<typeof meetingNotesRequestSchema>;
@@ -49,9 +49,9 @@ export const POST = createApiHandler(
   async ({ data }) => {
     const { transcript, template, provider: requestedProvider } = data;
     
-    const provider = requestedProvider ?? 'gemini-2.5-flash-lite';
+    const provider = requestedProvider ?? 'grok-4.1-fast';
     const systemPrompt = getSystemPrompt(template as MeetingTemplate);
-    const client = createGeminiClient(provider);
+    const client = new GrokClient(provider);
 
     const messages: LLMMessage[] = [
       { role: 'system', content: systemPrompt },

@@ -8,7 +8,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { createGeminiClient } from "@/lib/llm/clients/gemini";
+import { GrokClient } from "@/lib/llm/clients/grok";
 import {
   createScheduleGenerateMessages,
 } from "@/prompts/schedule-generate";
@@ -42,8 +42,8 @@ async function handleGenerate(request: NextRequest) {
     const body = await request.json();
     const validatedData = generateRequestSchema.parse(body);
 
-    // Gemini 2.5 Flash-Lite クライアントを作成
-    const client = createGeminiClient("gemini-2.5-flash-lite");
+    // Grok 4.1 Fast クライアントを作成
+    const client = new GrokClient("grok-4.1-fast");
 
     // プロンプトを作成
     const messages = createScheduleGenerateMessages({

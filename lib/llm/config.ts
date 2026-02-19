@@ -126,17 +126,17 @@ export const PROVIDER_CONFIG: Record<LLMProvider, ProviderInfo> = {
 /**
  * デフォルトプロバイダー
  */
-export const DEFAULT_PROVIDER: LLMProvider = 'gemini-2.5-flash-lite';
+export const DEFAULT_PROVIDER: LLMProvider = 'grok-4.1-fast';
 
 /**
  * PJ別デフォルトプロバイダー
  */
 export const PROJECT_DEFAULT_PROVIDERS: Record<string, LLMProvider> = {
-  'PJ-A': 'gemini-2.5-flash-lite',      // 議事録整形
-  'PJ-B': 'gemini-2.5-flash-lite',      // 書き起こし整形
+  'PJ-A': 'grok-4.1-fast',      // 議事録整形
+  'PJ-B': 'grok-4.1-fast',      // 書き起こし整形
   'PJ-C-people': 'grok-4.1-fast',       // 人探し（X検索）
-  'PJ-C-evidence': 'perplexity-sonar',  // エビデンス検索
-  'PJ-D': 'gemini-2.5-flash-lite',      // ロケスケ
+  'PJ-C-evidence': 'grok-4.1-fast',  // エビデンス検索（一時的にgrokで統一）
+  'PJ-D': 'grok-4.1-fast',      // ロケスケ
 };
 
 /**
