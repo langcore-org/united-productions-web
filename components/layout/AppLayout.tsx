@@ -2,6 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import { Sidebar } from "./Sidebar";
+import { useState } from "react";
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -10,23 +11,30 @@ interface AppLayoutProps {
 
 /**
  * アプリケーション共通レイアウト
- * - Sidebar（常時表示）
+ * - Sidebar（展開/縮小可能）
  * - ライトモード固定
  */
 export function AppLayout({ 
   children, 
   className,
 }: AppLayoutProps) {
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+
   return (
     <div className={cn(
       "min-h-screen bg-white text-gray-900",
       className
     )}>
       {/* Sidebar */}
-      <Sidebar />
+      <Sidebar onCollapseChange={setIsSidebarCollapsed} />
 
-      {/* Main Content - サイドバー幅分の余白を追加 */}
-      <main className="min-h-screen ml-[280px]">
+      {/* Main Content - サイドバー幅に応じてマージンを調整 */}
+      <main 
+        className={cn(
+          "min-h-screen transition-all duration-300 ease-in-out",
+          isSidebarCollapsed ? "ml-[64px]" : "ml-[240px]"
+        )}
+      >
         {children}
       </main>
     </div>
