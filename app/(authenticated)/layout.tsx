@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth/next";
 import type { Session } from "next-auth";
 import { redirect } from "next/navigation";
 import { authOptions } from "@/lib/auth-options";
+import { AppLayout } from "@/components/layout/AppLayout";
 
 export default async function AuthenticatedLayout({
   children,
@@ -15,5 +16,5 @@ export default async function AuthenticatedLayout({
     redirect("/auth/signin");
   }
 
-  return <>{children}</>;
+  return <AppLayout>{children}</AppLayout>;
 }
