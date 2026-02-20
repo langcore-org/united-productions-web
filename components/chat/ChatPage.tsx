@@ -2,58 +2,90 @@
 
 import { useEffect, useState } from "react";
 import { FeatureChat } from "@/components/ui/FeatureChat";
-import { ChatFeatureId, getChatConfig, requiresDynamicPrompt } from "@/lib/chat/chat-config";
-import { getProposalSystemPrompt } from "@/lib/prompts/proposal";
+import { getChatConfig, ChatFeatureId, updateChatConfigSystemPrompt } from "@/lib/chat/chat-config";
+import { featureIdToToolKey } from "@/lib/settings/db";
 
 interface ChatPageProps {
   featureId: ChatFeatureId;
 }
 
 /**
- * 共通チャットページコンポーネント
- * 
- * すべてのチャット機能はこのコンポーネントを使用してレンダリングされる。
- * featureIdに応じて設定を動的に切り替える。
+ * Grokツール設定の型
  */
+interface GrokToolSettings {
+  generalChat: boolean;
+  researchCast: boolean;
+  researchLocation: boolean;
+  researchInfo: boolean;
+  researchEvidence: boolean;
+  minutes: boolean;
+  proposal: boolean;
+  naScript: boolean;
+  [key: string]: boolean | undefined;
+}
+
 export function ChatPage({ featureId }: ChatPageProps) {
+  const [config, setConfig] = useState(getChatConfig(featureId));
   const [systemPrompt, setSystemPrompt] = useState<string>("");
   const [isLoading, setIsLoading] = useState(true);
-
-  const config = getChatConfig(featureId);
+  const [grokToolSettings, setGrokToolSettings] = useState<GrokToolSettings | null>(null);
 
   useEffect(() => {
-    async function loadSystemPrompt() {
+    async function loadConfig() {
       setIsLoading(true);
       
       try {
-        // 動的プロンプトが必要な場合（proposal機能）
-        if (requiresDynamicPrompt(featureId)) {
+        const baseConfig = getChatConfig(featureId);
+
+        // プロポーザルの場合は動的プロンプトを取得
+        if (featureId === "proposal") {
           const response = await fetch("/api/settings/program");
           if (response.ok) {
             const data = await response.json();
-            const prompt = getProposalSystemPrompt(
+            const updatedConfig = updateChatConfigSystemPrompt(
+              baseConfig,
               data.programInfo || "",
               data.pastProposals || ""
             );
-            setSystemPrompt(prompt);
+            setConfig(updatedConfig);
+            setSystemPrompt(updatedConfig.systemPrompt);
           } else {
-            // エラー時はデフォルトプロンプトを使用
-            setSystemPrompt(config.systemPrompt);
+            setConfig(baseConfig);
+            setSystemPrompt(baseConfig.systemPrompt);
           }
         } else {
-          // 静的プロンプトを使用
-          setSystemPrompt(config.systemPrompt);
+          setConfig(baseConfig);
+          setSystemPrompt(baseConfig.systemPrompt);
+        }
+
+        // Grokツール設定を取得
+        const toolResponse = await fetch("/api/settings/grok-tools");
+        if (toolResponse.ok) {
+          const toolData = await toolResponse.json();
+          setGrokToolSettings(toolData);
         }
       } catch (error) {
-        console.error("Failed to load system prompt:", error);
-        setSystemPrompt(config.systemPrompt);
+        console.error("Failed to load config:", error);
+        const fallbackConfig = getChatConfig(featureId);
+        setConfig(fallbackConfig);
+        setSystemPrompt(fallbackConfig.systemPrompt);
       } finally {
         setIsLoading(false);
       }
     }
 
-    loadSystemPrompt();
-  }, [featureId, config.systemPrompt]);
+    loadConfig();
+  }, [featureId]);
+
+  // 現在の機能でGrokツールが有効かどうか
+  const isGrokToolEnabled = (): boolean => {
+    if (!grokToolSettings) return false;
+    
+    const toolKey = featureIdToToolKey(featureId);
+    if (!toolKey) return false;
+    
+    return grokToolSettings[toolKey] ?? false;
+  };
 
   if (isLoading) {
     return (
@@ -71,8 +103,7 @@ export function ChatPage({ featureId }: ChatPageProps) {
       placeholder={config.placeholder}
       inputLabel={config.inputLabel}
       outputFormat={config.outputFormat}
+      enableGrokTools={isGrokToolEnabled()}
     />
   );
 }
-
-export default ChatPage;

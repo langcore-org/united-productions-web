@@ -2,16 +2,10 @@
  * Gems（専用チャット機能）の定義
  * 
  * GeminiのGemと同様に、特定の用途に特化したチャット機能を定義
+ * プロンプトはDB管理（lib/prompts/db.ts）がSingle Source of Truth
  */
 
-import { RESEARCH_CAST_SYSTEM_PROMPT } from "@/lib/prompts/research-cast";
-import { RESEARCH_LOCATION_SYSTEM_PROMPT } from "@/lib/prompts/research-location";
-import { RESEARCH_INFO_SYSTEM_PROMPT } from "@/lib/prompts/research-info";
-import { RESEARCH_EVIDENCE_SYSTEM_PROMPT } from "@/lib/prompts/research-evidence";
-import { MINUTES_SYSTEM_PROMPT } from "@/lib/prompts/minutes";
-import { getProposalSystemPrompt } from "@/lib/prompts/proposal";
-import { TRANSCRIPT_SYSTEM_PROMPT } from "@/lib/prompts/transcript";
-import { GENERAL_CHAT_SYSTEM_PROMPT } from "@/lib/prompts/general-chat";
+import { DEFAULT_PROMPTS, PROMPT_KEYS } from "@/lib/prompts/db";
 
 /** Gemの識別子 */
 export type GemId =
@@ -36,6 +30,29 @@ export interface Gem {
   outputFormat: "markdown" | "plaintext";
   category: "research" | "document" | "general";
   color?: string;        // アクセントカラー
+  promptKey: string;     // DBプロンプトキー
+}
+
+// デフォルトプロンプトをキーで検索するヘルパー
+function getDefaultPromptContent(key: string): string {
+  const prompt = DEFAULT_PROMPTS.find(p => p.key === key);
+  return prompt?.content || "";
+}
+
+/** プロポーザル用システムプロンプトを生成（動的） */
+function getProposalSystemPrompt(programInfo: string, pastProposals: string): string {
+  const basePrompt = getDefaultPromptContent(PROMPT_KEYS.PROPOSAL);
+  if (!programInfo && !pastProposals) {
+    return basePrompt;
+  }
+  
+  return `${basePrompt}
+
+## 番組情報
+${programInfo || "（未設定）"}
+
+## 過去の企画案
+${pastProposals || "（未設定）"}`;
 }
 
 /** 全てのGem定義 */
@@ -45,67 +62,73 @@ export const GEMS: Gem[] = [
     name: "一般チャット",
     description: "何でも相談できる汎用チャット",
     icon: "Sparkles",
-    systemPrompt: GENERAL_CHAT_SYSTEM_PROMPT,
+    systemPrompt: getDefaultPromptContent(PROMPT_KEYS.GENERAL_CHAT),
     placeholder: "何か質問や相談があれば、お気軽にどうぞ",
     outputFormat: "markdown",
     category: "general",
     color: "#6366f1",
+    promptKey: PROMPT_KEYS.GENERAL_CHAT,
   },
   {
     id: "research-cast",
     name: "出演者リサーチ",
     description: "企画に最適な出演者候補をリサーチ",
     icon: "Users",
-    systemPrompt: RESEARCH_CAST_SYSTEM_PROMPT,
+    systemPrompt: getDefaultPromptContent(PROMPT_KEYS.RESEARCH_CAST),
     placeholder: "企画内容・テーマを入力してください",
     outputFormat: "markdown",
     category: "research",
     color: "#ec4899",
+    promptKey: PROMPT_KEYS.RESEARCH_CAST,
   },
   {
     id: "research-location",
     name: "場所リサーチ",
     description: "ロケ地候補と撮影条件を調査",
     icon: "MapPin",
-    systemPrompt: RESEARCH_LOCATION_SYSTEM_PROMPT,
+    systemPrompt: getDefaultPromptContent(PROMPT_KEYS.RESEARCH_LOCATION),
     placeholder: "企画内容・テーマを入力してください",
     outputFormat: "markdown",
     category: "research",
     color: "#22c55e",
+    promptKey: PROMPT_KEYS.RESEARCH_LOCATION,
   },
   {
     id: "research-info",
     name: "情報リサーチ",
     description: "テーマに関する情報を収集・整理",
     icon: "Search",
-    systemPrompt: RESEARCH_INFO_SYSTEM_PROMPT,
+    systemPrompt: getDefaultPromptContent(PROMPT_KEYS.RESEARCH_INFO),
     placeholder: "リサーチしたいテーマを入力してください",
     outputFormat: "markdown",
     category: "research",
     color: "#3b82f6",
+    promptKey: PROMPT_KEYS.RESEARCH_INFO,
   },
   {
     id: "research-evidence",
     name: "エビデンスリサーチ",
     description: "情報の真偽を検証・ファクトチェック",
     icon: "Shield",
-    systemPrompt: RESEARCH_EVIDENCE_SYSTEM_PROMPT,
+    systemPrompt: getDefaultPromptContent(PROMPT_KEYS.RESEARCH_EVIDENCE),
     placeholder: "検証したい情報・主張を入力してください",
     outputFormat: "markdown",
     category: "research",
     color: "#f59e0b",
+    promptKey: PROMPT_KEYS.RESEARCH_EVIDENCE,
   },
   {
     id: "minutes",
     name: "議事録作成",
     description: "文字起こしから議事録を自動作成",
     icon: "FileText",
-    systemPrompt: MINUTES_SYSTEM_PROMPT,
+    systemPrompt: getDefaultPromptContent(PROMPT_KEYS.MINUTES),
     placeholder: "文字起こしテキストを貼り付けてください",
     inputLabel: "文字起こし",
     outputFormat: "markdown",
     category: "document",
     color: "#8b5cf6",
+    promptKey: PROMPT_KEYS.MINUTES,
   },
   {
     id: "proposal",
@@ -117,18 +140,20 @@ export const GEMS: Gem[] = [
     outputFormat: "markdown",
     category: "document",
     color: "#f97316",
+    promptKey: PROMPT_KEYS.PROPOSAL,
   },
   {
     id: "na-script",
     name: "NA原稿作成",
     description: "文字起こしからナレーション原稿を作成",
     icon: "Mic",
-    systemPrompt: TRANSCRIPT_SYSTEM_PROMPT,
+    systemPrompt: getDefaultPromptContent(PROMPT_KEYS.TRANSCRIPT),
     placeholder: "文字起こしテキストを貼り付けてください",
     inputLabel: "文字起こし",
     outputFormat: "plaintext",
     category: "document",
     color: "#14b8a6",
+    promptKey: PROMPT_KEYS.TRANSCRIPT,
   },
 ];
 
@@ -164,4 +189,14 @@ export function getGeneralGems(): Gem[] {
 /** プロポーザルのGemかチェック（動的プロンプトが必要） */
 export function isProposalGem(gemId: GemId): boolean {
   return gemId === "proposal";
+}
+
+/** プロポーザルのシステムプロンプトを更新（動的プログラム情報を反映） */
+export function updateProposalSystemPrompt(gem: Gem, programInfo: string, pastProposals: string): Gem {
+  if (gem.id !== "proposal") return gem;
+  
+  return {
+    ...gem,
+    systemPrompt: getProposalSystemPrompt(programInfo, pastProposals),
+  };
 }

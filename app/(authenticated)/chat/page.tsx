@@ -4,7 +4,7 @@ import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { FeatureChat } from "@/components/ui/FeatureChat";
 import { getGemById, GEMS, isProposalGem } from "@/lib/chat/gems";
-import { getProposalSystemPrompt } from "@/lib/prompts/proposal";
+import { updateProposalSystemPrompt } from "@/lib/chat/gems";
 import { featureIdToToolKey } from "@/lib/settings/db";
 import type { ChatFeatureId } from "@/lib/chat/chat-config";
 
@@ -53,11 +53,12 @@ function ChatPageContent() {
           const response = await fetch("/api/settings/program");
           if (response.ok) {
             const data = await response.json();
-            const prompt = getProposalSystemPrompt(
+            const updatedGem = updateProposalSystemPrompt(
+              selectedGem,
               data.programInfo || "",
               data.pastProposals || ""
             );
-            setSystemPrompt(prompt);
+            setSystemPrompt(updatedGem.systemPrompt);
           } else {
             setSystemPrompt(selectedGem.systemPrompt);
           }

@@ -8,8 +8,9 @@
 import { prisma } from "@/lib/prisma";
 import { SystemPrompt, SystemPromptVersion } from "@prisma/client";
 
-// 初期プロンプトデータ
-const DEFAULT_PROMPTS = [
+// 初期プロンプトデータ（Single Source of Truth）
+// DBが空の場合やフォールバック時に使用
+export const DEFAULT_PROMPTS = [
   {
     id: "prompt_general_chat",
     key: "GENERAL_CHAT",

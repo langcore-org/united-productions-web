@@ -3,7 +3,7 @@
  *
  * xAI APIを使用したLLMクライアント実装
  * 対応モデル: grok-4-1-fast-reasoning, grok-4-0709
- * X Searchツール使用可能
+ * X Searchツール使用可能（Responses API経由）
  */
 
 import { LLMClient, LLMMessage, LLMResponse, LLMProvider } from '../types';
@@ -20,8 +20,8 @@ export const GROK_TOOLS = {
     type: 'web_search' as const,
     description: 'Search the web for current information',
   },
-  live_search: {
-    type: 'live_search' as const,
+  x_search: {
+    type: 'x_search' as const,
     description: 'Search X (Twitter) for real-time information',
   },
   code_execution: {
@@ -45,49 +45,87 @@ export interface GrokToolOptions {
 }
 
 /**
- * xAI APIレスポンス型（ツール対応）
+ * xAI Responses APIレスポンス型
  */
-interface XAIChatResponse {
+interface XAIResponse {
   id: string;
   object: string;
   created: number;
+  completed_at: number;
   model: string;
-  choices: {
-    index: number;
-    message: {
-      role: string;
-      content: string;
-    };
-    finish_reason: string;
-  }[];
+  output: Array<
+    | {
+        // メッセージ出力
+        id: string;
+        type: 'message';
+        role: string;
+        content: Array<{
+          type: 'output_text';
+          text: string;
+          annotations?: Array<{
+            type: 'url_citation';
+            url: string;
+            title?: string;
+          }>;
+        }>;
+        status: string;
+      }
+    | {
+        // ツール呼び出し
+        id: string;
+        type: 'web_search_call' | 'custom_tool_call';
+        status: string;
+        call_id?: string;
+        name?: string;
+        input?: string;
+      }
+  >;
   usage: {
-    prompt_tokens: number;
-    completion_tokens: number;
+    input_tokens: number;
+    output_tokens: number;
     total_tokens: number;
+    input_tokens_details?: {
+      cached_tokens: number;
+    };
+    output_tokens_details?: {
+      reasoning_tokens: number;
+    };
+    cost_in_usd_ticks?: number;
+    num_sources_used?: number;
+    num_server_side_tools_used?: number;
+    server_side_tool_usage_details?: {
+      web_search_calls: number;
+      x_search_calls: number;
+      code_interpreter_calls: number;
+      file_search_calls: number;
+      mcp_calls: number;
+      document_search_calls: number;
+    };
   };
+  tools?: Array<{
+    type: string;
+  }>;
 }
 
 /**
- * xAI APIストリーミングレスポンス型
+ * xAI Responses APIストリーミングレスポンス型
  */
-interface XAIStreamChunk {
+interface XAIResponseStreamChunk {
   id: string;
   object: string;
   created: number;
   model: string;
-  choices: {
-    index: number;
-    delta: {
-      role?: string;
-      content?: string;
-    };
-    finish_reason: string | null;
-  }[];
-  usage?: {
-    prompt_tokens: number;
-    completion_tokens: number;
-    total_tokens: number;
-  };
+  output: Array<{
+    id?: string;
+    type?: string;
+    content?: Array<{
+      type?: string;
+      text?: string;
+      delta?: string;
+    }>;
+    delta?: string;
+  }>;
+  usage?: XAIResponse['usage'];
 }
 
 /**
@@ -115,7 +153,7 @@ export class GrokClient implements LLMClient {
   constructor(provider: LLMProvider, toolOptions?: GrokToolOptions) {
     this.provider = provider;
     this.model = this.getModelName(provider);
-    // 2026-02-20: デフォルトで全ツール有効（DB設定不要）
+    // 2026-02-20: Responses APIを使用してツールを再有効化
     this.toolOptions = {
       enableWebSearch: true,
       enableXSearch: true,
@@ -162,15 +200,15 @@ export class GrokClient implements LLMClient {
   /**
    * ツール設定を取得
    */
-  private getTools(): unknown[] | undefined {
-    const tools: unknown[] = [];
+  private getTools(): Array<{ type: string }> | undefined {
+    const tools: Array<{ type: string }> = [];
     
     if (this.toolOptions.enableWebSearch) {
       tools.push({ type: 'web_search' });
     }
     
     if (this.toolOptions.enableXSearch) {
-      tools.push({ type: 'live_search' });
+      tools.push({ type: 'x_search' });
     }
     
     if (this.toolOptions.enableCodeExecution) {
@@ -185,7 +223,17 @@ export class GrokClient implements LLMClient {
   }
 
   /**
-   * チャット完了を取得
+   * メッセージをResponses API形式に変換
+   */
+  private convertMessages(messages: LLMMessage[]): Array<{ role: string; content: string }> {
+    return messages.map(msg => ({
+      role: msg.role,
+      content: msg.content,
+    }));
+  }
+
+  /**
+   * チャット完了を取得（Responses API使用）
    */
   async chat(messages: LLMMessage[]): Promise<LLMResponse> {
     logger.info('Starting chat request', { 
@@ -196,14 +244,11 @@ export class GrokClient implements LLMClient {
     
     const requestBody: {
       model: string;
-      messages: { role: string; content: string }[];
-      tools?: unknown[];
+      input: Array<{ role: string; content: string }>;
+      tools?: Array<{ type: string }>;
     } = {
       model: this.model,
-      messages: messages.map(msg => ({
-        role: msg.role,
-        content: msg.content,
-      })),
+      input: this.convertMessages(messages),
     };
 
     // ツールが有効な場合は追加
@@ -212,7 +257,7 @@ export class GrokClient implements LLMClient {
       requestBody.tools = tools;
     }
     
-    const response = await fetch(`${this.baseUrl}/chat/completions`, {
+    const response = await fetch(`${this.baseUrl}/responses`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -227,21 +272,33 @@ export class GrokClient implements LLMClient {
       throw new Error(`xAI API error: ${response.status} ${errorText}`);
     }
 
-    const data: XAIChatResponse = await response.json();
+    const data: XAIResponse = await response.json();
     
-    const content = data.choices[0]?.message?.content || '';
+    // メッセージ出力を抽出
+    const messageOutput = data.output.find(item => item.type === 'message');
+    const content = messageOutput && 'content' in messageOutput 
+      ? messageOutput.content.map(c => c.text).join('') 
+      : '';
+    
     const usage = data.usage;
     
-    // コスト計算
+    // コスト計算（USD ticksからUSDに変換）
     const providerInfo = getProviderInfo(this.provider);
-    const inputTokens = usage?.prompt_tokens || 0;
-    const outputTokens = usage?.completion_tokens || 0;
-    const cost = Number(
-      (
-        (inputTokens / 1000000) * providerInfo.inputPrice +
-        (outputTokens / 1000000) * providerInfo.outputPrice
-      ).toFixed(6)
-    );
+    const inputTokens = usage?.input_tokens || 0;
+    const outputTokens = usage?.output_tokens || 0;
+    
+    // cost_in_usd_ticksがある場合はそれを使用、なければ計算
+    let cost: number;
+    if (usage?.cost_in_usd_ticks) {
+      cost = Number((usage.cost_in_usd_ticks / 1000000000).toFixed(6));
+    } else {
+      cost = Number(
+        (
+          (inputTokens / 1000000) * providerInfo.inputPrice +
+          (outputTokens / 1000000) * providerInfo.outputPrice
+        ).toFixed(6)
+      );
+    }
 
     logger.info('Chat request completed', {
       inputTokens,
@@ -249,6 +306,7 @@ export class GrokClient implements LLMClient {
       cost: cost.toFixed(6),
       contentLength: content.length,
       webSearchEnabled: this.toolOptions.enableWebSearch,
+      toolsUsed: usage?.server_side_tool_usage_details,
     });
 
     return {
@@ -274,15 +332,12 @@ export class GrokClient implements LLMClient {
     
     const requestBody: {
       model: string;
-      messages: { role: string; content: string }[];
+      input: Array<{ role: string; content: string }>;
       stream: boolean;
-      tools?: unknown[];
+      tools?: Array<{ type: string }>;
     } = {
       model: this.model,
-      messages: messages.map(msg => ({
-        role: msg.role,
-        content: msg.content,
-      })),
+      input: this.convertMessages(messages),
       stream: true,
     };
 
@@ -292,7 +347,7 @@ export class GrokClient implements LLMClient {
       requestBody.tools = tools;
     }
     
-    const response = await fetch(`${this.baseUrl}/chat/completions`, {
+    const response = await fetch(`${this.baseUrl}/responses`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -348,27 +403,43 @@ export class GrokClient implements LLMClient {
           }
 
           try {
-            const chunk: XAIStreamChunk = JSON.parse(data);
-            const content = chunk.choices[0]?.delta?.content;
+            const chunk: XAIResponseStreamChunk = JSON.parse(data);
             
-            // コンテンツをyield
-            if (content) {
-              chunkCount++;
-              totalLength += content.length;
-              yield { chunk: content };
+            // コンテンツを抽出
+            const outputItem = chunk.output?.[0];
+            if (outputItem) {
+              // テキストチャンク
+              if (outputItem.content?.[0]?.delta) {
+                const text = outputItem.content[0].delta;
+                chunkCount++;
+                totalLength += text.length;
+                yield { chunk: text };
+              }
+              // 直接deltaがある場合
+              else if (outputItem.delta) {
+                chunkCount++;
+                totalLength += outputItem.delta.length;
+                yield { chunk: outputItem.delta };
+              }
             }
             
-            // usage情報を記録（最後のチャンクに含まれる場合）
+            // usage情報を記録
             if (chunk.usage) {
               const providerInfo = getProviderInfo(this.provider);
-              const inputTokens = chunk.usage.prompt_tokens;
-              const outputTokens = chunk.usage.completion_tokens;
-              const cost = Number(
-                (
-                  (inputTokens / 1000000) * providerInfo.inputPrice +
-                  (outputTokens / 1000000) * providerInfo.outputPrice
-                ).toFixed(6)
-              );
+              const inputTokens = chunk.usage.input_tokens;
+              const outputTokens = chunk.usage.output_tokens;
+              
+              let cost: number;
+              if (chunk.usage.cost_in_usd_ticks) {
+                cost = Number((chunk.usage.cost_in_usd_ticks / 1000000000).toFixed(6));
+              } else {
+                cost = Number(
+                  (
+                    (inputTokens / 1000000) * providerInfo.inputPrice +
+                    (outputTokens / 1000000) * providerInfo.outputPrice
+                  ).toFixed(6)
+                );
+              }
               
               finalUsage = { inputTokens, outputTokens, cost };
               
@@ -392,22 +463,29 @@ export class GrokClient implements LLMClient {
           const data = trimmedLine.slice(6);
           if (data !== '[DONE]') {
             try {
-              const chunk: XAIStreamChunk = JSON.parse(data);
-              const content = chunk.choices[0]?.delta?.content;
-              if (content) {
-                yield { chunk: content };
+              const chunk: XAIResponseStreamChunk = JSON.parse(data);
+              const outputItem = chunk.output?.[0];
+              if (outputItem?.content?.[0]?.delta) {
+                yield { chunk: outputItem.content[0].delta };
+              } else if (outputItem?.delta) {
+                yield { chunk: outputItem.delta };
               }
-              // 最後のチャンクのusageをチェック
+              
               if (chunk.usage) {
                 const providerInfo = getProviderInfo(this.provider);
-                const inputTokens = chunk.usage.prompt_tokens;
-                const outputTokens = chunk.usage.completion_tokens;
-                const cost = Number(
-                  (
-                    (inputTokens / 1000000) * providerInfo.inputPrice +
-                    (outputTokens / 1000000) * providerInfo.outputPrice
-                  ).toFixed(6)
-                );
+                const inputTokens = chunk.usage.input_tokens;
+                const outputTokens = chunk.usage.output_tokens;
+                let cost: number;
+                if (chunk.usage.cost_in_usd_ticks) {
+                  cost = Number((chunk.usage.cost_in_usd_ticks / 1000000000).toFixed(6));
+                } else {
+                  cost = Number(
+                    (
+                      (inputTokens / 1000000) * providerInfo.inputPrice +
+                      (outputTokens / 1000000) * providerInfo.outputPrice
+                    ).toFixed(6)
+                  );
+                }
                 finalUsage = { inputTokens, outputTokens, cost };
               }
             } catch {
