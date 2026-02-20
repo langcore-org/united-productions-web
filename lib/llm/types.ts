@@ -6,20 +6,27 @@
  */
 
 /**
+ * LLMプロバイダー定数配列
+ * Single Source of Truth - 全てのプロバイダー定義はここから派生
+ */
+export const VALID_PROVIDERS = [
+  'gemini-2.5-flash-lite',
+  'gemini-3.0-flash',
+  'grok-4-1-fast-reasoning',
+  'grok-4-0709',
+  'gpt-4o-mini',
+  'gpt-5',
+  'claude-sonnet-4.5',
+  'claude-opus-4.6',
+  'perplexity-sonar',
+  'perplexity-sonar-pro',
+] as const;
+
+/**
  * LLMプロバイダー型
  * 全10モデルをサポート
  */
-export type LLMProvider =
-  | 'gemini-2.5-flash-lite'
-  | 'gemini-3.0-flash'
-  | 'grok-4-1-fast-reasoning'  // xAI Grok 4.1 Fast（推論モード）
-  | 'grok-4-0709'              // xAI Grok 4 標準版
-  | 'gpt-4o-mini'
-  | 'gpt-5'
-  | 'claude-sonnet-4.5'
-  | 'claude-opus-4.6'
-  | 'perplexity-sonar'
-  | 'perplexity-sonar-pro';
+export type LLMProvider = typeof VALID_PROVIDERS[number];
 
 /**
  * メッセージのロール型

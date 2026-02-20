@@ -5,7 +5,7 @@
  * Wave 2で各クライアントが実装された後、実際のインスタンス生成が有効になる
  */
 
-import { LLMProvider, LLMClient, LLMResponse } from './types';
+import { LLMProvider, LLMClient, LLMResponse, VALID_PROVIDERS } from './types';
 import { getProviderInfo } from './config';
 import { GeminiClient } from './clients/gemini';
 import { PerplexityClient } from './clients/perplexity';
@@ -87,19 +87,7 @@ export function createLLMClient(provider: LLMProvider): LLMClient {
  * @returns 有効な場合はtrue
  */
 export function isValidProvider(provider: string): provider is LLMProvider {
-  const validProviders: LLMProvider[] = [
-    'gemini-2.5-flash-lite',
-    'gemini-3.0-flash',
-    'grok-4-1-fast-reasoning',
-    'grok-4-0709',
-    'gpt-4o-mini',
-    'gpt-5',
-    'claude-sonnet-4.5',
-    'claude-opus-4.6',
-    'perplexity-sonar',
-    'perplexity-sonar-pro',
-  ];
-  return validProviders.includes(provider as LLMProvider);
+  return VALID_PROVIDERS.includes(provider as LLMProvider);
 }
 
 /**
@@ -123,11 +111,11 @@ export function getSameVendorProviders(provider: LLMProvider): LLMProvider[] {
   const vendor = info.provider;
   
   const vendorMap: Record<string, LLMProvider[]> = {
-    'Google': ['gemini-2.5-flash-lite', 'gemini-3.0-flash'],
-    'xAI': ['grok-4-1-fast-reasoning', 'grok-4-0709'],
-    'OpenAI': ['gpt-4o-mini', 'gpt-5'],
-    'Anthropic': ['claude-sonnet-4.5', 'claude-opus-4.6'],
-    'Perplexity': ['perplexity-sonar', 'perplexity-sonar-pro'],
+    'Google': VALID_PROVIDERS.filter(p => p.startsWith('gemini-')),
+    'xAI': VALID_PROVIDERS.filter(p => p.startsWith('grok-')),
+    'OpenAI': VALID_PROVIDERS.filter(p => p.startsWith('gpt-')),
+    'Anthropic': VALID_PROVIDERS.filter(p => p.startsWith('claude-')),
+    'Perplexity': VALID_PROVIDERS.filter(p => p.startsWith('perplexity-')),
   };
   
   return vendorMap[vendor] || [provider];
