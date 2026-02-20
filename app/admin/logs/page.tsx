@@ -213,12 +213,12 @@ export default function LogsPage() {
                   />
                 </div>
 
-                <Select value={selectedLevel} onValueChange={setSelectedLevel}>
+                <Select value={selectedLevel || "all"} onValueChange={(v) => setSelectedLevel(v === "all" ? "" : v)}>
                   <SelectTrigger className="w-[150px]">
                     <SelectValue placeholder="レベル" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">すべて</SelectItem>
+                    <SelectItem value="all">すべて</SelectItem>
                     {LOG_LEVELS.map((level) => (
                       <SelectItem key={level.value} value={level.value}>
                         {level.label}
@@ -227,12 +227,12 @@ export default function LogsPage() {
                   </SelectContent>
                 </Select>
 
-                <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                <Select value={selectedCategory || "all"} onValueChange={(v) => setSelectedCategory(v === "all" ? "" : v)}>
                   <SelectTrigger className="w-[180px]">
                     <SelectValue placeholder="カテゴリ" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">すべて</SelectItem>
+                    <SelectItem value="all">すべて</SelectItem>
                     {LOG_CATEGORIES.map((cat) => (
                       <SelectItem key={cat.value} value={cat.value}>
                         {cat.label}
