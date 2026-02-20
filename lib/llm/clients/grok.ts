@@ -117,8 +117,18 @@ interface XAIStreamEvent {
   content_index?: number;
   item_id?: string;
   output_index?: number;
-  response?: XAIResponse;
+  response?: XAIResponse & {
+    reasoning?: { effort?: string; summary?: string };
+  };
   usage?: XAIResponse['usage'];
+  item?: {
+    id: string;
+    type: string;
+    status: string;
+    name?: string;
+    input?: string;
+    call_id?: string;
+  };
 }
 
 /**
@@ -317,7 +327,13 @@ export class GrokClient implements LLMClient {
    * ストリーミングレスポンスを取得（usage付き）
    * 返り値: { content: string, usage?: { inputTokens, outputTokens, cost } }
    */
-  async *streamWithUsage(messages: LLMMessage[]): AsyncIterable<{ chunk?: string; usage?: { inputTokens: number; outputTokens: number; cost: number } }> {
+  async *streamWithUsage(messages: LLMMessage[]): AsyncIterable<{ 
+    chunk?: string; 
+    usage?: { inputTokens: number; outputTokens: number; cost: number };
+    toolCall?: { id: string; type: string; name?: string; input?: string; status: 'pending' | 'running' | 'completed' | 'failed' };
+    toolUsage?: { web_search_calls?: number; x_search_calls?: number; code_interpreter_calls?: number; file_search_calls?: number; mcp_calls?: number; document_search_calls?: number };
+    reasoning?: { step: number; content: string; tokens?: number };
+  }> {
     logger.info('Starting stream request with usage tracking', { 
       messageCount: messages.length, 
       model: this.model,
@@ -414,6 +430,52 @@ export class GrokClient implements LLMClient {
               yield { chunk: text };
             }
             
+            // ツール呼び出しの検出
+            if (event.type === 'response.output_item.added' && event.item) {
+              const item = event.item;
+              if (item.type === 'web_search_call') {
+                yield { 
+                  toolCall: { 
+                    id: item.id, 
+                    type: 'web_search', 
+                    status: item.status === 'completed' ? 'completed' : 'running' 
+                  } 
+                };
+              } else if (item.type === 'custom_tool_call') {
+                yield { 
+                  toolCall: { 
+                    id: item.id, 
+                    type: item.name || 'custom_tool', 
+                    name: item.name,
+                    input: item.input,
+                    status: item.status === 'completed' ? 'completed' : 'running' 
+                  } 
+                };
+              } else if (item.type === 'code_interpreter_call') {
+                yield { 
+                  toolCall: { 
+                    id: item.id, 
+                    type: 'code_interpreter', 
+                    status: item.status === 'completed' ? 'completed' : 'running' 
+                  } 
+                };
+              }
+            }
+            
+            // 推論ステップの検出（reasoning_tokensがある場合）
+            if (event.type === 'response.reasoning' && event.response?.reasoning) {
+              const reasoning = event.response.reasoning;
+              if (reasoning.summary) {
+                yield { 
+                  reasoning: { 
+                    step: 1, 
+                    content: reasoning.summary,
+                    tokens: event.response.usage?.output_tokens_details?.reasoning_tokens 
+                  } 
+                };
+              }
+            }
+            
             // usage情報を記録（response.completedイベントで）
             if (event.type === 'response.completed' && event.response?.usage) {
               const usage = event.response.usage;
@@ -435,10 +497,16 @@ export class GrokClient implements LLMClient {
               
               finalUsage = { inputTokens, outputTokens, cost };
               
+              // ツール使用状況も返す
+              if (usage.server_side_tool_usage_details) {
+                yield { toolUsage: usage.server_side_tool_usage_details };
+              }
+              
               logger.info('Stream usage received', {
                 inputTokens,
                 outputTokens,
                 cost: cost.toFixed(6),
+                toolUsage: usage.server_side_tool_usage_details,
               });
             }
           } catch {

@@ -1,6 +1,6 @@
 # コードベースリファクタリング調査レポート
 
-> **最終更新**: 2026-02-20 19:00
+> **最終更新**: 2026-02-20 20:45
 
 ---
 
@@ -172,24 +172,76 @@
 ### 高優先度（即座に対応推奨）
 
 1. ✅ **LLMプロバイダー定義の統一** - `VALID_PROVIDERS` を `types.ts` に集約（2026-02-20完了）
+   - `lib/llm/types.ts` に `VALID_PROVIDERS` 配列を追加
+   - `lib/llm/factory.ts` の `isValidProvider` がこれを参照
+   - `getSameVendorProviders` も動的に生成
+
 2. ✅ **StreamingMessageコンポーネントの統合** - 3つを1つに統合（2026-02-20完了）
+   - `components/ui/StreamingMessage.tsx` を統合版に刷新
+   - `variant` プロパティで表示モードを切り替え（'default' | 'chat'）
+   - 削除: `components/chat/StreamingMessage.tsx`
+   - 削除: `components/research/message/StreamingMessage.tsx`
+
 3. ✅ **ChatMessageコンポーネントの統合** - 2つを1つに統合（2026-02-20完了）
+   - `components/chat/ChatMessage.tsx` を統合版に更新
+   - `ResearchMessage` 型も受け入れるように変更
+   - 削除: `components/research/message/ChatMessage.tsx`
+
 4. ✅ **useChat/useLLMフックの統合** - useLLMにuseLLMStreamを統合（2026-02-20完了）
+   - `hooks/use-llm.ts` に `streamState`, `startStream`, `cancelStream`, `resetStream` を追加
+   - `components/ui/StreamingMessage.tsx` から `useLLMStream` を削除
+
 5. ✅ **プロンプト定義の統一** - DB管理に一本化（2026-02-20完了）
+   - 削除: `lib/prompts/general-chat.ts`, `minutes.ts`, `na-script.ts`, `proposal.ts`
+   - 削除: `lib/prompts/research-*.ts`, `transcript.ts`
+   - `lib/prompts/db.ts` の `DEFAULT_PROMPTS` を Single Source of Truth に
+   - `lib/chat/gems.ts` と `lib/chat/chat-config.ts` を更新
 
 ### 中優先度（計画的な対応）
 
 6. ✅ **レート制限設定の統合** - `lib/llm/config.ts` の `FREE_TIER_LIMITS` を Single Source of Truth に（2026-02-20完了）
+   - `lib/rate-limit.ts` の `DEFAULT_RATE_LIMITS` が `FREE_TIER_LIMITS` を参照するように変更
+
 7. ✅ **ロガー実装の統合** - クライアント/サーバー用を明確に分離（2026-02-20完了）
+   - `lib/logger.ts` - クライアントサイド用（シンプル版）
+   - `lib/logger/index.ts` - サーバーサイド用（DB記録機能付き）
+
 8. **SSEストリーミング処理の共通化** - 一部統合済み、完全統合は将来対応
+   - `useLLM` フックに統合済み
+   - `lib/api/handler.ts` と `app/api/llm/stream/route.ts` の重複は残存
+
 9. **チャット機能定義（Gem/ChatFeature）の統一** - 用途が異なるため現状維持
+   - `Gem` - URLパラメータ（`?gem=xxx`）用
+   - `ChatFeature` - コンポーネント設定用
 
 ### 低優先度（余裕がある場合）
 
-9. **コメントアウトコードの削除**
-10. **型アサーションの削減**
-11. **FeatureChatコンポーネントの分割**
-12. **テストの追加**
+10. **コメントアウトコードの削除**
+11. **型アサーションの削減**
+12. **FeatureChatコンポーネントの分割**
+13. **テストの追加**
+
+---
+
+## 削除されたファイル一覧
+
+リファクタリングにより削除されたファイル：
+
+### コンポーネント
+- `components/chat/StreamingMessage.tsx` → `components/ui/StreamingMessage.tsx` に統合
+- `components/research/message/StreamingMessage.tsx` → `components/ui/StreamingMessage.tsx` に統合
+- `components/research/message/ChatMessage.tsx` → `components/chat/ChatMessage.tsx` に統合
+
+### プロンプトファイル（DB管理に一本化）
+- `lib/prompts/general-chat.ts`
+- `lib/prompts/minutes.ts`
+- `lib/prompts/na-script.ts`
+- `lib/prompts/proposal.ts`
+- `lib/prompts/research-cast.ts`
+- `lib/prompts/research-evidence.ts`
+- `lib/prompts/research-info.ts`
+- `lib/prompts/research-location.ts`
+- `lib/prompts/transcript.ts`
 
 ---
 

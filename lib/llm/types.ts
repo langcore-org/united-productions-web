@@ -66,6 +66,36 @@ export interface LLMResponse {
 }
 
 /**
+ * ツール呼び出し情報
+ */
+export interface ToolCallInfo {
+  /** ツールID */
+  id: string;
+  /** ツールタイプ */
+  type: string;
+  /** ツール名 */
+  name?: string;
+  /** 入力パラメータ */
+  input?: string;
+  /** ステータス */
+  status: 'pending' | 'running' | 'completed' | 'failed';
+  /** 実行結果 */
+  result?: string;
+}
+
+/**
+ * 思考ステップ情報
+ */
+export interface ReasoningStep {
+  /** ステップ番号 */
+  step: number;
+  /** 思考内容 */
+  content: string;
+  /** 推論トークン数 */
+  tokens?: number;
+}
+
+/**
  * LLMストリーミングチャンク
  */
 export interface LLMStreamChunk {
@@ -75,6 +105,19 @@ export interface LLMStreamChunk {
   thinking?: string;
   /** 最後のチャンクかどうか */
   isDone?: boolean;
+  /** ツール呼び出し情報 */
+  toolCall?: ToolCallInfo;
+  /** 思考ステップ */
+  reasoningStep?: ReasoningStep;
+  /** ツール使用状況の更新 */
+  toolUsage?: {
+    web_search_calls?: number;
+    x_search_calls?: number;
+    code_interpreter_calls?: number;
+    file_search_calls?: number;
+    mcp_calls?: number;
+    document_search_calls?: number;
+  };
 }
 
 /**
