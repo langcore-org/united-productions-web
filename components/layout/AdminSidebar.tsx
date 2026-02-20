@@ -12,7 +12,7 @@ import {
   LogOut,
   Bot,
 } from "lucide-react";
-import { TeddyIcon } from "@/components/icons/TeddyIcon";
+// import { TeddyIcon } from "@/components/icons/TeddyIcon"; // ロゴは非表示（将来使用予定）
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
@@ -122,7 +122,7 @@ export function AdminSidebar({ className, onCollapseChange }: AdminSidebarProps)
         className
       )}
     >
-      {/* Header */}
+      {/* Header - ロゴ非表示（将来使用予定）
       <div className={cn(
         "flex items-center h-14 bg-white",
         isCollapsed ? "px-2 justify-center" : "px-4"
@@ -137,6 +137,7 @@ export function AdminSidebar({ className, onCollapseChange }: AdminSidebarProps)
           )}
         </div>
       </div>
+      */}
 
       {/* Back to User View Link */}
       <div className={cn(

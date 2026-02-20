@@ -18,7 +18,7 @@ import {
   PanelLeft,
   Plus,
 } from "lucide-react";
-import { TeddyIcon } from "@/components/icons/TeddyIcon";
+// import { TeddyIcon } from "@/components/icons/TeddyIcon"; // ロゴは非表示（将来使用予定）
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
@@ -148,7 +148,7 @@ export function Sidebar({ className, onCollapseChange }: SidebarProps) {
         className
       )}
     >
-      {/* Header */}
+      {/* Header - ロゴ非表示（将来使用予定）
       <div className={cn(
         "flex items-center h-14 bg-[#f9f9f9]",
         isCollapsed ? "px-2 justify-center" : "px-4"
@@ -160,6 +160,7 @@ export function Sidebar({ className, onCollapseChange }: SidebarProps) {
           )}
         </div>
       </div>
+      */}
 
       {/* New Chat Buttons */}
       <nav className="flex-1 overflow-y-auto flex flex-col min-h-0 bg-[#f9f9f9] custom-scrollbar">
