@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { ChatMessageType, ChatStreamState } from "@/components/chat";
 import { LLMProvider } from "@/lib/llm/types";
 import { createClientLogger } from "@/lib/logger";
+import { ProcessingStep, defaultProcessingSteps, startProcessingStep, completeProcessingStep, failProcessingStep } from "@/components/chat/ProcessingFlow";
 
 const logger = createClientLogger("useChat");
 
@@ -33,6 +34,7 @@ export function useChat(options: UseChatOptions) {
   });
 
   const abortControllerRef = useRef<AbortController | null>(null);
+  const [processingSteps, setProcessingSteps] = useState<ProcessingStep[]>([]);
 
   // クリーンアップ
   useEffect(() => {
@@ -52,6 +54,9 @@ export function useChat(options: UseChatOptions) {
       });
 
       setIsStreaming(true);
+      // 処理フローを初期化
+      const initialSteps = defaultProcessingSteps.map(s => ({ ...s }));
+      setProcessingSteps(initialSteps);
       setStreamState({
         content: "",
         thinking: "",
@@ -63,6 +68,9 @@ export function useChat(options: UseChatOptions) {
         reasoningSteps: [],
         reasoningTokens: 0,
       });
+      
+      // ステップ1: ユーザー入力を完了
+      setProcessingSteps(prev => completeProcessingStep(prev, "user-input"));
 
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
@@ -71,6 +79,9 @@ export function useChat(options: UseChatOptions) {
       abortControllerRef.current = abortController;
 
       try {
+        // ステップ2: リクエスト準備
+        setProcessingSteps(prev => startProcessingStep(prev, "request-prepare"));
+        
         const requestBody = {
           messages: [
             {
@@ -88,6 +99,11 @@ export function useChat(options: UseChatOptions) {
 
         logger.info(`[${requestId}] Sending request`, { endpoint: apiEndpoint });
         logger.debug(`[${requestId}] Request body`, { body: requestBody });
+        
+        setProcessingSteps(prev => completeProcessingStep(prev, "request-prepare"));
+        
+        // ステップ3: APIリクエスト
+        setProcessingSteps(prev => startProcessingStep(prev, "api-request"));
 
         const response = await fetch(apiEndpoint, {
           method: "POST",
@@ -95,8 +111,13 @@ export function useChat(options: UseChatOptions) {
           body: JSON.stringify(requestBody),
           signal: abortController.signal,
         });
+        
+        setProcessingSteps(prev => completeProcessingStep(prev, "api-request"));
 
         logger.info(`[${requestId}] Response received`, { status: response.status });
+        
+        // ステップ4: LLM処理開始
+        setProcessingSteps(prev => startProcessingStep(prev, "llm-processing"));
 
         if (!response.ok) {
           let errorData: { error?: string; message?: string; requestId?: string } = {};
@@ -122,6 +143,13 @@ export function useChat(options: UseChatOptions) {
         }
 
         logger.info(`[${requestId}] Starting to read stream`);
+        
+        // ステップ5: ツール実行（必要に応じて）
+        setProcessingSteps(prev => startProcessingStep(prev, "tool-execution"));
+        
+        // ステップ6: ストリーミング
+        setProcessingSteps(prev => completeProcessingStep(prev, "tool-execution"));
+        setProcessingSteps(prev => startProcessingStep(prev, "streaming"));
 
         const decoder = new TextDecoder();
         let buffer = "";
@@ -239,11 +267,20 @@ export function useChat(options: UseChatOptions) {
           }
         }
 
+        // ステップ7: レスポンス解析
+        setProcessingSteps(prev => completeProcessingStep(prev, "streaming"));
+        setProcessingSteps(prev => startProcessingStep(prev, "response-parse"));
+        
         logger.info(`[${requestId}] Stream completed`, { 
           contentLength: fullContent.length,
           thinkingLength: fullThinking.length,
           chunkCount,
         });
+        
+        setProcessingSteps(prev => completeProcessingStep(prev, "response-parse"));
+        
+        // ステップ8: UI描画
+        setProcessingSteps(prev => startProcessingStep(prev, "ui-render"));
 
         setMessages((prev) => [
           ...prev,
@@ -256,6 +293,12 @@ export function useChat(options: UseChatOptions) {
             thinking: fullThinking || undefined,
           },
         ]);
+        
+        setProcessingSteps(prev => completeProcessingStep(prev, "ui-render"));
+        
+        // ステップ9: 完了
+        setProcessingSteps(prev => startProcessingStep(prev, "complete"));
+        setProcessingSteps(prev => completeProcessingStep(prev, "complete"));
 
         setStreamState((prev) => ({ ...prev, isComplete: true }));
       } catch (error) {
@@ -263,6 +306,15 @@ export function useChat(options: UseChatOptions) {
           logger.info(`[${requestId}] Stream aborted by user`);
           return;
         }
+        
+        // エラー時は現在のステップを失敗に
+        setProcessingSteps(prev => {
+          const runningStep = prev.find(s => s.status === "running");
+          if (runningStep) {
+            return failProcessingStep(prev, runningStep.id, errorMessage);
+          }
+          return prev;
+        });
         
         const errorMessage = error instanceof Error ? error.message : "Unknown error";
         logger.error(`[${requestId}] Stream error`, { error: errorMessage });
@@ -378,6 +430,7 @@ export function useChat(options: UseChatOptions) {
     isLoading,
     isStreaming,
     streamState,
+    processingSteps,
 
     // Setters
     setInput,

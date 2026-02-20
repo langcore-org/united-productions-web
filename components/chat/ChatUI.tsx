@@ -7,7 +7,12 @@ import { ChatMessage } from "./ChatMessage";
 import { ChatInput } from "./ChatInput";
 import { EmptyState } from "./EmptyState";
 import { StreamingMessage } from "@/components/ui/StreamingMessage";
+import { ProcessingFlow, ProcessingStep } from "./ProcessingFlow";
 import type { ChatMessage as ChatMessageType, ChatUIProps } from "./types";
+
+export interface ExtendedChatUIProps extends ChatUIProps {
+  processingSteps?: ProcessingStep[];
+}
 
 export function ChatUI({
   messages,
@@ -24,7 +29,8 @@ export function ChatUI({
   onCancel,
   onKeyDown,
   className,
-}: ChatUIProps) {
+  processingSteps = [],
+}: ExtendedChatUIProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { placeholder, showThinking = true, showCitations = true } = config;
 
@@ -58,6 +64,11 @@ export function ChatUI({
                 showCitations={showCitations}
               />
             ))}
+
+            {/* Processing Flow */}
+            {isStreaming && processingSteps.length > 0 && (
+              <ProcessingFlow steps={processingSteps} className="mb-4" />
+            )}
 
             {/* Streaming Message */}
             {isStreaming && streamState && (
