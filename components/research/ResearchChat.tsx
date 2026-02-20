@@ -7,7 +7,7 @@ import { useResearchChat } from "@/hooks/useResearchChat";
 import { AgentTabs } from "./AgentTabs";
 import { ChatInput } from "./ChatInput";
 import { EmptyState } from "./EmptyState";
-import { ChatMessage } from "./message/ChatMessage";
+import { ChatMessage } from "@/components/chat/ChatMessage";
 import { StreamingMessage } from "@/components/ui/StreamingMessage";
 
 

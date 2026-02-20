@@ -3,9 +3,10 @@
 import { cn } from "@/lib/utils";
 import { Bot, User, Lightbulb } from "lucide-react";
 import { ChatMessage as ChatMessageType } from "./types";
+import { ResearchMessage } from "@/types/research";
 
 interface ChatMessageProps {
-  message: ChatMessageType;
+  message: ChatMessageType | ResearchMessage;
   showThinking?: boolean;
   showCitations?: boolean;
 }
