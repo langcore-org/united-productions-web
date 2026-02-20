@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Send, Copy, Check, Loader2, Sparkles, MessageSquare, Trash2, RotateCcw } from "lucide-react";
 import { WordExportButton } from "./WordExportButton";
-import { useLLMStream, StreamingMessage, type ToolOptions } from "./StreamingMessage";
+import { StreamingMessage, type ToolOptions } from "./StreamingMessage";
+import { useLLM } from "@/hooks/use-llm";
 import { MessageBubble } from "./MessageBubble";
 import { FileAttachButton, AttachedFile } from "./FileAttachment";
 import { DEFAULT_PROVIDER } from "@/lib/llm/config";
@@ -63,15 +64,11 @@ export function FeatureChat({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const {
-    content,
-    thinking,
-    isComplete,
-    error,
-    usage,
+    streamState: { content, thinking, isComplete, error, usage },
     startStream,
     cancelStream,
     resetStream,
-  } = useLLMStream();
+  } = useLLM();
 
   // 会話履歴を取得
   const loadConversation = useCallback(async () => {
