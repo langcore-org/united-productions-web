@@ -113,6 +113,7 @@ export function ChatPage({ featureId }: ChatPageProps) {
       inputLabel={config.inputLabel}
       outputFormat={config.outputFormat}
       toolOptions={getToolOptions()}
+      promptSuggestions={config.promptSuggestions}
     />
   );
 }

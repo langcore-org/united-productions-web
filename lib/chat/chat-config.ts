@@ -8,6 +8,7 @@
  */
 
 import { DEFAULT_PROMPTS, PROMPT_KEYS } from "@/lib/prompts/db";
+import { PromptSuggestion } from "@/components/chat/PromptSuggestions";
 
 // ============================================
 // ツール設定
@@ -55,6 +56,7 @@ export interface ChatFeatureConfig {
   description?: string;
   promptKey: string; // DBプロンプトキー
   toolOptions: ToolOptions; // デフォルトツール設定
+  promptSuggestions?: PromptSuggestion[]; // プロンプトサジェスト
 }
 
 // デフォルトプロンプトをキーで検索するヘルパー
@@ -91,6 +93,11 @@ export const chatFeatureConfigs: Record<ChatFeatureId, ChatFeatureConfig> = {
     description: "一般的な質問や相談",
     promptKey: PROMPT_KEYS.GENERAL_CHAT,
     toolOptions: featureToolDefaults["general-chat"],
+    promptSuggestions: [
+      { id: "1", text: "もっと詳しく教えて" },
+      { id: "2", text: "具体例を挙げて" },
+      { id: "3", text: "別の視点から考えて" },
+    ],
   },
   "research-cast": {
     featureId: "research-cast",
@@ -102,6 +109,12 @@ export const chatFeatureConfigs: Record<ChatFeatureId, ChatFeatureConfig> = {
     description: "企画に適した出演者候補を提案",
     promptKey: PROMPT_KEYS.RESEARCH_CAST,
     toolOptions: featureToolDefaults["research-cast"],
+    promptSuggestions: [
+      { id: "1", text: "最も出演可能性が高い候補3名について、具体的なプレゼン企画書を作成してください" },
+      { id: "2", text: "これらの候補者の中から、番組プロデューサーへの売り込み用のピッチ資料（スライド形式）を作ってください" },
+      { id: "3", text: "過去の「マツコの知らない世界」で高視聴率を記録した回の傾向を分析して、成功パターンを表にまとめてください" },
+      { id: "4", text: "実在する候補者を具体的にリサーチして、連絡先や実績とともにリスト化してください" },
+    ],
   },
   "research-location": {
     featureId: "research-location",
@@ -113,6 +126,11 @@ export const chatFeatureConfigs: Record<ChatFeatureId, ChatFeatureConfig> = {
     description: "ロケ地候補と撮影条件を調査",
     promptKey: PROMPT_KEYS.RESEARCH_LOCATION,
     toolOptions: featureToolDefaults["research-location"],
+    promptSuggestions: [
+      { id: "1", text: "撮影許可の取り方や費用について詳しく調査してください" },
+      { id: "2", text: "この場所へのアクセス方法と撮影に最適な時間帯を教えて" },
+      { id: "3", text: "類似のロケ地を他に3つ提案してください" },
+    ],
   },
   "research-info": {
     featureId: "research-info",
@@ -124,6 +142,11 @@ export const chatFeatureConfigs: Record<ChatFeatureId, ChatFeatureConfig> = {
     description: "テーマに関する情報を収集・整理",
     promptKey: PROMPT_KEYS.RESEARCH_INFO,
     toolOptions: featureToolDefaults["research-info"],
+    promptSuggestions: [
+      { id: "1", text: "この情報を表やグラフにまとめて" },
+      { id: "2", text: "出典を含めてより詳細なレポートを作成して" },
+      { id: "3", text: "このテーマに関連する最新ニュースを調べて" },
+    ],
   },
   "research-evidence": {
     featureId: "research-evidence",
@@ -135,6 +158,11 @@ export const chatFeatureConfigs: Record<ChatFeatureId, ChatFeatureConfig> = {
     description: "情報の真偽を検証",
     promptKey: PROMPT_KEYS.RESEARCH_EVIDENCE,
     toolOptions: featureToolDefaults["research-evidence"],
+    promptSuggestions: [
+      { id: "1", text: "この主張の信憑性をさらに深く検証してください" },
+      { id: "2", text: "反対の意見や反論も調査して提示してください" },
+      { id: "3", text: "専門家の見解や学術的な根拠を追加で調べて" },
+    ],
   },
   minutes: {
     featureId: "minutes",
@@ -147,6 +175,11 @@ export const chatFeatureConfigs: Record<ChatFeatureId, ChatFeatureConfig> = {
     description: "文字起こしから議事録を作成",
     promptKey: PROMPT_KEYS.MINUTES,
     toolOptions: featureToolDefaults["minutes"],
+    promptSuggestions: [
+      { id: "1", text: "議事録をMarkdown形式で整形して" },
+      { id: "2", text: "ToDoリストだけを抽出して" },
+      { id: "3", text: "決定事項を箇条書きでまとめて" },
+    ],
   },
   proposal: {
     featureId: "proposal",
@@ -158,6 +191,11 @@ export const chatFeatureConfigs: Record<ChatFeatureId, ChatFeatureConfig> = {
     description: "番組情報を基に新企画を提案",
     promptKey: PROMPT_KEYS.PROPOSAL,
     toolOptions: featureToolDefaults["proposal"],
+    promptSuggestions: [
+      { id: "1", text: "この企画をより具体的に詳細化してください" },
+      { id: "2", text: "予算とスケジュール案も追加してください" },
+      { id: "3", text: "類似企画との差別化ポイントを強調してください" },
+    ],
   },
   "na-script": {
     featureId: "na-script",
@@ -170,6 +208,11 @@ export const chatFeatureConfigs: Record<ChatFeatureId, ChatFeatureConfig> = {
     description: "文字起こし整形・NA原稿作成",
     promptKey: PROMPT_KEYS.TRANSCRIPT,
     toolOptions: featureToolDefaults["na-script"],
+    promptSuggestions: [
+      { id: "1", text: "読みやすく段落分けして整形してください" },
+      { id: "2", text: "NA原稿形式（テロップ指示付き）に変換してください" },
+      { id: "3", text: "重要なポイントだけを箇条書きで抽出してください" },
+    ],
   },
 };
 

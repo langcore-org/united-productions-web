@@ -13,6 +13,7 @@ import type { LLMProvider } from "@/lib/llm/types";
 import { AgenticResponse } from "@/components/chat/AgenticResponse";
 import { useLLMStream } from "@/components/ui/StreamingMessage";
 import type { ToolOptions } from "@/lib/chat/chat-config";
+import { PromptSuggestions, PromptSuggestion } from "@/components/chat/PromptSuggestions";
 
 export interface Message {
   id: string;
@@ -38,6 +39,8 @@ export interface FeatureChatProps {
   enableFileAttachment?: boolean;
   /** ツールオプション */
   toolOptions?: ToolOptions;
+  /** プロンプトサジェスト（AIレスポンス後に表示） */
+  promptSuggestions?: PromptSuggestion[];
 }
 
 export function FeatureChat({
@@ -52,6 +55,7 @@ export function FeatureChat({
   emptyDescription,
   enableFileAttachment = true,
   toolOptions = { enableWebSearch: false },
+  promptSuggestions = [],
 }: FeatureChatProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -269,6 +273,39 @@ export function FeatureChat({
     .find((m) => m.role === "assistant");
   const hasMessages = messages.length > 0;
 
+  // サジェストをクリックしたら即送信
+  const handleSuggestionClick = useCallback(async (suggestionText: string) => {
+    if (isStreaming || !suggestionText.trim()) return;
+
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      role: "user",
+      content: suggestionText.trim(),
+      timestamp: new Date(),
+    };
+
+    setMessages((prev) => [...prev, userMessage]);
+
+    // ストリーミング開始
+    const conversationHistory = messages.map((m) => ({
+      role: m.role,
+      content: m.content,
+    }));
+
+    // ツールオプションを設定（Grokの場合のみ）
+    const effectiveToolOptions = provider.startsWith("grok-") ? toolOptions : undefined;
+
+    await startStream(
+      [
+        { role: "system", content: systemPrompt },
+        ...conversationHistory,
+        { role: "user", content: userMessage.content },
+      ],
+      provider,
+      effectiveToolOptions
+    );
+  }, [isStreaming, messages, provider, systemPrompt, toolOptions, startStream]);
+
   return (
     <div className={cn("flex flex-col h-full bg-white", className)}>
       {/* Header */}
@@ -378,6 +415,16 @@ export function FeatureChat({
                 provider={provider}
                 variant="chat"
               />
+            )}
+
+            {/* Prompt Suggestions - 最後のアシスタントメッセージの後に表示 */}
+            {!isStreaming && hasMessages && lastAssistantMessage && promptSuggestions.length > 0 && (
+              <div className="px-4 py-4 max-w-3xl mx-auto">
+                <PromptSuggestions
+                  suggestions={promptSuggestions}
+                  onSuggestionClick={handleSuggestionClick}
+                />
+              </div>
             )}
 
             {/* Regenerate Button */}
