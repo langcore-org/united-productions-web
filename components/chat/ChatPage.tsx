@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { FeatureChat } from "@/components/ui/FeatureChat";
-import { getChatConfig, ChatFeatureId, updateChatConfigSystemPrompt } from "@/lib/chat/chat-config";
+import { getChatConfig, ChatFeatureId, updateChatConfigSystemPrompt, ToolOptions } from "@/lib/chat/chat-config";
 import { featureIdToToolKey } from "@/lib/settings/db";
 
 interface ChatPageProps {
@@ -77,14 +77,23 @@ export function ChatPage({ featureId }: ChatPageProps) {
     loadConfig();
   }, [featureId]);
 
-  // 現在の機能でGrokツールが有効かどうか
-  const isGrokToolEnabled = (): boolean => {
-    if (!grokToolSettings) return false;
+  // 機能別ツール設定を計算
+  const getToolOptions = (): ToolOptions => {
+    // デフォルトのツール設定
+    const defaultOptions = config.toolOptions;
+    
+    // 管理画面での設定があればマージ
+    if (!grokToolSettings) return defaultOptions;
     
     const toolKey = featureIdToToolKey(featureId);
-    if (!toolKey) return false;
+    const isEnabled = toolKey ? (grokToolSettings[toolKey] ?? false) : false;
     
-    return grokToolSettings[toolKey] ?? false;
+    // 管理画面で無効化されている場合は全ツール無効
+    if (!isEnabled) {
+      return { enableWebSearch: false, enableXSearch: false, enableCodeExecution: false };
+    }
+    
+    return defaultOptions;
   };
 
   if (isLoading) {
@@ -103,7 +112,7 @@ export function ChatPage({ featureId }: ChatPageProps) {
       placeholder={config.placeholder}
       inputLabel={config.inputLabel}
       outputFormat={config.outputFormat}
-      enableGrokTools={isGrokToolEnabled()}
+      toolOptions={getToolOptions()}
     />
   );
 }

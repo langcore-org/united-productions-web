@@ -399,6 +399,43 @@ export const PROMPT_KEYS = {
 | 2026-02-20 20:15 | Phase 1完了: エージェント基本プロンプト作成・DB更新 | AI Agent |
 | 2026-02-20 20:25 | Phase 2完了: AgenticResponseコンポーネント作成 | AI Agent |
 | 2026-02-20 20:35 | Phase 3完了: FeatureChatへの統合 | AI Agent |
+| 2026-02-20 20:50 | Phase 4完了: 機能別ツール設定の実装 | AI Agent |
+
+### Phase 4 実装詳細
+
+#### 変更ファイル
+- `lib/chat/chat-config.ts`
+  - `ToolOptions` インターフェースを追加
+  - `featureToolDefaults` で機能別デフォルトツール設定を定義
+  - `ChatFeatureConfig` に `toolOptions` を追加
+
+- `lib/chat/gems.ts`
+  - `ToolOptions` インターフェースを追加
+  - `gemToolDefaults` でGem別デフォルトツール設定を定義
+  - `Gem` インターフェースに `toolOptions` を追加
+
+- `components/chat/ChatPage.tsx`
+  - `isGrokToolEnabled()` → `getToolOptions()` に変更
+  - 機能別ツール設定と管理画面設定をマージ
+
+- `app/(authenticated)/chat/page.tsx`
+  - 同様に `getToolOptions()` を実装
+
+- `components/ui/FeatureChat.tsx`
+  - `enableGrokTools` プロップを `toolOptions` に変更
+  - ツールオプションを `useLLMStream` に渡す
+
+#### 機能別ツール設定
+| 機能 | Web検索 | X検索 | コード実行 |
+|------|---------|-------|-----------|
+| 一般チャット | ✅ | - | - |
+| 出演者リサーチ | ✅ | ✅ | - |
+| 場所リサーチ | ✅ | - | - |
+| 情報リサーチ | ✅ | ✅ | - |
+| エビデンスリサーチ | ✅ | - | - |
+| 議事録作成 | - | - | - |
+| 新企画立案 | ✅ | ✅ | - |
+| NA原稿作成 | - | - | - |
 
 ### Phase 3 実装詳細
 

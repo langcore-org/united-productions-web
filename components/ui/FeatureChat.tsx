@@ -6,13 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Send, Copy, Check, Loader2, Sparkles, MessageSquare, Trash2, RotateCcw } from "lucide-react";
 import { WordExportButton } from "./WordExportButton";
-import { type ToolOptions } from "./StreamingMessage";
 import { MessageBubble } from "./MessageBubble";
 import { FileAttachButton, AttachedFile } from "./FileAttachment";
 import { DEFAULT_PROVIDER } from "@/lib/llm/config";
 import type { LLMProvider } from "@/lib/llm/types";
 import { AgenticResponse } from "@/components/chat/AgenticResponse";
 import { useLLMStream } from "@/components/ui/StreamingMessage";
+import type { ToolOptions } from "@/lib/chat/chat-config";
 
 export interface Message {
   id: string;
@@ -36,8 +36,8 @@ export interface FeatureChatProps {
   emptyDescription?: string;
   /** ファイル添付を有効化 */
   enableFileAttachment?: boolean;
-  /** Grokツール（Web検索）を有効化 */
-  enableGrokTools?: boolean;
+  /** ツールオプション */
+  toolOptions?: ToolOptions;
 }
 
 export function FeatureChat({
@@ -51,7 +51,7 @@ export function FeatureChat({
   provider: initialProvider = DEFAULT_PROVIDER,
   emptyDescription,
   enableFileAttachment = true,
-  enableGrokTools = false,
+  toolOptions = { enableWebSearch: false },
 }: FeatureChatProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -160,11 +160,8 @@ export function FeatureChat({
       content: m.content,
     }));
 
-    // Grokツールオプションを設定
-    const toolOptions: ToolOptions | undefined = 
-      enableGrokTools && provider.startsWith("grok-")
-        ? { enableWebSearch: true }
-        : undefined;
+    // ツールオプションを設定（Grokの場合のみ）
+    const effectiveToolOptions = provider.startsWith("grok-") ? toolOptions : undefined;
 
     await startStream(
       [
@@ -173,7 +170,7 @@ export function FeatureChat({
         { role: "user", content: userMessage.content },
       ],
       provider,
-      toolOptions
+      effectiveToolOptions
     );
   };
 
@@ -195,11 +192,8 @@ export function FeatureChat({
       content: m.content,
     }));
 
-    // Grokツールオプションを設定
-    const toolOptions: ToolOptions | undefined = 
-      enableGrokTools && provider.startsWith("grok-")
-        ? { enableWebSearch: true }
-        : undefined;
+    // ツールオプションを設定（Grokの場合のみ）
+    const effectiveToolOptions = provider.startsWith("grok-") ? toolOptions : undefined;
 
     await startStream(
       [
@@ -208,7 +202,7 @@ export function FeatureChat({
         { role: "user", content: lastUserMessage.content },
       ],
       provider,
-      toolOptions
+      effectiveToolOptions
     );
   };
 

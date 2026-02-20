@@ -18,6 +18,13 @@ export type GemId =
   | "proposal"
   | "na-script";
 
+/** ツールオプション */
+export interface ToolOptions {
+  enableWebSearch?: boolean;
+  enableXSearch?: boolean;
+  enableCodeExecution?: boolean;
+}
+
 /** Gem（専用チャット機能）の定義 */
 export interface Gem {
   id: GemId;
@@ -31,6 +38,7 @@ export interface Gem {
   category: "research" | "document" | "general";
   color?: string;        // アクセントカラー
   promptKey: string;     // DBプロンプトキー
+  toolOptions: ToolOptions; // デフォルトツール設定
 }
 
 // デフォルトプロンプトをキーで検索するヘルパー
@@ -38,6 +46,18 @@ function getDefaultPromptContent(key: string): string {
   const prompt = DEFAULT_PROMPTS.find(p => p.key === key);
   return prompt?.content || "";
 }
+
+/** 機能別デフォルトツール設定 */
+const gemToolDefaults: Record<GemId, ToolOptions> = {
+  "general": { enableWebSearch: true },
+  "research-cast": { enableWebSearch: true, enableXSearch: true },
+  "research-location": { enableWebSearch: true },
+  "research-info": { enableWebSearch: true, enableXSearch: true },
+  "research-evidence": { enableWebSearch: true },
+  "minutes": { enableWebSearch: false },
+  "proposal": { enableWebSearch: true, enableXSearch: true },
+  "na-script": { enableWebSearch: false },
+};
 
 /** プロポーザル用システムプロンプトを生成（動的） */
 function getProposalSystemPrompt(programInfo: string, pastProposals: string): string {
@@ -68,6 +88,7 @@ export const GEMS: Gem[] = [
     category: "general",
     color: "#6366f1",
     promptKey: PROMPT_KEYS.GENERAL_CHAT,
+    toolOptions: gemToolDefaults["general"],
   },
   {
     id: "research-cast",
@@ -80,6 +101,7 @@ export const GEMS: Gem[] = [
     category: "research",
     color: "#ec4899",
     promptKey: PROMPT_KEYS.RESEARCH_CAST,
+    toolOptions: gemToolDefaults["research-cast"],
   },
   {
     id: "research-location",
@@ -92,6 +114,7 @@ export const GEMS: Gem[] = [
     category: "research",
     color: "#22c55e",
     promptKey: PROMPT_KEYS.RESEARCH_LOCATION,
+    toolOptions: gemToolDefaults["research-location"],
   },
   {
     id: "research-info",
@@ -104,6 +127,7 @@ export const GEMS: Gem[] = [
     category: "research",
     color: "#3b82f6",
     promptKey: PROMPT_KEYS.RESEARCH_INFO,
+    toolOptions: gemToolDefaults["research-info"],
   },
   {
     id: "research-evidence",
@@ -116,6 +140,7 @@ export const GEMS: Gem[] = [
     category: "research",
     color: "#f59e0b",
     promptKey: PROMPT_KEYS.RESEARCH_EVIDENCE,
+    toolOptions: gemToolDefaults["research-evidence"],
   },
   {
     id: "minutes",
@@ -129,6 +154,7 @@ export const GEMS: Gem[] = [
     category: "document",
     color: "#8b5cf6",
     promptKey: PROMPT_KEYS.MINUTES,
+    toolOptions: gemToolDefaults["minutes"],
   },
   {
     id: "proposal",
@@ -141,6 +167,7 @@ export const GEMS: Gem[] = [
     category: "document",
     color: "#f97316",
     promptKey: PROMPT_KEYS.PROPOSAL,
+    toolOptions: gemToolDefaults["proposal"],
   },
   {
     id: "na-script",
@@ -154,6 +181,7 @@ export const GEMS: Gem[] = [
     category: "document",
     color: "#14b8a6",
     promptKey: PROMPT_KEYS.TRANSCRIPT,
+    toolOptions: gemToolDefaults["na-script"],
   },
 ];
 

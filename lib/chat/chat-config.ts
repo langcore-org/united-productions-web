@@ -9,6 +9,29 @@
 
 import { DEFAULT_PROMPTS, PROMPT_KEYS } from "@/lib/prompts/db";
 
+// ============================================
+// ツール設定
+// ============================================
+
+/** ツールオプション */
+export interface ToolOptions {
+  enableWebSearch?: boolean;
+  enableXSearch?: boolean;
+  enableCodeExecution?: boolean;
+}
+
+/** 機能別デフォルトツール設定 */
+export const featureToolDefaults: Record<ChatFeatureId, ToolOptions> = {
+  "general-chat": { enableWebSearch: true },
+  "research-cast": { enableWebSearch: true, enableXSearch: true },
+  "research-location": { enableWebSearch: true },
+  "research-info": { enableWebSearch: true, enableXSearch: true },
+  "research-evidence": { enableWebSearch: true },
+  "minutes": { enableWebSearch: false },
+  "proposal": { enableWebSearch: true, enableXSearch: true },
+  "na-script": { enableWebSearch: false },
+};
+
 /** チャット機能の識別子 */
 export type ChatFeatureId =
   | "general-chat"
@@ -31,6 +54,7 @@ export interface ChatFeatureConfig {
   icon?: string;
   description?: string;
   promptKey: string; // DBプロンプトキー
+  toolOptions: ToolOptions; // デフォルトツール設定
 }
 
 // デフォルトプロンプトをキーで検索するヘルパー
@@ -66,6 +90,7 @@ export const chatFeatureConfigs: Record<ChatFeatureId, ChatFeatureConfig> = {
     icon: "MessageSquare",
     description: "一般的な質問や相談",
     promptKey: PROMPT_KEYS.GENERAL_CHAT,
+    toolOptions: featureToolDefaults["general-chat"],
   },
   "research-cast": {
     featureId: "research-cast",
@@ -76,6 +101,7 @@ export const chatFeatureConfigs: Record<ChatFeatureId, ChatFeatureConfig> = {
     icon: "Users",
     description: "企画に適した出演者候補を提案",
     promptKey: PROMPT_KEYS.RESEARCH_CAST,
+    toolOptions: featureToolDefaults["research-cast"],
   },
   "research-location": {
     featureId: "research-location",
@@ -86,6 +112,7 @@ export const chatFeatureConfigs: Record<ChatFeatureId, ChatFeatureConfig> = {
     icon: "MapPin",
     description: "ロケ地候補と撮影条件を調査",
     promptKey: PROMPT_KEYS.RESEARCH_LOCATION,
+    toolOptions: featureToolDefaults["research-location"],
   },
   "research-info": {
     featureId: "research-info",
@@ -96,6 +123,7 @@ export const chatFeatureConfigs: Record<ChatFeatureId, ChatFeatureConfig> = {
     icon: "Info",
     description: "テーマに関する情報を収集・整理",
     promptKey: PROMPT_KEYS.RESEARCH_INFO,
+    toolOptions: featureToolDefaults["research-info"],
   },
   "research-evidence": {
     featureId: "research-evidence",
@@ -106,6 +134,7 @@ export const chatFeatureConfigs: Record<ChatFeatureId, ChatFeatureConfig> = {
     icon: "Shield",
     description: "情報の真偽を検証",
     promptKey: PROMPT_KEYS.RESEARCH_EVIDENCE,
+    toolOptions: featureToolDefaults["research-evidence"],
   },
   minutes: {
     featureId: "minutes",
@@ -117,6 +146,7 @@ export const chatFeatureConfigs: Record<ChatFeatureId, ChatFeatureConfig> = {
     icon: "FileText",
     description: "文字起こしから議事録を作成",
     promptKey: PROMPT_KEYS.MINUTES,
+    toolOptions: featureToolDefaults["minutes"],
   },
   proposal: {
     featureId: "proposal",
@@ -127,6 +157,7 @@ export const chatFeatureConfigs: Record<ChatFeatureId, ChatFeatureConfig> = {
     icon: "Lightbulb",
     description: "番組情報を基に新企画を提案",
     promptKey: PROMPT_KEYS.PROPOSAL,
+    toolOptions: featureToolDefaults["proposal"],
   },
   "na-script": {
     featureId: "na-script",
@@ -138,6 +169,7 @@ export const chatFeatureConfigs: Record<ChatFeatureId, ChatFeatureConfig> = {
     icon: "FileEdit",
     description: "文字起こし整形・NA原稿作成",
     promptKey: PROMPT_KEYS.TRANSCRIPT,
+    toolOptions: featureToolDefaults["na-script"],
   },
 };
 

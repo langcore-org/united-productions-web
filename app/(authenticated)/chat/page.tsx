@@ -6,7 +6,7 @@ import { FeatureChat } from "@/components/ui/FeatureChat";
 import { getGemById, GEMS, isProposalGem } from "@/lib/chat/gems";
 import { updateProposalSystemPrompt } from "@/lib/chat/gems";
 import { featureIdToToolKey } from "@/lib/settings/db";
-import type { ChatFeatureId } from "@/lib/chat/chat-config";
+import type { ChatFeatureId, ToolOptions } from "@/lib/chat/chat-config";
 
 /**
  * Grokツール設定の型（Web検索のみ）
@@ -85,14 +85,23 @@ function ChatPageContent() {
     loadGem();
   }, [gemId]);
 
-  // 現在の機能でGrokツールが有効かどうか
-  const isGrokToolEnabled = (): boolean => {
-    if (!grokToolSettings) return false;
+  // 機能別ツール設定を計算
+  const getToolOptions = (): ToolOptions => {
+    // デフォルトのツール設定
+    const defaultOptions: ToolOptions = gem.toolOptions || { enableWebSearch: false };
+    
+    // 管理画面での設定があればマージ
+    if (!grokToolSettings) return defaultOptions;
     
     const toolKey = featureIdToToolKey(gem.id as ChatFeatureId);
-    if (!toolKey) return false;
+    const isEnabled = toolKey ? (grokToolSettings[toolKey] ?? false) : false;
     
-    return grokToolSettings[toolKey] ?? false;
+    // 管理画面で無効化されている場合は全ツール無効
+    if (!isEnabled) {
+      return { enableWebSearch: false, enableXSearch: false, enableCodeExecution: false };
+    }
+    
+    return defaultOptions;
   };
 
   if (isLoading) {
@@ -112,7 +121,7 @@ function ChatPageContent() {
       placeholder={gem.placeholder}
       inputLabel={gem.inputLabel}
       outputFormat={gem.outputFormat}
-      enableGrokTools={isGrokToolEnabled()}
+      toolOptions={getToolOptions()}
     />
   );
 }
