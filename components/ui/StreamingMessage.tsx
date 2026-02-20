@@ -2,7 +2,7 @@
  * StreamingMessage Component & useLLMStream Hook
  * 
  * ストリーミングレスポンスを表示するコンポーネントとフック
- * usage情報をサーバーから受信して表示
+ * usage情報、ツール使用状況、思考ステップを表示
  * 
  * 統合版: components/chat/StreamingMessage と components/research/message/StreamingMessage を統合
  */
@@ -11,7 +11,7 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { cn } from '@/lib/utils';
-import { Loader2, Bot, Lightbulb } from 'lucide-react';
+import { Loader2, Bot, Lightbulb, Search, Twitter, Terminal, FileSearch, BrainCircuit, CheckCircle2 } from 'lucide-react';
 import type { LLMMessage, LLMProvider } from '@/lib/llm/types';
 
 /**
@@ -31,10 +31,68 @@ interface UsageInfo {
 }
 
 /**
+ * ツール呼び出し情報
+ */
+export interface ToolCallInfo {
+  id: string;
+  type: string;
+  name?: string;
+  input?: string;
+  status: 'pending' | 'running' | 'completed' | 'failed';
+}
+
+/**
+ * 思考ステップ情報
+ */
+export interface ReasoningStepInfo {
+  step: number;
+  content: string;
+  tokens?: number;
+}
+
+/**
+ * ツール使用状況
+ */
+export interface ToolUsageInfo {
+  web_search_calls?: number;
+  x_search_calls?: number;
+  code_interpreter_calls?: number;
+  file_search_calls?: number;
+  mcp_calls?: number;
+  document_search_calls?: number;
+}
+
+// ツールアイコンマップ
+const toolIcons: Record<string, React.ElementType> = {
+  web_search: Search,
+  x_search: Twitter,
+  x_keyword_search: Twitter,
+  x_semantic_search: Twitter,
+  code_execution: Terminal,
+  code_interpreter: Terminal,
+  collections_search: FileSearch,
+  file_search: FileSearch,
+  custom_tool: BrainCircuit,
+};
+
+// ツールラベルマップ
+const toolLabels: Record<string, string> = {
+  web_search: 'Web検索',
+  x_search: 'X検索',
+  x_keyword_search: 'Xキーワード検索',
+  x_semantic_search: 'X意味検索',
+  code_execution: 'コード実行',
+  code_interpreter: 'コード実行',
+  collections_search: 'ファイル検索',
+  file_search: 'ファイル検索',
+  custom_tool: 'ツール実行',
+};
+
+/**
  * useLLMStream Hook
  * 
  * LLMストリーミングAPIとの連携を行うカスタムフック
- * usage情報をサーバーから受信して表示
+ * usage情報、ツール使用状況、思考ステップをサーバーから受信して表示
  */
 export function useLLMStream() {
   const [content, setContent] = useState('');
@@ -42,6 +100,10 @@ export function useLLMStream() {
   const [isComplete, setIsComplete] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [usage, setUsage] = useState<UsageInfo | null>(null);
+  const [toolCalls, setToolCalls] = useState<ToolCallInfo[]>([]);
+  const [toolUsage, setToolUsage] = useState<ToolUsageInfo | null>(null);
+  const [reasoningSteps, setReasoningSteps] = useState<ReasoningStepInfo[]>([]);
+  const [reasoningTokens, setReasoningTokens] = useState<number>(0);
   const abortControllerRef = useRef<AbortController | null>(null);
 
   /**
@@ -57,6 +119,10 @@ export function useLLMStream() {
     setIsComplete(false);
     setError(null);
     setUsage(null);
+    setToolCalls([]);
+    setToolUsage(null);
+    setReasoningSteps([]);
+    setReasoningTokens(0);
 
     // 既存のリクエストをキャンセル
     abortControllerRef.current?.abort();
@@ -115,6 +181,40 @@ export function useLLMStream() {
                 setThinking((prev) => prev + data.thinking);
               }
 
+              // ツール呼び出し
+              if (data.toolCall) {
+                setToolCalls((prev) => {
+                  const existing = prev.findIndex(t => t.id === data.toolCall.id);
+                  if (existing >= 0) {
+                    const updated = [...prev];
+                    updated[existing] = { ...updated[existing], ...data.toolCall };
+                    return updated;
+                  }
+                  return [...prev, data.toolCall];
+                });
+              }
+
+              // 思考ステップ
+              if (data.reasoning) {
+                setReasoningSteps((prev) => {
+                  const existing = prev.findIndex(r => r.step === data.reasoning.step);
+                  if (existing >= 0) {
+                    const updated = [...prev];
+                    updated[existing] = { ...updated[existing], ...data.reasoning };
+                    return updated;
+                  }
+                  return [...prev, data.reasoning];
+                });
+                if (data.reasoning.tokens) {
+                  setReasoningTokens(data.reasoning.tokens);
+                }
+              }
+
+              // ツール使用状況
+              if (data.toolUsage) {
+                setToolUsage(data.toolUsage);
+              }
+
               // 完了時のusage情報
               if (data.done) {
                 setIsComplete(true);
@@ -169,6 +269,10 @@ export function useLLMStream() {
     setIsComplete(true);
     setError(null);
     setUsage(null);
+    setToolCalls([]);
+    setToolUsage(null);
+    setReasoningSteps([]);
+    setReasoningTokens(0);
   }, []);
 
   return {
@@ -177,10 +281,119 @@ export function useLLMStream() {
     isComplete,
     error,
     usage,
+    toolCalls,
+    toolUsage,
+    reasoningSteps,
+    reasoningTokens,
     startStream,
     cancelStream,
     resetStream,
   };
+}
+
+/**
+ * ToolCallIndicator Component
+ */
+function ToolCallIndicator({ toolCalls }: { toolCalls: ToolCallInfo[] }) {
+  if (toolCalls.length === 0) return null;
+
+  return (
+    <div className="flex flex-wrap gap-2 mb-3">
+      {toolCalls.map((tool) => {
+        const Icon = toolIcons[tool.type] || toolIcons[tool.name || ''] || BrainCircuit;
+        const label = toolLabels[tool.type] || toolLabels[tool.name || ''] || tool.name || tool.type;
+        
+        return (
+          <div
+            key={tool.id}
+            className={cn(
+              "flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border",
+              tool.status === 'running' && "bg-blue-50 text-blue-700 border-blue-200 animate-pulse",
+              tool.status === 'completed' && "bg-green-50 text-green-700 border-green-200",
+              tool.status === 'failed' && "bg-red-50 text-red-700 border-red-200",
+              tool.status === 'pending' && "bg-gray-50 text-gray-600 border-gray-200"
+            )}
+          >
+            <Icon className="w-3 h-3" />
+            <span>{label}</span>
+            {tool.status === 'running' && <Loader2 className="w-3 h-3 animate-spin" />}
+            {tool.status === 'completed' && <CheckCircle2 className="w-3 h-3" />}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+/**
+ * ToolUsageSummary Component
+ */
+function ToolUsageSummary({ toolUsage }: { toolUsage: ToolUsageInfo | null }) {
+  if (!toolUsage) return null;
+
+  const items = [
+    { key: 'web_search_calls', label: 'Web検索', count: toolUsage.web_search_calls, icon: Search },
+    { key: 'x_search_calls', label: 'X検索', count: toolUsage.x_search_calls, icon: Twitter },
+    { key: 'code_interpreter_calls', label: 'コード実行', count: toolUsage.code_interpreter_calls, icon: Terminal },
+    { key: 'file_search_calls', label: 'ファイル検索', count: toolUsage.file_search_calls, icon: FileSearch },
+  ].filter(item => item.count && item.count > 0);
+
+  if (items.length === 0) return null;
+
+  return (
+    <div className="flex flex-wrap gap-3 text-xs text-gray-500 mt-2">
+      {items.map(({ key, label, count, icon: Icon }) => (
+        <div key={key} className="flex items-center gap-1">
+          <Icon className="w-3 h-3" />
+          <span>{label}: {count}回</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/**
+ * ReasoningSteps Component
+ */
+function ReasoningSteps({ steps, totalTokens }: { steps: ReasoningStepInfo[]; totalTokens?: number }) {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  if (steps.length === 0) return null;
+
+  return (
+    <div className="mb-3 rounded-lg bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-100">
+      <button
+        onClick={() => setIsExpanded(!isExpanded)}
+        className="w-full flex items-center justify-between p-2.5 text-left"
+      >
+        <div className="flex items-center gap-2">
+          <BrainCircuit className="w-4 h-4 text-purple-600" />
+          <span className="text-sm font-medium text-purple-900">思考プロセス</span>
+          {totalTokens && totalTokens > 0 && (
+            <span className="text-xs text-purple-600">({totalTokens.toLocaleString()} トークン)</span>
+          )}
+        </div>
+        <span className="text-xs text-purple-600">
+          {isExpanded ? '折りたたむ' : '展開'}
+        </span>
+      </button>
+
+      {isExpanded && (
+        <div className="px-2.5 pb-2.5 space-y-1.5">
+          {steps.map((step, index) => (
+            <div key={index} className="flex gap-2 p-2 rounded bg-white/60 border border-purple-100/50">
+              <div className="flex-shrink-0 w-5 h-5 rounded-full bg-purple-200 flex items-center justify-center text-xs font-medium text-purple-700">
+                {step.step}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm text-gray-700">{step.content}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
 
 /**
@@ -205,12 +418,21 @@ interface StreamingMessageProps {
   showAvatar?: boolean;
   /** バリアント（デフォルト or チャット風） */
   variant?: 'default' | 'chat';
+  /** ツール呼び出し情報 */
+  toolCalls?: ToolCallInfo[];
+  /** ツール使用状況 */
+  toolUsage?: ToolUsageInfo | null;
+  /** 思考ステップ */
+  reasoningSteps?: ReasoningStepInfo[];
+  /** 推論トークン数 */
+  reasoningTokens?: number;
 }
 
 /**
  * StreamingMessage Component
  * 
  * ストリーミングレスポンスを表示するコンポーネント（統合版）
+ * ツール使用状況と思考ステップを表示
  */
 export function StreamingMessage({
   provider,
@@ -222,6 +444,10 @@ export function StreamingMessage({
   showThinking = true,
   showAvatar = false,
   variant = 'default',
+  toolCalls = [],
+  toolUsage = null,
+  reasoningSteps = [],
+  reasoningTokens = 0,
 }: StreamingMessageProps) {
   const contentRef = useRef<HTMLDivElement>(null);
   const [showUsage, setShowUsage] = useState(false);
@@ -241,6 +467,8 @@ export function StreamingMessage({
   }, [isComplete, externalUsage]);
 
   const hasThinking = thinking && thinking.length > 0;
+  const hasToolCalls = toolCalls.length > 0;
+  const hasReasoning = reasoningSteps.length > 0;
 
   // チャット風バリアント
   if (variant === 'chat') {
@@ -275,8 +503,16 @@ export function StreamingMessage({
             )}
           </div>
 
-          {/* Thinking Process */}
-          {showThinking && hasThinking && (
+          {/* Tool Calls */}
+          {hasToolCalls && <ToolCallIndicator toolCalls={toolCalls} />}
+
+          {/* Reasoning Steps */}
+          {showThinking && hasReasoning && (
+            <ReasoningSteps steps={reasoningSteps} totalTokens={reasoningTokens} />
+          )}
+
+          {/* Thinking Process (Legacy) */}
+          {showThinking && hasThinking && !hasReasoning && (
             <div className="mb-3 p-3 rounded-xl bg-gray-50 border border-gray-200">
               <div className="flex items-center gap-2 mb-2">
                 <Lightbulb className="w-3.5 h-3.5 text-amber-500" />
@@ -311,13 +547,18 @@ export function StreamingMessage({
             )}
           </div>
 
-          {/* Usage Info */}
-          {showUsage && externalUsage && (
-            <div className="mt-2 text-xs text-gray-400">
-              {externalUsage.inputTokens.toLocaleString()} 入力 / {externalUsage.outputTokens.toLocaleString()} 出力
-              {' • '}${externalUsage.cost.toFixed(6)}
+          {/* Usage Info & Tool Usage */}
+          {(showUsage && externalUsage) || toolUsage ? (
+            <div className="mt-2 space-y-1">
+              {showUsage && externalUsage && (
+                <div className="text-xs text-gray-400">
+                  {externalUsage.inputTokens.toLocaleString()} 入力 / {externalUsage.outputTokens.toLocaleString()} 出力
+                  {' • '}${externalUsage.cost.toFixed(6)}
+                </div>
+              )}
+              <ToolUsageSummary toolUsage={toolUsage} />
             </div>
-          )}
+          ) : null}
         </div>
       </div>
     );
@@ -326,8 +567,16 @@ export function StreamingMessage({
   // デフォルトバリアント
   return (
     <div className={cn('space-y-3', className)}>
-      {/* 思考プロセス（Grok対応） */}
-      {hasThinking && showThinking && (
+      {/* ツール呼び出し */}
+      {hasToolCalls && <ToolCallIndicator toolCalls={toolCalls} />}
+
+      {/* 思考ステップ */}
+      {hasReasoning && showThinking && (
+        <ReasoningSteps steps={reasoningSteps} totalTokens={reasoningTokens} />
+      )}
+
+      {/* 思考プロセス（Legacy） */}
+      {hasThinking && showThinking && !hasReasoning && (
         <div className="rounded-lg bg-muted/50 border border-border/50 p-3">
           <div className="text-xs font-medium text-muted-foreground mb-2">
             思考プロセス
@@ -377,6 +626,9 @@ export function StreamingMessage({
           </>
         )}
       </div>
+
+      {/* ツール使用状況 */}
+      <ToolUsageSummary toolUsage={toolUsage} />
     </div>
   );
 }

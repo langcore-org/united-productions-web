@@ -46,7 +46,13 @@ export type StreamRequest = z.infer<typeof streamRequestSchema>;
  * usage情報も最後に送信
  */
 function createStreamResponse(
-  iterator: AsyncIterable<{ chunk?: string; usage?: { inputTokens: number; outputTokens: number; cost: number } }>,
+  iterator: AsyncIterable<{ 
+    chunk?: string; 
+    usage?: { inputTokens: number; outputTokens: number; cost: number };
+    toolCall?: { id: string; type: string; name?: string; input?: string; status: 'pending' | 'running' | 'completed' | 'failed' };
+    toolUsage?: { web_search_calls?: number; x_search_calls?: number; code_interpreter_calls?: number; file_search_calls?: number; mcp_calls?: number; document_search_calls?: number };
+    reasoning?: { step: number; content: string; tokens?: number };
+  }>,
   requestId: string,
   provider: LLMProvider,
   userId: string,
@@ -61,10 +67,28 @@ function createStreamResponse(
         
         let finalUsage: { inputTokens: number; outputTokens: number; cost: number } | undefined;
         
-        for await (const { chunk, usage } of iterator) {
+        for await (const { chunk, usage, toolCall, toolUsage, reasoning } of iterator) {
           if (chunk) {
             // SSE形式でデータを送信
             const data = JSON.stringify({ content: chunk });
+            controller.enqueue(encoder.encode(`data: ${data}\n\n`));
+          }
+          
+          // ツール呼び出し情報を転送
+          if (toolCall) {
+            const data = JSON.stringify({ toolCall });
+            controller.enqueue(encoder.encode(`data: ${data}\n\n`));
+          }
+          
+          // 思考ステップを転送
+          if (reasoning) {
+            const data = JSON.stringify({ reasoning });
+            controller.enqueue(encoder.encode(`data: ${data}\n\n`));
+          }
+          
+          // ツール使用状況を転送
+          if (toolUsage) {
+            const data = JSON.stringify({ toolUsage });
             controller.enqueue(encoder.encode(`data: ${data}\n\n`));
           }
           
