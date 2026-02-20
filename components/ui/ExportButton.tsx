@@ -118,10 +118,10 @@ export function ExportButton({
         className={cn(
           "flex items-center gap-2 px-3 py-2 rounded-lg",
           "bg-white border border-gray-200",
-          "hover:border-orange-500/50 transition-all duration-200",
+          "hover:border-amber-700/50 transition-all duration-200",
           "text-sm text-gray-700",
           "disabled:opacity-50 disabled:cursor-not-allowed",
-          isOpen && "border-orange-500/50"
+          isOpen && "border-amber-700/50"
         )}
       >
         <Download
@@ -275,7 +275,7 @@ export function SimpleExportButton({
       className={cn(
         "flex items-center gap-2 px-3 py-2 rounded-lg",
         "bg-white border border-gray-200",
-        "hover:border-orange-500/50 transition-all duration-200",
+        "hover:border-amber-700/50 transition-all duration-200",
         "text-sm text-gray-700",
         "disabled:opacity-50 disabled:cursor-not-allowed",
         className

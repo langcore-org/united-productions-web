@@ -163,12 +163,12 @@ export function FileAttachment({
       {/* Drag Overlay */}
       {isDragging && (
         <div
-          className="fixed inset-0 z-50 bg-orange-500/10 backdrop-blur-sm flex items-center justify-center"
+          className="fixed inset-0 z-50 bg-amber-700/10 backdrop-blur-sm flex items-center justify-center"
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
         >
-          <div className="bg-white border-2 border-dashed border-orange-500 rounded-2xl p-12 text-center shadow-lg">
-            <Paperclip className="w-12 h-12 text-orange-500 mx-auto mb-4" />
+          <div className="bg-white border-2 border-dashed border-amber-700 rounded-2xl p-12 text-center shadow-lg">
+            <Paperclip className="w-12 h-12 text-amber-700 mx-auto mb-4" />
             <p className="text-lg font-medium text-gray-900">ファイルをドロップ</p>
             <p className="text-sm text-gray-500 mt-1">
               テキスト、画像、コードファイルに対応

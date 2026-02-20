@@ -49,14 +49,14 @@ export const MessageBubble = memo(function MessageBubble({
         className={cn(
           "flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center shadow-lg",
           isUser 
-            ? "bg-gradient-to-br from-orange-500 to-orange-400" 
+            ? "bg-gradient-to-br from-amber-700 to-amber-600" 
             : "bg-gray-100 border border-gray-200"
         )}
       >
         {isUser ? (
           <User className="w-4 h-4 text-white" />
         ) : (
-          <Bot className="w-4 h-4 text-orange-500" />
+          <Bot className="w-4 h-4 text-amber-700" />
         )}
       </div>
 
@@ -82,7 +82,7 @@ export const MessageBubble = memo(function MessageBubble({
           className={cn(
             "relative rounded-2xl px-5 py-3.5 shadow-lg",
             isUser
-              ? "bg-gradient-to-br from-orange-500 to-orange-400 text-white rounded-tr-sm"
+              ? "bg-gradient-to-br from-amber-700 to-amber-600 text-white rounded-tr-sm"
               : "bg-white border border-gray-200 text-gray-800 rounded-tl-sm hover:border-gray-300 transition-colors shadow-sm"
           )}
         >

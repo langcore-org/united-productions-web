@@ -80,7 +80,7 @@ export function ModelSelector({
     (m) => m.id === value
   ) || PRIMARY_MODELS[0];
 
-  const currentColor = PROVIDER_COLORS[value] || "#f97316";
+  const currentColor = PROVIDER_COLORS[value] || "#b45309";
 
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
@@ -97,7 +97,7 @@ export function ModelSelector({
           <span style={{ color: currentColor }}>{currentModel.icon}</span>
           <span className="text-sm text-gray-700">{currentModel.name}</span>
           {value === DEFAULT_PROVIDER && (
-            <span className="text-[10px] px-1.5 py-0.5 rounded bg-orange-100 text-orange-600">
+            <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-100 text-amber-700">
               標準
             </span>
           )}
@@ -127,7 +127,7 @@ export function ModelSelector({
             >
               <div
                 className="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center bg-gray-100"
-                style={{ color: PROVIDER_COLORS[model.id] || "#f97316" }}
+                style={{ color: PROVIDER_COLORS[model.id] || "#b45309" }}
               >
                 {model.icon}
               </div>

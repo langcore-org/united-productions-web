@@ -48,7 +48,7 @@ const PROVIDERS: ProviderInfo[] = [
 // カテゴリーグラデーション
 const CATEGORY_GRADIENTS: Record<string, string> = {
   google: "from-blue-500/20 to-blue-600/10",
-  xai: "from-orange-500/20 to-orange-600/10",
+  xai: "from-amber-700/20 to-amber-600/10",
   openai: "from-emerald-500/20 to-emerald-600/10",
   anthropic: "from-amber-500/20 to-amber-600/10",
   perplexity: "from-green-500/20 to-green-600/10",
@@ -144,11 +144,11 @@ export const LLMSelector = memo(function LLMSelector({
         className={cn(
           "group flex items-center gap-2.5 px-4 py-2.5 rounded-xl",
           "bg-white border border-gray-200",
-          "hover:border-orange-500/50 hover:bg-gray-50",
+          "hover:border-amber-700/50 hover:bg-gray-50",
           "active:scale-[0.98]",
           "transition-all duration-200 ease-out",
           "text-sm",
-          isOpen && "border-orange-500/50 bg-gray-50"
+          isOpen && "border-amber-700/50 bg-gray-50"
         )}
       >
         {selectedProvider && (
@@ -190,7 +190,7 @@ export const LLMSelector = memo(function LLMSelector({
           className={cn(
             "w-4 h-4 text-gray-500 transition-transform duration-200",
             "group-hover:text-gray-400",
-            isOpen && "rotate-180 text-orange-500"
+            isOpen && "rotate-180 text-amber-700"
           )}
         />
       </button>
@@ -253,12 +253,12 @@ export const LLMSelector = memo(function LLMSelector({
                           className={cn(
                             "w-1.5 h-1.5 rounded-full flex-shrink-0 transition-all duration-200",
                             isSelected
-                              ? "bg-orange-500 scale-100"
+                              ? "bg-amber-700 scale-100"
                               : "bg-transparent scale-75"
                           )}
                           style={{
                             backgroundColor: isSelected
-                              ? "#f97316"
+                              ? "#b45309"
                               : CATEGORY_COLORS[category],
                             opacity: isSelected ? 1 : 0.4,
                           }}
@@ -300,7 +300,7 @@ export const LLMSelector = memo(function LLMSelector({
                         {isSelected && (
                           <div className="flex items-center justify-center w-5 h-5 rounded-full bg-orange-100 flex-shrink-0">
                             <svg
-                              className="w-3 h-3 text-orange-500"
+                              className="w-3 h-3 text-amber-700"
                               fill="none"
                               viewBox="0 0 24 24"
                               stroke="currentColor"
@@ -325,7 +325,7 @@ export const LLMSelector = memo(function LLMSelector({
           <div className="px-4 py-2.5 border-t border-gray-200 bg-gray-50">
             <div className="flex items-center gap-4 text-[10px] text-gray-500">
               <div className="flex items-center gap-1">
-                <Sparkles className="w-3 h-3 text-orange-500" />
+                <Sparkles className="w-3 h-3 text-amber-700" />
                 <span>推奨モデル</span>
               </div>
               <div className="flex items-center gap-1">

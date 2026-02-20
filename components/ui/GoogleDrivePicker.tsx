@@ -141,7 +141,7 @@ export function GoogleDrivePicker({ onSelect, onCancel, accept }: GoogleDrivePic
       return <span className="text-blue-600 font-bold text-xs">DOC</span>;
     }
     if (mimeType.includes("presentation") || mimeType.includes("powerpoint")) {
-      return <span className="text-orange-600 font-bold text-xs">PPT</span>;
+      return <span className="text-amber-700 font-bold text-xs">PPT</span>;
     }
     if (mimeType === "text/plain") {
       return <span className="text-gray-600 font-bold text-xs">TXT</span>;

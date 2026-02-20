@@ -83,7 +83,7 @@ export const MarkdownRenderer = memo(function MarkdownRenderer({
               <code
                 className={cn(
                   "px-1.5 py-0.5 rounded text-sm font-mono",
-                  "bg-gray-100 text-orange-600",
+                  "bg-gray-100 text-amber-700",
                   "border border-gray-600"
                 )}
                 {...props}
@@ -186,7 +186,7 @@ export const MarkdownRenderer = memo(function MarkdownRenderer({
           // 引用
           blockquote({ children }) {
             return (
-              <blockquote className="border-l-4 border-orange-500 pl-4 py-1 my-3 bg-gray-50 rounded-r italic text-gray-600">
+              <blockquote className="border-l-4 border-amber-700 pl-4 py-1 my-3 bg-gray-50 rounded-r italic text-gray-600">
                 {children}
               </blockquote>
             );
@@ -199,7 +199,7 @@ export const MarkdownRenderer = memo(function MarkdownRenderer({
                 href={href}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-orange-600 hover:underline hover:text-orange-700 transition-colors"
+                className="text-amber-700 hover:underline hover:text-orange-700 transition-colors"
               >
                 {children}
               </a>

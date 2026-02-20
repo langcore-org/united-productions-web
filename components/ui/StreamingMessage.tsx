@@ -83,7 +83,7 @@ export const StreamingMessage = memo(function StreamingMessage({
       >
         <Bot
           className="w-4 h-4"
-          style={{ color: PROVIDER_COLORS[provider] || "#f97316" }}
+          style={{ color: PROVIDER_COLORS[provider] || "#b45309" }}
         />
       </div>
 
@@ -94,7 +94,7 @@ export const StreamingMessage = memo(function StreamingMessage({
           <span className="text-sm font-medium text-gray-700">AI Assistant</span>
           <span
             className="text-xs px-2 py-0.5 rounded-full bg-gray-100 border border-gray-200"
-            style={{ color: PROVIDER_COLORS[provider] || "#f97316" }}
+            style={{ color: PROVIDER_COLORS[provider] || "#b45309" }}
           >
             {PROVIDER_LABELS[provider] || provider}
           </span>
@@ -152,7 +152,7 @@ export const StreamingMessage = memo(function StreamingMessage({
             <div className="text-sm leading-relaxed">
               <MarkdownRenderer content={displayedContent} />
               {!isComplete && (
-                <span className="inline-block w-1.5 h-4 bg-orange-500 ml-0.5 animate-pulse" />
+                <span className="inline-block w-1.5 h-4 bg-amber-700 ml-0.5 animate-pulse" />
               )}
             </div>
           </div>
