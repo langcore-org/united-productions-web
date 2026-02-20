@@ -2,19 +2,20 @@
  * Admin Users API
  * 
  * GET /api/admin/users - ユーザー一覧取得
+ * PATCH /api/admin/users/:id/role - ユーザー権限更新
  */
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireAuth } from "@/lib/api/auth";
+import { requireAdmin } from "@/lib/api/auth";
 
 /**
  * GET /api/admin/users
  * ユーザー一覧を取得
  */
 export async function GET(request: NextRequest) {
-  // 認証チェック
-  const authResult = await requireAuth(request);
+  // 管理者権限チェック
+  const authResult = await requireAdmin(request);
   if (authResult instanceof NextResponse) {
     return authResult;
   }
@@ -44,6 +45,7 @@ export async function GET(request: NextRequest) {
           email: true,
           name: true,
           image: true,
+          role: true,
           createdAt: true,
           updatedAt: true,
           _count: {
@@ -51,7 +53,6 @@ export async function GET(request: NextRequest) {
               meetingNotes: true,
               transcripts: true,
               researchChats: true,
-              // schedules: true, // 削除
             },
           },
         },
@@ -71,7 +72,6 @@ export async function GET(request: NextRequest) {
             meetingNotes: user._count.meetingNotes,
             transcripts: user._count.transcripts,
             researchChats: user._count.researchChats,
-            // schedules: user._count.schedules, // 削除
             total:
               user._count.meetingNotes +
               user._count.transcripts +

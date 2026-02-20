@@ -17,6 +17,9 @@ import {
   MessageSquare,
   Mail,
   User,
+  Shield,
+  UserCircle,
+  AlertTriangle,
 } from "lucide-react";
 
 interface UserData {
@@ -24,13 +27,13 @@ interface UserData {
   email: string;
   name: string | null;
   image: string | null;
+  role: string;
   createdAt: string;
   updatedAt: string;
   usage: {
     meetingNotes: number;
     transcripts: number;
     researchChats: number;
-    // schedules: number; // 削除
     total: number;
   };
 }
@@ -45,6 +48,7 @@ interface Pagination {
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<UserData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [updatingUserId, setUpdatingUserId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [pagination, setPagination] = useState<Pagination>({
     total: 0,
@@ -104,6 +108,42 @@ export default function AdminUsersPage() {
     setPagination((prev) => ({ ...prev, offset: newOffset }));
   };
 
+  // 権限を切り替え
+  const toggleRole = async (userId: string, currentRole: string) => {
+    setUpdatingUserId(userId);
+    try {
+      const newRole = currentRole === "ADMIN" ? "USER" : "ADMIN";
+      
+      const response = await fetch(`/api/admin/users/${userId}/role`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ role: newRole }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        // ローカルの状態を更新
+        setUsers((prev) =>
+          prev.map((user) =>
+            user.id === userId ? { ...user, role: newRole } : user
+          )
+        );
+        setMessage({
+          type: "success",
+          text: `${result.data.name || result.data.email} を ${newRole === "ADMIN" ? "管理者" : "一般ユーザー"} に変更しました`,
+        });
+      } else {
+        setMessage({ type: "error", text: result.error || "権限の更新に失敗しました" });
+      }
+    } catch (error) {
+      console.error("Failed to update role:", error);
+      setMessage({ type: "error", text: "権限の更新に失敗しました" });
+    } finally {
+      setUpdatingUserId(null);
+    }
+  };
+
   if (loading && users.length === 0) {
     return (
       <AdminLayout>
@@ -156,6 +196,18 @@ export default function AdminUsersPage() {
           </div>
         )}
 
+        {/* 注意書き */}
+        <div className="flex items-start gap-2 p-4 rounded-lg bg-amber-50 border border-amber-200 text-amber-800">
+          <AlertTriangle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+          <div className="text-sm">
+            <p className="font-medium">権限について</p>
+            <p className="mt-1">
+              管理者（ADMIN）は管理画面にアクセスできます。一般ユーザー（USER）は通常機能のみ使用できます。
+              自分自身の権限は変更できません。
+            </p>
+          </div>
+        </div>
+
         {/* ユーザー一覧 */}
         <div className="grid grid-cols-1 gap-4">
           {users.map((user) => (
@@ -176,9 +228,22 @@ export default function AdminUsersPage() {
                       )}
                     </div>
                     <div>
-                      <h3 className="font-semibold text-gray-900">
-                        {user.name || "名前未設定"}
-                      </h3>
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-semibold text-gray-900">
+                          {user.name || "名前未設定"}
+                        </h3>
+                        {user.role === "ADMIN" ? (
+                          <Badge className="bg-gray-900 text-white hover:bg-gray-800">
+                            <Shield className="w-3 h-3 mr-1" />
+                            管理者
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline" className="text-gray-600">
+                            <UserCircle className="w-3 h-3 mr-1" />
+                            一般ユーザー
+                          </Badge>
+                        )}
+                      </div>
                       <div className="flex items-center gap-2 text-sm text-gray-500">
                         <Mail className="w-4 h-4" />
                         {user.email}
@@ -189,7 +254,7 @@ export default function AdminUsersPage() {
                     </div>
                   </div>
 
-                  {/* 利用統計 */}
+                  {/* 利用統計と権限切り替え */}
                   <div className="flex items-center gap-4">
                     <StatBadge
                       icon={FileText}
@@ -209,12 +274,36 @@ export default function AdminUsersPage() {
                       label="リサーチ"
                       color="bg-pink-100 text-pink-800"
                     />
-                    {/* ロケスケ統計は削除 */}
                     <div className="ml-4 pl-4 border-l">
                       <div className="text-2xl font-bold text-gray-900">
                         {user.usage.total}
                       </div>
                       <div className="text-xs text-gray-500">合計利用</div>
+                    </div>
+                    
+                    {/* 権限切り替えボタン */}
+                    <div className="ml-4 pl-4 border-l">
+                      <Button
+                        variant={user.role === "ADMIN" ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => toggleRole(user.id, user.role)}
+                        disabled={updatingUserId === user.id}
+                        className={user.role === "ADMIN" ? "bg-gray-900 hover:bg-gray-800" : ""}
+                      >
+                        {updatingUserId === user.id ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : user.role === "ADMIN" ? (
+                          <>
+                            <Shield className="w-4 h-4 mr-1" />
+                            管理者
+                          </>
+                        ) : (
+                          <>
+                            <UserCircle className="w-4 h-4 mr-1" />
+                            一般
+                          </>
+                        )}
+                      </Button>
                     </div>
                   </div>
                 </div>
