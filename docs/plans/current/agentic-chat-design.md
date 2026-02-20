@@ -397,6 +397,32 @@ export const PROMPT_KEYS = {
 |------|------|------|
 | 2026-02-20 20:00 | 初版作成 | AI Agent |
 | 2026-02-20 20:15 | Phase 1完了: エージェント基本プロンプト作成・DB更新 | AI Agent |
+| 2026-02-20 20:25 | Phase 2完了: AgenticResponseコンポーネント作成 | AI Agent |
+
+### Phase 2 実装詳細
+
+#### 変更ファイル
+- `components/chat/AgenticResponse.tsx`（新規）
+  - ツール呼び出し表示 (`ToolCallIndicator`)
+  - 思考ステップ表示 (`ReasoningSteps`)
+  - ツール使用サマリー (`ToolUsageSummary`)
+  - 使用状況表示 (`UsageInfo`)
+  - 2つのバリアント: `default` と `chat`
+
+#### コンポーネント構成
+```
+AgenticResponse
+├── ToolCallIndicator (ツール実行状態)
+├── ReasoningSteps (思考プロセス - 折りたたみ可能)
+├── Message Content (メインコンテンツ)
+└── UsageInfo (トークン/ツール使用状況)
+```
+
+#### 主な機能
+- ツール実行状態のリアルタイム表示
+- 思考プロセスの折りたたみ表示
+- 構造化された回答表示
+- 使用状況サマリー（トークン数、コスト、ツール使用回数）
 
 ### Phase 1 実装詳細
 
