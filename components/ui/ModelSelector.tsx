@@ -80,7 +80,7 @@ export function ModelSelector({
     (m) => m.id === value
   ) || PRIMARY_MODELS[0];
 
-  const currentColor = PROVIDER_COLORS[value] || "#ff6b00";
+  const currentColor = PROVIDER_COLORS[value] || "#f97316";
 
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
@@ -90,14 +90,14 @@ export function ModelSelector({
           size="sm"
           disabled={disabled}
           className={cn(
-            "h-8 px-3 gap-2 border-[#2a2a35] bg-[#1e1e24] hover:bg-[#2a2a35] transition-all",
+            "h-8 px-3 gap-2 border-gray-200 bg-white hover:bg-gray-50 transition-all",
             className
           )}
         >
           <span style={{ color: currentColor }}>{currentModel.icon}</span>
-          <span className="text-sm text-gray-300">{currentModel.name}</span>
+          <span className="text-sm text-gray-700">{currentModel.name}</span>
           {value === DEFAULT_PROVIDER && (
-            <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#ff6b00]/20 text-[#ff6b00]">
+            <span className="text-[10px] px-1.5 py-0.5 rounded bg-orange-100 text-orange-600">
               標準
             </span>
           )}
@@ -107,7 +107,7 @@ export function ModelSelector({
 
       <DropdownMenuContent
         align="end"
-        className="w-72 bg-[#1e1e24] border-[#2a2a35] p-2"
+        className="w-72 bg-white border-gray-200 p-2"
       >
         {/* Primary Models */}
         <div className="space-y-1">
@@ -121,28 +121,28 @@ export function ModelSelector({
               className={cn(
                 "flex items-start gap-3 p-3 rounded-lg cursor-pointer transition-all",
                 value === model.id
-                  ? "bg-[#ff6b00]/10 border border-[#ff6b00]/30"
-                  : "hover:bg-[#2a2a35] border border-transparent"
+                  ? "bg-orange-50 border border-orange-200"
+                  : "hover:bg-gray-100 border border-transparent"
               )}
             >
               <div
-                className="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center bg-[#2a2a35]"
-                style={{ color: PROVIDER_COLORS[model.id] || "#ff6b00" }}
+                className="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center bg-gray-100"
+                style={{ color: PROVIDER_COLORS[model.id] || "#f97316" }}
               >
                 {model.icon}
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium text-gray-200">
+                  <span className="text-sm font-medium text-gray-800">
                     {model.name}
                   </span>
                   {model.isRecommended && (
-                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-green-500/20 text-green-400">
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-green-100 text-green-600">
                       推奨
                     </span>
                   )}
                   {model.isNew && (
-                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-400">
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-600">
                       NEW
                     </span>
                   )}
@@ -153,7 +153,7 @@ export function ModelSelector({
           ))}
         </div>
 
-        <DropdownMenuSeparator className="my-2 bg-[#2a2a35]" />
+        <DropdownMenuSeparator className="my-2 bg-gray-200" />
 
         {/* Other Models */}
         <div className="px-2 pb-1">
@@ -169,8 +169,8 @@ export function ModelSelector({
                 className={cn(
                   "flex items-center gap-2 px-2 py-2 rounded cursor-pointer",
                   value === model.id
-                    ? "bg-[#2a2a35] text-gray-200"
-                    : "text-gray-400 hover:bg-[#2a2a35] hover:text-gray-200"
+                    ? "bg-gray-100 text-gray-800"
+                    : "text-gray-600 hover:bg-gray-100 hover:text-gray-800"
                 )}
               >
                 <span style={{ color: PROVIDER_COLORS[model.id] || "#666" }}>

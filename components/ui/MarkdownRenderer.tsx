@@ -37,7 +37,7 @@ export const MarkdownRenderer = memo(function MarkdownRenderer({
 
             if (!inline && language) {
               return (
-                <div className="my-4 rounded-lg overflow-hidden bg-[#1e1e1e] border border-[#2a2a35] group">
+                <div className="my-4 rounded-lg overflow-hidden bg-gray-900 border border-gray-700 group">
                   <div className="flex items-center justify-between px-4 py-2 bg-[#2d2d30] border-b border-[#3e3e42]">
                     <span className="text-xs text-gray-400 font-mono">
                       {language.toUpperCase()}
@@ -83,8 +83,8 @@ export const MarkdownRenderer = memo(function MarkdownRenderer({
               <code
                 className={cn(
                   "px-1.5 py-0.5 rounded text-sm font-mono",
-                  "bg-[#2a2a35] text-[#ff6b00]",
-                  "border border-[#3a3a45]"
+                  "bg-gray-100 text-orange-600",
+                  "border border-gray-600"
                 )}
                 {...props}
               >
@@ -96,28 +96,28 @@ export const MarkdownRenderer = memo(function MarkdownRenderer({
           // 見出し
           h1({ children }) {
             return (
-              <h1 className="text-2xl font-bold text-white mt-6 mb-4 pb-2 border-b border-[#2a2a35]">
+              <h1 className="text-2xl font-bold text-gray-900 mt-6 mb-4 pb-2 border-b border-gray-200">
                 {children}
               </h1>
             );
           },
           h2({ children }) {
             return (
-              <h2 className="text-xl font-bold text-white mt-5 mb-3 pb-1 border-b border-[#2a2a35]/50">
+              <h2 className="text-xl font-bold text-gray-900 mt-5 mb-3 pb-1 border-b border-gray-200/50">
                 {children}
               </h2>
             );
           },
           h3({ children }) {
             return (
-              <h3 className="text-lg font-semibold text-gray-200 mt-4 mb-2">
+              <h3 className="text-lg font-semibold text-gray-800 mt-4 mb-2">
                 {children}
               </h3>
             );
           },
           h4({ children }) {
             return (
-              <h4 className="text-base font-semibold text-gray-300 mt-3 mb-2">
+              <h4 className="text-base font-semibold text-gray-700 mt-3 mb-2">
                 {children}
               </h4>
             );
@@ -126,7 +126,7 @@ export const MarkdownRenderer = memo(function MarkdownRenderer({
           // 段落
           p({ children }) {
             return (
-              <p className="text-gray-200 leading-relaxed mb-3 last:mb-0">
+              <p className="text-gray-700 leading-relaxed mb-3 last:mb-0">
                 {children}
               </p>
             );
@@ -135,14 +135,14 @@ export const MarkdownRenderer = memo(function MarkdownRenderer({
           // リスト
           ul({ children }) {
             return (
-              <ul className="list-disc list-inside space-y-1 mb-3 text-gray-200 ml-1">
+              <ul className="list-disc list-inside space-y-1 mb-3 text-gray-700 ml-1">
                 {children}
               </ul>
             );
           },
           ol({ children }) {
             return (
-              <ol className="list-decimal list-inside space-y-1 mb-3 text-gray-200 ml-1">
+              <ol className="list-decimal list-inside space-y-1 mb-3 text-gray-700 ml-1">
                 {children}
               </ol>
             );
@@ -163,21 +163,21 @@ export const MarkdownRenderer = memo(function MarkdownRenderer({
           },
           thead({ children }) {
             return (
-              <thead className="bg-[#2a2a35] text-gray-100">
+              <thead className="bg-gray-100 text-gray-800">
                 {children}
               </thead>
             );
           },
           th({ children }) {
             return (
-              <th className="px-4 py-2 text-left font-semibold border border-[#3a3a45]">
+              <th className="px-4 py-2 text-left font-semibold border border-gray-200">
                 {children}
               </th>
             );
           },
           td({ children }) {
             return (
-              <td className="px-4 py-2 border border-[#3a3a45] text-gray-200">
+              <td className="px-4 py-2 border border-gray-200 text-gray-700">
                 {children}
               </td>
             );
@@ -186,7 +186,7 @@ export const MarkdownRenderer = memo(function MarkdownRenderer({
           // 引用
           blockquote({ children }) {
             return (
-              <blockquote className="border-l-4 border-[#ff6b00] pl-4 py-1 my-3 bg-[#2a2a35]/30 rounded-r italic text-gray-300">
+              <blockquote className="border-l-4 border-orange-500 pl-4 py-1 my-3 bg-gray-50 rounded-r italic text-gray-600">
                 {children}
               </blockquote>
             );
@@ -199,7 +199,7 @@ export const MarkdownRenderer = memo(function MarkdownRenderer({
                 href={href}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-[#ff6b00] hover:underline hover:text-[#ff8533] transition-colors"
+                className="text-orange-600 hover:underline hover:text-orange-700 transition-colors"
               >
                 {children}
               </a>
@@ -209,16 +209,16 @@ export const MarkdownRenderer = memo(function MarkdownRenderer({
           // 水平線
           hr() {
             return (
-              <hr className="my-6 border-t border-[#2a2a35]" />
+              <hr className="my-6 border-t border-gray-200" />
             );
           },
 
           // 強調
           strong({ children }) {
-            return <strong className="font-bold text-white">{children}</strong>;
+            return <strong className="font-bold text-gray-900">{children}</strong>;
           },
           em({ children }) {
-            return <em className="italic text-gray-300">{children}</em>;
+            return <em className="italic text-gray-600">{children}</em>;
           },
         }}
       >

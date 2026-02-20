@@ -78,12 +78,12 @@ export const StreamingMessage = memo(function StreamingMessage({
       <div
         className={cn(
           "flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center shadow-lg",
-          "bg-gradient-to-br from-[#2a2a35] to-[#1a1a24] border border-[#3a3a45]"
+          "bg-gray-100 border border-gray-200"
         )}
       >
         <Bot
           className="w-4 h-4"
-          style={{ color: PROVIDER_COLORS[provider] || "#ff6b00" }}
+          style={{ color: PROVIDER_COLORS[provider] || "#f97316" }}
         />
       </div>
 
@@ -91,10 +91,10 @@ export const StreamingMessage = memo(function StreamingMessage({
       <div className="flex-1 max-w-[80%] items-start">
         {/* Header */}
         <div className="flex items-center gap-2 mb-1.5">
-          <span className="text-sm font-medium text-gray-300">AI Assistant</span>
+          <span className="text-sm font-medium text-gray-700">AI Assistant</span>
           <span
-            className="text-xs px-2 py-0.5 rounded-full bg-[#2a2a35] border border-[#3a3a45]"
-            style={{ color: PROVIDER_COLORS[provider] || "#ff6b00" }}
+            className="text-xs px-2 py-0.5 rounded-full bg-gray-100 border border-gray-200"
+            style={{ color: PROVIDER_COLORS[provider] || "#f97316" }}
           >
             {PROVIDER_LABELS[provider] || provider}
           </span>
@@ -111,7 +111,7 @@ export const StreamingMessage = memo(function StreamingMessage({
           <div className="mb-3">
             <button
               onClick={() => setShowThinking(!showThinking)}
-              className="flex items-center gap-1.5 text-xs text-[#22c55e] hover:text-[#4ade80] transition-colors mb-2"
+              className="flex items-center gap-1.5 text-xs text-green-600 hover:text-green-700 transition-colors mb-2"
             >
               <Sparkles className="w-3.5 h-3.5" />
               <span>思考プロセス</span>
@@ -122,18 +122,18 @@ export const StreamingMessage = memo(function StreamingMessage({
               )}
               {!isComplete && (
                 <div className="flex gap-1 ml-1">
-                  <span className="w-1 h-1 bg-[#22c55e] rounded-full animate-bounce [animation-delay:-0.3s]" />
-                  <span className="w-1 h-1 bg-[#22c55e] rounded-full animate-bounce [animation-delay:-0.15s]" />
-                  <span className="w-1 h-1 bg-[#22c55e] rounded-full animate-bounce" />
+                  <span className="w-1 h-1 bg-green-600 rounded-full animate-bounce [animation-delay:-0.3s]" />
+                  <span className="w-1 h-1 bg-green-600 rounded-full animate-bounce [animation-delay:-0.15s]" />
+                  <span className="w-1 h-1 bg-green-600 rounded-full animate-bounce" />
                 </div>
               )}
             </button>
             {showThinking && (
-              <div className="p-3 rounded-lg bg-[#0d0d12] border border-[#2a2a35]">
-                <p className="text-xs text-gray-400 leading-relaxed whitespace-pre-wrap">
+              <div className="p-3 rounded-lg bg-gray-50 border border-gray-200">
+                <p className="text-xs text-gray-600 leading-relaxed whitespace-pre-wrap">
                   {displayedThinking}
                   {!isComplete && (
-                    <span className="inline-block w-1.5 h-3.5 bg-[#22c55e] ml-0.5 animate-pulse" />
+                    <span className="inline-block w-1.5 h-3.5 bg-green-600 ml-0.5 animate-pulse" />
                   )}
                 </p>
               </div>
@@ -146,13 +146,13 @@ export const StreamingMessage = memo(function StreamingMessage({
           <div
             className={cn(
               "rounded-2xl px-5 py-3.5 shadow-lg",
-              "bg-[#1e1e24] border border-[#2a2a35] text-gray-100 rounded-tl-sm"
+              "bg-white border border-gray-200 text-gray-800 rounded-tl-sm shadow-sm"
             )}
           >
             <div className="text-sm leading-relaxed">
               <MarkdownRenderer content={displayedContent} />
               {!isComplete && (
-                <span className="inline-block w-1.5 h-4 bg-[#ff6b00] ml-0.5 animate-pulse" />
+                <span className="inline-block w-1.5 h-4 bg-orange-500 ml-0.5 animate-pulse" />
               )}
             </div>
           </div>
@@ -160,7 +160,7 @@ export const StreamingMessage = memo(function StreamingMessage({
           <div
             className={cn(
               "rounded-2xl px-5 py-3.5",
-              "bg-[#1e1e24] border border-[#2a2a35] text-gray-500 rounded-tl-sm"
+              "bg-gray-50 border border-gray-200 text-gray-400 rounded-tl-sm"
             )}
           >
             <div className="flex items-center gap-2">

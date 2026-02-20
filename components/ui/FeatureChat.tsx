@@ -255,15 +255,15 @@ export function FeatureChat({
   const hasMessages = messages.length > 0;
 
   return (
-    <div className={cn("flex flex-col h-full bg-[#0d0d12]", className)}>
+    <div className={cn("flex flex-col h-full bg-white", className)}>
       {/* Header */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-[#2a2a35] bg-[#14141a]">
+      <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-white">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#ff6b00]/20 to-[#ff8533]/10 flex items-center justify-center border border-[#ff6b00]/20">
-            <Sparkles className="w-4 h-4 text-[#ff6b00]" />
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-500/20 to-orange-400/10 flex items-center justify-center border border-orange-500/20">
+            <Sparkles className="w-4 h-4 text-orange-500" />
           </div>
           <div>
-            <h1 className="text-base font-semibold text-white">{title}</h1>
+            <h1 className="text-base font-semibold text-gray-900">{title}</h1>
             <p className="text-xs text-gray-500">AI Assistant</p>
           </div>
         </div>
@@ -281,7 +281,7 @@ export function FeatureChat({
               variant="ghost"
               size="sm"
               onClick={handleClear}
-              className="text-gray-400 hover:text-red-400 hover:bg-red-500/10"
+              className="text-gray-500 hover:text-red-500 hover:bg-red-50"
             >
               <Trash2 className="w-4 h-4 mr-1" />
               クリア
@@ -299,7 +299,7 @@ export function FeatureChat({
                 variant="outline"
                 size="sm"
                 onClick={handleCopy}
-                className="gap-2 border-[#2a2a35] bg-[#1e1e24] text-gray-300 hover:bg-[#2a2a35] hover:text-white"
+                className="gap-2 border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100 hover:text-gray-900"
               >
                 {isCopied ? (
                   <>
@@ -322,7 +322,7 @@ export function FeatureChat({
       <div className="flex-1 overflow-y-auto">
         {isLoadingHistory ? (
           <div className="flex items-center justify-center h-full">
-            <div className="flex items-center gap-3 text-gray-400">
+            <div className="flex items-center gap-3 text-gray-500">
               <Loader2 className="w-5 h-5 animate-spin" />
               <span className="text-sm">履歴を読み込み中...</span>
             </div>
@@ -330,17 +330,17 @@ export function FeatureChat({
         ) : !hasMessages && !isStreaming ? (
           // 空の状態
           <div className="flex flex-col items-center justify-center h-full text-center px-6">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#ff6b00]/20 to-[#ff8533]/10 flex items-center justify-center border border-[#ff6b00]/20 mb-4">
-              <MessageSquare className="w-8 h-8 text-[#ff6b00]" />
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-orange-500/20 to-orange-400/10 flex items-center justify-center border border-orange-500/20 mb-4">
+              <MessageSquare className="w-8 h-8 text-orange-500" />
             </div>
-            <h2 className="text-lg font-medium text-white mb-2">
+            <h2 className="text-lg font-medium text-gray-900 mb-2">
               {title}
             </h2>
-            <p className="text-sm text-gray-400 max-w-md">
+            <p className="text-sm text-gray-500 max-w-md">
               {emptyDescription || "メッセージを送信して、AIと対話を始めましょう。"}
             </p>
             <div className="mt-6 flex items-center gap-2 text-xs text-gray-500">
-              <span className="px-2 py-1 rounded bg-[#1e1e24] border border-[#2a2a35]">
+              <span className="px-2 py-1 rounded bg-gray-100 border border-gray-200">
                 Ctrl + Enter
               </span>
               <span>で送信</span>
@@ -375,7 +375,7 @@ export function FeatureChat({
                   size="sm"
                   onClick={handleRegenerate}
                   disabled={!!isStreaming}
-                  className="gap-2 border-[#2a2a35] bg-[#1e1e24] text-gray-400 hover:bg-[#2a2a35] hover:text-white"
+                  className="gap-2 border-gray-200 bg-gray-50 text-gray-600 hover:bg-gray-100 hover:text-gray-900"
                 >
                   <RotateCcw className="w-4 h-4" />
                   再生成
@@ -396,9 +396,9 @@ export function FeatureChat({
       </div>
 
       {/* Input Area */}
-      <div className="border-t border-[#2a2a35] px-6 py-4 bg-[#14141a]">
+      <div className="border-t border-gray-200 px-6 py-4 bg-white">
         {inputLabel && (
-          <label className="block text-sm font-medium text-gray-400 mb-2">
+          <label className="block text-sm font-medium text-gray-600 mb-2">
             {inputLabel}
           </label>
         )}
@@ -409,14 +409,14 @@ export function FeatureChat({
             {attachedFiles.map((file) => (
               <div
                 key={file.id}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#2a2a35] border border-[#3a3a45]"
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-100 border border-gray-200"
               >
-                <span className="text-xs text-gray-300 max-w-[150px] truncate">
+                <span className="text-xs text-gray-700 max-w-[150px] truncate">
                   {file.name}
                 </span>
                 <button
                   onClick={() => setAttachedFiles(prev => prev.filter(f => f.id !== file.id))}
-                  className="p-0.5 rounded hover:bg-[#3a3a45] text-gray-500 hover:text-red-400"
+                  className="p-0.5 rounded hover:bg-gray-200 text-gray-500 hover:text-red-500"
                 >
                   <Trash2 className="w-3 h-3" />
                 </button>
@@ -439,7 +439,7 @@ export function FeatureChat({
               }}
               placeholder={placeholder}
               disabled={!!isStreaming}
-              className="min-h-[80px] max-h-[200px] resize-none bg-[#1e1e24] border-[#2a2a35] text-white placeholder:text-gray-500 focus:border-[#ff6b00]/50 focus:ring-[#ff6b00]/20 pr-24"
+              className="min-h-[80px] max-h-[200px] resize-none bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-orange-500/50 focus:ring-orange-500/20 pr-24"
             />
             <div className="absolute bottom-3 right-3 flex items-center gap-2">
               {enableFileAttachment && (
@@ -449,7 +449,7 @@ export function FeatureChat({
                 />
               )}
               {input.length > 0 && (
-                <span className="text-xs text-gray-500 bg-[#2a2a35] px-2 py-0.5 rounded">
+                <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded">
                   {input.length}
                 </span>
               )}
@@ -461,8 +461,8 @@ export function FeatureChat({
             className={cn(
               "h-10 w-10 p-0 transition-all duration-200",
               !input.trim() || isStreaming
-                ? "bg-[#2a2a35] text-gray-500"
-                : "bg-[#ff6b00] hover:bg-[#ff8533] text-white shadow-lg shadow-[#ff6b00]/25"
+                ? "bg-gray-200 text-gray-400"
+                : "bg-orange-500 hover:bg-orange-600 text-white shadow-lg shadow-orange-500/25"
             )}
           >
             {isStreaming ? (
@@ -473,10 +473,10 @@ export function FeatureChat({
           </Button>
         </div>
         <div className="mt-2 flex items-center justify-between text-xs">
-          <span className="text-gray-500">
+          <span className="text-gray-400">
             AIは正確でない情報を含むことがあります
           </span>
-          <span className="text-gray-600">
+          <span className="text-gray-400">
             Ctrl + Enter で送信
           </span>
         </div>

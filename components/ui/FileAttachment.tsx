@@ -163,14 +163,14 @@ export function FileAttachment({
       {/* Drag Overlay */}
       {isDragging && (
         <div
-          className="fixed inset-0 z-50 bg-[#ff6b00]/10 backdrop-blur-sm flex items-center justify-center"
+          className="fixed inset-0 z-50 bg-orange-500/10 backdrop-blur-sm flex items-center justify-center"
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
         >
-          <div className="bg-[#1e1e24] border-2 border-dashed border-[#ff6b00] rounded-2xl p-12 text-center">
-            <Paperclip className="w-12 h-12 text-[#ff6b00] mx-auto mb-4" />
-            <p className="text-lg font-medium text-white">ファイルをドロップ</p>
-            <p className="text-sm text-gray-400 mt-1">
+          <div className="bg-white border-2 border-dashed border-orange-500 rounded-2xl p-12 text-center shadow-lg">
+            <Paperclip className="w-12 h-12 text-orange-500 mx-auto mb-4" />
+            <p className="text-lg font-medium text-gray-900">ファイルをドロップ</p>
+            <p className="text-sm text-gray-500 mt-1">
               テキスト、画像、コードファイルに対応
             </p>
           </div>
@@ -185,11 +185,11 @@ export function FileAttachment({
             return (
               <div
                 key={file.id}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#2a2a35] border border-[#3a3a45] group"
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-100 border border-gray-200 group"
               >
-                <Icon className="w-4 h-4 text-gray-400" />
+                <Icon className="w-4 h-4 text-gray-500" />
                 <div className="flex flex-col">
-                  <span className="text-xs text-gray-300 max-w-[150px] truncate">
+                  <span className="text-xs text-gray-700 max-w-[150px] truncate">
                     {file.name}
                   </span>
                   <span className="text-[10px] text-gray-500">
@@ -198,7 +198,7 @@ export function FileAttachment({
                 </div>
                 <button
                   onClick={() => removeFile(file.id)}
-                  className="p-1 rounded hover:bg-[#3a3a45] text-gray-500 hover:text-red-400 transition-colors"
+                  className="p-1 rounded hover:bg-gray-200 text-gray-500 hover:text-red-500 transition-colors"
                 >
                   <X className="w-3.5 h-3.5" />
                 </button>
@@ -210,7 +210,7 @@ export function FileAttachment({
 
       {/* Error Message */}
       {error && (
-        <p className="text-xs text-red-400 flex items-center gap-1">
+        <p className="text-xs text-red-500 flex items-center gap-1">
           <X className="w-3 h-3" />
           {error}
         </p>
@@ -292,7 +292,7 @@ export function FileAttachButton({ onFilesSelect, disabled }: FileAttachButtonPr
         size="icon"
         disabled={disabled}
         onClick={() => inputRef.current?.click()}
-        className="h-8 w-8 text-gray-400 hover:text-white hover:bg-[#2a2a35]"
+        className="h-8 w-8 text-gray-500 hover:text-gray-700 hover:bg-gray-100"
       >
         <Paperclip className="w-4 h-4" />
       </Button>

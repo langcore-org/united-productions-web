@@ -33,17 +33,17 @@ const featureButtonVariants = cva(
           "data-[active=true]:text-white",
         ],
         dark: [
-          "bg-[#1a1a24]",
-          "border-[#2a2a35]",
-          "text-gray-200",
-          "hover:border-[#3a3a45]",
-          "hover:bg-[#1f1f2a]",
+          "bg-gray-100",
+          "border-gray-200",
+          "text-gray-700",
+          "hover:border-gray-300",
+          "hover:bg-gray-200",
           "hover:shadow-lg",
-          "hover:shadow-black/30",
-          "focus:ring-[#ff6b00]/50",
-          "data-[active=true]:border-[#ff6b00]/50",
-          "data-[active=true]:bg-[#ff6b00]/10",
-          "data-[active=true]:text-[#ff6b00]",
+          "hover:shadow-gray-200/50",
+          "focus:ring-orange-500/50",
+          "data-[active=true]:border-orange-500/50",
+          "data-[active=true]:bg-orange-50",
+          "data-[active=true]:text-orange-600",
         ],
       },
       size: {
@@ -71,9 +71,9 @@ const iconContainerVariants = cva(
           "group-data-[active=true]:text-white",
         ],
         dark: [
-          "text-gray-400",
-          "group-hover:text-gray-200",
-          "group-data-[active=true]:text-[#ff6b00]",
+          "text-gray-500",
+          "group-hover:text-gray-700",
+          "group-data-[active=true]:text-orange-600",
         ],
       },
       size: {
@@ -104,17 +104,17 @@ const shortcutVariants = cva(
           "group-data-[active=true]:text-zinc-300",
         ],
         dark: [
-          "bg-[#2a2a35]",
+          "bg-gray-200",
           "text-gray-500",
-          "group-hover:bg-[#3a3a45]",
-          "group-hover:text-gray-400",
-          "group-data-[active=true]:bg-[#ff6b00]/20",
-          "group-data-[active=true]:text-[#ff6b00]/80",
+          "group-hover:bg-gray-300",
+          "group-hover:text-gray-600",
+          "group-data-[active=true]:bg-orange-100",
+          "group-data-[active=true]:text-orange-600",
         ],
       },
     },
     defaultVariants: {
-      variant: "dark",
+      variant: "light",
     },
   }
 );
@@ -368,7 +368,7 @@ export const presetButtons = {
         <path d="M18 8v6a6 6 0 0 1-12 0V8" />
         <path d="M12 18v4" />
         <path d="M8 22h8" />
-        <circle cx="17" cy="6" r="3" fill="currentColor" className="text-[#ff6b00]" />
+        <circle cx="17" cy="6" r="3" fill="currentColor" className="text-orange-500" />
       </svg>
     ),
     ...props,

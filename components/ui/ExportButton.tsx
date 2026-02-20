@@ -117,11 +117,11 @@ export function ExportButton({
         disabled={isExporting}
         className={cn(
           "flex items-center gap-2 px-3 py-2 rounded-lg",
-          "bg-[#1a1a24] border border-[#2a2a35]",
-          "hover:border-[#ff6b00]/50 transition-all duration-200",
-          "text-sm text-gray-200",
+          "bg-white border border-gray-200",
+          "hover:border-orange-500/50 transition-all duration-200",
+          "text-sm text-gray-700",
           "disabled:opacity-50 disabled:cursor-not-allowed",
-          isOpen && "border-[#ff6b00]/50"
+          isOpen && "border-orange-500/50"
         )}
       >
         <Download
@@ -153,14 +153,14 @@ export function ExportButton({
             className={cn(
               "absolute top-full right-0 mt-2 z-50",
               "w-64 rounded-xl",
-              "bg-[#1a1a24] border border-[#2a2a35]",
-              "shadow-xl shadow-black/50",
+              "bg-white border border-gray-200",
+              "shadow-xl shadow-gray-200/50",
               "overflow-hidden",
               "animate-in fade-in zoom-in-95 duration-100"
             )}
           >
             {/* ヘッダー */}
-            <div className="px-3 py-2 border-b border-[#2a2a35]">
+            <div className="px-3 py-2 border-b border-gray-200">
               <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
                 エクスポート形式
               </span>
@@ -174,23 +174,23 @@ export function ExportButton({
                   onClick={() => handleExport(option.id)}
                   className={cn(
                     "w-full flex items-start gap-3 px-3 py-3 rounded-lg",
-                    "hover:bg-[#2a2a35] transition-colors",
+                    "hover:bg-gray-100 transition-colors",
                     "text-left group"
                   )}
                 >
                   <div
                     className={cn(
                       "flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center",
-                      "bg-[#2a2a35] group-hover:bg-[#3a3a45] transition-colors",
-                      option.id === "markdown" && "text-blue-400",
-                      option.id === "csv" && "text-green-400"
+                      "bg-gray-100 group-hover:bg-gray-200 transition-colors",
+                      option.id === "markdown" && "text-blue-500",
+                      option.id === "csv" && "text-green-500"
                     )}
                   >
                     {option.icon}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="text-sm text-gray-200 font-medium">
+                      <span className="text-sm text-gray-700 font-medium">
                         {option.label}
                       </span>
                       <span className="text-xs text-gray-500">
@@ -216,8 +216,8 @@ export function ExportButton({
             "flex items-center gap-2 px-3 py-2 rounded-lg",
             "text-sm animate-in fade-in slide-in-from-top-2",
             exportStatus.success
-              ? "bg-green-500/10 border border-green-500/20 text-green-400"
-              : "bg-red-500/10 border border-red-500/20 text-red-400"
+              ? "bg-green-50 border border-green-200 text-green-600"
+              : "bg-red-50 border border-red-200 text-red-600"
           )}
         >
           {exportStatus.success ? (
@@ -274,9 +274,9 @@ export function SimpleExportButton({
       disabled={isExporting}
       className={cn(
         "flex items-center gap-2 px-3 py-2 rounded-lg",
-        "bg-[#1a1a24] border border-[#2a2a35]",
-        "hover:border-[#ff6b00]/50 transition-all duration-200",
-        "text-sm text-gray-200",
+        "bg-white border border-gray-200",
+        "hover:border-orange-500/50 transition-all duration-200",
+        "text-sm text-gray-700",
         "disabled:opacity-50 disabled:cursor-not-allowed",
         className
       )}

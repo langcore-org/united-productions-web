@@ -143,12 +143,12 @@ export const LLMSelector = memo(function LLMSelector({
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
           "group flex items-center gap-2.5 px-4 py-2.5 rounded-xl",
-          "bg-[#1a1a24] border border-[#2a2a35]",
-          "hover:border-[#ff6b00]/50 hover:bg-[#1f1f2a]",
+          "bg-white border border-gray-200",
+          "hover:border-orange-500/50 hover:bg-gray-50",
           "active:scale-[0.98]",
           "transition-all duration-200 ease-out",
           "text-sm",
-          isOpen && "border-[#ff6b00]/50 bg-[#1f1f2a]"
+          isOpen && "border-orange-500/50 bg-gray-50"
         )}
       >
         {selectedProvider && (
@@ -164,7 +164,7 @@ export const LLMSelector = memo(function LLMSelector({
         )}
 
         <div className="flex flex-col items-start">
-          <span className="font-semibold text-gray-100 leading-tight">
+          <span className="font-semibold text-gray-900 leading-tight">
             {selectedProvider?.name}
           </span>
           <span className="text-[10px] text-gray-500 leading-tight">
@@ -174,12 +174,12 @@ export const LLMSelector = memo(function LLMSelector({
 
         <div className="flex items-center gap-1.5 ml-1">
           {selectedProvider?.isFree && (
-            <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-green-500/15 text-green-400 border border-green-500/20">
+            <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-green-100 text-green-600 border border-green-200">
               無料
             </span>
           )}
           {isRecommended && (
-            <span className="flex items-center gap-0.5 text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-[#ff6b00]/15 text-[#ff6b00] border border-[#ff6b00]/20">
+            <span className="flex items-center gap-0.5 text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-orange-100 text-orange-600 border border-orange-200">
               <Sparkles className="w-2.5 h-2.5" />
               推奨
             </span>
@@ -190,7 +190,7 @@ export const LLMSelector = memo(function LLMSelector({
           className={cn(
             "w-4 h-4 text-gray-500 transition-transform duration-200",
             "group-hover:text-gray-400",
-            isOpen && "rotate-180 text-[#ff6b00]"
+            isOpen && "rotate-180 text-orange-500"
           )}
         />
       </button>
@@ -201,13 +201,13 @@ export const LLMSelector = memo(function LLMSelector({
           className={cn(
             "absolute top-full left-0 mt-2 z-50",
             "w-80 rounded-2xl",
-            "bg-[#1a1a24] border border-[#2a2a35]",
-            "shadow-2xl shadow-black/60",
+            "bg-white border border-gray-200",
+            "shadow-2xl shadow-gray-200/50",
             "overflow-hidden",
             "animate-in fade-in-0 zoom-in-95 duration-150"
           )}
         >
-          <div className="px-4 py-3 border-b border-[#2a2a35] bg-[#15151d]">
+          <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
             <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">
               モデルを選択
             </span>
@@ -220,7 +220,7 @@ export const LLMSelector = memo(function LLMSelector({
                   key={category}
                   className={cn(
                     "mb-1 last:mb-0",
-                    categoryIndex !== 0 && "mt-2 pt-2 border-t border-[#2a2a35]/50"
+                    categoryIndex !== 0 && "mt-2 pt-2 border-t border-gray-200/50"
                   )}
                 >
                   <div className="px-4 py-2 flex items-center gap-2">
@@ -243,9 +243,9 @@ export const LLMSelector = memo(function LLMSelector({
                         onClick={() => handleProviderSelect(provider.id)}
                         className={cn(
                           "w-full flex items-center gap-3 px-4 py-3 mx-2 rounded-xl",
-                          "hover:bg-[#2a2a35]/70 transition-all duration-150",
+                          "hover:bg-gray-100/70 transition-all duration-150",
                           "text-left",
-                          isSelected && "bg-[#2a2a35] hover:bg-[#2a2a35]"
+                          isSelected && "bg-gray-100 hover:bg-gray-100"
                         )}
                         style={{ width: "calc(100% - 16px)" }}
                       >
@@ -253,12 +253,12 @@ export const LLMSelector = memo(function LLMSelector({
                           className={cn(
                             "w-1.5 h-1.5 rounded-full flex-shrink-0 transition-all duration-200",
                             isSelected
-                              ? "bg-[#ff6b00] scale-100"
+                              ? "bg-orange-500 scale-100"
                               : "bg-transparent scale-75"
                           )}
                           style={{
                             backgroundColor: isSelected
-                              ? "#ff6b00"
+                              ? "#f97316"
                               : CATEGORY_COLORS[category],
                             opacity: isSelected ? 1 : 0.4,
                           }}
@@ -269,24 +269,24 @@ export const LLMSelector = memo(function LLMSelector({
                             <span
                               className={cn(
                                 "text-sm font-medium truncate",
-                                isSelected ? "text-gray-100" : "text-gray-300"
+                                isSelected ? "text-gray-900" : "text-gray-600"
                               )}
                             >
                               {provider.name}
                             </span>
 
                             {provider.isNew && (
-                              <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded bg-purple-500/15 text-purple-400 border border-purple-500/20">
+                              <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded bg-purple-100 text-purple-600 border border-purple-200">
                                 NEW
                               </span>
                             )}
                             {provider.isFree && (
-                              <span className="text-[9px] font-medium px-1.5 py-0.5 rounded-full bg-green-500/15 text-green-400 border border-green-500/20">
+                              <span className="text-[9px] font-medium px-1.5 py-0.5 rounded-full bg-green-100 text-green-600 border border-green-200">
                                 無料
                               </span>
                             )}
                             {isProviderRecommended && (
-                              <span className="flex items-center gap-0.5 text-[9px] font-medium px-1.5 py-0.5 rounded-full bg-[#ff6b00]/15 text-[#ff6b00] border border-[#ff6b00]/20">
+                              <span className="flex items-center gap-0.5 text-[9px] font-medium px-1.5 py-0.5 rounded-full bg-orange-100 text-orange-600 border border-orange-200">
                                 <Sparkles className="w-2.5 h-2.5" />
                                 推奨
                               </span>
@@ -298,9 +298,9 @@ export const LLMSelector = memo(function LLMSelector({
                         </div>
 
                         {isSelected && (
-                          <div className="flex items-center justify-center w-5 h-5 rounded-full bg-[#ff6b00]/20 flex-shrink-0">
+                          <div className="flex items-center justify-center w-5 h-5 rounded-full bg-orange-100 flex-shrink-0">
                             <svg
-                              className="w-3 h-3 text-[#ff6b00]"
+                              className="w-3 h-3 text-orange-500"
                               fill="none"
                               viewBox="0 0 24 24"
                               stroke="currentColor"
@@ -322,10 +322,10 @@ export const LLMSelector = memo(function LLMSelector({
             )}
           </div>
 
-          <div className="px-4 py-2.5 border-t border-[#2a2a35] bg-[#15151d]">
+          <div className="px-4 py-2.5 border-t border-gray-200 bg-gray-50">
             <div className="flex items-center gap-4 text-[10px] text-gray-500">
               <div className="flex items-center gap-1">
-                <Sparkles className="w-3 h-3 text-[#ff6b00]" />
+                <Sparkles className="w-3 h-3 text-orange-500" />
                 <span>推奨モデル</span>
               </div>
               <div className="flex items-center gap-1">

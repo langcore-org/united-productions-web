@@ -49,14 +49,14 @@ export const MessageBubble = memo(function MessageBubble({
         className={cn(
           "flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center shadow-lg",
           isUser 
-            ? "bg-gradient-to-br from-[#ff6b00] to-[#ff8533]" 
-            : "bg-gradient-to-br from-[#2a2a35] to-[#1a1a24] border border-[#3a3a45]"
+            ? "bg-gradient-to-br from-orange-500 to-orange-400" 
+            : "bg-gray-100 border border-gray-200"
         )}
       >
         {isUser ? (
           <User className="w-4 h-4 text-white" />
         ) : (
-          <Bot className="w-4 h-4 text-[#ff6b00]" />
+          <Bot className="w-4 h-4 text-orange-500" />
         )}
       </div>
 
@@ -67,11 +67,11 @@ export const MessageBubble = memo(function MessageBubble({
           "flex items-center gap-2 mb-1.5",
           isUser ? "flex-row-reverse" : "flex-row"
         )}>
-          <span className="text-sm font-medium text-gray-300">
+          <span className="text-sm font-medium text-gray-700">
             {isUser ? "あなた" : "AI Assistant"}
           </span>
           {llmProvider && !isUser && (
-            <span className="text-xs px-2 py-0.5 rounded-full bg-[#2a2a35] text-[#ff6b00] border border-[#3a3a45]">
+            <span className="text-xs px-2 py-0.5 rounded-full bg-orange-50 text-orange-600 border border-orange-200">
               {PROVIDER_LABELS[llmProvider]}
             </span>
           )}
@@ -82,21 +82,21 @@ export const MessageBubble = memo(function MessageBubble({
           className={cn(
             "relative rounded-2xl px-5 py-3.5 shadow-lg",
             isUser
-              ? "bg-gradient-to-br from-[#ff6b00] to-[#ff8533] text-white rounded-tr-sm"
-              : "bg-[#1e1e24] border border-[#2a2a35] text-gray-100 rounded-tl-sm hover:border-[#3a3a45] transition-colors"
+              ? "bg-gradient-to-br from-orange-500 to-orange-400 text-white rounded-tr-sm"
+              : "bg-white border border-gray-200 text-gray-800 rounded-tl-sm hover:border-gray-300 transition-colors shadow-sm"
           )}
         >
           {/* Copy Button (Assistant only) */}
           {!isUser && (
             <button
               onClick={handleCopy}
-              className="absolute top-2 right-2 p-1.5 rounded-md bg-[#2a2a35]/80 text-gray-400 
-                         opacity-0 group-hover:opacity-100 hover:text-white hover:bg-[#3a3a45] 
+              className="absolute top-2 right-2 p-1.5 rounded-md bg-gray-100/80 text-gray-500 
+                         opacity-0 group-hover:opacity-100 hover:text-gray-700 hover:bg-gray-200 
                          transition-all duration-200"
               title="コピー"
             >
               {copied ? (
-                <Check className="w-3.5 h-3.5 text-green-400" />
+                <Check className="w-3.5 h-3.5 text-green-500" />
               ) : (
                 <Copy className="w-3.5 h-3.5" />
               )}
@@ -134,13 +134,13 @@ export const MessageBubble = memo(function MessageBubble({
 
         {/* Thinking Indicator */}
         {isThinking && (
-          <div className="mt-2 flex items-center gap-2 text-[#22c55e]">
+          <div className="mt-2 flex items-center gap-2 text-green-600">
             <div className="flex gap-1">
-              <span className="w-1.5 h-1.5 bg-[#22c55e] rounded-full animate-bounce [animation-delay:-0.3s]" />
-              <span className="w-1.5 h-1.5 bg-[#22c55e] rounded-full animate-bounce [animation-delay:-0.15s]" />
-              <span className="w-1.5 h-1.5 bg-[#22c55e] rounded-full animate-bounce" />
+              <span className="w-1.5 h-1.5 bg-green-600 rounded-full animate-bounce [animation-delay:-0.3s]" />
+              <span className="w-1.5 h-1.5 bg-green-600 rounded-full animate-bounce [animation-delay:-0.15s]" />
+              <span className="w-1.5 h-1.5 bg-green-600 rounded-full animate-bounce" />
             </div>
-            <span className="text-xs">思考中...</span>
+            <span className="text-xs text-gray-600">思考中...</span>
           </div>
         )}
 
@@ -149,7 +149,7 @@ export const MessageBubble = memo(function MessageBubble({
           <div className="mt-2 w-full">
             <button
               onClick={() => setShowThinking(!showThinking)}
-              className="flex items-center gap-1.5 text-xs text-[#22c55e] hover:text-[#4ade80] transition-colors"
+              className="flex items-center gap-1.5 text-xs text-green-600 hover:text-green-700 transition-colors"
             >
               {showThinking ? (
                 <ChevronUp className="w-3.5 h-3.5" />
@@ -159,7 +159,7 @@ export const MessageBubble = memo(function MessageBubble({
               <span>思考プロセス</span>
             </button>
             {showThinking && (
-              <div className="mt-2 p-3 rounded-lg bg-[#0d0d12] border border-[#2a2a35] text-xs text-gray-400 leading-relaxed">
+              <div className="mt-2 p-3 rounded-lg bg-gray-50 border border-gray-200 text-xs text-gray-600 leading-relaxed">
                 {thinkingContent}
               </div>
             )}
