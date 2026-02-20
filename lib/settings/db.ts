@@ -20,6 +20,48 @@ export const SYSTEM_SETTING_KEYS = {
   GROK_TOOL_SETTINGS: 'grok.toolSettings',
 } as const;
 
+// ============================================
+// インメモリキャッシュ
+// ============================================
+
+type CacheEntry<T> = {
+  data: T;
+  timestamp: number;
+};
+
+const cache = new Map<string, CacheEntry<unknown>>();
+const CACHE_TTL_MS = 60 * 1000; // 1分間キャッシュ
+
+/**
+ * キャッシュから値を取得
+ */
+function getCache<T>(key: string): T | null {
+  const entry = cache.get(key);
+  if (!entry) return null;
+  
+  // TTLチェック
+  if (Date.now() - entry.timestamp > CACHE_TTL_MS) {
+    cache.delete(key);
+    return null;
+  }
+  
+  return entry.data as T;
+}
+
+/**
+ * キャッシュに値を設定
+ */
+function setCache<T>(key: string, data: T): void {
+  cache.set(key, { data, timestamp: Date.now() });
+}
+
+/**
+ * キャッシュを削除
+ */
+function clearCache(key: string): void {
+  cache.delete(key);
+}
+
 export type SystemSettingKey = typeof SYSTEM_SETTING_KEYS[keyof typeof SYSTEM_SETTING_KEYS];
 
 /**
@@ -311,18 +353,29 @@ export async function isGrokToolEnabled(
 // ============================================
 
 /**
- * システム全体のGrokツール設定を取得
+ * システム全体のGrokツール設定を取得（キャッシュ付き）
  * DBに設定がなければnullを返す
  */
 export async function getSystemGrokToolSettings(): Promise<GrokToolSettings | null> {
+  const cacheKey = SYSTEM_SETTING_KEYS.GROK_TOOL_SETTINGS;
+  
+  // キャッシュチェック
+  const cached = getCache<GrokToolSettings>(cacheKey);
+  if (cached) {
+    return cached;
+  }
+  
   try {
     const value = await getSystemSetting(SYSTEM_SETTING_KEYS.GROK_TOOL_SETTINGS);
     if (value) {
       const parsed = JSON.parse(value) as Partial<GrokToolSettings>;
-      return {
+      const settings = {
         ...DEFAULT_GROK_TOOL_SETTINGS,
         ...parsed,
       };
+      // キャッシュに保存
+      setCache(cacheKey, settings);
+      return settings;
     }
   } catch (error) {
     console.error('Failed to get system Grok tool settings:', error);
@@ -343,6 +396,7 @@ export async function getSystemGrokToolSettingsOrDefault(): Promise<GrokToolSett
 
 /**
  * システム全体のGrokツール設定を保存
+ * 保存後にキャッシュをクリア
  */
 export async function setSystemGrokToolSettings(
   settings: Partial<GrokToolSettings>
@@ -353,5 +407,9 @@ export async function setSystemGrokToolSettings(
   };
 
   await setSystemSetting(SYSTEM_SETTING_KEYS.GROK_TOOL_SETTINGS, JSON.stringify(data));
+  
+  // キャッシュをクリア（次回取得時に新しい値をDBから取得）
+  clearCache(SYSTEM_SETTING_KEYS.GROK_TOOL_SETTINGS);
+  
   return data;
 }
