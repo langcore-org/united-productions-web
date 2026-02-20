@@ -13,7 +13,24 @@ import { createClientLogger } from '@/lib/logger';
 const logger = createClientLogger('GrokClient');
 
 /**
- * xAI APIレスポンス型
+ * Grokツール定義
+ */
+export const GROK_TOOLS = {
+  web_search: {
+    type: 'web_search' as const,
+    description: 'Search the web for current information',
+  },
+} as const;
+
+/**
+ * ツール有効化オプション
+ */
+export interface GrokToolOptions {
+  enableWebSearch?: boolean;
+}
+
+/**
+ * xAI APIレスポンス型（ツール対応）
  */
 interface XAIChatResponse {
   id: string;
@@ -61,10 +78,12 @@ export class GrokClient implements LLMClient {
   private model: string;
   private provider: LLMProvider;
   private baseUrl = 'https://api.x.ai/v1';
+  private toolOptions: GrokToolOptions;
 
-  constructor(provider: LLMProvider) {
+  constructor(provider: LLMProvider, toolOptions: GrokToolOptions = {}) {
     this.provider = provider;
     this.model = this.getModelName(provider);
+    this.toolOptions = toolOptions;
     
     const apiKey = process.env.XAI_API_KEY;
     if (!apiKey) {
@@ -72,7 +91,19 @@ export class GrokClient implements LLMClient {
       throw new Error('XAI_API_KEY environment variable is not set');
     }
     this.apiKey = apiKey;
-    logger.info('GrokClient initialized', { provider, model: this.model });
+    logger.info('GrokClient initialized', { 
+      provider, 
+      model: this.model,
+      tools: this.toolOptions 
+    });
+  }
+
+  /**
+   * ツールオプションを更新
+   */
+  setToolOptions(options: GrokToolOptions): void {
+    this.toolOptions = { ...this.toolOptions, ...options };
+    logger.info('GrokClient tool options updated', { tools: this.toolOptions });
   }
 
   /**
@@ -90,10 +121,47 @@ export class GrokClient implements LLMClient {
   }
 
   /**
+   * ツール設定を取得
+   */
+  private getTools(): unknown[] | undefined {
+    const tools: unknown[] = [];
+    
+    if (this.toolOptions.enableWebSearch) {
+      tools.push({
+        type: 'web_search',
+      });
+    }
+    
+    return tools.length > 0 ? tools : undefined;
+  }
+
+  /**
    * チャット完了を取得
    */
   async chat(messages: LLMMessage[]): Promise<LLMResponse> {
-    logger.info('Starting chat request', { messageCount: messages.length, model: this.model });
+    logger.info('Starting chat request', { 
+      messageCount: messages.length, 
+      model: this.model,
+      enableWebSearch: this.toolOptions.enableWebSearch 
+    });
+    
+    const requestBody: {
+      model: string;
+      messages: { role: string; content: string }[];
+      tools?: unknown[];
+    } = {
+      model: this.model,
+      messages: messages.map(msg => ({
+        role: msg.role,
+        content: msg.content,
+      })),
+    };
+
+    // ツールが有効な場合は追加
+    const tools = this.getTools();
+    if (tools) {
+      requestBody.tools = tools;
+    }
     
     const response = await fetch(`${this.baseUrl}/chat/completions`, {
       method: 'POST',
@@ -101,13 +169,7 @@ export class GrokClient implements LLMClient {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${this.apiKey}`,
       },
-      body: JSON.stringify({
-        model: this.model,
-        messages: messages.map(msg => ({
-          role: msg.role,
-          content: msg.content,
-        })),
-      }),
+      body: JSON.stringify(requestBody),
     });
 
     if (!response.ok) {
@@ -137,6 +199,7 @@ export class GrokClient implements LLMClient {
       outputTokens,
       cost: cost.toFixed(6),
       contentLength: content.length,
+      webSearchEnabled: this.toolOptions.enableWebSearch,
     });
 
     return {
@@ -153,7 +216,31 @@ export class GrokClient implements LLMClient {
    * ストリーミングレスポンスを取得
    */
   async *stream(messages: LLMMessage[]): AsyncIterable<string> {
-    logger.info('Starting stream request', { messageCount: messages.length, model: this.model });
+    logger.info('Starting stream request', { 
+      messageCount: messages.length, 
+      model: this.model,
+      enableWebSearch: this.toolOptions.enableWebSearch 
+    });
+    
+    const requestBody: {
+      model: string;
+      messages: { role: string; content: string }[];
+      stream: boolean;
+      tools?: unknown[];
+    } = {
+      model: this.model,
+      messages: messages.map(msg => ({
+        role: msg.role,
+        content: msg.content,
+      })),
+      stream: true,
+    };
+
+    // ツールが有効な場合は追加
+    const tools = this.getTools();
+    if (tools) {
+      requestBody.tools = tools;
+    }
     
     const response = await fetch(`${this.baseUrl}/chat/completions`, {
       method: 'POST',
@@ -161,14 +248,7 @@ export class GrokClient implements LLMClient {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${this.apiKey}`,
       },
-      body: JSON.stringify({
-        model: this.model,
-        messages: messages.map(msg => ({
-          role: msg.role,
-          content: msg.content,
-        })),
-        stream: true,
-      }),
+      body: JSON.stringify(requestBody),
     });
 
     if (!response.ok) {

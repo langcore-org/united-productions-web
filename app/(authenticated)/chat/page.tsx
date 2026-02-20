@@ -5,7 +5,22 @@ import { useSearchParams } from "next/navigation";
 import { FeatureChat } from "@/components/ui/FeatureChat";
 import { getGemById, GEMS, isProposalGem } from "@/lib/chat/gems";
 import { getProposalSystemPrompt } from "@/lib/prompts/proposal";
-import { Sparkles, Users, MapPin, Search, Shield, FileText, Lightbulb, Mic } from "lucide-react";
+import { featureIdToToolKey } from "@/lib/settings/db";
+import type { ChatFeatureId } from "@/lib/chat/chat-config";
+
+/**
+ * Grokツール設定の型
+ */
+interface GrokToolSettings {
+  generalChat: boolean;
+  researchCast: boolean;
+  researchLocation: boolean;
+  researchInfo: boolean;
+  researchEvidence: boolean;
+  minutes: boolean;
+  proposal: boolean;
+  naScript: boolean;
+}
 
 /**
  * 統合チャットページ
@@ -20,6 +35,7 @@ function ChatPageContent() {
   const [gem, setGem] = useState(GEMS[0]);
   const [systemPrompt, setSystemPrompt] = useState<string>("");
   const [isLoading, setIsLoading] = useState(true);
+  const [grokToolSettings, setGrokToolSettings] = useState<GrokToolSettings | null>(null);
 
   useEffect(() => {
     async function loadGem() {
@@ -44,6 +60,13 @@ function ChatPageContent() {
         } else {
           setSystemPrompt(selectedGem.systemPrompt);
         }
+
+        // Grokツール設定を取得
+        const toolResponse = await fetch("/api/settings/grok-tools");
+        if (toolResponse.ok) {
+          const toolData = await toolResponse.json();
+          setGrokToolSettings(toolData);
+        }
       } catch (error) {
         console.error("Failed to load gem:", error);
         setGem(GEMS[0]);
@@ -55,6 +78,16 @@ function ChatPageContent() {
 
     loadGem();
   }, [gemId]);
+
+  // 現在の機能でGrokツールが有効かどうか
+  const isGrokToolEnabled = (): boolean => {
+    if (!grokToolSettings) return false;
+    
+    const toolKey = featureIdToToolKey(gem.id as ChatFeatureId);
+    if (!toolKey) return false;
+    
+    return grokToolSettings[toolKey] ?? false;
+  };
 
   if (isLoading) {
     return (
@@ -72,6 +105,7 @@ function ChatPageContent() {
       placeholder={gem.placeholder}
       inputLabel={gem.inputLabel}
       outputFormat={gem.outputFormat}
+      enableGrokTools={isGrokToolEnabled()}
     />
   );
 }

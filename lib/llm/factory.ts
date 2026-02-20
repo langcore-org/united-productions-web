@@ -9,7 +9,7 @@ import { LLMProvider, LLMClient, LLMResponse } from './types';
 import { getProviderInfo } from './config';
 import { GeminiClient } from './clients/gemini';
 import { PerplexityClient } from './clients/perplexity';
-import { GrokClient } from './clients/grok';
+import { GrokClient, type GrokToolOptions } from './clients/grok';
 
 /**
  * 未実装エラークラス
@@ -131,4 +131,21 @@ export function getSameVendorProviders(provider: LLMProvider): LLMProvider[] {
   };
   
   return vendorMap[vendor] || [provider];
+}
+
+/**
+ * Grokクライアントをツールオプション付きで作成
+ * 
+ * @param provider - Grokプロバイダー
+ * @param toolOptions - ツールオプション
+ * @returns GrokClientインスタンス
+ */
+export function createGrokClientWithTools(
+  provider: LLMProvider, 
+  toolOptions: GrokToolOptions
+): GrokClient {
+  if (!provider.startsWith('grok-')) {
+    throw new Error(`Provider "${provider}" is not a Grok provider`);
+  }
+  return new GrokClient(provider, toolOptions);
 }

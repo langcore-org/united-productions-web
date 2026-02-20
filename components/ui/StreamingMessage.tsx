@@ -186,10 +186,18 @@ interface StreamState {
   error: string | null;
 }
 
+/**
+ * ツールオプション
+ */
+export interface ToolOptions {
+  enableWebSearch?: boolean;
+}
+
 interface UseLLMStreamReturn extends StreamState {
   startStream: (
     messages: Array<{ role: "user" | "assistant" | "system"; content: string }>,
-    provider: LLMProvider
+    provider: LLMProvider,
+    toolOptions?: ToolOptions
   ) => Promise<void>;
   cancelStream: () => void;
   resetStream: () => void;
@@ -211,7 +219,8 @@ export function useLLMStream(): UseLLMStreamReturn {
 
   const startStream = useCallback(async (
     messages: Array<{ role: "user" | "assistant" | "system"; content: string }>,
-    provider: LLMProvider
+    provider: LLMProvider,
+    toolOptions?: ToolOptions
   ) => {
     // 既存の接続をキャンセル
     if (abortControllerRef.current) {
@@ -234,7 +243,7 @@ export function useLLMStream(): UseLLMStreamReturn {
       const response = await fetch("/api/llm/stream", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages, provider }),
+        body: JSON.stringify({ messages, provider, toolOptions }),
         signal: abortController.signal,
       });
 

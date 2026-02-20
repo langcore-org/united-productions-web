@@ -8,11 +8,18 @@
 
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
-import { createLLMClient, isValidProvider } from '@/lib/llm/factory';
+import { createLLMClient, createGrokClientWithTools, isValidProvider } from '@/lib/llm/factory';
 import { DEFAULT_PROVIDER } from '@/lib/llm/config';
 import { requireAuth } from '@/lib/api/auth';
 import { logger } from '@/lib/logger';
 import type { LLMMessage, LLMProvider } from '@/lib/llm/types';
+
+/**
+ * ツールオプションの型
+ */
+interface ToolOptions {
+  enableWebSearch?: boolean;
+}
 
 /**
  * リクエストバリデーションスキーマ
@@ -25,6 +32,9 @@ const streamRequestSchema = z.object({
     })
   ).min(1),
   provider: z.string().optional(),
+  toolOptions: z.object({
+    enableWebSearch: z.boolean().optional(),
+  }).optional(),
 });
 
 export type StreamRequest = z.infer<typeof streamRequestSchema>;
@@ -154,7 +164,7 @@ export async function POST(request: NextRequest): Promise<Response> {
       );
     }
 
-    const { messages, provider: requestedProvider } = validationResult.data;
+    const { messages, provider: requestedProvider, toolOptions } = validationResult.data;
 
     // プロバイダーの決定
     let provider: LLMProvider;
@@ -183,8 +193,18 @@ export async function POST(request: NextRequest): Promise<Response> {
     // LLMクライアントの作成
     let client;
     try {
-      client = createLLMClient(provider);
-      logger.info(`[${requestId}] LLM client created`);
+      // Grokの場合はツールオプションを渡す
+      if (provider.startsWith('grok-') && toolOptions) {
+        client = createGrokClientWithTools(provider, {
+          enableWebSearch: toolOptions.enableWebSearch,
+        });
+      } else {
+        client = createLLMClient(provider);
+      }
+      logger.info(`[${requestId}] LLM client created`, { 
+        provider, 
+        tools: toolOptions 
+      });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       logger.error(`[${requestId}] Failed to create LLM client`, { error: errorMessage });

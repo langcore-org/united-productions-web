@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Send, Copy, Check, Loader2, Sparkles, MessageSquare, Trash2, RotateCcw } from "lucide-react";
 import { WordExportButton } from "./WordExportButton";
-import { useLLMStream, StreamingMessage } from "./StreamingMessage";
+import { useLLMStream, StreamingMessage, type ToolOptions } from "./StreamingMessage";
 import { MessageBubble } from "./MessageBubble";
 import { ModelSelector } from "./ModelSelector";
 import { FileAttachButton, AttachedFile } from "./FileAttachment";
@@ -37,6 +37,8 @@ export interface FeatureChatProps {
   enableModelSelector?: boolean;
   /** ファイル添付を有効化 */
   enableFileAttachment?: boolean;
+  /** Grokツール（Web検索）を有効化 */
+  enableGrokTools?: boolean;
 }
 
 export function FeatureChat({
@@ -51,6 +53,7 @@ export function FeatureChat({
   emptyDescription,
   enableModelSelector = true,
   enableFileAttachment = true,
+  enableGrokTools = false,
 }: FeatureChatProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -153,13 +156,20 @@ export function FeatureChat({
       content: m.content,
     }));
 
+    // Grokツールオプションを設定
+    const toolOptions: ToolOptions | undefined = 
+      enableGrokTools && provider.startsWith("grok-")
+        ? { enableWebSearch: true }
+        : undefined;
+
     await startStream(
       [
         { role: "system", content: systemPrompt },
         ...conversationHistory,
         { role: "user", content: userMessage.content },
       ],
-      provider
+      provider,
+      toolOptions
     );
   };
 
@@ -181,13 +191,20 @@ export function FeatureChat({
       content: m.content,
     }));
 
+    // Grokツールオプションを設定
+    const toolOptions: ToolOptions | undefined = 
+      enableGrokTools && provider.startsWith("grok-")
+        ? { enableWebSearch: true }
+        : undefined;
+
     await startStream(
       [
         { role: "system", content: systemPrompt },
         ...conversationHistory,
         { role: "user", content: lastUserMessage.content },
       ],
-      provider
+      provider,
+      toolOptions
     );
   };
 

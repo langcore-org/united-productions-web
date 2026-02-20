@@ -9,6 +9,7 @@ import { prisma } from '@/lib/prisma';
 import { DEFAULT_PROVIDER } from '@/lib/llm/config';
 import { isValidProvider } from '@/lib/llm/factory';
 import type { LLMProvider } from '@/lib/llm/types';
+import type { ChatFeatureId } from '@/lib/chat/chat-config';
 
 /**
  * 管理可能なシステム設定キーの定数
@@ -60,4 +61,123 @@ export async function getDefaultLLMProvider(): Promise<LLMProvider> {
     return value;
   }
   return DEFAULT_PROVIDER;
+}
+
+// ============================================
+// Grokツール設定
+// ============================================
+
+/**
+ * Grokツール設定の型
+ */
+export interface GrokToolSettings {
+  generalChat: boolean;
+  researchCast: boolean;
+  researchLocation: boolean;
+  researchInfo: boolean;
+  researchEvidence: boolean;
+  minutes: boolean;
+  proposal: boolean;
+  naScript: boolean;
+}
+
+/**
+ * デフォルトのGrokツール設定
+ */
+export const DEFAULT_GROK_TOOL_SETTINGS: GrokToolSettings = {
+  generalChat: false,
+  researchCast: false,
+  researchLocation: false,
+  researchInfo: true,
+  researchEvidence: true,
+  minutes: false,
+  proposal: false,
+  naScript: false,
+};
+
+/**
+ * featureIdからGrokToolSettingsのキーに変換
+ */
+export function featureIdToToolKey(featureId: ChatFeatureId): keyof GrokToolSettings | null {
+  const mapping: Record<ChatFeatureId, keyof GrokToolSettings> = {
+    'general-chat': 'generalChat',
+    'research-cast': 'researchCast',
+    'research-location': 'researchLocation',
+    'research-info': 'researchInfo',
+    'research-evidence': 'researchEvidence',
+    'minutes': 'minutes',
+    'proposal': 'proposal',
+    'na-script': 'naScript',
+  };
+  return mapping[featureId] ?? null;
+}
+
+/**
+ * ユーザーのGrokツール設定を取得
+ */
+export async function getGrokToolSettings(userId: string): Promise<GrokToolSettings> {
+  try {
+    const settings = await (prisma as unknown as { 
+      grokToolSettings: { 
+        findUnique: (args: { where: { userId: string } }) => Promise<GrokToolSettings | null> 
+      } 
+    }).grokToolSettings.findUnique({
+      where: { userId },
+    });
+
+    if (settings) {
+      return settings;
+    }
+  } catch (error) {
+    console.error('Failed to get Grok tool settings:', error);
+  }
+
+  return DEFAULT_GROK_TOOL_SETTINGS;
+}
+
+/**
+ * ユーザーのGrokツール設定を保存
+ */
+export async function saveGrokToolSettings(
+  userId: string, 
+  settings: Partial<GrokToolSettings>
+): Promise<GrokToolSettings> {
+  const data = {
+    ...DEFAULT_GROK_TOOL_SETTINGS,
+    ...settings,
+  };
+
+  const result = await (prisma as unknown as { 
+    grokToolSettings: { 
+      upsert: (args: {
+        where: { userId: string };
+        update: GrokToolSettings;
+        create: GrokToolSettings & { userId: string };
+      }) => Promise<GrokToolSettings>;
+    } 
+  }).grokToolSettings.upsert({
+    where: { userId },
+    update: data,
+    create: {
+      userId,
+      ...data,
+    },
+  });
+
+  return result;
+}
+
+/**
+ * 特定の機能でGrokツール（Web検索）が有効かどうか
+ */
+export async function isGrokToolEnabled(
+  userId: string, 
+  featureId: ChatFeatureId
+): Promise<boolean> {
+  const settings = await getGrokToolSettings(userId);
+  const key = featureIdToToolKey(featureId);
+  
+  if (!key) return false;
+  
+  return settings[key] ?? false;
 }
