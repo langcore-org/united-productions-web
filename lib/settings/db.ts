@@ -120,8 +120,7 @@ export interface GrokToolSettings {
 /**
  * デフォルトのGrokツール設定
  * 
- * 検索ツール（Web検索、X検索）はデフォルトでON
- * コード実行とファイル検索はデフォルトでOFF
+ * すべてのツールをデフォルトでONに設定
  */
 export const DEFAULT_GROK_TOOL_SETTINGS: GrokToolSettings = {
   // Web検索（デフォルトON）
@@ -144,25 +143,25 @@ export const DEFAULT_GROK_TOOL_SETTINGS: GrokToolSettings = {
   xSearchProposal: true,
   xSearchNaScript: true,
   
-  // コード実行（デフォルトOFF）
-  codeExecutionGeneralChat: false,
-  codeExecutionResearchCast: false,
-  codeExecutionResearchLocation: false,
-  codeExecutionResearchInfo: false,
-  codeExecutionResearchEvidence: false,
-  codeExecutionMinutes: false,
-  codeExecutionProposal: false,
-  codeExecutionNaScript: false,
+  // コード実行（デフォルトON）
+  codeExecutionGeneralChat: true,
+  codeExecutionResearchCast: true,
+  codeExecutionResearchLocation: true,
+  codeExecutionResearchInfo: true,
+  codeExecutionResearchEvidence: true,
+  codeExecutionMinutes: true,
+  codeExecutionProposal: true,
+  codeExecutionNaScript: true,
   
-  // ファイル検索（デフォルトOFF）
-  fileSearchGeneralChat: false,
-  fileSearchResearchCast: false,
-  fileSearchResearchLocation: false,
-  fileSearchResearchInfo: false,
-  fileSearchResearchEvidence: false,
-  fileSearchMinutes: false,
-  fileSearchProposal: false,
-  fileSearchNaScript: false,
+  // ファイル検索（デフォルトON）
+  fileSearchGeneralChat: true,
+  fileSearchResearchCast: true,
+  fileSearchResearchLocation: true,
+  fileSearchResearchInfo: true,
+  fileSearchResearchEvidence: true,
+  fileSearchMinutes: true,
+  fileSearchProposal: true,
+  fileSearchNaScript: true,
 };
 
 /**
