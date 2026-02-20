@@ -20,8 +20,8 @@ export const GROK_TOOLS = {
     type: 'web_search' as const,
     description: 'Search the web for current information',
   },
-  x_search: {
-    type: 'x_search' as const,
+  live_search: {
+    type: 'live_search' as const,
     description: 'Search X (Twitter) for real-time information',
   },
   code_execution: {
@@ -170,7 +170,7 @@ export class GrokClient implements LLMClient {
     }
     
     if (this.toolOptions.enableXSearch) {
-      tools.push({ type: 'x_search' });
+      tools.push({ type: 'live_search' });
     }
     
     if (this.toolOptions.enableCodeExecution) {

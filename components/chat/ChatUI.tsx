@@ -6,7 +6,7 @@ import { AlertCircle, X } from "lucide-react";
 import { ChatMessage } from "./ChatMessage";
 import { ChatInput } from "./ChatInput";
 import { EmptyState } from "./EmptyState";
-import { StreamingMessage } from "./StreamingMessage";
+import { StreamingMessage } from "@/components/ui/StreamingMessage";
 import type { ChatMessage as ChatMessageType, ChatUIProps } from "./types";
 
 export function ChatUI({

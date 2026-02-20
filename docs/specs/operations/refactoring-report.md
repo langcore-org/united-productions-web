@@ -171,7 +171,7 @@
 
 ### 高優先度（即座に対応推奨）
 
-1. **LLMプロバイダー定義の統一** - 単一の情報源（Single Source of Truth）に集約
+1. ✅ **LLMプロバイダー定義の統一** - `VALID_PROVIDERS` を `types.ts` に集約（2026-02-20完了）
 2. **StreamingMessage/ChatMessageコンポーネントの統合** - 3つの重複を1つに
 3. **useChat/useLLMフックの統合** - 類似フックを統一
 4. **プロンプト定義の統一** - DB管理かファイル管理かを明確に

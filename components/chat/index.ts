@@ -1,11 +1,9 @@
-export { ChatUI } from "./ChatUI";
-export { ChatMessage } from "./ChatMessage";
-export { ChatInput } from "./ChatInput";
-export { EmptyState } from "./EmptyState";
-export { StreamingMessage } from "./StreamingMessage";
-export type {
-  ChatMessage as ChatMessageType,
-  ChatStreamState,
-  ChatConfig,
-  ChatUIProps,
-} from "./types";
+// Chat components - 統合版StreamingMessageを再エクスポート
+export { StreamingMessage } from "@/components/ui/StreamingMessage";
+export type { ToolOptions } from "@/components/ui/StreamingMessage";
+
+// 型定義
+export * from "./types";
+
+// 後方互換性のための型エイリアス
+export type ChatMessageType = import("./types").ChatMessage;

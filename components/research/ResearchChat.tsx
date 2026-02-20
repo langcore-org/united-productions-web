@@ -8,7 +8,7 @@ import { AgentTabs } from "./AgentTabs";
 import { ChatInput } from "./ChatInput";
 import { EmptyState } from "./EmptyState";
 import { ChatMessage } from "./message/ChatMessage";
-import { StreamingMessage } from "./message/StreamingMessage";
+import { StreamingMessage } from "@/components/ui/StreamingMessage";
 
 
 interface ResearchChatProps {

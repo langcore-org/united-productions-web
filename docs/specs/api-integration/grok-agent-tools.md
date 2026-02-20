@@ -51,12 +51,12 @@ export async function isToolEnabled(): Promise<boolean> {
 
 ---
 
-### 2. X Search (`x_search`)
+### 2. X Search (`live_search`)
 
 | 項目 | 内容 |
 |------|------|
 | **名前** | X検索 |
-| **API名** | `x_search` |
+| **API名** | `live_search` |
 | **説明** | X（Twitter）からリアルタイム投稿、ユーザー、スレッドを検索 |
 | **状態** | **常時有効** |
 | **利用可能モデル** | Grok 4.1 Fast, Grok 4.1 Fast Reasoning |

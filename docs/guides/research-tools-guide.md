@@ -170,7 +170,7 @@ response = client.chat.create(
         {"role": "user", "content": "Xで現在話題になっているテクノロジートレンドを3つ挙げて、それぞれの sentiment を分析してください。"}
     ],
     tools=[
-        {"type": "x_search", "allowed_x_handles": ["techcrunch", "verge"]}
+        {"type": "live_search", "allowed_x_handles": ["techcrunch", "verge"]}
     ]
 )
 ```

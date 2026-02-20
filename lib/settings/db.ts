@@ -115,7 +115,7 @@ export async function getDefaultLLMProvider(): Promise<LLMProvider> {
  * 
  * 各機能でどのツールを有効にするかを設定
  * - search: Web検索（web_search）
- * - xSearch: X検索（x_search）
+ * - xSearch: X検索（live_search）
  * - codeExecution: コード実行（code_execution）
  * - fileSearch: ファイル検索（collections_search）
  */
@@ -226,7 +226,7 @@ export function featureIdToToolKey(featureId: ChatFeatureId): keyof GrokToolSett
 /**
  * ツールタイプ
  */
-export type GrokToolType = 'web_search' | 'x_search' | 'code_execution' | 'collections_search';
+export type GrokToolType = 'web_search' | 'live_search' | 'code_execution' | 'collections_search';
 
 /**
  * featureIdとツールタイプから設定キーを取得
@@ -248,7 +248,7 @@ export function getToolSettingKey(
   
   const toolPrefixMap: Record<GrokToolType, string> = {
     'web_search': '',
-    'x_search': 'xSearch',
+    'live_search': 'xSearch',
     'code_execution': 'codeExecution',
     'collections_search': 'fileSearch',
   };

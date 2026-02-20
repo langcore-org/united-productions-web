@@ -41,7 +41,7 @@ const TOOLS = [
   },
   {
     id: "xSearch" as const,
-    name: "x_search",
+    name: "live_search",
     label: "X検索",
     description: "X（Twitter）からリアルタイム情報を検索",
     icon: Twitter,
