@@ -134,6 +134,28 @@ export function FeatureChat({
     }
   }, [input]);
 
+  // ツール呼び出しのタイトルを取得
+  const getToolCallTitle = useCallback((type: string, name?: string): string => {
+    const titleMap: Record<string, string> = {
+      web_search: "Web検索",
+      x_search: "X検索",
+      code_execution: "コード実行",
+      file_search: "ファイル検索",
+    };
+    return titleMap[type] || name || "ツール実行";
+  }, []);
+
+  // ツール呼び出しのラベルを取得
+  const getToolCallLabel = useCallback((type: string): string => {
+    const labelMap: Record<string, string> = {
+      web_search: "検索",
+      x_search: "X検索",
+      code_execution: "コード実行",
+      file_search: "ファイル検索",
+    };
+    return labelMap[type] || "ツール";
+  }, []);
+
   // ツール呼び出しを思考ステップに変換
   useEffect(() => {
     if (toolCalls.length === 0) return;
@@ -193,39 +215,59 @@ export function FeatureChat({
     if (latestToolCall.status === "running") {
       setActiveThinkingStepId(latestToolCall.id);
     }
-  }, [toolCalls]);
+  }, [toolCalls, getToolCallTitle, getToolCallLabel]);
 
-  // ツール呼び出しのタイトルを取得
-  const getToolCallTitle = (type: string, name?: string): string => {
-    const titleMap: Record<string, string> = {
-      web_search: "Web検索",
-      x_search: "X検索",
-      code_execution: "コード実行",
-      file_search: "ファイル検索",
-    };
-    return titleMap[type] || name || "ツール実行";
-  };
+  // thinkingやreasoningStepsから思考ステップを生成
+  useEffect(() => {
+    // ストリーミング中でない場合はスキップ
+    const currentlyStreaming = !isComplete && (content || thinking);
+    if (!currentlyStreaming) return;
 
-  // ツール呼び出しのラベルを取得
-  const getToolCallLabel = (type: string): string => {
-    const labelMap: Record<string, string> = {
-      web_search: "検索",
-      x_search: "X検索",
-      code_execution: "コード実行",
-      file_search: "ファイル検索",
-    };
-    return labelMap[type] || "ツール";
-  };
+    // thinkingがある場合、表示用ステップを生成
+    if (thinking && thinking.length > 0 && thinkingSteps.length === 0) {
+      const newStep: ThinkingStep = {
+        id: uuidv4(),
+        stepNumber: 1,
+        type: "thinking",
+        title: "思考中...",
+        content: thinking,
+        status: "running",
+        subSteps: [],
+        timestamp: new Date(),
+      };
+      setThinkingSteps([newStep]);
+      setActiveThinkingStepId(newStep.id);
+    }
+
+    // reasoningStepsがある場合、ステップを生成
+    if (reasoningSteps.length > 0 && thinkingSteps.length === 0) {
+      const steps: ThinkingStep[] = reasoningSteps.map((rs, index) => ({
+        id: uuidv4(),
+        stepNumber: index + 1,
+        type: index === reasoningSteps.length - 1 ? "thinking" : "analysis",
+        title: `ステップ ${rs.step}`,
+        content: rs.content,
+        status: index === reasoningSteps.length - 1 ? "running" : "completed",
+        subSteps: [],
+        timestamp: new Date(),
+      }));
+      setThinkingSteps(steps);
+      if (steps.length > 0) {
+        setActiveThinkingStepId(steps[steps.length - 1].id);
+      }
+    }
+  }, [isComplete, content, thinking, reasoningSteps, thinkingSteps.length]);
 
   // ストリーミング開始時に思考ステップをリセット
   useEffect(() => {
-    if (!isComplete && toolCalls.length === 0 && content === "" && thinking === "") {
+    const currentlyStreaming = !isComplete && (content || thinking);
+    if (!isComplete && !currentlyStreaming && toolCalls.length === 0 && content === "" && thinking === "") {
       // 新しいストリーム開始
       setThinkingSteps([]);
       setThinkingEvents([]);
       setActiveThinkingStepId(undefined);
     }
-  }, [isComplete, toolCalls.length, content, thinking]);
+  }, [isComplete, content, thinking, toolCalls.length]);
 
   const handleSend = async () => {
     if (!input.trim() && attachedFiles.length === 0) return;
