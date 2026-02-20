@@ -365,7 +365,7 @@ export default function AdminPromptDetailPage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {prompt.versions.slice(0, 5).map((version) => (
+                  {(prompt.versions || []).slice(0, 5).map((version) => (
                     <div
                       key={version.id}
                       className="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 cursor-pointer"

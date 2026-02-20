@@ -308,7 +308,7 @@ export default function AdminPromptsPage() {
             {filteredPrompts.map((prompt) => {
               const categoryConfig = CATEGORIES[prompt.category] || CATEGORIES.general;
               const Icon = categoryConfig.icon;
-              const preview = prompt.content.slice(0, 100).replace(/\n/g, " ") + "...";
+              const preview = (prompt.content || "").slice(0, 100).replace(/\n/g, " ") + "...";
 
               return (
                 <Card

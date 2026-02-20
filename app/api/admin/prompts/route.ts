@@ -59,6 +59,7 @@ export async function GET(request: NextRequest) {
         key: true,
         name: true,
         description: true,
+        content: true,
         category: true,
         isActive: true,
         currentVersion: true,
