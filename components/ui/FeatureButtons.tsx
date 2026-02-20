@@ -53,7 +53,7 @@ const featureButtonVariants = cva(
       },
     },
     defaultVariants: {
-      variant: "dark",
+      variant: "light",
       size: "md",
     },
   }
@@ -83,7 +83,7 @@ const iconContainerVariants = cva(
       },
     },
     defaultVariants: {
-      variant: "dark",
+      variant: "light",
       size: "md",
     },
   }
@@ -212,7 +212,7 @@ FeatureButtonItem.displayName = "FeatureButtonItem";
 // Main Feature Buttons Container Component
 export function FeatureButtons({
   buttons,
-  variant = "dark",
+  variant = "light",
   size = "md",
   className,
   buttonClassName,
