@@ -226,7 +226,8 @@ export function featureIdToToolKey(featureId: ChatFeatureId): keyof GrokToolSett
 /**
  * ツールタイプ
  */
-export type GrokToolType = 'web_search' | 'x_search' | 'code_execution' | 'collections_search';
+// 注意: code_execution はレスポンスでは code_interpreter として記録される
+export type GrokToolType = 'web_search' | 'x_search' | 'code_execution' | 'code_interpreter' | 'collections_search' | 'file_search';
 
 /**
  * featureIdとツールタイプから設定キーを取得
@@ -246,11 +247,13 @@ export function getToolSettingKey(
     'na-script': 'NaScript',
   };
   
-  const toolPrefixMap: Record<GrokToolType, string> = {
+  const toolPrefixMap: Partial<Record<GrokToolType, string>> = {
     'web_search': '',
     'x_search': 'xSearch',
     'code_execution': 'codeExecution',
+    'code_interpreter': 'codeExecution',  // エイリアス
     'collections_search': 'fileSearch',
+    'file_search': 'fileSearch',  // エイリアス
   };
   
   const feature = featureMap[featureId];

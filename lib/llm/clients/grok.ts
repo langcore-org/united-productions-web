@@ -108,23 +108,16 @@ interface XAIResponse {
 }
 
 /**
- * xAI Responses APIストリーミングレスポンス型
+ * xAI Responses APIストリーミングイベント型
  */
-interface XAIResponseStreamChunk {
-  id: string;
-  object: string;
-  created: number;
-  model: string;
-  output: Array<{
-    id?: string;
-    type?: string;
-    content?: Array<{
-      type?: string;
-      text?: string;
-      delta?: string;
-    }>;
-    delta?: string;
-  }>;
+interface XAIStreamEvent {
+  type: string;
+  sequence_number?: number;
+  delta?: string;
+  content_index?: number;
+  item_id?: string;
+  output_index?: number;
+  response?: XAIResponse;
   usage?: XAIResponse['usage'];
 }
 
@@ -158,7 +151,7 @@ export class GrokClient implements LLMClient {
       enableWebSearch: true,
       enableXSearch: true,
       enableCodeExecution: true,
-      enableFileSearch: true,
+      enableFileSearch: false,  // vector_store_ids が必要なため無効化
       ...toolOptions,
     };
     
@@ -215,9 +208,10 @@ export class GrokClient implements LLMClient {
       tools.push({ type: 'code_execution' });
     }
     
-    if (this.toolOptions.enableFileSearch) {
-      tools.push({ type: 'collections_search' });
-    }
+    // collections_search/file_search は vector_store_ids が必要なため現状未対応
+    // if (this.toolOptions.enableFileSearch) {
+    //   tools.push({ type: 'collections_search' });
+    // }
     
     return tools.length > 0 ? tools : undefined;
   }
@@ -390,7 +384,14 @@ export class GrokClient implements LLMClient {
 
         for (const line of lines) {
           const trimmedLine = line.trim();
-          if (!trimmedLine || !trimmedLine.startsWith('data: ')) continue;
+          
+          // SSE形式: "event: xxx" または "data: xxx"
+          if (trimmedLine.startsWith('event: ')) {
+            // イベントタイプを記録（必要に応じて）
+            continue;
+          }
+          
+          if (!trimmedLine.startsWith('data: ')) continue;
 
           const data = trimmedLine.slice(6); // Remove 'data: ' prefix
           
@@ -403,35 +404,26 @@ export class GrokClient implements LLMClient {
           }
 
           try {
-            const chunk: XAIResponseStreamChunk = JSON.parse(data);
+            const event: XAIStreamEvent = JSON.parse(data);
             
-            // コンテンツを抽出
-            const outputItem = chunk.output?.[0];
-            if (outputItem) {
-              // テキストチャンク
-              if (outputItem.content?.[0]?.delta) {
-                const text = outputItem.content[0].delta;
-                chunkCount++;
-                totalLength += text.length;
-                yield { chunk: text };
-              }
-              // 直接deltaがある場合
-              else if (outputItem.delta) {
-                chunkCount++;
-                totalLength += outputItem.delta.length;
-                yield { chunk: outputItem.delta };
-              }
+            // テキストチャンクの抽出
+            if (event.type === 'response.output_text.delta' && event.delta) {
+              const text = event.delta;
+              chunkCount++;
+              totalLength += text.length;
+              yield { chunk: text };
             }
             
-            // usage情報を記録
-            if (chunk.usage) {
+            // usage情報を記録（response.completedイベントで）
+            if (event.type === 'response.completed' && event.response?.usage) {
+              const usage = event.response.usage;
               const providerInfo = getProviderInfo(this.provider);
-              const inputTokens = chunk.usage.input_tokens;
-              const outputTokens = chunk.usage.output_tokens;
+              const inputTokens = usage.input_tokens;
+              const outputTokens = usage.output_tokens;
               
               let cost: number;
-              if (chunk.usage.cost_in_usd_ticks) {
-                cost = Number((chunk.usage.cost_in_usd_ticks / 1000000000).toFixed(6));
+              if (usage.cost_in_usd_ticks) {
+                cost = Number((usage.cost_in_usd_ticks / 1000000000).toFixed(6));
               } else {
                 cost = Number(
                   (
@@ -463,21 +455,22 @@ export class GrokClient implements LLMClient {
           const data = trimmedLine.slice(6);
           if (data !== '[DONE]') {
             try {
-              const chunk: XAIResponseStreamChunk = JSON.parse(data);
-              const outputItem = chunk.output?.[0];
-              if (outputItem?.content?.[0]?.delta) {
-                yield { chunk: outputItem.content[0].delta };
-              } else if (outputItem?.delta) {
-                yield { chunk: outputItem.delta };
+              const event: XAIStreamEvent = JSON.parse(data);
+              
+              // テキストチャンク
+              if (event.type === 'response.output_text.delta' && event.delta) {
+                yield { chunk: event.delta };
               }
               
-              if (chunk.usage) {
+              // usage情報
+              if (event.type === 'response.completed' && event.response?.usage) {
+                const usage = event.response.usage;
                 const providerInfo = getProviderInfo(this.provider);
-                const inputTokens = chunk.usage.input_tokens;
-                const outputTokens = chunk.usage.output_tokens;
+                const inputTokens = usage.input_tokens;
+                const outputTokens = usage.output_tokens;
                 let cost: number;
-                if (chunk.usage.cost_in_usd_ticks) {
-                  cost = Number((chunk.usage.cost_in_usd_ticks / 1000000000).toFixed(6));
+                if (usage.cost_in_usd_ticks) {
+                  cost = Number((usage.cost_in_usd_ticks / 1000000000).toFixed(6));
                 } else {
                   cost = Number(
                     (
