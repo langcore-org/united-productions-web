@@ -398,6 +398,33 @@ export const PROMPT_KEYS = {
 | 2026-02-20 20:00 | 初版作成 | AI Agent |
 | 2026-02-20 20:15 | Phase 1完了: エージェント基本プロンプト作成・DB更新 | AI Agent |
 | 2026-02-20 20:25 | Phase 2完了: AgenticResponseコンポーネント作成 | AI Agent |
+| 2026-02-20 20:35 | Phase 3完了: FeatureChatへの統合 | AI Agent |
+
+### Phase 3 実装詳細
+
+#### 変更ファイル
+- `components/ui/FeatureChat.tsx`
+  - `useLLM` → `useLLMStream` に変更（ツール呼び出し・思考ステップ対応）
+  - `StreamingMessage` → `AgenticResponse` に変更
+  - `variant="chat"` を指定してチャット風表示
+
+#### 統合内容
+```typescript
+// 変更前
+const { streamState: { content, thinking, isComplete, error, usage } } = useLLM();
+
+// 変更後
+const {
+  content, thinking, isComplete, error, usage,
+  toolCalls, toolUsage, reasoningSteps,  // 追加
+} = useLLMStream();
+```
+
+#### 表示内容
+- ツール実行状態（Web検索、X検索など）
+- 思考プロセス（折りたたみ可能）
+- 構造化された回答
+- 使用状況サマリー（完了後）
 
 ### Phase 2 実装詳細
 

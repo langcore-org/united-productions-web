@@ -6,12 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Send, Copy, Check, Loader2, Sparkles, MessageSquare, Trash2, RotateCcw } from "lucide-react";
 import { WordExportButton } from "./WordExportButton";
-import { StreamingMessage, type ToolOptions } from "./StreamingMessage";
-import { useLLM } from "@/hooks/use-llm";
+import { type ToolOptions } from "./StreamingMessage";
 import { MessageBubble } from "./MessageBubble";
 import { FileAttachButton, AttachedFile } from "./FileAttachment";
 import { DEFAULT_PROVIDER } from "@/lib/llm/config";
 import type { LLMProvider } from "@/lib/llm/types";
+import { AgenticResponse } from "@/components/chat/AgenticResponse";
+import { useLLMStream } from "@/components/ui/StreamingMessage";
 
 export interface Message {
   id: string;
@@ -64,11 +65,18 @@ export function FeatureChat({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const {
-    streamState: { content, thinking, isComplete, error, usage },
+    content,
+    thinking,
+    isComplete,
+    error,
+    usage,
+    toolCalls,
+    toolUsage,
+    reasoningSteps,
     startStream,
     cancelStream,
     resetStream,
-  } = useLLM();
+  } = useLLMStream();
 
   // 会話履歴を取得
   const loadConversation = useCallback(async () => {
@@ -365,12 +373,16 @@ export function FeatureChat({
             ))}
 
             {isStreaming && (
-              <StreamingMessage
-                provider={provider}
+              <AgenticResponse
                 content={content}
                 thinking={thinking}
-                isComplete={false}
+                toolCalls={toolCalls}
+                reasoningSteps={reasoningSteps}
+                toolUsage={toolUsage}
                 usage={usage}
+                isComplete={false}
+                provider={provider}
+                variant="chat"
               />
             )}
 
