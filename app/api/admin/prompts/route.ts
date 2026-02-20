@@ -2,7 +2,7 @@
  * Admin Prompts API
  * 
  * GET /api/admin/prompts - 全プロンプト一覧取得
- * PUT /api/admin/prompts/:key - プロンプト更新
+ * PUT /api/admin/prompts?key=xxx - プロンプト更新
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -54,6 +54,19 @@ export async function GET(request: NextRequest) {
     const prompts = await prisma.systemPrompt.findMany({
       where: category ? { category } : undefined,
       orderBy: [{ category: "asc" }, { name: "asc" }],
+      select: {
+        id: true,
+        key: true,
+        name: true,
+        description: true,
+        category: true,
+        isActive: true,
+        currentVersion: true,
+        changedBy: true,
+        changeNote: true,
+        createdAt: true,
+        updatedAt: true,
+      },
     });
 
     return NextResponse.json({ success: true, data: prompts });
@@ -69,7 +82,7 @@ export async function GET(request: NextRequest) {
 
 /**
  * PUT /api/admin/prompts?key=xxx
- * プロンプトを更新
+ * プロンプトを更新（メタデータのみ - 内容更新は /[key] エンドポイントを使用）
  */
 export async function PUT(request: NextRequest) {
   // 認証チェック

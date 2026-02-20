@@ -85,6 +85,7 @@ model User {
   image           String?
   emailVerified   DateTime?
   googleId        String?            @unique
+  role            String             @default("USER") // ADMIN | USER
   accounts        Account[]
   sessions        Session[]
   meetingNotes    MeetingNote[]
@@ -298,16 +299,37 @@ model SystemSettings {
 // ============================================
 
 model SystemPrompt {
-  id          String   @id @default(cuid())
-  key         String   @unique // プロンプトの識別子（例: MINUTES, TRANSCRIPT, RESEARCH_CAST）
-  name        String   // 表示名
-  description String?  // 説明
-  content     String   @db.Text // プロンプト内容
-  category    String   // カテゴリ（minutes, transcript, research, document, general）
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id             String   @id @default(cuid())
+  key            String   @unique // プロンプトの識別子（例: MINUTES, TRANSCRIPT, RESEARCH_CAST）
+  name           String   // 表示名
+  description    String?  // 説明
+  content        String   @db.Text // プロンプト内容
+  category       String   // カテゴリ（minutes, transcript, research, document, general）
+  isActive       Boolean  @default(true)
+  currentVersion Int      @default(1) // 現在のバージョン番号
+  changedBy      String?  // 最終更新者 UserId
+  changeNote     String?  // 最終更新の理由メモ
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // リレーション
+  versions       SystemPromptVersion[]
 
   @@index([category])
   @@index([isActive])
+}
+
+// システムプロンプトバージョン履歴
+model SystemPromptVersion {
+  id          String       @id @default(cuid())
+  promptId    String       // FK -> SystemPrompt.id
+  prompt      SystemPrompt @relation(fields: [promptId], references: [id], onDelete: Cascade)
+  version     Int          // 連番（1, 2, 3...）
+  content     String       @db.Text // プロンプト本文（スナップショット）
+  changedBy   String?      // 変更者 UserId
+  changeNote  String?      // 変更理由・メモ（任意）
+  createdAt   DateTime     @default(now())
+
+  @@index([promptId, version])
+  @@index([promptId, createdAt])
 }
