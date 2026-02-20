@@ -430,7 +430,7 @@ export class GrokClient implements LLMClient {
               yield { chunk: text };
             }
             
-            // ツール呼び出しの検出
+            // ツール呼び出しの検出（開始時）
             if (event.type === 'response.output_item.added' && event.item) {
               const item = event.item;
               if (item.type === 'web_search_call') {
@@ -438,7 +438,7 @@ export class GrokClient implements LLMClient {
                   toolCall: { 
                     id: item.id, 
                     type: 'web_search', 
-                    status: item.status === 'completed' ? 'completed' : 'running' 
+                    status: 'running'
                   } 
                 };
               } else if (item.type === 'custom_tool_call') {
@@ -448,7 +448,7 @@ export class GrokClient implements LLMClient {
                     type: item.name || 'custom_tool', 
                     name: item.name,
                     input: item.input,
-                    status: item.status === 'completed' ? 'completed' : 'running' 
+                    status: 'running'
                   } 
                 };
               } else if (item.type === 'code_interpreter_call') {
@@ -456,7 +456,39 @@ export class GrokClient implements LLMClient {
                   toolCall: { 
                     id: item.id, 
                     type: 'code_interpreter', 
-                    status: item.status === 'completed' ? 'completed' : 'running' 
+                    status: 'running'
+                  } 
+                };
+              }
+            }
+            
+            // ツール呼び出しの完了検出
+            if (event.type === 'response.output_item.done' && event.item) {
+              const item = event.item;
+              if (item.type === 'web_search_call') {
+                yield { 
+                  toolCall: { 
+                    id: item.id, 
+                    type: 'web_search', 
+                    status: 'completed'
+                  } 
+                };
+              } else if (item.type === 'custom_tool_call') {
+                yield { 
+                  toolCall: { 
+                    id: item.id, 
+                    type: item.name || 'custom_tool', 
+                    name: item.name,
+                    input: item.input,
+                    status: 'completed'
+                  } 
+                };
+              } else if (item.type === 'code_interpreter_call') {
+                yield { 
+                  toolCall: { 
+                    id: item.id, 
+                    type: 'code_interpreter', 
+                    status: 'completed'
                   } 
                 };
               }

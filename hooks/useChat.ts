@@ -26,6 +26,10 @@ export function useChat(options: UseChatOptions) {
     isThinking: false,
     isComplete: false,
     error: null,
+    toolCalls: [],
+    toolUsage: undefined,
+    reasoningSteps: [],
+    reasoningTokens: 0,
   });
 
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -54,6 +58,10 @@ export function useChat(options: UseChatOptions) {
         isThinking: false,
         isComplete: false,
         error: null,
+        toolCalls: [],
+        toolUsage: undefined,
+        reasoningSteps: [],
+        reasoningTokens: 0,
       });
 
       if (abortControllerRef.current) {
@@ -120,6 +128,8 @@ export function useChat(options: UseChatOptions) {
         let fullContent = "";
         let fullThinking = "";
         let chunkCount = 0;
+        const toolCallsMap = new Map<string, { id: string; type: string; name?: string; input?: string; status: 'pending' | 'running' | 'completed' | 'failed' }>();
+        const reasoningStepsList: { step: number; content: string; tokens?: number }[] = [];
 
         while (true) {
           const { done, value } = await reader.read();
@@ -169,6 +179,39 @@ export function useChat(options: UseChatOptions) {
                   ...prev,
                   content: fullContent,
                   isThinking: false,
+                }));
+              }
+
+              // ツール呼び出し
+              if (parsed.toolCall) {
+                const tc = parsed.toolCall;
+                toolCallsMap.set(tc.id, { ...tc });
+                setStreamState((prev) => ({
+                  ...prev,
+                  toolCalls: Array.from(toolCallsMap.values()),
+                }));
+              }
+
+              // 思考ステップ
+              if (parsed.reasoning) {
+                const existingIndex = reasoningStepsList.findIndex(r => r.step === parsed.reasoning.step);
+                if (existingIndex >= 0) {
+                  reasoningStepsList[existingIndex] = { ...reasoningStepsList[existingIndex], ...parsed.reasoning };
+                } else {
+                  reasoningStepsList.push(parsed.reasoning);
+                }
+                setStreamState((prev) => ({
+                  ...prev,
+                  reasoningSteps: [...reasoningStepsList],
+                  reasoningTokens: parsed.reasoning.tokens || prev.reasoningTokens,
+                }));
+              }
+
+              // ツール使用状況
+              if (parsed.toolUsage) {
+                setStreamState((prev) => ({
+                  ...prev,
+                  toolUsage: parsed.toolUsage,
                 }));
               }
             } catch (parseError) {

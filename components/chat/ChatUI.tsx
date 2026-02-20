@@ -66,6 +66,10 @@ export function ChatUI({
                 thinking={streamState.thinking}
                 showThinking={showThinking}
                 provider={provider}
+                toolCalls={streamState.toolCalls}
+                toolUsage={streamState.toolUsage}
+                reasoningSteps={streamState.reasoningSteps}
+                reasoningTokens={streamState.reasoningTokens}
               />
             )}
 
