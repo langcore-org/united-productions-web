@@ -14,6 +14,9 @@ import { AgenticResponse } from "@/components/chat/AgenticResponse";
 import { useLLMStream } from "@/components/ui/StreamingMessage";
 import type { ToolOptions } from "@/lib/chat/chat-config";
 import { PromptSuggestions, PromptSuggestion } from "@/components/chat/PromptSuggestions";
+import { ThinkingProcess } from "@/components/agent-thinking/ThinkingProcess";
+import type { ThinkingStep, ThinkingEvent } from "@/types/agent-thinking";
+import { v4 as uuidv4 } from "uuid";
 
 export interface Message {
   id: string;
@@ -62,6 +65,11 @@ export function FeatureChat({
   const [isCopied, setIsCopied] = useState(false);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [attachedFiles, setAttachedFiles] = useState<AttachedFile[]>([]);
+  
+  // 思考プロセス状態
+  const [thinkingSteps, setThinkingSteps] = useState<ThinkingStep[]>([]);
+  const [thinkingEvents, setThinkingEvents] = useState<ThinkingEvent[]>([]);
+  const [activeThinkingStepId, setActiveThinkingStepId] = useState<string | undefined>();
   
   // Grok固定
   const provider: LLMProvider = initialProvider;
@@ -125,6 +133,99 @@ export function FeatureChat({
       )}px`;
     }
   }, [input]);
+
+  // ツール呼び出しを思考ステップに変換
+  useEffect(() => {
+    if (toolCalls.length === 0) return;
+
+    const latestToolCall = toolCalls[toolCalls.length - 1];
+    
+    // 新しいツール呼び出しをステップとして追加
+    setThinkingSteps((prev) => {
+      const existingIndex = prev.findIndex(
+        (s) => s.metadata?.toolId === latestToolCall.id
+      );
+      
+      if (existingIndex >= 0) {
+        // 既存のステップを更新
+        const updated = [...prev];
+        updated[existingIndex] = {
+          ...updated[existingIndex],
+          status: latestToolCall.status === "completed" ? "completed" : "running",
+          subSteps: updated[existingIndex].subSteps.map((ss) =>
+            ss.id === latestToolCall.id
+              ? { ...ss, status: latestToolCall.status === "failed" ? "error" : latestToolCall.status }
+              : ss
+          ),
+        };
+        return updated;
+      }
+
+      // 新しいステップを追加
+      const newStep: ThinkingStep = {
+        id: uuidv4(),
+        stepNumber: prev.length + 1,
+        type: latestToolCall.type === "web_search" ? "search" : "thinking",
+        title: getToolCallTitle(latestToolCall.type, latestToolCall.name),
+        status: latestToolCall.status === "completed" ? "completed" : "running",
+        subSteps: [
+          {
+            id: latestToolCall.id,
+            type: latestToolCall.type === "web_search" ? "search" : "tool_use",
+            label: getToolCallLabel(latestToolCall.type),
+            searchQuery: latestToolCall.input,
+            toolName: latestToolCall.name,
+            status: latestToolCall.status === "failed" ? "error" : latestToolCall.status,
+            timestamp: new Date(),
+          },
+        ],
+        metadata: {
+          toolId: latestToolCall.id,
+          toolName: latestToolCall.name,
+        },
+        timestamp: new Date(),
+      };
+
+      return [...prev, newStep];
+    });
+
+    // アクティブステップを更新
+    if (latestToolCall.status === "running") {
+      setActiveThinkingStepId(latestToolCall.id);
+    }
+  }, [toolCalls]);
+
+  // ツール呼び出しのタイトルを取得
+  const getToolCallTitle = (type: string, name?: string): string => {
+    const titleMap: Record<string, string> = {
+      web_search: "Web検索",
+      x_search: "X検索",
+      code_execution: "コード実行",
+      file_search: "ファイル検索",
+    };
+    return titleMap[type] || name || "ツール実行";
+  };
+
+  // ツール呼び出しのラベルを取得
+  const getToolCallLabel = (type: string): string => {
+    const labelMap: Record<string, string> = {
+      web_search: "検索",
+      x_search: "X検索",
+      code_execution: "コード実行",
+      file_search: "ファイル検索",
+    };
+    return labelMap[type] || "ツール";
+  };
+
+  // ストリーミング開始時に思考ステップをリセット
+  useEffect(() => {
+    if (!isComplete && toolCalls.length === 0 && content === "" && thinking === "") {
+      // 新しいストリーム開始
+      setThinkingSteps([]);
+      setThinkingEvents([]);
+      setActiveThinkingStepId(undefined);
+    }
+  }, [isComplete, toolCalls.length, content, thinking]);
 
   const handleSend = async () => {
     if (!input.trim() && attachedFiles.length === 0) return;
@@ -404,17 +505,45 @@ export function FeatureChat({
             ))}
 
             {isStreaming && (
-              <AgenticResponse
-                content={content}
-                thinking={thinking}
-                toolCalls={toolCalls}
-                reasoningSteps={reasoningSteps}
-                toolUsage={toolUsage}
-                usage={usage}
-                isComplete={false}
-                provider={provider}
-                variant="chat"
-              />
+              <div className="px-4 py-2">
+                {/* 新しい思考プロセスUI */}
+                {thinkingSteps.length > 0 && (
+                  <ThinkingProcess
+                    steps={thinkingSteps}
+                    activeStepId={activeThinkingStepId}
+                    overallStatus="running"
+                    events={thinkingEvents}
+                    className="mb-4"
+                  />
+                )}
+                
+                {/* 従来のレスポンス表示（フォールバック） */}
+                {thinkingSteps.length === 0 && (
+                  <AgenticResponse
+                    content={content}
+                    thinking={thinking}
+                    toolCalls={toolCalls}
+                    reasoningSteps={reasoningSteps}
+                    toolUsage={toolUsage}
+                    usage={usage}
+                    isComplete={false}
+                    provider={provider}
+                    variant="chat"
+                  />
+                )}
+                
+                {/* コンテンツ表示（思考ステップがある場合） */}
+                {thinkingSteps.length > 0 && content && (
+                  <div className="mt-4 pl-12">
+                    <div className="prose prose-neutral max-w-none">
+                      <div className="whitespace-pre-wrap text-sm leading-relaxed text-gray-800">
+                        {content}
+                        <span className="inline-block w-2 h-4 bg-gray-400 ml-1 animate-pulse rounded-sm" />
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
             )}
 
             {/* Prompt Suggestions - 最後のアシスタントメッセージの後に表示 */}
