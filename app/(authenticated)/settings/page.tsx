@@ -510,13 +510,13 @@ function GrokToolSection() {
           </div>
         ) : (
           <>
-            <div className="flex items-start gap-3 p-4 rounded-lg bg-blue-50 border border-blue-200">
-              <Search className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+            <div className="flex items-start gap-3 p-4 rounded-lg bg-gray-100 border border-gray-200">
+              <Search className="w-5 h-5 text-gray-600 flex-shrink-0 mt-0.5" />
               <div>
-                <p className="text-sm font-medium text-blue-900">
+                <p className="text-sm font-medium text-gray-900">
                   Web検索ツールについて
                 </p>
-                <p className="text-xs text-blue-700 mt-1">
+                <p className="text-xs text-gray-600 mt-1">
                   Grokモデル使用時に、各機能でWeb検索を有効にすると、
                   最新情報をリアルタイムで検索して回答に含めることができます。
                   検索が必要な機能（情報リサーチ・エビデンス検索など）ではデフォルトで有効になっています。
@@ -549,7 +549,7 @@ function GrokToolSection() {
                 {saveMessage && (
                   <span className={cn(
                     "text-sm",
-                    saveMessage === "保存しました" ? "text-green-600" : "text-red-600"
+                    saveMessage === "保存しました" ? "text-gray-700" : "text-gray-600"
                   )}>
                     {saveMessage}
                   </span>
@@ -652,19 +652,19 @@ function DataManagementSection() {
         {/* Delete Data */}
         <div className="space-y-4">
           <div className="flex items-center gap-2 pb-2 border-b border-gray-200">
-            <Trash2 className="w-4 h-4 text-red-400" />
-            <span className="text-sm font-medium text-red-400">データ削除</span>
+            <Trash2 className="w-4 h-4 text-gray-500" />
+            <span className="text-sm font-medium text-gray-600">データ削除</span>
           </div>
           <div
             className={cn(
               "p-4 rounded-lg border",
-              "bg-red-500/5 border-red-500/20"
+              "bg-gray-100 border-gray-200"
             )}
           >
             <div className="flex items-start gap-3">
-              <AlertTriangle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+              <AlertTriangle className="w-5 h-5 text-gray-500 flex-shrink-0 mt-0.5" />
               <div className="flex-1">
-                <p className="text-sm font-medium text-red-400">
+                <p className="text-sm font-medium text-gray-700">
                   すべてのデータを削除
                 </p>
                 <p className="text-xs text-gray-500 mt-1">
@@ -675,8 +675,8 @@ function DataManagementSection() {
                     onClick={() => setShowDeleteConfirm(true)}
                     className={cn(
                       "mt-3 px-4 py-2 rounded-lg text-sm font-medium",
-                      "bg-red-500/10 text-red-400 border border-red-500/20",
-                      "hover:bg-red-500/20 transition-colors"
+                      "bg-gray-200 text-gray-700 border border-gray-300",
+                      "hover:bg-gray-300 transition-colors"
                     )}
                   >
                     データを削除
@@ -694,9 +694,9 @@ function DataManagementSection() {
                         placeholder="削除"
                         className={cn(
                           "flex-1 px-3 py-2 rounded-lg",
-                          "bg-gray-50 border border-red-500/30",
+                          "bg-gray-50 border border-gray-300",
                           "text-gray-900 text-sm placeholder:text-gray-400",
-                          "focus:outline-none focus:border-red-500"
+                          "focus:outline-none focus:border-gray-500"
                         )}
                       />
                       <button
@@ -704,8 +704,8 @@ function DataManagementSection() {
                         disabled={deleteConfirmText !== "削除"}
                         className={cn(
                           "px-4 py-2 rounded-lg text-sm font-medium",
-                          "bg-red-500 text-white",
-                          "hover:bg-red-600 transition-colors",
+                          "bg-gray-700 text-white",
+                          "hover:bg-gray-800 transition-colors",
                           "disabled:opacity-50 disabled:cursor-not-allowed"
                         )}
                       >

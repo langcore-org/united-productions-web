@@ -105,10 +105,10 @@ export function FileUploadChat({
     <div className="flex flex-col h-full bg-[#0a0a0f]">
       {/* Header */}
       <div className="flex items-center gap-3 px-4 py-3 border-b border-white/5">
-        <MessageSquare className="w-5 h-5 text-[#ff6b00]" />
+        <MessageSquare className="w-5 h-5 text-gray-400" />
         <h2 className="text-sm font-medium text-white">チャット</h2>
         {isGenerating && (
-          <span className="ml-auto text-xs text-green-400 flex items-center gap-1">
+          <span className="ml-auto text-xs text-gray-400 flex items-center gap-1">
             <Loader2 className="w-3 h-3 animate-spin" />
             生成中...
           </span>
@@ -121,8 +121,8 @@ export function FileUploadChat({
           // 初期状態: アップロードUI
           <div className="space-y-4">
             <div className="text-center py-8">
-              <div className="w-16 h-16 rounded-2xl bg-[#ff6b00]/10 border border-[#ff6b00]/20 flex items-center justify-center mx-auto mb-4">
-                <FileAudio className="w-8 h-8 text-[#ff6b00]" />
+              <div className="w-16 h-16 rounded-2xl bg-gray-800 border border-gray-700 flex items-center justify-center mx-auto mb-4">
+                <FileAudio className="w-8 h-8 text-gray-400" />
               </div>
               <h3 className="text-lg font-medium text-white mb-2">
                 文字起こしファイルをアップロード
@@ -136,7 +136,7 @@ export function FileUploadChat({
             <div
               className={cn(
                 "border-2 border-dashed border-white/10 rounded-xl p-8",
-                "hover:border-[#ff6b00]/50 hover:bg-white/[0.02]",
+                "hover:border-gray-500 hover:bg-white/[0.02]",
                 "transition-colors cursor-pointer text-center"
               )}
               onClick={() => fileInputRef.current?.click()}
@@ -177,7 +177,7 @@ export function FileUploadChat({
                 className={cn(
                   "w-full h-48 bg-white/5 border border-white/10 rounded-xl p-4",
                   "text-sm text-white placeholder-gray-600",
-                  "focus:outline-none focus:border-[#ff6b00]/50",
+                  "focus:outline-none focus:border-gray-500",
                   "resize-none"
                 )}
               />
@@ -187,7 +187,7 @@ export function FileUploadChat({
                 className={cn(
                   "w-full py-3 rounded-xl font-medium transition-all",
                   text.trim() && !isGenerating
-                    ? "bg-[#ff6b00] text-white hover:bg-[#ff8533]"
+                    ? "bg-gray-600 text-white hover:bg-gray-500"
                     : "bg-white/10 text-gray-500 cursor-not-allowed"
                 )}
               >
@@ -208,7 +208,7 @@ export function FileUploadChat({
             {/* Uploaded File Info */}
             {uploadedFile && (
               <div className="flex items-center gap-3 p-3 bg-white/5 rounded-lg border border-white/10">
-                <FileText className="w-5 h-5 text-[#ff6b00]" />
+                <FileText className="w-5 h-5 text-gray-400" />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm text-white truncate">
                     {uploadedFile.name}
@@ -233,21 +233,21 @@ export function FileUploadChat({
                   className={cn(
                     "w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0",
                     message.role === "user"
-                      ? "bg-[#ff6b00]"
+                      ? "bg-gray-600"
                       : "bg-white/10"
                   )}
                 >
                   {message.role === "user" ? (
                     <span className="text-xs text-white">You</span>
                   ) : (
-                    <span className="text-xs text-[#ff6b00]">AI</span>
+                    <span className="text-xs text-gray-400">AI</span>
                   )}
                 </div>
                 <div
                   className={cn(
                     "max-w-[80%] rounded-2xl px-4 py-2.5 text-sm",
                     message.role === "user"
-                      ? "bg-[#ff6b00] text-white rounded-tr-sm"
+                      ? "bg-gray-600 text-white rounded-tr-sm"
                       : "bg-white/5 text-gray-200 rounded-tl-sm border border-white/10"
                   )}
                 >
@@ -272,7 +272,7 @@ export function FileUploadChat({
               className={cn(
                 "flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3",
                 "text-sm text-white placeholder-gray-600",
-                "focus:outline-none focus:border-[#ff6b00]/50",
+                "focus:outline-none focus:border-gray-500",
                 "resize-none min-h-[44px] max-h-[120px]"
               )}
               rows={1}
@@ -283,7 +283,7 @@ export function FileUploadChat({
               className={cn(
                 "w-11 h-11 rounded-xl flex items-center justify-center transition-all",
                 chatInput.trim() && !isGenerating
-                  ? "bg-[#ff6b00] text-white hover:bg-[#ff8533]"
+                  ? "bg-gray-600 text-white hover:bg-gray-500"
                   : "bg-white/10 text-gray-500 cursor-not-allowed"
               )}
             >

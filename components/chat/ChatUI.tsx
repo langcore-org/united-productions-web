@@ -72,14 +72,14 @@ export function ChatUI({
             {/* Error Message */}
             {streamState?.error && (
               <div className="flex gap-4">
-                <div className="flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center bg-red-100">
-                  <AlertCircle className="w-4 h-4 text-red-600" />
+                <div className="flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center bg-gray-100">
+                  <AlertCircle className="w-4 h-4 text-gray-600" />
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1.5">
-                    <span className="text-sm font-medium text-red-600">エラー</span>
+                    <span className="text-sm font-medium text-gray-600">エラー</span>
                   </div>
-                  <div className="relative px-4 py-3 text-sm leading-relaxed rounded-2xl bg-red-50 text-red-800 border border-red-200 rounded-tl-sm">
+                  <div className="relative px-4 py-3 text-sm leading-relaxed rounded-2xl bg-gray-100 text-gray-800 border border-gray-200 rounded-tl-sm">
                     <div className="whitespace-pre-wrap">{streamState.error}</div>
                   </div>
                 </div>

@@ -80,7 +80,7 @@ export default function ProgramSettingsPage() {
       </div>
 
       {error && (
-        <div className="mb-6 p-4 rounded-lg bg-red-50 border border-red-200 text-red-700">
+        <div className="mb-6 p-4 rounded-lg bg-gray-100 border border-gray-200 text-gray-700">
           {error}
         </div>
       )}

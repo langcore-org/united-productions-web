@@ -49,14 +49,14 @@ export const MessageBubble = memo(function MessageBubble({
         className={cn(
           "flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center shadow-lg",
           isUser 
-            ? "bg-gradient-to-br from-amber-700 to-amber-600" 
+            ? "bg-gray-800" 
             : "bg-gray-100 border border-gray-200"
         )}
       >
         {isUser ? (
           <User className="w-4 h-4 text-white" />
         ) : (
-          <Bot className="w-4 h-4 text-amber-700" />
+          <Bot className="w-4 h-4 text-gray-600" />
         )}
       </div>
 
@@ -71,7 +71,7 @@ export const MessageBubble = memo(function MessageBubble({
             {isUser ? "あなた" : "AI Assistant"}
           </span>
           {llmProvider && !isUser && (
-            <span className="text-xs px-2 py-0.5 rounded-full bg-orange-50 text-orange-600 border border-orange-200">
+            <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 border border-gray-200">
               {PROVIDER_LABELS[llmProvider]}
             </span>
           )}
@@ -82,7 +82,7 @@ export const MessageBubble = memo(function MessageBubble({
           className={cn(
             "relative rounded-2xl px-5 py-3.5 shadow-lg",
             isUser
-              ? "bg-gradient-to-br from-amber-700 to-amber-600 text-white rounded-tr-sm"
+              ? "bg-gray-800 text-white rounded-tr-sm"
               : "bg-white border border-gray-200 text-gray-800 rounded-tl-sm hover:border-gray-300 transition-colors shadow-sm"
           )}
         >
@@ -96,7 +96,7 @@ export const MessageBubble = memo(function MessageBubble({
               title="コピー"
             >
               {copied ? (
-                <Check className="w-3.5 h-3.5 text-green-500" />
+                <Check className="w-3.5 h-3.5 text-gray-600" />
               ) : (
                 <Copy className="w-3.5 h-3.5" />
               )}
@@ -134,11 +134,11 @@ export const MessageBubble = memo(function MessageBubble({
 
         {/* Thinking Indicator */}
         {isThinking && (
-          <div className="mt-2 flex items-center gap-2 text-green-600">
+          <div className="mt-2 flex items-center gap-2 text-gray-600">
             <div className="flex gap-1">
-              <span className="w-1.5 h-1.5 bg-green-600 rounded-full animate-bounce [animation-delay:-0.3s]" />
-              <span className="w-1.5 h-1.5 bg-green-600 rounded-full animate-bounce [animation-delay:-0.15s]" />
-              <span className="w-1.5 h-1.5 bg-green-600 rounded-full animate-bounce" />
+              <span className="w-1.5 h-1.5 bg-gray-600 rounded-full animate-bounce [animation-delay:-0.3s]" />
+              <span className="w-1.5 h-1.5 bg-gray-600 rounded-full animate-bounce [animation-delay:-0.15s]" />
+              <span className="w-1.5 h-1.5 bg-gray-600 rounded-full animate-bounce" />
             </div>
             <span className="text-xs text-gray-600">思考中...</span>
           </div>
@@ -149,7 +149,7 @@ export const MessageBubble = memo(function MessageBubble({
           <div className="mt-2 w-full">
             <button
               onClick={() => setShowThinking(!showThinking)}
-              className="flex items-center gap-1.5 text-xs text-green-600 hover:text-green-700 transition-colors"
+              className="flex items-center gap-1.5 text-xs text-gray-600 hover:text-gray-800 transition-colors"
             >
               {showThinking ? (
                 <ChevronUp className="w-3.5 h-3.5" />

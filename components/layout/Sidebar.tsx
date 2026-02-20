@@ -260,7 +260,7 @@ export function Sidebar({ className, onCollapseChange }: SidebarProps) {
         isCollapsed ? "px-2 justify-center" : "px-4"
       )}>
         <div className="flex items-center gap-2">
-          <TeddyIcon size={28} variant="filled" className="text-amber-700" />
+          <TeddyIcon size={28} variant="filled" className="text-gray-900" />
           {!isCollapsed && (
             <span className="font-bold text-lg text-[#1a1a1a]">Teddy</span>
           )}
@@ -429,7 +429,7 @@ export function Sidebar({ className, onCollapseChange }: SidebarProps) {
 
               <div className="flex-1 overflow-y-auto px-2 space-y-4 custom-scrollbar">
                 {historyError ? (
-                  <p className="text-xs text-red-500 px-2">{historyError}</p>
+                  <p className="text-xs text-gray-500 px-2">{historyError}</p>
                 ) : history.length === 0 && !isLoadingHistory ? (
                   <p className="text-xs text-gray-400 px-2 py-2">履歴がありません</p>
                 ) : (
@@ -465,7 +465,7 @@ export function Sidebar({ className, onCollapseChange }: SidebarProps) {
                         {hoveredItem === item.id && (
                           <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-0.5 bg-white rounded-md px-1 shadow-sm border border-[#e5e5e5]">
                             <button 
-                              className="p-1 rounded hover:bg-[#f0f0f0] text-[#6b7280] hover:text-red-500 transition-colors"
+                              className="p-1 rounded hover:bg-gray-100 text-gray-500 hover:text-gray-900 transition-colors"
                               onClick={(e) => handleDeleteHistory(item.id, e)}
                             >
                               <Trash2 className="w-3 h-3" />

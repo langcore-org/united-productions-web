@@ -30,21 +30,21 @@ export function TeddyIcon({
         cx="7"
         cy="7"
         r="4.5"
-        fill={variant === "filled" ? "currentColor" : "#C17848"}
+        fill={variant === "filled" ? "currentColor" : "#6b7280"}
       />
       {/* 右耳 */}
       <circle
         cx="25"
         cy="7"
         r="4.5"
-        fill={variant === "filled" ? "currentColor" : "#C17848"}
+        fill={variant === "filled" ? "currentColor" : "#6b7280"}
       />
       {/* 顔の輪郭 - より丸く */}
       <circle
         cx="16"
         cy="17"
         r="11"
-        fill={variant === "filled" ? "currentColor" : "#D2691E"}
+        fill={variant === "filled" ? "currentColor" : "#4b5563"}
       />
       {/* 左目 - アニメ風大きめの目 */}
       <ellipse
@@ -98,7 +98,7 @@ export function TeddyIcon({
         cy="19"
         rx="2"
         ry="1.2"
-        fill="#FF9AA2"
+        fill="#d1d5db"
         opacity="0.7"
       />
       {/* 右頬 */}
@@ -107,7 +107,7 @@ export function TeddyIcon({
         cy="19"
         rx="2"
         ry="1.2"
-        fill="#FF9AA2"
+        fill="#d1d5db"
         opacity="0.7"
       />
     </svg>
@@ -126,7 +126,7 @@ export function TeddyLogo({
   return (
     <div className={cn("flex items-center gap-2", className)}>
       <div className="relative">
-        <TeddyIcon size={size} variant="filled" className="text-amber-700" />
+        <TeddyIcon size={size} variant="filled" className="text-gray-700" />
       </div>
       {showText && (
         <span className="font-bold text-xl tracking-tight">Teddy</span>

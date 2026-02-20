@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ChevronDown, Sparkles, Zap, Brain, Bot } from "lucide-react";
 import type { LLMProvider } from "@/lib/llm/types";
-import { PROVIDER_LABELS, PROVIDER_COLORS } from "@/lib/llm/constants";
+import { PROVIDER_LABELS } from "@/lib/llm/constants";
 import { DEFAULT_PROVIDER } from "@/lib/llm/config";
 
 interface ModelInfo {
@@ -80,7 +80,6 @@ export function ModelSelector({
     (m) => m.id === value
   ) || PRIMARY_MODELS[0];
 
-  const currentColor = PROVIDER_COLORS[value] || "#b45309";
 
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
@@ -94,10 +93,10 @@ export function ModelSelector({
             className
           )}
         >
-          <span style={{ color: currentColor }}>{currentModel.icon}</span>
+          <span className="text-gray-600">{currentModel.icon}</span>
           <span className="text-sm text-gray-700">{currentModel.name}</span>
           {value === DEFAULT_PROVIDER && (
-            <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-100 text-amber-700">
+            <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-600">
               標準
             </span>
           )}
@@ -121,14 +120,11 @@ export function ModelSelector({
               className={cn(
                 "flex items-start gap-3 p-3 rounded-lg cursor-pointer transition-all",
                 value === model.id
-                  ? "bg-orange-50 border border-orange-200"
+                  ? "bg-gray-100 border border-gray-200"
                   : "hover:bg-gray-100 border border-transparent"
               )}
             >
-              <div
-                className="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center bg-gray-100"
-                style={{ color: PROVIDER_COLORS[model.id] || "#b45309" }}
-              >
+              <div className="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center bg-gray-100 text-gray-600">
                 {model.icon}
               </div>
               <div className="flex-1 min-w-0">
@@ -137,12 +133,12 @@ export function ModelSelector({
                     {model.name}
                   </span>
                   {model.isRecommended && (
-                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-green-100 text-green-600">
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-600">
                       推奨
                     </span>
                   )}
                   {model.isNew && (
-                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-600">
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-600">
                       NEW
                     </span>
                   )}
@@ -173,7 +169,7 @@ export function ModelSelector({
                     : "text-gray-600 hover:bg-gray-100 hover:text-gray-800"
                 )}
               >
-                <span style={{ color: PROVIDER_COLORS[model.id] || "#666" }}>
+                <span className="text-gray-600">
                   {model.icon}
                 </span>
                 <span className="text-sm">{model.name}</span>

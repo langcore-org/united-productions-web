@@ -40,10 +40,10 @@ const featureButtonVariants = cva(
           "hover:bg-gray-200",
           "hover:shadow-lg",
           "hover:shadow-gray-200/50",
-          "focus:ring-amber-700/50",
-          "data-[active=true]:border-amber-700/50",
-          "data-[active=true]:bg-orange-50",
-          "data-[active=true]:text-amber-700",
+          "focus:ring-gray-700/50",
+          "data-[active=true]:border-gray-700/50",
+          "data-[active=true]:bg-gray-100",
+          "data-[active=true]:text-gray-700",
         ],
       },
       size: {
@@ -73,7 +73,7 @@ const iconContainerVariants = cva(
         dark: [
           "text-gray-500",
           "group-hover:text-gray-700",
-          "group-data-[active=true]:text-amber-700",
+          "group-data-[active=true]:text-gray-700",
         ],
       },
       size: {
@@ -108,8 +108,8 @@ const shortcutVariants = cva(
           "text-gray-500",
           "group-hover:bg-gray-300",
           "group-hover:text-gray-600",
-          "group-data-[active=true]:bg-orange-100",
-          "group-data-[active=true]:text-amber-700",
+          "group-data-[active=true]:bg-gray-200",
+          "group-data-[active=true]:text-gray-700",
         ],
       },
     },
@@ -368,7 +368,7 @@ export const presetButtons = {
         <path d="M18 8v6a6 6 0 0 1-12 0V8" />
         <path d="M12 18v4" />
         <path d="M8 22h8" />
-        <circle cx="17" cy="6" r="3" fill="currentColor" className="text-amber-700" />
+        <circle cx="17" cy="6" r="3" fill="currentColor" className="text-gray-700" />
       </svg>
     ),
     ...props,

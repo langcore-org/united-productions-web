@@ -52,8 +52,8 @@ export function ChatMessage({ message }: ChatMessageProps) {
         {!isUser && message.thinking && (
           <div className="mb-3 p-3 rounded-xl bg-gray-50 border border-gray-200">
             <div className="flex items-center gap-2 mb-2">
-              <Lightbulb className="w-3.5 h-3.5 text-amber-500" />
-              <span className="text-xs text-amber-600 font-medium">思考プロセス</span>
+              <Lightbulb className="w-3.5 h-3.5 text-gray-500" />
+              <span className="text-xs text-gray-600 font-medium">思考プロセス</span>
             </div>
             <p className="text-xs text-gray-500 leading-relaxed whitespace-pre-wrap">
               {message.thinking}
@@ -63,8 +63,8 @@ export function ChatMessage({ message }: ChatMessageProps) {
 
         {/* Citations */}
         {!isUser && message.citations && message.citations.length > 0 && (
-          <div className="mb-3 p-3 rounded-xl bg-blue-50 border border-blue-100">
-            <p className="text-xs text-blue-600 font-medium mb-2">情報源</p>
+          <div className="mb-3 p-3 rounded-xl bg-gray-50 border border-gray-200">
+            <p className="text-xs text-gray-600 font-medium mb-2">情報源</p>
             <ul className="space-y-1">
               {message.citations.map((citation, index) => (
                 <li key={index} className="text-xs text-gray-600 truncate">

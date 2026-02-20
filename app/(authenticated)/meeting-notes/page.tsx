@@ -243,8 +243,8 @@ export default function MeetingNotesPage() {
         <div className="max-w-6xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#ff6b00]/20 to-[#ff6b00]/5 flex items-center justify-center border border-[#ff6b00]/20">
-                <FileText className="w-5 h-5 text-[#ff6b00]" />
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-gray-200 to-gray-100 flex items-center justify-center border border-gray-200">
+                <FileText className="w-5 h-5 text-gray-700" />
               </div>
               <div>
                 <h1 className="text-xl font-semibold text-gray-900">議事録・文字起こし</h1>
@@ -325,7 +325,7 @@ export default function MeetingNotesPage() {
             {transcript && (
               <button
                 onClick={() => setTranscript("")}
-                className="text-xs text-gray-500 hover:text-[#ff6b00] transition-colors"
+                className="text-xs text-gray-500 hover:text-gray-700 transition-colors"
               >
                 クリア
               </button>
@@ -373,7 +373,7 @@ export default function MeetingNotesPage() {
               onClick={handleCancel}
               className={cn(
                 "flex items-center gap-3 px-8 py-4 rounded-xl font-medium transition-all duration-200",
-                "bg-red-500/90 text-white hover:bg-red-500 shadow-lg shadow-red-500/20 hover:shadow-red-500/30"
+                "bg-gray-700 text-white hover:bg-gray-800 shadow-lg shadow-gray-500/20 hover:shadow-gray-500/30"
               )}
             >
               <Square className="w-5 h-5 fill-current" />
@@ -398,12 +398,12 @@ export default function MeetingNotesPage() {
 
         {/* Error Message */}
         {error && (
-          <div className="mb-8 p-4 rounded-xl bg-red-50 border border-red-200">
+          <div className="mb-8 p-4 rounded-xl bg-gray-100 border border-gray-200">
             <div className="flex items-start gap-3">
-              <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+              <AlertCircle className="w-5 h-5 text-gray-600 flex-shrink-0 mt-0.5" />
               <div>
-                <p className="text-sm font-medium text-red-800">エラーが発生しました</p>
-                <p className="text-sm text-red-600 mt-1">{error}</p>
+                <p className="text-sm font-medium text-gray-800">エラーが発生しました</p>
+                <p className="text-sm text-gray-600 mt-1">{error}</p>
               </div>
             </div>
           </div>
@@ -418,7 +418,7 @@ export default function MeetingNotesPage() {
                   整形結果
                 </h2>
                 {status === "streaming" && (
-                  <span className="inline-flex items-center gap-2 text-green-600 bg-green-50 px-3 py-1 rounded-full text-xs border border-green-200">
+                  <span className="inline-flex items-center gap-2 text-gray-600 bg-gray-100 px-3 py-1 rounded-full text-xs border border-gray-200">
                     <Brain className="w-3.5 h-3.5 animate-pulse" />
                     生成中...
                   </span>
@@ -431,7 +431,7 @@ export default function MeetingNotesPage() {
                   className={cn(
                     "flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-all duration-200",
                     copied
-                      ? "bg-green-50 text-green-600 border border-green-200"
+                      ? "bg-gray-100 text-gray-700 border border-gray-200"
                       : "bg-gray-100 text-gray-600 hover:text-black hover:bg-gray-200 border border-transparent"
                   )}
                 >

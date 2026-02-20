@@ -60,7 +60,7 @@ export function ChatInput({
             {isStreaming ? (
               <button
                 onClick={onCancel}
-                className="flex items-center justify-center w-10 h-10 rounded-xl bg-red-50 text-red-600 hover:bg-red-100 transition-colors"
+                className="flex items-center justify-center w-10 h-10 rounded-xl bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors"
               >
                 <Square className="w-4 h-4 fill-current" />
               </button>

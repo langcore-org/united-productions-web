@@ -37,8 +37,8 @@ export function StreamingMessage({
           <span className="text-[10px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 border border-gray-200">
             {provider}
           </span>
-          <span className="flex items-center gap-1.5 text-xs text-green-600">
-            <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
+          <span className="flex items-center gap-1.5 text-xs text-gray-600">
+            <span className="w-1.5 h-1.5 bg-gray-500 rounded-full animate-pulse" />
             生成中
           </span>
         </div>
@@ -47,8 +47,8 @@ export function StreamingMessage({
         {thinking && (
           <div className="mb-3 p-3 rounded-xl bg-gray-50 border border-gray-200">
             <div className="flex items-center gap-2 mb-2">
-              <Lightbulb className="w-3.5 h-3.5 text-amber-500" />
-              <span className="text-xs text-amber-600 font-medium">思考プロセス</span>
+              <Lightbulb className="w-3.5 h-3.5 text-gray-500" />
+              <span className="text-xs text-gray-600 font-medium">思考プロセス</span>
             </div>
             <p className="text-xs text-gray-500 leading-relaxed whitespace-pre-wrap">
               {thinking}

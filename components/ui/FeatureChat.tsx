@@ -276,8 +276,8 @@ export function FeatureChat({
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-white">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-700/20 to-amber-600/10 flex items-center justify-center border border-amber-700/20">
-            <Sparkles className="w-4 h-4 text-amber-700" />
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-gray-900/20 to-gray-600/10 flex items-center justify-center border border-gray-900/20">
+            <Sparkles className="w-4 h-4 text-gray-900" />
           </div>
           <div>
             <h1 className="text-base font-semibold text-gray-900">{title}</h1>
@@ -347,8 +347,8 @@ export function FeatureChat({
         ) : !hasMessages && !isStreaming ? (
           // 空の状態
           <div className="flex flex-col items-center justify-center h-full text-center px-6">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-700/20 to-amber-600/10 flex items-center justify-center border border-amber-700/20 mb-4">
-              <MessageSquare className="w-8 h-8 text-amber-700" />
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-gray-900/20 to-gray-600/10 flex items-center justify-center border border-gray-900/20 mb-4">
+              <MessageSquare className="w-8 h-8 text-gray-900" />
             </div>
             <h2 className="text-lg font-medium text-gray-900 mb-2">
               {title}
@@ -456,7 +456,7 @@ export function FeatureChat({
               }}
               placeholder={placeholder}
               disabled={!!isStreaming}
-              className="min-h-[80px] max-h-[200px] resize-none bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-amber-700/50 focus:ring-amber-700/20 pr-24"
+              className="min-h-[80px] max-h-[200px] resize-none bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-gray-900/50 focus:ring-gray-900/20 pr-24"
             />
             <div className="absolute bottom-3 right-3 flex items-center gap-2">
               {enableFileAttachment && (
@@ -479,7 +479,7 @@ export function FeatureChat({
               "h-10 w-10 p-0 transition-all duration-200",
               !input.trim() || isStreaming
                 ? "bg-gray-200 text-gray-400"
-                : "bg-amber-700 hover:bg-amber-800 text-white shadow-lg shadow-amber-700/25"
+                : "bg-gray-900 hover:bg-gray-800 text-white shadow-lg shadow-gray-900/25"
             )}
           >
             {isStreaming ? (

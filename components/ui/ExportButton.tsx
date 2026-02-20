@@ -118,10 +118,10 @@ export function ExportButton({
         className={cn(
           "flex items-center gap-2 px-3 py-2 rounded-lg",
           "bg-white border border-gray-200",
-          "hover:border-amber-700/50 transition-all duration-200",
+          "hover:border-gray-700/50 transition-all duration-200",
           "text-sm text-gray-700",
           "disabled:opacity-50 disabled:cursor-not-allowed",
-          isOpen && "border-amber-700/50"
+          isOpen && "border-gray-700/50"
         )}
       >
         <Download
@@ -182,8 +182,8 @@ export function ExportButton({
                     className={cn(
                       "flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center",
                       "bg-gray-100 group-hover:bg-gray-200 transition-colors",
-                      option.id === "markdown" && "text-blue-500",
-                      option.id === "csv" && "text-green-500"
+                      option.id === "markdown" && "text-gray-600",
+                      option.id === "csv" && "text-gray-500"
                     )}
                   >
                     {option.icon}
@@ -216,8 +216,8 @@ export function ExportButton({
             "flex items-center gap-2 px-3 py-2 rounded-lg",
             "text-sm animate-in fade-in slide-in-from-top-2",
             exportStatus.success
-              ? "bg-green-50 border border-green-200 text-green-600"
-              : "bg-red-50 border border-red-200 text-red-600"
+              ? "bg-gray-100 border border-gray-200 text-gray-700"
+              : "bg-gray-100 border border-gray-300 text-gray-600"
           )}
         >
           {exportStatus.success ? (
@@ -275,7 +275,7 @@ export function SimpleExportButton({
       className={cn(
         "flex items-center gap-2 px-3 py-2 rounded-lg",
         "bg-white border border-gray-200",
-        "hover:border-amber-700/50 transition-all duration-200",
+        "hover:border-gray-700/50 transition-all duration-200",
         "text-sm text-gray-700",
         "disabled:opacity-50 disabled:cursor-not-allowed",
         className

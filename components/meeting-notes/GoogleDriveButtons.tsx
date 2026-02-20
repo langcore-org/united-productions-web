@@ -39,7 +39,7 @@ export function DriveUploadButton({ content, filename, onSuccess }: DriveUploadB
       className={cn(
         "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all",
         uploaded
-          ? "bg-green-100 text-green-700 border border-green-200"
+          ? "bg-gray-100 text-gray-700 border border-gray-200"
           : "bg-white border border-gray-200 text-gray-700 hover:border-black hover:text-black"
       )}
     >

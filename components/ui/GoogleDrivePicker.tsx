@@ -132,16 +132,16 @@ export function GoogleDrivePicker({ onSelect, onCancel, accept }: GoogleDrivePic
 
   const getFileIcon = (mimeType: string) => {
     if (mimeType.includes("spreadsheet") || mimeType.includes("excel")) {
-      return <span className="text-green-600 font-bold text-xs">XLS</span>;
+      return <span className="text-gray-600 font-bold text-xs">XLS</span>;
     }
     if (mimeType.includes("pdf")) {
-      return <span className="text-red-600 font-bold text-xs">PDF</span>;
+      return <span className="text-gray-500 font-bold text-xs">PDF</span>;
     }
     if (mimeType.includes("word") || mimeType.includes("document")) {
-      return <span className="text-blue-600 font-bold text-xs">DOC</span>;
+      return <span className="text-gray-700 font-bold text-xs">DOC</span>;
     }
     if (mimeType.includes("presentation") || mimeType.includes("powerpoint")) {
-      return <span className="text-amber-700 font-bold text-xs">PPT</span>;
+      return <span className="text-gray-600 font-bold text-xs">PPT</span>;
     }
     if (mimeType === "text/plain") {
       return <span className="text-gray-600 font-bold text-xs">TXT</span>;

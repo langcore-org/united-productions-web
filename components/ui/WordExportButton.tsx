@@ -61,7 +61,7 @@ export function WordExportButton({
         {isExporting ? (
           <Loader2 className="h-4 w-4 animate-spin" />
         ) : showSuccess ? (
-          <Check className="h-4 w-4 text-green-500" />
+          <Check className="h-4 w-4 text-gray-600" />
         ) : (
           <FileText className="h-4 w-4" />
         )}
