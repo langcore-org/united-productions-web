@@ -92,7 +92,7 @@ export function AdminSidebar({ className, onCollapseChange }: AdminSidebarProps)
   // アクティブ状態の判定
   const isActive = (href: string) => {
     if (pathname === href) return true;
-    // サブページもアクティブにする（/admin/settings/xxx など）
+    // サブページもアクティブにする
     if (href !== "/admin" && pathname.startsWith(href)) return true;
     return false;
   };
@@ -104,7 +104,7 @@ export function AdminSidebar({ className, onCollapseChange }: AdminSidebarProps)
         className={cn(
           "fixed top-0 left-0 z-50 h-screen w-[240px]",
           "flex flex-col",
-          "bg-[#1a1a1a] border-r border-[#333333]",
+          "bg-white border-r border-gray-200",
           className
         )}
       />
@@ -116,7 +116,7 @@ export function AdminSidebar({ className, onCollapseChange }: AdminSidebarProps)
       className={cn(
         "fixed top-0 left-0 z-50 h-screen",
         "flex flex-col",
-        "bg-[#1a1a1a] border-r border-[#333333]",
+        "bg-white border-r border-gray-200",
         "transition-all duration-300 ease-in-out",
         isCollapsed ? "w-[64px]" : "w-[240px]",
         className
@@ -124,15 +124,15 @@ export function AdminSidebar({ className, onCollapseChange }: AdminSidebarProps)
     >
       {/* Header */}
       <div className={cn(
-        "flex items-center h-14 bg-[#1a1a1a]",
+        "flex items-center h-14 bg-white",
         isCollapsed ? "px-2 justify-center" : "px-4"
       )}>
         <div className="flex items-center gap-2">
-          <TeddyIcon size={28} variant="filled" className="text-amber-500" />
+          <TeddyIcon size={28} variant="filled" className="text-amber-700" />
           {!isCollapsed && (
             <div className="flex flex-col">
-              <span className="font-bold text-lg text-white">Teddy</span>
-              <span className="text-[10px] text-gray-400 -mt-1">Admin</span>
+              <span className="font-bold text-lg text-gray-900">Teddy</span>
+              <span className="text-[10px] text-gray-500 -mt-1">Admin</span>
             </div>
           )}
         </div>
@@ -140,7 +140,7 @@ export function AdminSidebar({ className, onCollapseChange }: AdminSidebarProps)
 
       {/* Back to User View Link */}
       <div className={cn(
-        "bg-[#1a1a1a] border-b border-[#333333]",
+        "bg-gray-50 border-b border-gray-200",
         isCollapsed ? "px-2 py-2" : "px-3 py-2"
       )}>
         <Link
@@ -150,7 +150,7 @@ export function AdminSidebar({ className, onCollapseChange }: AdminSidebarProps)
             isCollapsed 
               ? "w-10 h-10 justify-center p-0" 
               : "w-full gap-2 px-3 py-2",
-            "text-gray-400 hover:text-white hover:bg-[#333333]"
+            "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
           )}
           title={isCollapsed ? "ユーザー画面へ" : undefined}
         >
@@ -165,7 +165,7 @@ export function AdminSidebar({ className, onCollapseChange }: AdminSidebarProps)
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 overflow-hidden flex flex-col min-h-0 bg-[#1a1a1a]">
+      <nav className="flex-1 overflow-hidden flex flex-col min-h-0 bg-white">
         {/* Main Nav Items */}
         <div className={cn(
           "py-2 space-y-0.5 flex-shrink-0",
@@ -183,20 +183,20 @@ export function AdminSidebar({ className, onCollapseChange }: AdminSidebarProps)
                   "group relative overflow-hidden",
                   isCollapsed ? "w-10 h-10 justify-center p-0 mx-auto" : "gap-3 px-3 py-2",
                   isItemActive
-                    ? "bg-amber-600 text-white"
-                    : "text-gray-400 hover:bg-[#333333] hover:text-white"
+                    ? "bg-amber-50 text-amber-700 border border-amber-200"
+                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                 )}
                 title={isCollapsed ? item.label : undefined}
               >
                 {isItemActive && !isCollapsed && (
-                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-amber-400 rounded-r-full" />
+                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-amber-600 rounded-r-full" />
                 )}
                 {isItemActive && isCollapsed && (
-                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-4 bg-amber-400 rounded-r-full" />
+                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-4 bg-amber-600 rounded-r-full" />
                 )}
                 <span className={cn(
                   "flex-shrink-0 transition-transform duration-200",
-                  isItemActive ? "text-white" : "group-hover:scale-110"
+                  isItemActive ? "text-amber-700" : "group-hover:scale-110"
                 )}>
                   {item.icon}
                 </span>
@@ -213,7 +213,7 @@ export function AdminSidebar({ className, onCollapseChange }: AdminSidebarProps)
 
       {/* Bottom Items */}
       <div className={cn(
-        "py-2 space-y-0.5 border-t border-[#333333] flex-shrink-0 bg-[#1a1a1a]",
+        "py-2 space-y-0.5 border-t border-gray-200 flex-shrink-0 bg-white",
         isCollapsed ? "px-1.5" : "px-2"
       )}>
         <Link
@@ -221,7 +221,7 @@ export function AdminSidebar({ className, onCollapseChange }: AdminSidebarProps)
           className={cn(
             "flex items-center rounded-xl transition-all duration-200 ease-out group",
             isCollapsed ? "w-10 h-10 justify-center p-0 mx-auto" : "gap-3 px-3 py-2",
-            "text-gray-400 hover:bg-[#333333] hover:text-white"
+            "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
           )}
           title={isCollapsed ? "ログアウト" : undefined}
         >
@@ -239,7 +239,7 @@ export function AdminSidebar({ className, onCollapseChange }: AdminSidebarProps)
           className={cn(
             "flex items-center rounded-xl transition-all duration-200 ease-out group",
             isCollapsed ? "w-10 h-10 justify-center p-0 mx-auto" : "gap-3 px-3 py-2",
-            "text-gray-400 hover:bg-[#333333] hover:text-white"
+            "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
           )}
           title={isCollapsed ? "サイドバーを展開" : "サイドバーを縮小"}
         >

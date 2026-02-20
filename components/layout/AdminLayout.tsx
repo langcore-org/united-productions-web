@@ -12,7 +12,7 @@ interface AdminLayoutProps {
 /**
  * 管理画面共通レイアウト
  * - AdminSidebar（展開/縮小可能）
- * - ダークテーマ固定
+ * - 白背景（ライトモード）
  */
 export function AdminLayout({ 
   children, 
@@ -22,7 +22,7 @@ export function AdminLayout({
 
   return (
     <div className={cn(
-      "h-screen overflow-hidden bg-[#0f0f0f] text-gray-100",
+      "h-screen overflow-hidden bg-white text-gray-900",
       className
     )}>
       {/* Sidebar (fixed positioning) */}

@@ -416,7 +416,7 @@ export default function UsagePage() {
                               style={{ backgroundColor: COLORS[index % COLORS.length] }}
                             />
                             <div>
-                              <p className="font-medium text-sm">
+                              <p className="font-medium text-sm text-gray-900">
                                 {PROVIDER_LABELS[provider.provider] || provider.provider}
                               </p>
                               <p className="text-xs text-gray-500">
@@ -462,7 +462,7 @@ export default function UsagePage() {
                               {index + 1}
                             </span>
                             <div>
-                              <p className="font-medium text-sm">
+                              <p className="font-medium text-sm text-gray-900">
                                 {user.userName || "未設定"}
                               </p>
                               <p className="text-xs text-gray-500">{user.userEmail}</p>
@@ -544,7 +544,7 @@ export default function UsagePage() {
                         </td>
                         <td className="py-3 px-4 text-sm">
                           <div>
-                            <p className="font-medium">{log.userName || "未設定"}</p>
+                            <p className="font-medium text-gray-900">{log.userName || "未設定"}</p>
                             <p className="text-xs text-gray-500">{log.userEmail}</p>
                           </div>
                         </td>

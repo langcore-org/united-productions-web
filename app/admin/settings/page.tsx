@@ -346,11 +346,11 @@ export default function AdminSettingsPage() {
 
   return (
     <AdminLayout>
-      <div className="flex h-full bg-[#0f0f0f]">
+      <div className="flex h-full bg-gray-50">
       {/* 左側: カテゴリ一覧 */}
-      <aside className="w-64 border-r border-[#333333] bg-[#1a1a1a] flex-shrink-0">
+      <aside className="w-64 border-r border-gray-200 bg-white flex-shrink-0">
         <div className="p-4">
-          <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">
+          <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">
             設定カテゴリ
           </h2>
           <nav className="space-y-1">
@@ -362,7 +362,7 @@ export default function AdminSettingsPage() {
                   "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors",
                   activeCategory === category.id
                     ? "bg-amber-600 text-white shadow-sm"
-                    : "text-gray-400 hover:bg-[#333333] hover:text-white"
+                    : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
                 )}
               >
                 <span className={cn(
@@ -384,15 +384,15 @@ export default function AdminSettingsPage() {
       </aside>
 
       {/* 右側: 設定詳細 */}
-      <main className="flex-1 overflow-y-auto bg-[#0f0f0f]">
+      <main className="flex-1 overflow-y-auto bg-gray-50">
         <div className="max-w-4xl mx-auto p-6">
           {/* ヘッダー */}
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h1 className="text-2xl font-bold text-white">
+              <h1 className="text-2xl font-bold text-gray-900">
                 {SETTING_CATEGORIES.find((c) => c.id === activeCategory)?.label}
               </h1>
-              <p className="text-gray-400 mt-1">
+              <p className="text-gray-500 mt-1">
                 {SETTING_CATEGORIES.find((c) => c.id === activeCategory)?.description}
               </p>
             </div>
@@ -445,14 +445,14 @@ export default function AdminSettingsPage() {
               <Card
                 key={setting.id}
                 className={cn(
-                  "transition-colors bg-[#1a1a1a] border-[#333333]",
+                  "transition-colors bg-white border-gray-200",
                   isModified(setting.id) && "border-amber-500 bg-amber-500/10"
                 )}
               >
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between">
                     <div>
-                      <CardTitle className="text-base font-medium flex items-center gap-2 text-white">
+                      <CardTitle className="text-base font-medium flex items-center gap-2 text-gray-900">
                         {setting.label}
                         {setting.required && (
                           <Badge variant="destructive" className="text-xs">
@@ -460,12 +460,12 @@ export default function AdminSettingsPage() {
                           </Badge>
                         )}
                         {setting.readOnly && (
-                          <Badge variant="secondary" className="text-xs bg-gray-700 text-gray-300">
+                          <Badge variant="secondary" className="text-xs bg-gray-100 text-gray-600">
                             読取専用
                           </Badge>
                         )}
                       </CardTitle>
-                      <CardDescription className="mt-1.5 text-gray-400">
+                      <CardDescription className="mt-1.5 text-gray-500">
                         {setting.description}
                       </CardDescription>
                     </div>

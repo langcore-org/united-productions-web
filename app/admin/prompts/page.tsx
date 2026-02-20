@@ -250,8 +250,8 @@ export default function AdminPromptsPage() {
           {/* ヘッダー */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-black flex items-center justify-center">
-                <FileText className="w-6 h-6 text-white" />
+              <div className="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center">
+                <FileText className="w-6 h-6 text-gray-600" />
               </div>
               <div>
                 <h1 className="text-3xl font-bold text-gray-900">プロンプト管理</h1>
