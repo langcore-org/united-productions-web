@@ -25,79 +25,90 @@ export function TeddyIcon({
       xmlns="http://www.w3.org/2000/svg"
       className={cn("", className)}
     >
-      {/* 左耳 */}
+      {/* 左耳 - ぷっくり丸みを帯びた耳 */}
       <circle
-        cx="8"
-        cy="8"
-        r="4"
-        stroke={strokeColor}
-        strokeWidth="2"
-        fill={variant === "filled" ? "currentColor" : "#8B4513"}
+        cx="7"
+        cy="7"
+        r="4.5"
+        fill={variant === "filled" ? "currentColor" : "#C17848"}
       />
       {/* 右耳 */}
       <circle
-        cx="24"
-        cy="8"
-        r="4"
-        stroke={strokeColor}
-        strokeWidth="2"
-        fill={variant === "filled" ? "currentColor" : "#8B4513"}
+        cx="25"
+        cy="7"
+        r="4.5"
+        fill={variant === "filled" ? "currentColor" : "#C17848"}
       />
-      {/* 顔の輪郭 */}
-      <ellipse
+      {/* 顔の輪郭 - より丸く */}
+      <circle
         cx="16"
-        cy="18"
-        rx="10"
-        ry="9"
-        stroke={strokeColor}
-        strokeWidth="2"
+        cy="17"
+        r="11"
         fill={variant === "filled" ? "currentColor" : "#D2691E"}
       />
-      {/* 左目 */}
+      {/* 左目 - アニメ風大きめの目 */}
+      <ellipse
+        cx="11"
+        cy="15"
+        rx="2"
+        ry="2.5"
+        fill="#1a1a1a"
+      />
+      {/* 左目のハイライト */}
       <circle
         cx="12"
-        cy="15"
-        r="1.5"
-        fill={variant === "filled" ? "white" : "#1a1a1a"}
+        cy="13.5"
+        r="0.8"
+        fill="white"
       />
-      {/* 右目 */}
+      {/* 右目 - アニメ風大きめの目 */}
+      <ellipse
+        cx="21"
+        cy="15"
+        rx="2"
+        ry="2.5"
+        fill="#1a1a1a"
+      />
+      {/* 右目のハイライト */}
       <circle
-        cx="20"
-        cy="15"
-        r="1.5"
-        fill={variant === "filled" ? "white" : "#1a1a1a"}
+        cx="22"
+        cy="13.5"
+        r="0.8"
+        fill="white"
       />
-      {/* 鼻 */}
+      {/* 鼻 - 小さめシンプル */}
       <ellipse
         cx="16"
         cy="19"
-        rx="2.5"
-        ry="1.8"
-        fill={variant === "filled" ? "#1a1a1a" : "#1a1a1a"}
+        rx="1.5"
+        ry="1"
+        fill="#1a1a1a"
       />
-      {/* 口 */}
+      {/* 口 - ω型でかわいらしく */}
       <path
-        d="M13 22 Q16 25 19 22"
-        stroke={strokeColor}
-        strokeWidth="1.5"
+        d="M14 21 Q16 23 18 21"
+        stroke="#1a1a1a"
+        strokeWidth="1.2"
         strokeLinecap="round"
         fill="none"
       />
-      {/* 左頬 */}
-      <circle
-        cx="9"
-        cy="20"
-        r="1.5"
-        fill="#FFB6C1"
-        opacity="0.6"
+      {/* 左頬 - ぷっくり強調 */}
+      <ellipse
+        cx="8"
+        cy="19"
+        rx="2"
+        ry="1.2"
+        fill="#FF9AA2"
+        opacity="0.7"
       />
       {/* 右頬 */}
-      <circle
-        cx="23"
-        cy="20"
-        r="1.5"
-        fill="#FFB6C1"
-        opacity="0.6"
+      <ellipse
+        cx="24"
+        cy="19"
+        rx="2"
+        ry="1.2"
+        fill="#FF9AA2"
+        opacity="0.7"
       />
     </svg>
   );
