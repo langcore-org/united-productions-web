@@ -121,8 +121,51 @@ function FeatureChat({ featureId }: { featureId: string }) {
 | 静的コンテンツ | useState, useEffect |
 | SEO重要ページ | ブラウザAPI使用 |
 
+## スタイル設計
+
+### カラー使用規則
+
+**基本原則**: モノトーン（グレースケール）のみ使用
+
+```typescript
+// ✅ 良い例: グレーのみ
+<div className="bg-white border border-gray-200 text-gray-900" />
+
+// ❌ 悪い例: カラー使用
+<div className="bg-blue-500 text-red-600" />
+```
+
+**例外**（管理画面のみ）:
+```typescript
+// 管理画面のアクティブ状態
+'bg-amber-50 text-amber-700 border-amber-200'
+```
+
+### 共通スタイルパターン
+
+```typescript
+// カード
+const cardStyle = 'bg-white border border-gray-200 rounded-xl shadow-sm';
+
+// ボタン（プライマリー）
+const buttonPrimary = 'bg-gray-900 text-white hover:bg-gray-800';
+
+// ボタン（セカンダリー）
+const buttonSecondary = 'bg-white border border-gray-200 text-gray-900 hover:bg-gray-50';
+
+// 入力欄
+const inputStyle = 'bg-gray-50 border-gray-200 text-gray-900 focus:border-gray-900';
+
+// ナビゲーション（アクティブ）
+const navActive = 'bg-white text-gray-900 border-gray-200';
+
+// ナビゲーション（非アクティブ）
+const navInactive = 'text-gray-600 hover:bg-gray-100 hover:text-gray-900';
+```
+
 ## 関連ファイル
 
 - `components/ui/` - shadcn/uiコンポーネント
 - `app/` - ページコンポーネント
 - [system-architecture.md](./system-architecture.md) - 全体構成
+- [theme-system.md](../../theme-system.md) - テーマシステム詳細
