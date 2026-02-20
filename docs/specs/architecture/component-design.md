@@ -2,7 +2,7 @@
 
 > **UIコンポーネントの構成と設計方針**
 > 
-> **最終更新**: 2026-02-20 23:10
+> **最終更新**: 2026-02-20 23:55
 
 ## コンポーネント階層
 
@@ -168,9 +168,56 @@ const navActive = 'bg-white text-gray-900 border-gray-200';
 const navInactive = 'text-gray-600 hover:bg-gray-100 hover:text-gray-900';
 ```
 
+## エージェント思考プロセスUI
+
+### 概要
+
+Manus風の階層的ステップ表示コンポーネント群。
+
+### コンポーネント構成
+
+| コンポーネント | ファイル | 役割 |
+|-------------|---------|------|
+| ThinkingProcess | `ThinkingProcess.tsx` | メインコンテナ、ステップ管理 |
+| ThinkingStep | `ThinkingStep.tsx` | 個別ステップ（折りたたみ対応） |
+| SubStep | `SubStep.tsx` | 検索クエリ、ツール呼び出し表示 |
+| ComputerPanel | `ComputerPanel.tsx` | 検索結果表示パネル |
+
+### 型定義
+
+```typescript
+// types/agent-thinking.ts
+interface ThinkingStep {
+  id: string;
+  stepNumber: number;
+  type: 'thinking' | 'search' | 'analysis' | 'synthesis' | 'complete';
+  title: string;
+  content?: string;
+  status: 'running' | 'completed' | 'error';
+  subSteps: SubStep[];
+  searchResults?: SearchResultItem[];
+}
+```
+
+### 使用例
+
+```typescript
+import { ThinkingProcess } from "@/components/agent-thinking/ThinkingProcess";
+
+<ThinkingProcess
+  steps={thinkingSteps}
+  activeStepId={activeStepId}
+  overallStatus="running"
+  events={thinkingEvents}
+/>
+```
+
 ## 関連ファイル
 
 - `components/ui/` - shadcn/uiコンポーネント
+- `components/agent-thinking/` - エージェント思考プロセスUI
+- `types/agent-thinking.ts` - 型定義
+- `hooks/useTypingAnimation.ts` - タイピングアニメーション
 - `app/` - ページコンポーネント
 - [system-architecture.md](./system-architecture.md) - 全体構成
 - [theme-system.md](../../theme-system.md) - テーマシステム詳細
