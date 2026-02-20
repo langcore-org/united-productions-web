@@ -12,6 +12,7 @@ import { createLLMClient, createGrokClientWithTools, isValidProvider } from '@/l
 import { DEFAULT_PROVIDER } from '@/lib/llm/config';
 import { requireAuth } from '@/lib/api/auth';
 import { logger } from '@/lib/logger';
+import { trackUsage } from '@/lib/usage/tracker';
 import type { LLMMessage, LLMProvider } from '@/lib/llm/types';
 
 /**

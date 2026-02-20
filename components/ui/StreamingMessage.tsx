@@ -333,6 +333,27 @@ export function useLLMStream(): UseLLMStreamReturn {
       }
 
       setState((prev) => ({ ...prev, isComplete: true }));
+      
+      // ストリーミング完了後、使用量を記録（概算）
+      // 日本語は約1.5文字で1トークン、英語は約4文字で1トークン
+      const finalContent = buffer; // 最終的なコンテンツ
+      const estimatedOutputTokens = Math.ceil(finalContent.length / 1.5);
+      const estimatedInputTokens = messages.reduce((acc, msg) => acc + Math.ceil(msg.content.length / 1.5), 0);
+      
+      try {
+        await fetch("/api/llm/usage", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            provider,
+            inputTokens: estimatedInputTokens,
+            outputTokens: estimatedOutputTokens,
+            metadata: { method: "stream", estimated: true },
+          }),
+        });
+      } catch (error) {
+        console.error("Failed to track usage:", error);
+      }
     } catch (error) {
       if (error instanceof Error && error.name === "AbortError") {
         // ユーザーによるキャンセル
