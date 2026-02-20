@@ -172,9 +172,17 @@ export async function GET(request: NextRequest) {
       fileSearch: { requests: 0, cost: 0 },
     };
 
+    // ツール情報の型定義
+    type ToolInfo = {
+      webSearch?: boolean;
+      xSearch?: boolean;
+      codeExecution?: boolean;
+      fileSearch?: boolean;
+    };
+
     for (const log of grokLogs) {
-      const metadata = log.metadata as Record<string, any> | null;
-      const tools = metadata?.tools;
+      const metadata = log.metadata as Record<string, unknown> | null;
+      const tools = metadata?.tools as ToolInfo | undefined;
       
       if (tools) {
         if (tools.webSearch) {
@@ -236,7 +244,7 @@ export async function GET(request: NextRequest) {
         inputTokens: p._sum.inputTokens || 0,
         outputTokens: p._sum.outputTokens || 0,
       })),
-      byDay: (byDay as any[]).map((d) => ({
+      byDay: (byDay as { date: Date; cost: bigint | number; requests: bigint | number }[]).map((d) => ({
         date: d.date.toISOString().split("T")[0],
         cost: Number(d.cost) || 0,
         requests: Number(d.requests) || 0,

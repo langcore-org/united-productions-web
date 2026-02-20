@@ -269,7 +269,9 @@ export function getToolSettingKey(
  * 全機能ですべてのツール（Web検索、X検索、コード実行、ファイル検索）を使用可能
  */
 export async function isToolEnabled(
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _featureId: ChatFeatureId,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _toolType: GrokToolType
 ): Promise<boolean> {
   // 常に全ツール有効
@@ -338,7 +340,9 @@ export async function saveGrokToolSettings(
  * 全機能ですべてのツールを使用可能
  */
 export async function isGrokToolEnabled(
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _userId: string, 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _featureId: ChatFeatureId
 ): Promise<boolean> {
   // 常に全ツール有効

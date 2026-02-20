@@ -7,8 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import {
-  BarChart,
-  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -39,7 +37,7 @@ import {
   Twitter,
 } from "lucide-react";
 import Link from "next/link";
-import { PROVIDER_COLORS } from "@/lib/llm/constants";
+
 
 // プロバイダー表示名
 const PROVIDER_LABELS: Record<string, string> = {
@@ -126,7 +124,7 @@ interface RecentLog {
   userName: string | null;
   userEmail: string;
   createdAt: string;
-  metadata: any;
+  metadata: Record<string, unknown> | null;
 }
 
 export default function UsagePage() {
@@ -160,12 +158,14 @@ export default function UsagePage() {
 
   useEffect(() => {
     fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [period]);
 
   // 自動更新（30秒ごと）
   useEffect(() => {
     const interval = setInterval(fetchData, 30000);
     return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [period]);
 
   // 金額フォーマット
@@ -189,19 +189,29 @@ export default function UsagePage() {
     return date.toLocaleDateString("ja-JP", { month: "short", day: "numeric" });
   };
 
+  // ツール情報の型
+type ToolInfo = {
+  webSearch?: boolean;
+  xSearch?: boolean;
+  codeExecution?: boolean;
+  fileSearch?: boolean;
+};
+
   // ツール使用有無を判定
   const hasToolUsage = (log: RecentLog): boolean => {
-    return log.metadata?.tools && (
-      log.metadata.tools.webSearch ||
-      log.metadata.tools.xSearch ||
-      log.metadata.tools.codeExecution ||
-      log.metadata.tools.fileSearch
+    const tools = log.metadata?.tools as ToolInfo | undefined;
+    if (!tools) return false;
+    return Boolean(
+      tools.webSearch ||
+      tools.xSearch ||
+      tools.codeExecution ||
+      tools.fileSearch
     );
   };
 
   // 使用ツール一覧を取得
   const getUsedTools = (log: RecentLog): string[] => {
-    const tools = log.metadata?.tools;
+    const tools = log.metadata?.tools as ToolInfo | undefined;
     if (!tools) return [];
     const used: string[] = [];
     if (tools.webSearch) used.push("Web");
