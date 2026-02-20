@@ -51,10 +51,11 @@ describe("SubStep", () => {
     const handleClick = vi.fn();
     render(<SubStep subStep={mockSubStep} onClick={handleClick} />);
 
-    // 親要素をクリック（折りたたみ可能なエリア）
-    const element = screen.getByText("検索").closest("div")?.parentElement?.parentElement;
-    if (element) {
-      fireEvent.click(element);
+    // メイン行をクリック（onClickが設定されている要素）
+    const label = screen.getByText("検索");
+    const mainRow = label.parentElement; // flex items-center gap-2 px-3 py-2
+    if (mainRow) {
+      fireEvent.click(mainRow);
       expect(handleClick).toHaveBeenCalledWith(mockSubStep);
     }
   });
@@ -107,9 +108,10 @@ describe("SubStepList", () => {
     const handleClick = vi.fn();
     render(<SubStepList subSteps={mockSubSteps} onSubStepClick={handleClick} />);
 
-    const element = screen.getByText("検索").closest("div")?.parentElement?.parentElement;
-    if (element) {
-      fireEvent.click(element);
+    const label = screen.getByText("検索");
+    const mainRow = label.parentElement;
+    if (mainRow) {
+      fireEvent.click(mainRow);
       expect(handleClick).toHaveBeenCalledWith(mockSubStep);
     }
   });
