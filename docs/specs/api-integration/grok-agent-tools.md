@@ -1,6 +1,6 @@
 # Grok Agent Tools API 仕様
 
-> **最終更新**: 2026-02-20 19:30
+> **最終更新**: 2026-02-20 20:00
 
 ---
 
@@ -782,6 +782,155 @@ data: {"type": ".response.output_text.delta", "delta": "ちは", ...}
 
 **無効なツール**:
 - ❌ `collections_search` / `file_search`（`vector_store_ids` が必要）
+
+---
+
+## UI実装（ツール使用状況・思考ステップ表示）
+
+### 2026-02-20: GenSpark/Manus/Kimi Code風UIの実装
+
+**実装内容**:
+ツール使用状況と思考プロセスをリアルタイムに表示するUIコンポーネントを追加
+
+### コンポーネント構成
+
+| コンポーネント | ファイル | 機能 |
+|--------------|---------|------|
+| `ToolCallIndicator` | `components/chat/ToolCallIndicator.tsx` | ツール呼び出しのリアルタイム表示 |
+| `ReasoningSteps` | `components/chat/ReasoningSteps.tsx` | 思考プロセスの折りたたみ表示 |
+| `StreamingMessage` | `components/ui/StreamingMessage.tsx` | 統合ストリーミング表示（ツール・思考対応） |
+
+### 表示される情報
+
+#### 1. ツール呼び出しインジケーター
+
+**表示タイミング**: ツール実行開始時〜完了時
+
+**表示内容**:
+- ツールアイコン（Web検索、X検索、コード実行等）
+- ツール名ラベル
+- 実行ステータス（実行中/完了/失敗）
+- 複数ツールの並列表示
+
+**UI例**:
+```
+🔍 Web検索 [実行中...]
+🐦 X検索   [完了 ✓]
+💻 コード実行 [実行中...]
+```
+
+#### 2. 思考ステップ表示
+
+**表示タイミング**: 推論モデル使用時
+
+**表示内容**:
+- 思考プロセスの折りたたみパネル
+- ステップ番号付き思考内容
+- 推論トークン数
+
+**UI例**:
+```
+🧠 思考プロセス (1,234 トークン) [展開]
+├─ ステップ1: 問題を分析中...
+├─ ステップ2: 検索クエリを生成中...
+└─ ステップ3: 結果を統合中...
+```
+
+#### 3. ツール使用サマリー
+
+**表示タイミング**: レスポンス完了後
+
+**表示内容**:
+- 各ツールの使用回数
+- 総トークン数/コスト
+
+**UI例**:
+```
+Web検索: 3回 • X検索: 2回 • コード実行: 1回
+1,234 入力 / 567 出力 • $0.001234
+```
+
+### 技術実装詳細
+
+#### ストリーミングイベントの処理
+
+```typescript
+// lib/llm/clients/grok.ts
+async *streamWithUsage(messages: LLMMessage[]) {
+  // ...
+  for await (const event of stream) {
+    // ツール呼び出しイベント
+    if (event.type === 'response.output_item.added' && event.item) {
+      const item = event.item;
+      if (item.type === 'web_search_call') {
+        yield { toolCall: { id: item.id, type: 'web_search', status: 'running' } };
+      }
+      // ...
+    }
+    
+    // 思考ステップイベント
+    if (event.type === 'response.reasoning' && event.response?.reasoning) {
+      yield { reasoning: { step: 1, content: event.response.reasoning.summary } };
+    }
+    
+    // ツール使用状況
+    if (event.type === 'response.completed') {
+      yield { toolUsage: event.response.usage?.server_side_tool_usage_details };
+    }
+  }
+}
+```
+
+#### APIでのイベント転送
+
+```typescript
+// app/api/llm/stream/route.ts
+for await (const { chunk, toolCall, reasoning, toolUsage } of iterator) {
+  if (chunk) {
+    controller.enqueue(encoder.encode(`data: ${JSON.stringify({ content: chunk })}\n\n`));
+  }
+  
+  if (toolCall) {
+    controller.enqueue(encoder.encode(`data: ${JSON.stringify({ toolCall })}\n\n`));
+  }
+  
+  if (reasoning) {
+    controller.enqueue(encoder.encode(`data: ${JSON.stringify({ reasoning })}\n\n`));
+  }
+  
+  if (toolUsage) {
+    controller.enqueue(encoder.encode(`data: ${JSON.stringify({ toolUsage })}\n\n`));
+  }
+}
+```
+
+#### フロントエンドでの表示
+
+```typescript
+// components/ui/StreamingMessage.tsx
+const [toolCalls, setToolCalls] = useState<ToolCallInfo[]>([]);
+const [reasoningSteps, setReasoningSteps] = useState<ReasoningStepInfo[]>([]);
+
+// ストリームからのデータ処理
+if (data.toolCall) {
+  setToolCalls(prev => updateToolCall(prev, data.toolCall));
+}
+
+if (data.reasoning) {
+  setReasoningSteps(prev => [...prev, data.reasoning]);
+}
+```
+
+### 対応ツールタイプ
+
+| ツールタイプ | アイコン | ラベル | ステータス表示 |
+|------------|---------|--------|--------------|
+| `web_search` | 🔍 | Web検索 | 実行中/完了/失敗 |
+| `x_search` | 🐦 | X検索 | 実行中/完了/失敗 |
+| `x_keyword_search` | 🐦 | Xキーワード検索 | 実行中/完了/失敗 |
+| `x_semantic_search` | 🐦 | X意味検索 | 実行中/完了/失敗 |
+| `code_execution` | 💻 | コード実行 | 実行中/完了/失敗 |
+| `code_interpreter` | 💻 | コード実行 | 実行中/完了/失敗 |
 
 ---
 
