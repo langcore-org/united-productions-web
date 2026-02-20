@@ -165,9 +165,22 @@ export const authOptions: AuthOptions = {
         session.user.id = token.userId as string;
         session.accessToken = token.accessToken as string;
         
-        // token.roleがあればsession.user.roleに渡す
+        // token.roleがあればsession.user.roleに渡す（Preview E2E用）
         if (token.role) {
           session.user.role = token.role as string;
+        }
+        
+        // DBから最新のユーザー情報（role）を取得
+        try {
+          const dbUser = await prisma.user.findUnique({
+            where: { id: token.userId as string },
+            select: { role: true },
+          });
+          if (dbUser?.role) {
+            session.user.role = dbUser.role;
+          }
+        } catch (error) {
+          console.error("Failed to fetch user role from DB:", error);
         }
       }
       return session;
