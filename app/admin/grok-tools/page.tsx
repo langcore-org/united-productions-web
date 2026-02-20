@@ -30,7 +30,7 @@ const TOOL_FEATURES = [
   { key: "naScript", label: "NA原稿作成" },
 ] as const;
 
-// ツール定義
+// ツール定義（モノトーン統一）
 const TOOLS = [
   {
     id: "webSearch" as const,
@@ -38,7 +38,6 @@ const TOOLS = [
     label: "Web検索",
     description: "インターネットから最新情報を検索",
     icon: Search,
-    color: "indigo",
   },
   {
     id: "xSearch" as const,
@@ -46,7 +45,6 @@ const TOOLS = [
     label: "X検索",
     description: "X（Twitter）からリアルタイム情報を検索",
     icon: Twitter,
-    color: "sky",
   },
   {
     id: "codeExecution" as const,
@@ -54,7 +52,6 @@ const TOOLS = [
     label: "コード実行",
     description: "Pythonコードを安全なサンドボックスで実行",
     icon: Terminal,
-    color: "emerald",
   },
   {
     id: "fileSearch" as const,
@@ -62,7 +59,6 @@ const TOOLS = [
     label: "ファイル検索",
     description: "アップロードしたドキュメントを検索",
     icon: FileSearch,
-    color: "amber",
   },
 ] as const;
 
@@ -284,7 +280,7 @@ export default function GrokToolsPage() {
                         {TOOLS.map((tool) => (
                           <th key={tool.id} className="text-center py-3 px-2 text-sm font-medium text-gray-700 min-w-[100px]">
                             <div className="flex flex-col items-center gap-1">
-                              <tool.icon className={`w-4 h-4 text-${tool.color}-600`} />
+                              <tool.icon className="w-4 h-4 text-gray-600" />
                               <span>{tool.label}</span>
                             </div>
                           </th>
@@ -306,7 +302,7 @@ export default function GrokToolsPage() {
                                   onClick={() => updateSetting(settingKey, !isEnabled)}
                                   className={`relative w-10 h-5 rounded-full transition-colors duration-200 ${
                                     isEnabled 
-                                      ? `bg-${tool.color}-600` 
+                                      ? "bg-gray-900" 
                                       : "bg-gray-200"
                                   }`}
                                 >
@@ -328,9 +324,9 @@ export default function GrokToolsPage() {
                 {/* ツール説明 */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-gray-200">
                   {TOOLS.map((tool) => (
-                    <div key={tool.id} className={`p-3 rounded-lg bg-${tool.color}-50 border border-${tool.color}-200`}>
+                    <div key={tool.id} className="p-3 rounded-lg bg-gray-50 border border-gray-200">
                       <div className="flex items-center gap-2 mb-1">
-                        <tool.icon className={`w-4 h-4 text-${tool.color}-600`} />
+                        <tool.icon className="w-4 h-4 text-gray-600" />
                         <span className="text-sm font-medium text-gray-900">{tool.label}</span>
                       </div>
                       <p className="text-xs text-gray-600">{tool.description}</p>
