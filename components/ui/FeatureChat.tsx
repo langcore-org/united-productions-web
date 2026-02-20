@@ -8,7 +8,6 @@ import { Send, Copy, Check, Loader2, Sparkles, MessageSquare, Trash2, RotateCcw 
 import { WordExportButton } from "./WordExportButton";
 import { useLLMStream, StreamingMessage, type ToolOptions } from "./StreamingMessage";
 import { MessageBubble } from "./MessageBubble";
-import { ModelSelector } from "./ModelSelector";
 import { FileAttachButton, AttachedFile } from "./FileAttachment";
 import { DEFAULT_PROVIDER } from "@/lib/llm/config";
 import type { LLMProvider } from "@/lib/llm/types";
@@ -33,8 +32,6 @@ export interface FeatureChatProps {
   provider?: LLMProvider;
   /** 空の状態の説明 */
   emptyDescription?: string;
-  /** モデル選択を有効化 */
-  enableModelSelector?: boolean;
   /** ファイル添付を有効化 */
   enableFileAttachment?: boolean;
   /** Grokツール（Web検索）を有効化 */
@@ -51,7 +48,6 @@ export function FeatureChat({
   className,
   provider: initialProvider = DEFAULT_PROVIDER,
   emptyDescription,
-  enableModelSelector = true,
   enableFileAttachment = true,
   enableGrokTools = false,
 }: FeatureChatProps) {
@@ -59,8 +55,10 @@ export function FeatureChat({
   const [input, setInput] = useState("");
   const [isCopied, setIsCopied] = useState(false);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
-  const [provider, setProvider] = useState<LLMProvider>(initialProvider);
   const [attachedFiles, setAttachedFiles] = useState<AttachedFile[]>([]);
+  
+  // Grok固定
+  const provider: LLMProvider = initialProvider;
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -286,13 +284,6 @@ export function FeatureChat({
         </div>
         
         <div className="flex items-center gap-2">
-          {enableModelSelector && (
-            <ModelSelector
-              value={provider}
-              onChange={setProvider}
-              disabled={!!isStreaming}
-            />
-          )}
           {hasMessages && (
             <Button
               variant="ghost"
