@@ -26,23 +26,10 @@ export interface RateLimitConfig {
  * プロバイダー別のデフォルトレート制限設定
  * 無料枠を前提とした設定
  */
-export const DEFAULT_RATE_LIMITS: Record<string, RateLimitConfig> = {
-  // Google AI Studio 無料枠
-  'gemini-2.5-flash-lite': { rpm: 30, rpd: 1500 },
-  'gemini-3.0-flash': { rpm: 30, rpd: 1500 },
-  // xAI（デフォルト制限）
-  'grok-4-1-fast-reasoning': { rpm: 60, rpd: 10000 },
-  'grok-4-0709': { rpm: 60, rpd: 10000 },
-  // OpenAI（デフォルト制限）
-  'gpt-4o-mini': { rpm: 60, rpd: 10000 },
-  'gpt-5': { rpm: 60, rpd: 10000 },
-  // Anthropic（デフォルト制限）
-  'claude-sonnet-4.5': { rpm: 60, rpd: 10000 },
-  'claude-opus-4.6': { rpm: 60, rpd: 10000 },
-  // Perplexity（デフォルト制限）
-  'perplexity-sonar': { rpm: 60, rpd: 10000 },
-  'perplexity-sonar-pro': { rpm: 60, rpd: 10000 },
-};
+import { FREE_TIER_LIMITS } from '@/lib/llm/config';
+
+// lib/llm/config.ts の FREE_TIER_LIMITS を Single Source of Truth とする
+export const DEFAULT_RATE_LIMITS = FREE_TIER_LIMITS;
 
 /**
  * レート制限チェック結果

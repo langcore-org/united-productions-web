@@ -589,6 +589,202 @@ curl -X POST https://api.x.ai/v1/responses \
 
 ---
 
+## 包括的テスト結果（2026-02-20）
+
+### テスト概要
+- **テスト日時**: 2026-02-20
+- **テスト対象**: xAI Responses API (`/v1/responses`)
+- **テストモデル**: `grok-4-1-fast-reasoning`, `grok-4-0709`
+- **テスト実施者**: AI Agent
+
+### テスト結果一覧
+
+| # | テスト項目 | エンドポイント | ツール/パラメータ | 結果 | 備考 |
+|---|-----------|--------------|-----------------|------|------|
+| 1 | x_search基本動作 | `/responses` | `{"type": "x_search"}` | ✅ 成功 | 複数の検索クエリを自動実行 |
+| 2 | web_search基本動作 | `/responses` | `{"type": "web_search"}` | ✅ 成功 | 検索+ページ閲覧を実行 |
+| 3 | code_execution基本動作 | `/responses` | `{"type": "code_execution"}` | ✅ 成功 | コード実行、結果返却 |
+| 4 | collections_search基本動作 | `/responses` | `{"type": "collections_search"}` | ❌ 失敗 | `vector_store_ids` が必要 |
+| 5 | ツール組み合わせ | `/responses` | `web_search` + `x_search` | ✅ 成功 | 両方のツールが並列実行 |
+| 6 | web_search制限付き | `/responses` | `allowed_domains` 指定 | ✅ 成功 | ドメイン制限が機能 |
+| 7 | ストリーミング | `/responses` | `stream: true` | ✅ 成功 | SSE形式で正常動作 |
+| 8 | 無効ツールタイプ | `/responses` | `{"type": "invalid_tool"}` | ❌ 失敗 | 適切なエラーメッセージ |
+| 9 | 別モデルでの動作 | `/responses` | `grok-4-0709` + `web_search` | ✅ 成功 | 両モデルでツール動作 |
+| 10 | ツールなし | `/responses` | ツールなし | ✅ 成功 | 通常チャットとして動作 |
+| 11 | file_searchエイリアス | `/responses` | `{"type": "file_search"}` | ❌ 失敗 | `vector_store_ids` が必要 |
+| 12 | code_interpreterエイリアス | `/responses` | `{"type": "code_interpreter"}` | ✅ 成功 | `code_execution` と同等 |
+
+### 有効なツールタイプ（API確認済み）
+
+エラーメッセージから確認できた有効なツールタイプ：
+
+```
+expected one of:
+  - function          # カスタム関数呼び出し
+  - web_search        # Web検索
+  - x_search          # X検索
+  - collections_search # コレクション検索（vector_store_ids必要）
+  - file_search       # ファイル検索（collections_searchのエイリアス）
+  - code_execution    # コード実行
+  - code_interpreter  # コードインタープリター（code_executionのエイリアス）
+  - mcp               # Model Context Protocol
+```
+
+### 各ツールの詳細仕様
+
+#### ✅ x_search（利用可能）
+
+**動作**: X（Twitter）の投稿を検索
+**自動実行される検索タイプ**:
+- `x_keyword_search`: キーワード検索
+- `x_semantic_search`: セマンティック検索
+
+**レスポンス例**:
+```json
+{
+  "output": [
+    {"type": "custom_tool_call", "name": "x_keyword_search", ...},
+    {"type": "custom_tool_call", "name": "x_semantic_search", ...},
+    {"type": "message", "content": [{"type": "output_text", "text": "..."}]}
+  ],
+  "usage": {
+    "server_side_tool_usage_details": {"x_search_calls": 2}
+  }
+}
+```
+
+#### ✅ web_search（利用可能）
+
+**動作**: Web検索とページ閲覧
+**自動実行されるアクション**:
+- `search`: 検索クエリ実行
+- `open_page`: 特定ページの閲覧
+
+**レスポンス例**:
+```json
+{
+  "output": [
+    {"type": "web_search_call", "action": {"type": "search", "query": "..."}},
+    {"type": "web_search_call", "action": {"type": "open_page", "url": "..."}},
+    {"type": "message", "content": [{"type": "output_text", "text": "..."}]}
+  ],
+  "usage": {
+    "server_side_tool_usage_details": {"web_search_calls": 3}
+  }
+}
+```
+
+#### ✅ code_execution / code_interpreter（利用可能）
+
+**動作**: Pythonコードをサンドボックスで実行
+**注意**: リクエストは `code_execution` だが、レスポンスでは `code_interpreter` として記録される
+
+**レスポンス例**:
+```json
+{
+  "output": [
+    {"type": "code_interpreter_call", "code": "print(sum(range(1, 11)))", ...},
+    {"type": "message", "content": [{"type": "output_text", "text": "..."}]}
+  ],
+  "usage": {
+    "server_side_tool_usage_details": {"code_interpreter_calls": 1}
+  }
+}
+```
+
+#### ❌ collections_search / file_search（現状未対応）
+
+**動作**: ベクトルストア（アップロード済みドキュメント）の検索
+**制限**: `vector_store_ids` パラメータが必要
+
+**エラーメッセージ**:
+```
+Failed to deserialize the JSON body into the target type: 
+tools[0]: missing field `vector_store_ids` at line 4 column 45
+```
+
+**使用例（vector_store_ids指定時）**:
+```json
+{
+  "tools": [{
+    "type": "collections_search",
+    "vector_store_ids": ["vs_xxxxxxxxxxxxxxxx"]
+  }]
+}
+```
+
+**実装方針**: 現状は未対応（ファイルアップロード機能が必要）
+
+### ストリーミング仕様
+
+**リクエスト**:
+```json
+{
+  "model": "grok-4-1-fast-reasoning",
+  "input": [...],
+  "tools": [{"type": "x_search"}],
+  "stream": true
+}
+```
+
+**レスポンス形式**: SSE（Server-Sent Events）
+
+```
+event: response.created
+data: {"type": "response.created", ...}
+
+event: response.in_progress
+data: {"type": "response.in_progress", ...}
+
+event: response.output_item.added
+data: {"type": "response.output_item.added", ...}
+
+event: response.output_text.delta
+data: {"type": "response.output_text.delta", "delta": "こんに", ...}
+
+event: response.output_text.delta
+data: {"type": ".response.output_text.delta", "delta": "ちは", ...}
+```
+
+### ツール使用状況の追跡
+
+**レスポンスの usage フィールド**:
+```json
+{
+  "usage": {
+    "input_tokens": 9596,
+    "output_tokens": 1177,
+    "total_tokens": 10773,
+    "num_sources_used": 0,
+    "num_server_side_tools_used": 3,
+    "cost_in_usd_ticks": 171580500,
+    "server_side_tool_usage_details": {
+      "web_search_calls": 0,
+      "x_search_calls": 3,
+      "code_interpreter_calls": 0,
+      "file_search_calls": 0,
+      "mcp_calls": 0,
+      "document_search_calls": 0
+    }
+  }
+}
+```
+
+**コスト計算**:
+- `cost_in_usd_ticks`: USDの10億分の1（例: `171580500` = $0.17158）
+
+### 実装の最終状態
+
+**有効なツール**（デフォルトで有効）:
+- ✅ `web_search`
+- ✅ `x_search`
+- ✅ `code_execution`
+
+**無効なツール**:
+- ❌ `collections_search` / `file_search`（`vector_store_ids` が必要）
+
+---
+
 ## 参考リンク
 
 - [xAI Tools Overview](https://docs.x.ai/developers/tools/overview)

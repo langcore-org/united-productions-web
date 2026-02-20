@@ -22,7 +22,7 @@ interface LogData {
   level: LogLevel;
   category: LogCategory;
   message: string;
-  details?: Record<string, any>;
+  details?: Record<string, unknown>;
   userId?: string;
   context?: LogContext;
   error?: Error;
@@ -75,7 +75,7 @@ export async function log(data: LogData): Promise<void> {
         level,
         category,
         message,
-        details: details || {},
+        details: details as any || {},
         userId,
         requestId: context?.requestId,
         path: context?.path,
@@ -97,19 +97,19 @@ export async function log(data: LogData): Promise<void> {
 
 // 便利なショートハンド関数
 export const logger = {
-  debug: (category: LogCategory, message: string, details?: Record<string, any>) =>
+  debug: (category: LogCategory, message: string, details?: Record<string, unknown>) =>
     log({ level: "DEBUG", category, message, details }),
   
-  info: (category: LogCategory, message: string, details?: Record<string, any>) =>
+  info: (category: LogCategory, message: string, details?: Record<string, unknown>) =>
     log({ level: "INFO", category, message, details }),
   
-  warn: (category: LogCategory, message: string, details?: Record<string, any>) =>
+  warn: (category: LogCategory, message: string, details?: Record<string, unknown>) =>
     log({ level: "WARN", category, message, details }),
   
-  error: (category: LogCategory, message: string, error?: Error, details?: Record<string, any>) =>
+  error: (category: LogCategory, message: string, error?: Error, details?: Record<string, unknown>) =>
     log({ level: "ERROR", category, message, error, details }),
   
-  audit: (message: string, userId: string, details?: Record<string, any>, context?: LogContext) =>
+  audit: (message: string, userId: string, details?: Record<string, unknown>, context?: LogContext) =>
     log({ level: "AUDIT", category: "USER_ACTION", message, userId, details, context }),
 };
 

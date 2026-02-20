@@ -1,7 +1,10 @@
 /**
- * ロガーユーティリティ
+ * ロガーユーティリティ（シンプル版）
  * 
  * 環境に応じたログレベル制御と構造化ログ出力
+ * 
+ * 【統合履歴】2026-02-20: lib/logger/index.ts がサーバーサイド用のため、
+ * クライアントサイド用にこのファイルを維持
  */
 
 type LogLevel = 'debug' | 'info' | 'warn' | 'error';
@@ -15,7 +18,6 @@ class Logger {
   private level: LogLevel;
 
   private constructor() {
-    // 環境変数からログレベルを取得（デフォルト: info）
     const envLevel = process.env.LOG_LEVEL as LogLevel;
     this.level = envLevel || 'info';
   }
