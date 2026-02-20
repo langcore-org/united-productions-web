@@ -35,6 +35,7 @@ interface GrokToolSettings {
 function ChatPageContent() {
   const searchParams = useSearchParams();
   const gemId = searchParams.get("gem") || "general";
+  const isNewChat = searchParams.get("new") === "1";
   
   const [gem, setGem] = useState(GEMS[0]);
   const [systemPrompt, setSystemPrompt] = useState<string>("");
@@ -104,6 +105,7 @@ function ChatPageContent() {
 
   return (
     <FeatureChat
+      key={`${gem.id}-${isNewChat ? Date.now() : "default"}`}
       featureId={gem.id}
       title={gem.name}
       systemPrompt={systemPrompt}
