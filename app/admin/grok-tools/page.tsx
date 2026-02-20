@@ -13,6 +13,8 @@ import {
   Twitter,
   Settings,
   ArrowLeft,
+  AlertCircle,
+  Loader2,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -37,7 +39,6 @@ const TOOLS = [
     description: "インターネットから最新情報を検索",
     icon: Search,
     color: "indigo",
-    defaultOn: true,
   },
   {
     id: "xSearch" as const,
@@ -46,7 +47,6 @@ const TOOLS = [
     description: "X（Twitter）からリアルタイム情報を検索",
     icon: Twitter,
     color: "sky",
-    defaultOn: true,
   },
   {
     id: "codeExecution" as const,
@@ -55,7 +55,6 @@ const TOOLS = [
     description: "Pythonコードを安全なサンドボックスで実行",
     icon: Terminal,
     color: "emerald",
-    defaultOn: true,
   },
   {
     id: "fileSearch" as const,
@@ -64,7 +63,6 @@ const TOOLS = [
     description: "アップロードしたドキュメントを検索",
     icon: FileSearch,
     color: "amber",
-    defaultOn: true,
   },
 ] as const;
 
@@ -73,52 +71,11 @@ type FeatureKey = typeof TOOL_FEATURES[number]["key"];
 
 type GrokToolSettings = Record<`${ToolId}${Capitalize<FeatureKey>}`, boolean>;
 
-const DEFAULT_GROK_SETTINGS: GrokToolSettings = {
-  // Web検索（デフォルトON）
-  webSearchGeneralChat: true,
-  webSearchResearchCast: true,
-  webSearchResearchLocation: true,
-  webSearchResearchInfo: true,
-  webSearchResearchEvidence: true,
-  webSearchMinutes: true,
-  webSearchProposal: true,
-  webSearchNaScript: true,
-  
-  // X検索（デフォルトON）
-  xSearchGeneralChat: true,
-  xSearchResearchCast: true,
-  xSearchResearchLocation: true,
-  xSearchResearchInfo: true,
-  xSearchResearchEvidence: true,
-  xSearchMinutes: true,
-  xSearchProposal: true,
-  xSearchNaScript: true,
-  
-  // コード実行（デフォルトON）
-  codeExecutionGeneralChat: true,
-  codeExecutionResearchCast: true,
-  codeExecutionResearchLocation: true,
-  codeExecutionResearchInfo: true,
-  codeExecutionResearchEvidence: true,
-  codeExecutionMinutes: true,
-  codeExecutionProposal: true,
-  codeExecutionNaScript: true,
-  
-  // ファイル検索（デフォルトON）
-  fileSearchGeneralChat: true,
-  fileSearchResearchCast: true,
-  fileSearchResearchLocation: true,
-  fileSearchResearchInfo: true,
-  fileSearchResearchEvidence: true,
-  fileSearchMinutes: true,
-  fileSearchProposal: true,
-  fileSearchNaScript: true,
-};
-
 export default function GrokToolsPage() {
   const [mounted, setMounted] = useState(false);
-  const [grokSettings, setGrokSettings] = useState<GrokToolSettings>(DEFAULT_GROK_SETTINGS);
+  const [grokSettings, setGrokSettings] = useState<GrokToolSettings | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
 
@@ -128,24 +85,42 @@ export default function GrokToolsPage() {
   }, []);
 
   const fetchSettings = async () => {
+    setIsLoading(true);
+    setError(null);
+    
     try {
       const response = await fetch("/api/settings/grok-tools");
-      if (response.ok) {
-        const data = await response.json();
-        setGrokSettings({ ...DEFAULT_GROK_SETTINGS, ...data });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `HTTP ${response.status}: 設定の取得に失敗しました`);
       }
-    } catch (error) {
-      console.error("Failed to fetch Grok tool settings:", error);
+      
+      const data = await response.json();
+      
+      // データが空または無効な場合はエラー
+      if (!data || typeof data !== 'object') {
+        throw new Error('設定データが無効です');
+      }
+      
+      setGrokSettings(data);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : '設定の取得中にエラーが発生しました';
+      setError(errorMessage);
+      console.error("Failed to fetch Grok tool settings:", err);
     } finally {
       setIsLoading(false);
     }
   };
 
   const updateSetting = (key: keyof GrokToolSettings, value: boolean) => {
-    setGrokSettings((prev) => ({ ...prev, [key]: value }));
+    if (!grokSettings) return;
+    setGrokSettings((prev) => prev ? ({ ...prev, [key]: value }) : null);
   };
 
   const handleSave = async () => {
+    if (!grokSettings) return;
+    
     setIsSaving(true);
     setSaveMessage(null);
     
@@ -156,25 +131,106 @@ export default function GrokToolsPage() {
         body: JSON.stringify(grokSettings),
       });
 
-      if (response.ok) {
-        setSaveMessage("保存しました");
-        setTimeout(() => setSaveMessage(null), 3000);
-      } else {
-        setSaveMessage("保存に失敗しました");
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || '保存に失敗しました');
       }
-    } catch (error) {
-      console.error("Failed to save Grok tool settings:", error);
-      setSaveMessage("保存に失敗しました");
+
+      setSaveMessage("保存しました");
+      setTimeout(() => setSaveMessage(null), 3000);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : '保存に失敗しました';
+      setSaveMessage(errorMessage);
+      console.error("Failed to save Grok tool settings:", err);
     } finally {
       setIsSaving(false);
     }
   };
 
-  if (!mounted) {
+  // エラー表示
+  if (error) {
     return (
       <AdminLayout>
-        <div className="h-full flex items-center justify-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-500" />
+        <div className="h-full overflow-y-auto p-8">
+          <div className="max-w-6xl mx-auto">
+            {/* ヘッダー */}
+            <div className="flex items-center gap-4 mb-8">
+              <Link
+                href="/admin"
+                className="flex items-center justify-center w-10 h-10 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </Link>
+              <div className="w-12 h-12 rounded-xl bg-indigo-600 flex items-center justify-center">
+                <Bot className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900">Grokツール設定</h1>
+                <p className="text-gray-500">Agent Tools APIの有効化設定</p>
+              </div>
+            </div>
+
+            {/* エラーカード */}
+            <Card className="border-red-200">
+              <CardContent className="p-8">
+                <div className="flex flex-col items-center text-center">
+                  <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mb-4">
+                    <AlertCircle className="w-8 h-8 text-red-600" />
+                  </div>
+                  <h2 className="text-xl font-semibold text-gray-900 mb-2">
+                    設定の取得に失敗しました
+                  </h2>
+                  <p className="text-gray-600 mb-6 max-w-md">
+                    {error}
+                  </p>
+                  <button
+                    onClick={fetchSettings}
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-indigo-600 text-white hover:bg-indigo-700 transition-colors"
+                  >
+                    再試行
+                  </button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </AdminLayout>
+    );
+  }
+
+  // ローディング表示
+  if (isLoading || !grokSettings) {
+    return (
+      <AdminLayout>
+        <div className="h-full overflow-y-auto p-8">
+          <div className="max-w-6xl mx-auto">
+            {/* ヘッダー */}
+            <div className="flex items-center gap-4 mb-8">
+              <Link
+                href="/admin"
+                className="flex items-center justify-center w-10 h-10 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </Link>
+              <div className="w-12 h-12 rounded-xl bg-indigo-600 flex items-center justify-center">
+                <Bot className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900">Grokツール設定</h1>
+                <p className="text-gray-500">Agent Tools APIの有効化設定</p>
+              </div>
+            </div>
+
+            {/* ローディングカード */}
+            <Card>
+              <CardContent className="p-12">
+                <div className="flex flex-col items-center">
+                  <Loader2 className="w-8 h-8 text-indigo-600 animate-spin mb-4" />
+                  <p className="text-gray-600">設定を読み込んでいます...</p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </AdminLayout>
     );
@@ -210,116 +266,107 @@ export default function GrokToolsPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {isLoading ? (
-                <div className="flex items-center justify-center py-8">
-                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-600" />
+              <div className="space-y-6">
+                <div className="p-4 rounded-lg bg-indigo-50 border border-indigo-200">
+                  <p className="text-sm text-indigo-900">
+                    Grokモデル使用時に、各機能でAgent Toolsを有効にすると、
+                    AIが自律的にツールを使いこなして回答を生成します。
+                    この設定は<strong>全ユーザーに適用</strong>されます。
+                  </p>
                 </div>
-              ) : (
-                <div className="space-y-6">
-                  <div className="p-4 rounded-lg bg-indigo-50 border border-indigo-200">
-                    <p className="text-sm text-indigo-900">
-                      Grokモデル使用時に、各機能でAgent Toolsを有効にすると、
-                      AIが自律的にツールを使いこなして回答を生成します。
-                      この設定は<strong>全ユーザーに適用</strong>されます。
-                    </p>
-                  </div>
 
-                  {/* ツール別設定テーブル */}
-                  <div className="overflow-x-auto">
-                    <table className="w-full">
-                      <thead>
-                        <tr className="border-b border-gray-200">
-                          <th className="text-left py-3 px-4 text-sm font-medium text-gray-700">機能</th>
-                          {TOOLS.map((tool) => (
-                            <th key={tool.id} className="text-center py-3 px-2 text-sm font-medium text-gray-700 min-w-[100px]">
-                              <div className="flex flex-col items-center gap-1">
-                                <tool.icon className={`w-4 h-4 text-${tool.color}-600`} />
-                                <span>{tool.label}</span>
-                              </div>
-                            </th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {TOOL_FEATURES.map((feature) => (
-                          <tr key={feature.key} className="border-b border-gray-100 hover:bg-gray-50">
-                            <td className="py-3 px-4">
-                              <span className="text-sm font-medium text-gray-900">{feature.label}</span>
-                            </td>
-                            {TOOLS.map((tool) => {
-                              const settingKey = `${tool.id}${feature.key.charAt(0).toUpperCase() + feature.key.slice(1)}` as keyof GrokToolSettings;
-                              const isEnabled = grokSettings[settingKey] ?? tool.defaultOn;
-                              return (
-                                <td key={tool.id} className="py-3 px-2 text-center">
-                                  <button
-                                    onClick={() => updateSetting(settingKey, !isEnabled)}
-                                    className={`relative w-10 h-5 rounded-full transition-colors duration-200 ${
-                                      isEnabled 
-                                        ? `bg-${tool.color}-600` 
-                                        : "bg-gray-200"
-                                    }`}
-                                  >
-                                    <span
-                                      className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform duration-200 ${
-                                        isEnabled ? "translate-x-5" : "translate-x-0"
-                                      }`}
-                                    />
-                                  </button>
-                                </td>
-                              );
-                            })}
-                          </tr>
+                {/* ツール別設定テーブル */}
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-gray-200">
+                        <th className="text-left py-3 px-4 text-sm font-medium text-gray-700">機能</th>
+                        {TOOLS.map((tool) => (
+                          <th key={tool.id} className="text-center py-3 px-2 text-sm font-medium text-gray-700 min-w-[100px]">
+                            <div className="flex flex-col items-center gap-1">
+                              <tool.icon className={`w-4 h-4 text-${tool.color}-600`} />
+                              <span>{tool.label}</span>
+                            </div>
+                          </th>
                         ))}
-                      </tbody>
-                    </table>
-                  </div>
-
-                  {/* ツール説明 */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-gray-200">
-                    {TOOLS.map((tool) => (
-                      <div key={tool.id} className={`p-3 rounded-lg bg-${tool.color}-50 border border-${tool.color}-200`}>
-                        <div className="flex items-center gap-2 mb-1">
-                          <tool.icon className={`w-4 h-4 text-${tool.color}-600`} />
-                          <span className="text-sm font-medium text-gray-900">{tool.label}</span>
-                          {tool.defaultOn && (
-                            <Badge className="bg-green-100 text-green-800 text-xs">デフォルトON</Badge>
-                          )}
-                        </div>
-                        <p className="text-xs text-gray-600">{tool.description}</p>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="flex items-center justify-between pt-4 border-t border-gray-200">
-                    <div>
-                      {saveMessage && (
-                        <span className={`text-sm ${
-                          saveMessage === "保存しました" ? "text-green-600" : "text-red-600"
-                        }`}>
-                          {saveMessage}
-                        </span>
-                      )}
-                    </div>
-                    <button
-                      onClick={handleSave}
-                      disabled={isSaving}
-                      className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-indigo-600 text-white hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {isSaving ? (
-                        <>
-                          <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                          保存中...
-                        </>
-                      ) : (
-                        <>
-                          <Save className="w-4 h-4" />
-                          設定を保存
-                        </>
-                      )}
-                    </button>
-                  </div>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {TOOL_FEATURES.map((feature) => (
+                        <tr key={feature.key} className="border-b border-gray-100 hover:bg-gray-50">
+                          <td className="py-3 px-4">
+                            <span className="text-sm font-medium text-gray-900">{feature.label}</span>
+                          </td>
+                          {TOOLS.map((tool) => {
+                            const settingKey = `${tool.id}${feature.key.charAt(0).toUpperCase() + feature.key.slice(1)}` as keyof GrokToolSettings;
+                            const isEnabled = grokSettings[settingKey] ?? false;
+                            return (
+                              <td key={tool.id} className="py-3 px-2 text-center">
+                                <button
+                                  onClick={() => updateSetting(settingKey, !isEnabled)}
+                                  className={`relative w-10 h-5 rounded-full transition-colors duration-200 ${
+                                    isEnabled 
+                                      ? `bg-${tool.color}-600` 
+                                      : "bg-gray-200"
+                                  }`}
+                                >
+                                  <span
+                                    className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform duration-200 ${
+                                      isEnabled ? "translate-x-5" : "translate-x-0"
+                                    }`}
+                                  />
+                                </button>
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
-              )}
+
+                {/* ツール説明 */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-gray-200">
+                  {TOOLS.map((tool) => (
+                    <div key={tool.id} className={`p-3 rounded-lg bg-${tool.color}-50 border border-${tool.color}-200`}>
+                      <div className="flex items-center gap-2 mb-1">
+                        <tool.icon className={`w-4 h-4 text-${tool.color}-600`} />
+                        <span className="text-sm font-medium text-gray-900">{tool.label}</span>
+                      </div>
+                      <p className="text-xs text-gray-600">{tool.description}</p>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="flex items-center justify-between pt-4 border-t border-gray-200">
+                  <div>
+                    {saveMessage && (
+                      <span className={`text-sm ${
+                        saveMessage === "保存しました" ? "text-green-600" : "text-red-600"
+                      }`}>
+                        {saveMessage}
+                      </span>
+                    )}
+                  </div>
+                  <button
+                    onClick={handleSave}
+                    disabled={isSaving}
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-indigo-600 text-white hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isSaving ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        保存中...
+                      </>
+                    ) : (
+                      <>
+                        <Save className="w-4 h-4" />
+                        設定を保存
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </div>

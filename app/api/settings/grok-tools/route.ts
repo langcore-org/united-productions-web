@@ -21,6 +21,7 @@ import {
 /**
  * GET /api/settings/grok-tools
  * システム全体のGrokツール設定を取得
+ * DBに設定がない場合は404エラーを返す
  */
 export async function GET(request: NextRequest): Promise<Response> {
   const requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -34,6 +35,17 @@ export async function GET(request: NextRequest): Promise<Response> {
 
     const settings = await getSystemGrokToolSettings();
 
+    // DBに設定がない場合は404エラー
+    if (settings === null) {
+      return new Response(
+        JSON.stringify({ 
+          error: "Grokツール設定が見つかりません。先に設定を保存してください。",
+          requestId 
+        }),
+        { status: 404, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
     return new Response(
       JSON.stringify(settings),
       { headers: { "Content-Type": "application/json" } }
@@ -45,7 +57,7 @@ export async function GET(request: NextRequest): Promise<Response> {
       error: errorMessage,
     });
     return new Response(
-      JSON.stringify({ error: "Failed to get settings", requestId }),
+      JSON.stringify({ error: "設定の取得に失敗しました", requestId }),
       { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }
@@ -148,7 +160,7 @@ export async function POST(request: NextRequest): Promise<Response> {
       error: errorMessage,
     });
     return new Response(
-      JSON.stringify({ error: "Failed to save settings", requestId }),
+      JSON.stringify({ error: "設定の保存に失敗しました", requestId }),
       { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }

@@ -227,7 +227,7 @@ export async function isToolEnabled(
   featureId: ChatFeatureId,
   toolType: GrokToolType
 ): Promise<boolean> {
-  const settings = await getSystemGrokToolSettings();
+  const settings = await getSystemGrokToolSettingsOrDefault();
   const key = getToolSettingKey(featureId, toolType);
   
   if (!key) return false;
@@ -298,7 +298,7 @@ export async function isGrokToolEnabled(
   _userId: string, 
   featureId: ChatFeatureId
 ): Promise<boolean> {
-  const settings = await getSystemGrokToolSettings();
+  const settings = await getSystemGrokToolSettingsOrDefault();
   const key = featureIdToToolKey(featureId);
   
   if (!key) return false;
@@ -312,9 +312,9 @@ export async function isGrokToolEnabled(
 
 /**
  * システム全体のGrokツール設定を取得
- * DBに設定がなければデフォルト値を返す
+ * DBに設定がなければnullを返す
  */
-export async function getSystemGrokToolSettings(): Promise<GrokToolSettings> {
+export async function getSystemGrokToolSettings(): Promise<GrokToolSettings | null> {
   try {
     const value = await getSystemSetting(SYSTEM_SETTING_KEYS.GROK_TOOL_SETTINGS);
     if (value) {
@@ -326,9 +326,19 @@ export async function getSystemGrokToolSettings(): Promise<GrokToolSettings> {
     }
   } catch (error) {
     console.error('Failed to get system Grok tool settings:', error);
+    throw error;
   }
 
-  return DEFAULT_GROK_TOOL_SETTINGS;
+  return null;
+}
+
+/**
+ * システム全体のGrokツール設定を取得（設定がない場合はデフォルト値を返す）
+ * クライアント側で使用
+ */
+export async function getSystemGrokToolSettingsOrDefault(): Promise<GrokToolSettings> {
+  const settings = await getSystemGrokToolSettings();
+  return settings ?? DEFAULT_GROK_TOOL_SETTINGS;
 }
 
 /**
