@@ -83,6 +83,23 @@ interface XAIStreamChunk {
     };
     finish_reason: string | null;
   }[];
+  usage?: {
+    prompt_tokens: number;
+    completion_tokens: number;
+    total_tokens: number;
+  };
+}
+
+/**
+ * ストリーミング結果（コンテンツ + usage）
+ */
+export interface StreamResult {
+  content: string;
+  usage?: {
+    inputTokens: number;
+    outputTokens: number;
+    cost: number;
+  };
 }
 
 /**
@@ -95,10 +112,17 @@ export class GrokClient implements LLMClient {
   private baseUrl = 'https://api.x.ai/v1';
   private toolOptions: GrokToolOptions;
 
-  constructor(provider: LLMProvider, toolOptions: GrokToolOptions = {}) {
+  constructor(provider: LLMProvider, toolOptions?: GrokToolOptions) {
     this.provider = provider;
     this.model = this.getModelName(provider);
-    this.toolOptions = toolOptions;
+    // 2026-02-20: デフォルトで全ツール有効（DB設定不要）
+    this.toolOptions = {
+      enableWebSearch: true,
+      enableXSearch: true,
+      enableCodeExecution: true,
+      enableFileSearch: true,
+      ...toolOptions,
+    };
     
     const apiKey = process.env.XAI_API_KEY;
     if (!apiKey) {
@@ -238,10 +262,11 @@ export class GrokClient implements LLMClient {
   }
 
   /**
-   * ストリーミングレスポンスを取得
+   * ストリーミングレスポンスを取得（usage付き）
+   * 返り値: { content: string, usage?: { inputTokens, outputTokens, cost } }
    */
-  async *stream(messages: LLMMessage[]): AsyncIterable<string> {
-    logger.info('Starting stream request', { 
+  async *streamWithUsage(messages: LLMMessage[]): AsyncIterable<{ chunk?: string; usage?: { inputTokens: number; outputTokens: number; cost: number } }> {
+    logger.info('Starting stream request with usage tracking', { 
       messageCount: messages.length, 
       model: this.model,
       enableWebSearch: this.toolOptions.enableWebSearch 
@@ -292,9 +317,9 @@ export class GrokClient implements LLMClient {
 
     const decoder = new TextDecoder();
     let buffer = '';
-
     let chunkCount = 0;
     let totalLength = 0;
+    let finalUsage: { inputTokens: number; outputTokens: number; cost: number } | undefined;
 
     try {
       while (true) {
@@ -315,16 +340,43 @@ export class GrokClient implements LLMClient {
           const data = trimmedLine.slice(6); // Remove 'data: ' prefix
           
           if (data === '[DONE]') {
+            // 最後にusageを返す
+            if (finalUsage) {
+              yield { usage: finalUsage };
+            }
             return;
           }
 
           try {
             const chunk: XAIStreamChunk = JSON.parse(data);
             const content = chunk.choices[0]?.delta?.content;
+            
+            // コンテンツをyield
             if (content) {
               chunkCount++;
               totalLength += content.length;
-              yield content;
+              yield { chunk: content };
+            }
+            
+            // usage情報を記録（最後のチャンクに含まれる場合）
+            if (chunk.usage) {
+              const providerInfo = getProviderInfo(this.provider);
+              const inputTokens = chunk.usage.prompt_tokens;
+              const outputTokens = chunk.usage.completion_tokens;
+              const cost = Number(
+                (
+                  (inputTokens / 1000000) * providerInfo.inputPrice +
+                  (outputTokens / 1000000) * providerInfo.outputPrice
+                ).toFixed(6)
+              );
+              
+              finalUsage = { inputTokens, outputTokens, cost };
+              
+              logger.info('Stream usage received', {
+                inputTokens,
+                outputTokens,
+                cost: cost.toFixed(6),
+              });
             }
           } catch {
             // Ignore JSON parse errors for malformed chunks
@@ -333,7 +385,7 @@ export class GrokClient implements LLMClient {
         }
       }
 
-      // Process remaining buffer
+      // 残りのバッファを処理
       if (buffer.trim()) {
         const trimmedLine = buffer.trim();
         if (trimmedLine.startsWith('data: ')) {
@@ -343,16 +395,68 @@ export class GrokClient implements LLMClient {
               const chunk: XAIStreamChunk = JSON.parse(data);
               const content = chunk.choices[0]?.delta?.content;
               if (content) {
-                yield content;
+                yield { chunk: content };
+              }
+              // 最後のチャンクのusageをチェック
+              if (chunk.usage) {
+                const providerInfo = getProviderInfo(this.provider);
+                const inputTokens = chunk.usage.prompt_tokens;
+                const outputTokens = chunk.usage.completion_tokens;
+                const cost = Number(
+                  (
+                    (inputTokens / 1000000) * providerInfo.inputPrice +
+                    (outputTokens / 1000000) * providerInfo.outputPrice
+                  ).toFixed(6)
+                );
+                finalUsage = { inputTokens, outputTokens, cost };
               }
             } catch {
-              // Ignore JSON parse errors
+              // Ignore
             }
           }
         }
+      }
+      
+      // 最後にusageを返す
+      if (finalUsage) {
+        yield { usage: finalUsage };
       }
     } finally {
       reader.releaseLock();
     }
   }
+
+  /**
+   * ストリーミングレスポンスを取得（後方互換性）
+   */
+  async *stream(messages: LLMMessage[]): AsyncIterable<string> {
+    for await (const { chunk } of this.streamWithUsage(messages)) {
+      if (chunk) {
+        yield chunk;
+      }
+    }
+  }
+}
+
+/**
+ * ストリーミング結果から最終的なusageを取得
+ * この関数はストリーム全体を消費してusageを返す
+ */
+export async function streamWithUsageTracking(
+  client: GrokClient,
+  messages: LLMMessage[]
+): Promise<{ content: string; usage?: { inputTokens: number; outputTokens: number; cost: number } }> {
+  let content = '';
+  let finalUsage: { inputTokens: number; outputTokens: number; cost: number } | undefined;
+  
+  for await (const { chunk, usage } of client.streamWithUsage(messages)) {
+    if (chunk) {
+      content += chunk;
+    }
+    if (usage) {
+      finalUsage = usage;
+    }
+  }
+  
+  return { content, usage: finalUsage };
 }

@@ -2,7 +2,9 @@
  * API使用量・コスト監視API
  * 
  * GET /api/admin/usage
- * 使用量統計を取得
+ * 使用量統計を取得（ツール使用状況含む）
+ * 
+ * 更新: 2026-02-20 - ツール使用量・ログ統計を追加
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -32,6 +34,12 @@ interface UsageStats {
     userEmail: string;
     cost: number;
     requests: number;
+  }[];
+  // ツール使用統計（2026-02-20追加）
+  byTool: {
+    toolName: string;
+    requests: number;
+    cost: number;
   }[];
 }
 
@@ -139,6 +147,62 @@ export async function GET(request: NextRequest) {
 
     const userMap = new Map(users.map((u) => [u.id, u]));
 
+    // ツール別統計（2026-02-20追加）
+    // Grokプロバイダーのみツール使用を集計
+    const grokLogs = await prisma.usageLog.findMany({
+      where: {
+        createdAt: {
+          gte: startDate,
+        },
+        provider: {
+          in: ["GROK_4_1_FAST_REASONING", "GROK_4_0709"],
+        },
+      },
+      select: {
+        cost: true,
+        metadata: true,
+      },
+    });
+
+    // ツール使用統計を計算
+    const toolStats = {
+      webSearch: { requests: 0, cost: 0 },
+      xSearch: { requests: 0, cost: 0 },
+      codeExecution: { requests: 0, cost: 0 },
+      fileSearch: { requests: 0, cost: 0 },
+    };
+
+    for (const log of grokLogs) {
+      const metadata = log.metadata as Record<string, any> | null;
+      const tools = metadata?.tools;
+      
+      if (tools) {
+        if (tools.webSearch) {
+          toolStats.webSearch.requests++;
+          toolStats.webSearch.cost += log.cost;
+        }
+        if (tools.xSearch) {
+          toolStats.xSearch.requests++;
+          toolStats.xSearch.cost += log.cost;
+        }
+        if (tools.codeExecution) {
+          toolStats.codeExecution.requests++;
+          toolStats.codeExecution.cost += log.cost;
+        }
+        if (tools.fileSearch) {
+          toolStats.fileSearch.requests++;
+          toolStats.fileSearch.cost += log.cost;
+        }
+      }
+    }
+
+    const byTool = [
+      { toolName: "Web検索", ...toolStats.webSearch },
+      { toolName: "X検索", ...toolStats.xSearch },
+      { toolName: "コード実行", ...toolStats.codeExecution },
+      { toolName: "ファイル検索", ...toolStats.fileSearch },
+    ].filter(t => t.requests > 0);
+
     // 最近の使用履歴
     const recentLogs = await prisma.usageLog.findMany({
       where: {
@@ -187,6 +251,7 @@ export async function GET(request: NextRequest) {
           requests: u._count.id,
         };
       }),
+      byTool,
     };
 
     return NextResponse.json({

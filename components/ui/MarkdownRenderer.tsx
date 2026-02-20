@@ -123,32 +123,49 @@ export const MarkdownRenderer = memo(function MarkdownRenderer({
             );
           },
 
-          // 段落
+          // 段落 - リスト内の段落はマージンを削除
           p({ children }) {
             return (
-              <p className="text-gray-700 leading-relaxed mb-3 last:mb-0">
+              <p className="text-gray-700 leading-relaxed mb-3 last:mb-0 [&:is(li_*)]:mb-0 [&:is(li_*)]:inline">
                 {children}
               </p>
             );
           },
 
-          // リスト
+          // リスト - list-outsideを使用してより自然な表示に
           ul({ children }) {
             return (
-              <ul className="list-disc list-inside space-y-1 mb-3 text-gray-700 ml-1">
+              <ul className="list-disc list-outside space-y-1.5 mb-3 text-gray-700 pl-5">
                 {children}
               </ul>
             );
           },
           ol({ children }) {
             return (
-              <ol className="list-decimal list-inside space-y-1 mb-3 text-gray-700 ml-1">
+              <ol className="list-decimal list-outside space-y-1.5 mb-3 text-gray-700 pl-5">
                 {children}
               </ol>
             );
           },
-          li({ children }) {
-            return <li className="leading-relaxed">{children}</li>;
+          li({ children, node }) {
+            // 子要素が段落の場合はインライン表示にする
+            const hasParagraph = node?.children?.some(
+              (child: any) => child.type === 'element' && child.tagName === 'p'
+            );
+            
+            if (hasParagraph) {
+              return (
+                <li className="leading-relaxed pl-1">
+                  <span className="text-gray-700">{children}</span>
+                </li>
+              );
+            }
+            
+            return (
+              <li className="leading-relaxed pl-1">
+                {children}
+              </li>
+            );
           },
 
           // テーブル
@@ -219,6 +236,11 @@ export const MarkdownRenderer = memo(function MarkdownRenderer({
           },
           em({ children }) {
             return <em className="italic text-gray-600">{children}</em>;
+          },
+
+          // 改行
+          br() {
+            return <br />;
           },
         }}
       >

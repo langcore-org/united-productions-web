@@ -32,6 +32,11 @@ import {
   AlertCircle,
   ChevronDown,
   ChevronUp,
+  Bot,
+  Search,
+  Terminal,
+  FileSearch,
+  Twitter,
 } from "lucide-react";
 import Link from "next/link";
 import { PROVIDER_COLORS } from "@/lib/llm/constants";
@@ -56,6 +61,30 @@ const COLORS = [
   "#ef4444", "#8b5cf6", "#ec4899", "#14b8a6",
 ];
 
+// ツール表示名
+const TOOL_LABELS: Record<string, string> = {
+  "Web検索": "Web検索",
+  "X検索": "X検索",
+  "コード実行": "コード実行",
+  "ファイル検索": "ファイル検索",
+};
+
+// ツールアイコン
+const TOOL_ICONS: Record<string, React.ElementType> = {
+  "Web検索": Search,
+  "X検索": Twitter,
+  "コード実行": Terminal,
+  "ファイル検索": FileSearch,
+};
+
+// ツール色
+const TOOL_COLORS = {
+  "Web検索": "#3b82f6",
+  "X検索": "#000000",
+  "コード実行": "#22c55e",
+  "ファイル検索": "#f59e0b",
+};
+
 interface UsageStats {
   totalCost: number;
   totalRequests: number;
@@ -79,6 +108,12 @@ interface UsageStats {
     userEmail: string;
     cost: number;
     requests: number;
+  }[];
+  // ツール使用統計（2026-02-20追加）
+  byTool: {
+    toolName: string;
+    requests: number;
+    cost: number;
   }[];
 }
 
@@ -152,6 +187,28 @@ export default function UsagePage() {
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
     return date.toLocaleDateString("ja-JP", { month: "short", day: "numeric" });
+  };
+
+  // ツール使用有無を判定
+  const hasToolUsage = (log: RecentLog): boolean => {
+    return log.metadata?.tools && (
+      log.metadata.tools.webSearch ||
+      log.metadata.tools.xSearch ||
+      log.metadata.tools.codeExecution ||
+      log.metadata.tools.fileSearch
+    );
+  };
+
+  // 使用ツール一覧を取得
+  const getUsedTools = (log: RecentLog): string[] => {
+    const tools = log.metadata?.tools;
+    if (!tools) return [];
+    const used: string[] = [];
+    if (tools.webSearch) used.push("Web");
+    if (tools.xSearch) used.push("X");
+    if (tools.codeExecution) used.push("Code");
+    if (tools.fileSearch) used.push("File");
+    return used;
   };
 
   if (isLoading && !stats) {
@@ -304,6 +361,10 @@ export default function UsagePage() {
             <TabsList className="bg-white border">
               <TabsTrigger value="daily">日別推移</TabsTrigger>
               <TabsTrigger value="provider">プロバイダー別</TabsTrigger>
+              <TabsTrigger value="tools">
+                <Bot className="w-4 h-4 mr-1" />
+                ツール別
+              </TabsTrigger>
               <TabsTrigger value="users">ユーザー別</TabsTrigger>
             </TabsList>
 
@@ -440,6 +501,147 @@ export default function UsagePage() {
               </div>
             </TabsContent>
 
+            {/* ツール別タブ（2026-02-20追加） */}
+            <TabsContent value="tools">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Bot className="w-5 h-5" />
+                      Grokツール使用状況
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {stats.byTool.length > 0 ? (
+                      <div className="h-64">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <PieChart>
+                            <Pie
+                              data={stats.byTool}
+                              dataKey="requests"
+                              nameKey="toolName"
+                              cx="50%"
+                              cy="50%"
+                              innerRadius={60}
+                              outerRadius={100}
+                              paddingAngle={2}
+                            >
+                              {stats.byTool.map((entry, index) => (
+                                <Cell
+                                  key={`cell-${index}`}
+                                  fill={Object.values(TOOL_COLORS)[index % Object.values(TOOL_COLORS).length]}
+                                />
+                              ))}
+                            </Pie>
+                            <Tooltip
+                              formatter={(value, name) => [`${value} 回`, name]}
+                              contentStyle={{
+                                backgroundColor: "white",
+                                border: "1px solid #e5e7eb",
+                                borderRadius: "8px",
+                              }}
+                            />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      </div>
+                    ) : (
+                      <div className="h-64 flex items-center justify-center text-gray-500">
+                        <div className="text-center">
+                          <Bot className="w-12 h-12 mx-auto mb-2 text-gray-300" />
+                          <p>ツール使用データがありません</p>
+                          <p className="text-sm text-gray-400">Grokモデルの使用時に記録されます</p>
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>ツール別詳細</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {stats.byTool.length > 0 ? (
+                      <div className="space-y-3">
+                        {stats.byTool.map((tool) => {
+                          const Icon = TOOL_ICONS[tool.toolName] || Bot;
+                          const color = TOOL_COLORS[tool.toolName as keyof typeof TOOL_COLORS] || "#6b7280";
+                          return (
+                            <div
+                              key={tool.toolName}
+                              className="flex items-center justify-between p-3 rounded-lg bg-gray-50"
+                            >
+                              <div className="flex items-center gap-3">
+                                <div
+                                  className="w-10 h-10 rounded-lg flex items-center justify-center"
+                                  style={{ backgroundColor: `${color}15` }}
+                                >
+                                  <Icon className="w-5 h-5" style={{ color }} />
+                                </div>
+                                <div>
+                                  <p className="font-medium text-sm text-gray-900">
+                                    {TOOL_LABELS[tool.toolName] || tool.toolName}
+                                  </p>
+                                  <p className="text-xs text-gray-500">
+                                    {formatNumber(tool.requests)} 回使用
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="text-right">
+                                <p className="font-semibold text-sm">
+                                  {formatCurrency(tool.cost)}
+                                </p>
+                                <p className="text-xs text-gray-500">
+                                  コスト
+                                </p>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <div className="p-8 text-center text-gray-500">
+                        <Bot className="w-12 h-12 mx-auto mb-2 text-gray-300" />
+                        <p>ツール使用データがありません</p>
+                        <p className="text-sm text-gray-400 mt-1">
+                          Grokモデル使用時のツール呼び出しが記録されます
+                        </p>
+                      </div>
+                    )}
+
+                    {/* ツール説明 */}
+                    <div className="mt-6 pt-4 border-t border-gray-200">
+                      <p className="text-sm font-medium text-gray-700 mb-3">利用可能なツール</p>
+                      <div className="grid grid-cols-2 gap-3">
+                        {[
+                          { name: "Web検索", icon: Search, desc: "インターネット検索", color: "#3b82f6" },
+                          { name: "X検索", icon: Twitter, desc: "X(Twitter)検索", color: "#000000" },
+                          { name: "コード実行", icon: Terminal, desc: "Python実行", color: "#22c55e" },
+                          { name: "ファイル検索", icon: FileSearch, desc: "ドキュメント検索", color: "#f59e0b" },
+                        ].map((tool) => (
+                          <div key={tool.name} className="flex items-center gap-2 p-2 rounded-lg bg-gray-50">
+                            <div
+                              className="w-8 h-8 rounded flex items-center justify-center"
+                              style={{ backgroundColor: `${tool.color}15` }}
+                            >
+                              <tool.icon className="w-4 h-4" style={{ color: tool.color }} />
+                            </div>
+                            <div>
+                              <p className="text-xs font-medium text-gray-900">{tool.name}</p>
+                              <p className="text-[10px] text-gray-500">{tool.desc}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      <p className="text-xs text-gray-400 mt-3">
+                        ※ 2026-02-20より、全ツールが常時有効となりました
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+
             <TabsContent value="users">
               <Card>
                 <CardHeader>
@@ -523,6 +725,9 @@ export default function UsagePage() {
                       <th className="text-left py-3 px-4 text-sm font-medium text-gray-500">
                         プロバイダー
                       </th>
+                      <th className="text-left py-3 px-4 text-sm font-medium text-gray-500">
+                        ツール
+                      </th>
                       <th className="text-right py-3 px-4 text-sm font-medium text-gray-500">
                         Tokens
                       </th>
@@ -552,6 +757,23 @@ export default function UsagePage() {
                           <Badge variant="outline" className="text-xs">
                             {PROVIDER_LABELS[log.provider] || log.provider}
                           </Badge>
+                        </td>
+                        <td className="py-3 px-4">
+                          {hasToolUsage(log) ? (
+                            <div className="flex flex-wrap gap-1">
+                              {getUsedTools(log).map((tool) => (
+                                <Badge
+                                  key={tool}
+                                  variant="secondary"
+                                  className="text-[10px] px-1.5 py-0"
+                                >
+                                  {tool}
+                                </Badge>
+                              ))}
+                            </div>
+                          ) : (
+                            <span className="text-xs text-gray-400">-</span>
+                          )}
                         </td>
                         <td className="py-3 px-4 text-sm text-right">
                           <span className="text-gray-600">

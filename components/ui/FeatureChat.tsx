@@ -67,6 +67,7 @@ export function FeatureChat({
     thinking,
     isComplete,
     error,
+    usage,
     startStream,
     cancelStream,
     resetStream,
@@ -372,6 +373,7 @@ export function FeatureChat({
                 content={content}
                 thinking={thinking}
                 isComplete={false}
+                usage={usage}
               />
             )}
 

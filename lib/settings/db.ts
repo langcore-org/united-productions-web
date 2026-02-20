@@ -264,17 +264,16 @@ export function getToolSettingKey(
 
 /**
  * 特定の機能で特定のツールが有効かどうか
+ * 
+ * 【変更】2026-02-20: DBからの設定取得を廃止し、常に全ツール有効を返す
+ * 全機能ですべてのツール（Web検索、X検索、コード実行、ファイル検索）を使用可能
  */
 export async function isToolEnabled(
-  featureId: ChatFeatureId,
-  toolType: GrokToolType
+  _featureId: ChatFeatureId,
+  _toolType: GrokToolType
 ): Promise<boolean> {
-  const settings = await getSystemGrokToolSettingsOrDefault();
-  const key = getToolSettingKey(featureId, toolType);
-  
-  if (!key) return false;
-  
-  return settings[key] ?? false;
+  // 常に全ツール有効
+  return true;
 }
 
 /**
@@ -334,18 +333,16 @@ export async function saveGrokToolSettings(
 
 /**
  * 特定の機能でGrokツール（Web検索）が有効かどうか
- * システム設定を参照して判定
+ * 
+ * 【変更】2026-02-20: DBからの設定取得を廃止し、常に有効を返す
+ * 全機能ですべてのツールを使用可能
  */
 export async function isGrokToolEnabled(
   _userId: string, 
-  featureId: ChatFeatureId
+  _featureId: ChatFeatureId
 ): Promise<boolean> {
-  const settings = await getSystemGrokToolSettingsOrDefault();
-  const key = featureIdToToolKey(featureId);
-  
-  if (!key) return false;
-  
-  return settings[key] ?? false;
+  // 常に全ツール有効
+  return true;
 }
 
 // ============================================
