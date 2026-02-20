@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { AdminLayout } from "@/components/layout/AdminLayout";
 import {
   Users,
   Search,
@@ -14,7 +15,6 @@ import {
   FileText,
   Mic,
   MessageSquare,
-  // Calendar, // 削除
   Mail,
   User,
 } from "lucide-react";
@@ -106,14 +106,17 @@ export default function AdminUsersPage() {
 
   if (loading && users.length === 0) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
-      </div>
+      <AdminLayout>
+        <div className="h-full flex items-center justify-center">
+          <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
+        </div>
+      </AdminLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
+    <AdminLayout>
+      <div className="h-full overflow-y-auto p-8">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* ヘッダー */}
         <div className="flex items-center justify-between">
@@ -258,7 +261,8 @@ export default function AdminUsersPage() {
           </div>
         )}
       </div>
-    </div>
+      </div>
+    </AdminLayout>
   );
 }
 

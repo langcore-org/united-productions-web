@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { AdminLayout } from "@/components/layout/AdminLayout";
 import { 
   PROVIDER_CONFIG, 
   DEFAULT_PROVIDER, 
@@ -83,13 +84,20 @@ export default function AdminPage() {
   }, []);
 
   if (!mounted) {
-    return null;
+    return (
+      <AdminLayout>
+        <div className="h-full flex items-center justify-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-500" />
+        </div>
+      </AdminLayout>
+    );
   }
 
   const defaultProviderInfo = getProviderInfo(DEFAULT_PROVIDER);
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
+    <AdminLayout>
+      <div className="h-full overflow-y-auto p-8">
       <div className="max-w-6xl mx-auto space-y-8">
         {/* ヘッダー */}
         <div className="flex items-center gap-4">
@@ -309,6 +317,7 @@ export default function AdminPage() {
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </AdminLayout>
   );
 }

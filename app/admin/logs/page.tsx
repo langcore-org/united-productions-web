@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { AdminLayout } from "@/components/layout/AdminLayout";
 import {
   Select,
   SelectContent,
@@ -164,234 +165,236 @@ export default function LogsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-7xl mx-auto space-y-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-gray-700 to-gray-800 flex items-center justify-center">
-              <FileText className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">アプリケーションログ</h1>
-              <p className="text-gray-500">システムログの閲覧と管理</p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setIsAutoRefresh(!isAutoRefresh)}
-              className={isAutoRefresh ? "bg-green-50 text-green-600" : ""}
-            >
-              <RefreshCw className={cn("w-4 h-4 mr-2", isAutoRefresh && "animate-spin")} />
-              {isAutoRefresh ? "自動更新ON" : "自動更新OFF"}
-            </Button>
-            <Button variant="outline" size="sm" onClick={fetchLogs} disabled={isLoading}>
-              <RefreshCw className={cn("w-4 h-4 mr-2", isLoading && "animate-spin")} />
-              更新
-            </Button>
-            <Button variant="destructive" size="sm" onClick={handleDeleteOldLogs}>
-              <Trash2 className="w-4 h-4 mr-2" />
-              古いログ削除
-            </Button>
-          </div>
-        </div>
-
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex flex-wrap items-center gap-4">
-              <div className="relative flex-1 min-w-[300px]">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <Input
-                  placeholder="ログメッセージを検索..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
-                />
+    <AdminLayout>
+      <div className="h-full overflow-y-auto p-8">
+        <div className="max-w-7xl mx-auto space-y-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-gray-700 to-gray-800 flex items-center justify-center">
+                <FileText className="w-6 h-6 text-white" />
               </div>
-
-              <Select value={selectedLevel} onValueChange={setSelectedLevel}>
-                <SelectTrigger className="w-[150px]">
-                  <SelectValue placeholder="レベル" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">すべて</SelectItem>
-                  {LOG_LEVELS.map((level) => (
-                    <SelectItem key={level.value} value={level.value}>
-                      {level.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="カテゴリ" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">すべて</SelectItem>
-                  {LOG_CATEGORIES.map((cat) => (
-                    <SelectItem key={cat.value} value={cat.value}>
-                      {cat.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              {(searchQuery || selectedLevel || selectedCategory) && (
-                <Button variant="ghost" size="sm" onClick={handleClearFilters}>
-                  <X className="w-4 h-4 mr-1" />
-                  クリア
-                </Button>
-              )}
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900">アプリケーションログ</h1>
+                <p className="text-gray-500">システムログの閲覧と管理</p>
+              </div>
             </div>
-          </CardContent>
-        </Card>
 
-        {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-red-500 mt-0.5" />
-            <div>
-              <h3 className="font-medium text-red-800">エラーが発生しました</h3>
-              <p className="text-red-600 mt-1">{error}</p>
+            <div className="flex items-center gap-3">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsAutoRefresh(!isAutoRefresh)}
+                className={isAutoRefresh ? "bg-green-50 text-green-600" : ""}
+              >
+                <RefreshCw className={cn("w-4 h-4 mr-2", isAutoRefresh && "animate-spin")} />
+                {isAutoRefresh ? "自動更新ON" : "自動更新OFF"}
+              </Button>
+              <Button variant="outline" size="sm" onClick={fetchLogs} disabled={isLoading}>
+                <RefreshCw className={cn("w-4 h-4 mr-2", isLoading && "animate-spin")} />
+                更新
+              </Button>
+              <Button variant="destructive" size="sm" onClick={handleDeleteOldLogs}>
+                <Trash2 className="w-4 h-4 mr-2" />
+                古いログ削除
+              </Button>
             </div>
           </div>
-        )}
 
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg">
-              ログ一覧
-              {pagination && (
-                <span className="text-sm font-normal text-gray-500 ml-2">
-                  ({pagination.totalCount.toLocaleString()}件)
-                </span>
-              )}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50 border-b">
-                  <tr>
-                    <th className="text-left py-3 px-4 text-xs font-medium text-gray-500">レベル</th>
-                    <th className="text-left py-3 px-4 text-xs font-medium text-gray-500">カテゴリ</th>
-                    <th className="text-left py-3 px-4 text-xs font-medium text-gray-500">メッセージ</th>
-                    <th className="text-left py-3 px-4 text-xs font-medium text-gray-500">ユーザー</th>
-                    <th className="text-left py-3 px-4 text-xs font-medium text-gray-500">日時</th>
-                    <th className="text-center py-3 px-4 text-xs font-medium text-gray-500">詳細</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {logs.map((log) => {
-                    const levelConfig = getLevelConfig(log.level);
-                    const LevelIcon = levelConfig.icon;
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex flex-wrap items-center gap-4">
+                <div className="relative flex-1 min-w-[300px]">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Input
+                    placeholder="ログメッセージを検索..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
 
-                    return (
-                      <tr key={log.id} className="hover:bg-gray-50">
-                        <td className="py-3 px-4">
-                          <Badge className={cn("text-white", levelConfig.color)}>
-                            <LevelIcon className="w-3 h-3 mr-1" />
-                            {log.level}
-                          </Badge>
-                        </td>
-                        <td className="py-3 px-4">
-                          <span className="text-xs text-gray-600">{log.category}</span>
-                        </td>
-                        <td className="py-3 px-4 max-w-md">
-                          <p className="text-sm text-gray-900 truncate">{log.message}</p>
-                        </td>
-                        <td className="py-3 px-4">
-                          {log.user ? (
-                            <span className="text-xs text-gray-600">{log.user.email}</span>
-                          ) : (
-                            <span className="text-xs text-gray-400">-</span>
-                          )}
-                        </td>
-                        <td className="py-3 px-4">
-                          <span className="text-xs text-gray-500">{formatDate(log.createdAt)}</span>
-                        </td>
-                        <td className="py-3 px-4 text-center">
-                          <Dialog>
-                            <DialogTrigger asChild>
-                              <Button variant="ghost" size="sm">
-                                <Eye className="w-4 h-4" />
-                              </Button>
-                            </DialogTrigger>
-                            <DialogContent className="max-w-2xl">
-                              <DialogHeader>
-                                <DialogTitle className="flex items-center gap-2">
-                                  <Badge className={cn("text-white", levelConfig.color)}>
-                                    {log.level}
-                                  </Badge>
-                                </DialogTitle>
-                              </DialogHeader>
-                              <div className="space-y-4 mt-4">
-                                <p className="text-sm">{log.message}</p>
-                                <div className="grid grid-cols-2 gap-4 text-sm">
-                                  <div><span className="text-gray-500">カテゴリ:</span> {log.category}</div>
-                                  <div><span className="text-gray-500">日時:</span> {formatDate(log.createdAt)}</div>
-                                  {log.user && <div><span className="text-gray-500">ユーザー:</span> {log.user.email}</div>}
-                                  {log.ip && <div><span className="text-gray-500">IP:</span> {log.ip}</div>}
-                                  {log.path && <div><span className="text-gray-500">パス:</span> {log.path}</div>}
+                <Select value={selectedLevel} onValueChange={setSelectedLevel}>
+                  <SelectTrigger className="w-[150px]">
+                    <SelectValue placeholder="レベル" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">すべて</SelectItem>
+                    {LOG_LEVELS.map((level) => (
+                      <SelectItem key={level.value} value={level.value}>
+                        {level.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="カテゴリ" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">すべて</SelectItem>
+                    {LOG_CATEGORIES.map((cat) => (
+                      <SelectItem key={cat.value} value={cat.value}>
+                        {cat.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                {(searchQuery || selectedLevel || selectedCategory) && (
+                  <Button variant="ghost" size="sm" onClick={handleClearFilters}>
+                    <X className="w-4 h-4 mr-1" />
+                    クリア
+                  </Button>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {error && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-red-500 mt-0.5" />
+              <div>
+                <h3 className="font-medium text-red-800">エラーが発生しました</h3>
+                <p className="text-red-600 mt-1">{error}</p>
+              </div>
+            </div>
+          )}
+
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg">
+                ログ一覧
+                {pagination && (
+                  <span className="text-sm font-normal text-gray-500 ml-2">
+                    ({pagination.totalCount.toLocaleString()}件)
+                  </span>
+                )}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50 border-b">
+                    <tr>
+                      <th className="text-left py-3 px-4 text-xs font-medium text-gray-500">レベル</th>
+                      <th className="text-left py-3 px-4 text-xs font-medium text-gray-500">カテゴリ</th>
+                      <th className="text-left py-3 px-4 text-xs font-medium text-gray-500">メッセージ</th>
+                      <th className="text-left py-3 px-4 text-xs font-medium text-gray-500">ユーザー</th>
+                      <th className="text-left py-3 px-4 text-xs font-medium text-gray-500">日時</th>
+                      <th className="text-center py-3 px-4 text-xs font-medium text-gray-500">詳細</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {logs.map((log) => {
+                      const levelConfig = getLevelConfig(log.level);
+                      const LevelIcon = levelConfig.icon;
+
+                      return (
+                        <tr key={log.id} className="hover:bg-gray-50">
+                          <td className="py-3 px-4">
+                            <Badge className={cn("text-white", levelConfig.color)}>
+                              <LevelIcon className="w-3 h-3 mr-1" />
+                              {log.level}
+                            </Badge>
+                          </td>
+                          <td className="py-3 px-4">
+                            <span className="text-xs text-gray-600">{log.category}</span>
+                          </td>
+                          <td className="py-3 px-4 max-w-md">
+                            <p className="text-sm text-gray-900 truncate">{log.message}</p>
+                          </td>
+                          <td className="py-3 px-4">
+                            {log.user ? (
+                              <span className="text-xs text-gray-600">{log.user.email}</span>
+                            ) : (
+                              <span className="text-xs text-gray-400">-</span>
+                            )}
+                          </td>
+                          <td className="py-3 px-4">
+                            <span className="text-xs text-gray-500">{formatDate(log.createdAt)}</span>
+                          </td>
+                          <td className="py-3 px-4 text-center">
+                            <Dialog>
+                              <DialogTrigger asChild>
+                                <Button variant="ghost" size="sm">
+                                  <Eye className="w-4 h-4" />
+                                </Button>
+                              </DialogTrigger>
+                              <DialogContent className="max-w-2xl">
+                                <DialogHeader>
+                                  <DialogTitle className="flex items-center gap-2">
+                                    <Badge className={cn("text-white", levelConfig.color)}>
+                                      {log.level}
+                                    </Badge>
+                                  </DialogTitle>
+                                </DialogHeader>
+                                <div className="space-y-4 mt-4">
+                                  <p className="text-sm">{log.message}</p>
+                                  <div className="grid grid-cols-2 gap-4 text-sm">
+                                    <div><span className="text-gray-500">カテゴリ:</span> {log.category}</div>
+                                    <div><span className="text-gray-500">日時:</span> {formatDate(log.createdAt)}</div>
+                                    {log.user && <div><span className="text-gray-500">ユーザー:</span> {log.user.email}</div>}
+                                    {log.ip && <div><span className="text-gray-500">IP:</span> {log.ip}</div>}
+                                    {log.path && <div><span className="text-gray-500">パス:</span> {log.path}</div>}
+                                  </div>
+                                  {log.details && (
+                                    <pre className="bg-gray-100 p-3 rounded text-xs overflow-x-auto">
+                                      {JSON.stringify(log.details, null, 2)}
+                                    </pre>
+                                  )}
                                 </div>
-                                {log.details && (
-                                  <pre className="bg-gray-100 p-3 rounded text-xs overflow-x-auto">
-                                    {JSON.stringify(log.details, null, 2)}
-                                  </pre>
-                                )}
-                              </div>
-                            </DialogContent>
-                          </Dialog>
+                              </DialogContent>
+                            </Dialog>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                    {logs.length === 0 && !isLoading && (
+                      <tr>
+                        <td colSpan={6} className="py-12 text-center text-gray-500">
+                          ログがありません
                         </td>
                       </tr>
-                    );
-                  })}
-                  {logs.length === 0 && !isLoading && (
-                    <tr>
-                      <td colSpan={6} className="py-12 text-center text-gray-500">
-                        ログがありません
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-
-            {pagination && pagination.totalPages > 1 && (
-              <div className="flex items-center justify-between p-4 border-t">
-                <span className="text-sm text-gray-500">
-                  {pagination.totalCount.toLocaleString()}件中
-                  {((pagination.page - 1) * pagination.limit + 1).toLocaleString()} -
-                  {Math.min(pagination.page * pagination.limit, pagination.totalCount).toLocaleString()}件
-                </span>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCurrentPage((p) => p - 1)}
-                    disabled={!pagination.hasPrevPage}
-                  >
-                    <ChevronLeft className="w-4 h-4" />
-                  </Button>
-                  <span className="text-sm text-gray-600">
-                    {pagination.page} / {pagination.totalPages}
-                  </span>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCurrentPage((p) => p + 1)}
-                    disabled={!pagination.hasNextPage}
-                  >
-                    <ChevronRight className="w-4 h-4" />
-                  </Button>
-                </div>
+                    )}
+                  </tbody>
+                </table>
               </div>
-            )}
-          </CardContent>
-        </Card>
+
+              {pagination && pagination.totalPages > 1 && (
+                <div className="flex items-center justify-between p-4 border-t">
+                  <span className="text-sm text-gray-500">
+                    {pagination.totalCount.toLocaleString()}件中
+                    {((pagination.page - 1) * pagination.limit + 1).toLocaleString()} -
+                    {Math.min(pagination.page * pagination.limit, pagination.totalCount).toLocaleString()}件
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage((p) => p - 1)}
+                      disabled={!pagination.hasPrevPage}
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                    </Button>
+                    <span className="text-sm text-gray-600">
+                      {pagination.page} / {pagination.totalPages}
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage((p) => p + 1)}
+                      disabled={!pagination.hasNextPage}
+                    >
+                      <ChevronRight className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
       </div>
-    </div>
+    </AdminLayout>
   );
 }

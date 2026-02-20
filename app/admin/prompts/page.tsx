@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { AdminLayout } from "@/components/layout/AdminLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -140,9 +141,11 @@ export default function AdminPromptsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
-      </div>
+      <AdminLayout>
+        <div className="h-full flex items-center justify-center">
+          <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
+        </div>
+      </AdminLayout>
     );
   }
 
@@ -241,113 +244,115 @@ export default function AdminPromptsPage() {
 
   // 一覧モード
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-7xl mx-auto space-y-6">
-        {/* ヘッダー */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-black flex items-center justify-center">
-              <FileText className="w-6 h-6 text-white" />
+    <AdminLayout>
+      <div className="h-full overflow-y-auto p-8">
+        <div className="max-w-7xl mx-auto space-y-6">
+          {/* ヘッダー */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-black flex items-center justify-center">
+                <FileText className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900">プロンプト管理</h1>
+                <p className="text-gray-500">AIモデルに使用するプロンプトの編集</p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">プロンプト管理</h1>
-              <p className="text-gray-500">AIモデルに使用するプロンプトの編集</p>
+            <div className="flex items-center gap-2">
+              <Input
+                placeholder="プロンプトを検索..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-64"
+              />
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Input
-              placeholder="プロンプトを検索..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-64"
-            />
+
+          {message && (
+            <div
+              className={`p-4 rounded-lg ${
+                message.type === "success" ? "bg-green-50 text-green-800" : "bg-red-50 text-red-800"
+              }`}
+            >
+              {message.text}
+            </div>
+          )}
+
+          {/* カテゴリフィルタ */}
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant={activeCategory === "all" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setActiveCategory("all")}
+            >
+              全て
+            </Button>
+            {Object.entries(CATEGORIES).map(([key, config]) => {
+              const Icon = config.icon;
+              return (
+                <Button
+                  key={key}
+                  variant={activeCategory === key ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setActiveCategory(key)}
+                >
+                  <Icon className="w-4 h-4 mr-1" />
+                  {config.label}
+                </Button>
+              );
+            })}
           </div>
-        </div>
 
-        {message && (
-          <div
-            className={`p-4 rounded-lg ${
-              message.type === "success" ? "bg-green-50 text-green-800" : "bg-red-50 text-red-800"
-            }`}
-          >
-            {message.text}
-          </div>
-        )}
+          {/* プロンプト一覧 */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filteredPrompts.map((prompt) => {
+              const categoryConfig = CATEGORIES[prompt.category] || CATEGORIES.general;
+              const Icon = categoryConfig.icon;
+              const preview = prompt.content.slice(0, 100).replace(/\n/g, " ") + "...";
 
-        {/* カテゴリフィルタ */}
-        <div className="flex flex-wrap gap-2">
-          <Button
-            variant={activeCategory === "all" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setActiveCategory("all")}
-          >
-            全て
-          </Button>
-          {Object.entries(CATEGORIES).map(([key, config]) => {
-            const Icon = config.icon;
-            return (
-              <Button
-                key={key}
-                variant={activeCategory === key ? "default" : "outline"}
-                size="sm"
-                onClick={() => setActiveCategory(key)}
-              >
-                <Icon className="w-4 h-4 mr-1" />
-                {config.label}
-              </Button>
-            );
-          })}
-        </div>
+              return (
+                <Card
+                  key={prompt.id}
+                  className="hover:shadow-md transition-shadow cursor-pointer"
+                  onClick={() => handleEdit(prompt)}
+                >
+                  <CardContent className="p-4">
+                    <div className="flex items-start justify-between mb-2">
+                      <Badge className={categoryConfig.color}>{categoryConfig.label}</Badge>
+                      {!prompt.isActive && (
+                        <Badge variant="outline" className="text-gray-400">
+                          無効
+                        </Badge>
+                      )}
+                    </div>
 
-        {/* プロンプト一覧 */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredPrompts.map((prompt) => {
-            const categoryConfig = CATEGORIES[prompt.category] || CATEGORIES.general;
-            const Icon = categoryConfig.icon;
-            const preview = prompt.content.slice(0, 100).replace(/\n/g, " ") + "...";
+                    <h3 className="font-semibold text-gray-900 mb-1">{prompt.name}</h3>
 
-            return (
-              <Card
-                key={prompt.id}
-                className="hover:shadow-md transition-shadow cursor-pointer"
-                onClick={() => handleEdit(prompt)}
-              >
-                <CardContent className="p-4">
-                  <div className="flex items-start justify-between mb-2">
-                    <Badge className={categoryConfig.color}>{categoryConfig.label}</Badge>
-                    {!prompt.isActive && (
-                      <Badge variant="outline" className="text-gray-400">
-                        無効
-                      </Badge>
+                    {prompt.description && (
+                      <p className="text-sm text-gray-500 mb-2">{prompt.description}</p>
                     )}
-                  </div>
 
-                  <h3 className="font-semibold text-gray-900 mb-1">{prompt.name}</h3>
+                    <p className="text-xs text-gray-400 font-mono mb-2">{prompt.key}</p>
 
-                  {prompt.description && (
-                    <p className="text-sm text-gray-500 mb-2">{prompt.description}</p>
-                  )}
+                    <p className="text-sm text-gray-600 line-clamp-2">{preview}</p>
 
-                  <p className="text-xs text-gray-400 font-mono mb-2">{prompt.key}</p>
-
-                  <p className="text-sm text-gray-600 line-clamp-2">{preview}</p>
-
-                  <div className="mt-3 pt-3 border-t border-gray-100 text-xs text-gray-400">
-                    更新: {new Date(prompt.updatedAt).toLocaleString("ja-JP")}
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-
-        {filteredPrompts.length === 0 && (
-          <div className="text-center py-12 text-gray-500">
-            <FileText className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-            <p>プロンプトが見つかりません</p>
+                    <div className="mt-3 pt-3 border-t border-gray-100 text-xs text-gray-400">
+                      更新: {new Date(prompt.updatedAt).toLocaleString("ja-JP")}
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
-        )}
+
+          {filteredPrompts.length === 0 && (
+            <div className="text-center py-12 text-gray-500">
+              <FileText className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+              <p>プロンプトが見つかりません</p>
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+    </AdminLayout>
   );
 }
