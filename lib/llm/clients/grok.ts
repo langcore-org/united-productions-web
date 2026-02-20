@@ -20,6 +20,18 @@ export const GROK_TOOLS = {
     type: 'web_search' as const,
     description: 'Search the web for current information',
   },
+  x_search: {
+    type: 'x_search' as const,
+    description: 'Search X (Twitter) for real-time information',
+  },
+  code_execution: {
+    type: 'code_execution' as const,
+    description: 'Execute Python code in a secure sandbox',
+  },
+  collections_search: {
+    type: 'collections_search' as const,
+    description: 'Search uploaded documents and files',
+  },
 } as const;
 
 /**
@@ -27,6 +39,9 @@ export const GROK_TOOLS = {
  */
 export interface GrokToolOptions {
   enableWebSearch?: boolean;
+  enableXSearch?: boolean;
+  enableCodeExecution?: boolean;
+  enableFileSearch?: boolean;
 }
 
 /**
@@ -127,9 +142,19 @@ export class GrokClient implements LLMClient {
     const tools: unknown[] = [];
     
     if (this.toolOptions.enableWebSearch) {
-      tools.push({
-        type: 'web_search',
-      });
+      tools.push({ type: 'web_search' });
+    }
+    
+    if (this.toolOptions.enableXSearch) {
+      tools.push({ type: 'x_search' });
+    }
+    
+    if (this.toolOptions.enableCodeExecution) {
+      tools.push({ type: 'code_execution' });
+    }
+    
+    if (this.toolOptions.enableFileSearch) {
+      tools.push({ type: 'collections_search' });
     }
     
     return tools.length > 0 ? tools : undefined;

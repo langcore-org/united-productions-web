@@ -10,6 +10,7 @@ import {
   ChevronRight,
   PanelLeft,
   LogOut,
+  Bot,
 } from "lucide-react";
 import { TeddyIcon } from "@/components/icons/TeddyIcon";
 import Link from "next/link";
@@ -47,6 +48,11 @@ const adminNavItems = [
     icon: <Shield className="w-[18px] h-[18px]" />,
     label: "ログ閲覧",
     href: "/admin/logs",
+  },
+  {
+    icon: <Bot className="w-[18px] h-[18px]" />,
+    label: "Grokツール設定",
+    href: "/admin/grok-tools",
   },
 ];
 

@@ -9,7 +9,8 @@ import { featureIdToToolKey } from "@/lib/settings/db";
 import type { ChatFeatureId } from "@/lib/chat/chat-config";
 
 /**
- * Grokツール設定の型
+ * Grokツール設定の型（Web検索のみ）
+ * システム設定から取得した値を使用
  */
 interface GrokToolSettings {
   generalChat: boolean;
@@ -20,6 +21,9 @@ interface GrokToolSettings {
   minutes: boolean;
   proposal: boolean;
   naScript: boolean;
+  
+  // 他のツール設定（型互換性のため）
+  [key: string]: boolean | undefined;
 }
 
 /**

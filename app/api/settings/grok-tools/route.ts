@@ -1,37 +1,38 @@
 /**
- * Grokツール設定 API Route
+ * Grokツール設定 API Route（システム設定版）
  *
  * GET /api/settings/grok-tools
  * POST /api/settings/grok-tools
  *
- * 機能別のGrokツール（Web検索）有効化設定を管理
+ * システム全体のGrokツール有効化設定を管理
+ * 管理者のみアクセス可能
  */
 
 import { NextRequest } from "next/server";
 import { z } from "zod";
-import { requireAuth } from "@/lib/api/auth";
+import { requireAdmin } from "@/lib/api/auth";
 import { logger } from "@/lib/logger";
 import { 
-  getGrokToolSettings, 
-  saveGrokToolSettings,
+  getSystemGrokToolSettings, 
+  setSystemGrokToolSettings,
   type GrokToolSettings 
 } from "@/lib/settings/db";
 
 /**
  * GET /api/settings/grok-tools
- * 現在のGrokツール設定を取得
+ * システム全体のGrokツール設定を取得
  */
 export async function GET(request: NextRequest): Promise<Response> {
   const requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
   try {
-    const authResult = await requireAuth(request);
+    // 管理者権限チェック
+    const authResult = await requireAdmin(request);
     if (authResult instanceof Response) {
       return authResult;
     }
-    const userId = authResult.user.id;
 
-    const settings = await getGrokToolSettings(userId);
+    const settings = await getSystemGrokToolSettings();
 
     return new Response(
       JSON.stringify(settings),
@@ -52,9 +53,10 @@ export async function GET(request: NextRequest): Promise<Response> {
 
 /**
  * POST /api/settings/grok-tools
- * Grokツール設定を保存
+ * システム全体のGrokツール設定を保存
  */
 const saveSettingsSchema = z.object({
+  // Web検索
   generalChat: z.boolean().optional(),
   researchCast: z.boolean().optional(),
   researchLocation: z.boolean().optional(),
@@ -63,17 +65,47 @@ const saveSettingsSchema = z.object({
   minutes: z.boolean().optional(),
   proposal: z.boolean().optional(),
   naScript: z.boolean().optional(),
+  
+  // X検索
+  xSearchGeneralChat: z.boolean().optional(),
+  xSearchResearchCast: z.boolean().optional(),
+  xSearchResearchLocation: z.boolean().optional(),
+  xSearchResearchInfo: z.boolean().optional(),
+  xSearchResearchEvidence: z.boolean().optional(),
+  xSearchMinutes: z.boolean().optional(),
+  xSearchProposal: z.boolean().optional(),
+  xSearchNaScript: z.boolean().optional(),
+  
+  // コード実行
+  codeExecutionGeneralChat: z.boolean().optional(),
+  codeExecutionResearchCast: z.boolean().optional(),
+  codeExecutionResearchLocation: z.boolean().optional(),
+  codeExecutionResearchInfo: z.boolean().optional(),
+  codeExecutionResearchEvidence: z.boolean().optional(),
+  codeExecutionMinutes: z.boolean().optional(),
+  codeExecutionProposal: z.boolean().optional(),
+  codeExecutionNaScript: z.boolean().optional(),
+  
+  // ファイル検索
+  fileSearchGeneralChat: z.boolean().optional(),
+  fileSearchResearchCast: z.boolean().optional(),
+  fileSearchResearchLocation: z.boolean().optional(),
+  fileSearchResearchInfo: z.boolean().optional(),
+  fileSearchResearchEvidence: z.boolean().optional(),
+  fileSearchMinutes: z.boolean().optional(),
+  fileSearchProposal: z.boolean().optional(),
+  fileSearchNaScript: z.boolean().optional(),
 });
 
 export async function POST(request: NextRequest): Promise<Response> {
   const requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
   try {
-    const authResult = await requireAuth(request);
+    // 管理者権限チェック
+    const authResult = await requireAdmin(request);
     if (authResult instanceof Response) {
       return authResult;
     }
-    const userId = authResult.user.id;
 
     let body: unknown;
     try {
@@ -96,9 +128,11 @@ export async function POST(request: NextRequest): Promise<Response> {
       );
     }
 
-    const settings = await saveGrokToolSettings(userId, validationResult.data);
+    const settings = await setSystemGrokToolSettings(validationResult.data);
 
-    logger.info(`[${requestId}] Grok tool settings saved`, { userId });
+    logger.info(`[${requestId}] System Grok tool settings saved`, {
+      adminId: authResult.user.id,
+    });
 
     return new Response(
       JSON.stringify({

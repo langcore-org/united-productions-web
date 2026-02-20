@@ -17,6 +17,7 @@ import type { ChatFeatureId } from '@/lib/chat/chat-config';
  */
 export const SYSTEM_SETTING_KEYS = {
   DEFAULT_LLM_PROVIDER: 'llm.defaultProvider',
+  GROK_TOOL_SETTINGS: 'grok.toolSettings',
 } as const;
 
 export type SystemSettingKey = typeof SYSTEM_SETTING_KEYS[keyof typeof SYSTEM_SETTING_KEYS];
@@ -69,8 +70,15 @@ export async function getDefaultLLMProvider(): Promise<LLMProvider> {
 
 /**
  * Grokツール設定の型
+ * 
+ * 各機能でどのツールを有効にするかを設定
+ * - search: Web検索（web_search）
+ * - xSearch: X検索（x_search）
+ * - codeExecution: コード実行（code_execution）
+ * - fileSearch: ファイル検索（collections_search）
  */
 export interface GrokToolSettings {
+  // 機能別の検索ツール設定（デフォルトでON）
   generalChat: boolean;
   researchCast: boolean;
   researchLocation: boolean;
@@ -79,20 +87,82 @@ export interface GrokToolSettings {
   minutes: boolean;
   proposal: boolean;
   naScript: boolean;
+  
+  // 追加ツール設定
+  xSearchGeneralChat: boolean;
+  xSearchResearchCast: boolean;
+  xSearchResearchLocation: boolean;
+  xSearchResearchInfo: boolean;
+  xSearchResearchEvidence: boolean;
+  xSearchMinutes: boolean;
+  xSearchProposal: boolean;
+  xSearchNaScript: boolean;
+  
+  codeExecutionGeneralChat: boolean;
+  codeExecutionResearchCast: boolean;
+  codeExecutionResearchLocation: boolean;
+  codeExecutionResearchInfo: boolean;
+  codeExecutionResearchEvidence: boolean;
+  codeExecutionMinutes: boolean;
+  codeExecutionProposal: boolean;
+  codeExecutionNaScript: boolean;
+  
+  fileSearchGeneralChat: boolean;
+  fileSearchResearchCast: boolean;
+  fileSearchResearchLocation: boolean;
+  fileSearchResearchInfo: boolean;
+  fileSearchResearchEvidence: boolean;
+  fileSearchMinutes: boolean;
+  fileSearchProposal: boolean;
+  fileSearchNaScript: boolean;
 }
 
 /**
  * デフォルトのGrokツール設定
+ * 
+ * 検索ツール（Web検索、X検索）はデフォルトでON
+ * コード実行とファイル検索はデフォルトでOFF
  */
 export const DEFAULT_GROK_TOOL_SETTINGS: GrokToolSettings = {
-  generalChat: false,
-  researchCast: false,
-  researchLocation: false,
+  // Web検索（デフォルトON）
+  generalChat: true,
+  researchCast: true,
+  researchLocation: true,
   researchInfo: true,
   researchEvidence: true,
-  minutes: false,
-  proposal: false,
-  naScript: false,
+  minutes: true,
+  proposal: true,
+  naScript: true,
+  
+  // X検索（デフォルトON）
+  xSearchGeneralChat: true,
+  xSearchResearchCast: true,
+  xSearchResearchLocation: true,
+  xSearchResearchInfo: true,
+  xSearchResearchEvidence: true,
+  xSearchMinutes: true,
+  xSearchProposal: true,
+  xSearchNaScript: true,
+  
+  // コード実行（デフォルトOFF）
+  codeExecutionGeneralChat: false,
+  codeExecutionResearchCast: false,
+  codeExecutionResearchLocation: false,
+  codeExecutionResearchInfo: false,
+  codeExecutionResearchEvidence: false,
+  codeExecutionMinutes: false,
+  codeExecutionProposal: false,
+  codeExecutionNaScript: false,
+  
+  // ファイル検索（デフォルトOFF）
+  fileSearchGeneralChat: false,
+  fileSearchResearchCast: false,
+  fileSearchResearchLocation: false,
+  fileSearchResearchInfo: false,
+  fileSearchResearchEvidence: false,
+  fileSearchMinutes: false,
+  fileSearchProposal: false,
+  fileSearchNaScript: false,
 };
 
 /**
@@ -110,6 +180,60 @@ export function featureIdToToolKey(featureId: ChatFeatureId): keyof GrokToolSett
     'na-script': 'naScript',
   };
   return mapping[featureId] ?? null;
+}
+
+/**
+ * ツールタイプ
+ */
+export type GrokToolType = 'web_search' | 'x_search' | 'code_execution' | 'collections_search';
+
+/**
+ * featureIdとツールタイプから設定キーを取得
+ */
+export function getToolSettingKey(
+  featureId: ChatFeatureId, 
+  toolType: GrokToolType
+): keyof GrokToolSettings | null {
+  const featureMap: Record<ChatFeatureId, string> = {
+    'general-chat': 'GeneralChat',
+    'research-cast': 'ResearchCast',
+    'research-location': 'ResearchLocation',
+    'research-info': 'ResearchInfo',
+    'research-evidence': 'ResearchEvidence',
+    'minutes': 'Minutes',
+    'proposal': 'Proposal',
+    'na-script': 'NaScript',
+  };
+  
+  const toolPrefixMap: Record<GrokToolType, string> = {
+    'web_search': '',
+    'x_search': 'xSearch',
+    'code_execution': 'codeExecution',
+    'collections_search': 'fileSearch',
+  };
+  
+  const feature = featureMap[featureId];
+  const prefix = toolPrefixMap[toolType];
+  
+  if (!feature) return null;
+  
+  const key = `${prefix}${feature}`;
+  return key as keyof GrokToolSettings;
+}
+
+/**
+ * 特定の機能で特定のツールが有効かどうか
+ */
+export async function isToolEnabled(
+  featureId: ChatFeatureId,
+  toolType: GrokToolType
+): Promise<boolean> {
+  const settings = await getSystemGrokToolSettings();
+  const key = getToolSettingKey(featureId, toolType);
+  
+  if (!key) return false;
+  
+  return settings[key] ?? false;
 }
 
 /**
@@ -169,15 +293,56 @@ export async function saveGrokToolSettings(
 
 /**
  * 特定の機能でGrokツール（Web検索）が有効かどうか
+ * システム設定を参照して判定
  */
 export async function isGrokToolEnabled(
-  userId: string, 
+  _userId: string, 
   featureId: ChatFeatureId
 ): Promise<boolean> {
-  const settings = await getGrokToolSettings(userId);
+  const settings = await getSystemGrokToolSettings();
   const key = featureIdToToolKey(featureId);
   
   if (!key) return false;
   
   return settings[key] ?? false;
+}
+
+// ============================================
+// システム全体のGrokツール設定（管理画面用）
+// ============================================
+
+/**
+ * システム全体のGrokツール設定を取得
+ * DBに設定がなければデフォルト値を返す
+ */
+export async function getSystemGrokToolSettings(): Promise<GrokToolSettings> {
+  try {
+    const value = await getSystemSetting(SYSTEM_SETTING_KEYS.GROK_TOOL_SETTINGS);
+    if (value) {
+      const parsed = JSON.parse(value) as Partial<GrokToolSettings>;
+      return {
+        ...DEFAULT_GROK_TOOL_SETTINGS,
+        ...parsed,
+      };
+    }
+  } catch (error) {
+    console.error('Failed to get system Grok tool settings:', error);
+  }
+
+  return DEFAULT_GROK_TOOL_SETTINGS;
+}
+
+/**
+ * システム全体のGrokツール設定を保存
+ */
+export async function setSystemGrokToolSettings(
+  settings: Partial<GrokToolSettings>
+): Promise<GrokToolSettings> {
+  const data: GrokToolSettings = {
+    ...DEFAULT_GROK_TOOL_SETTINGS,
+    ...settings,
+  };
+
+  await setSystemSetting(SYSTEM_SETTING_KEYS.GROK_TOOL_SETTINGS, JSON.stringify(data));
+  return data;
 }

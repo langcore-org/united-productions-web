@@ -17,8 +17,6 @@ import {
   Mail,
   MessageSquare,
   Save,
-  Search,
-  Bot,
 } from "lucide-react";
 
 // ============================================
@@ -45,16 +43,7 @@ interface NotificationSettings {
   };
 }
 
-interface GrokToolSettings {
-  generalChat: boolean;
-  researchCast: boolean;
-  researchLocation: boolean;
-  researchInfo: boolean;
-  researchEvidence: boolean;
-  minutes: boolean;
-  proposal: boolean;
-  naScript: boolean;
-}
+
 
 // ============================================
 // Components
@@ -421,171 +410,6 @@ function NotificationSection() {
 }
 
 /**
- * Grok Tool Settings Section
- */
-function GrokToolSection() {
-  const [settings, setSettings] = useState<GrokToolSettings>({
-    generalChat: false,
-    researchCast: false,
-    researchLocation: false,
-    researchInfo: true,
-    researchEvidence: true,
-    minutes: false,
-    proposal: false,
-    naScript: false,
-  });
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
-  const [saveMessage, setSaveMessage] = useState<string | null>(null);
-
-  // 設定を取得
-  useEffect(() => {
-    fetchSettings();
-  }, []);
-
-  const fetchSettings = async () => {
-    try {
-      const response = await fetch("/api/settings/grok-tools");
-      if (response.ok) {
-        const data = await response.json();
-        setSettings(data);
-      }
-    } catch (error) {
-      console.error("Failed to fetch Grok tool settings:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const updateSetting = (key: keyof GrokToolSettings, value: boolean) => {
-    setSettings((prev) => ({ ...prev, [key]: value }));
-  };
-
-  const handleSave = async () => {
-    setIsSaving(true);
-    setSaveMessage(null);
-    
-    try {
-      const response = await fetch("/api/settings/grok-tools", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(settings),
-      });
-
-      if (response.ok) {
-        setSaveMessage("保存しました");
-        setTimeout(() => setSaveMessage(null), 3000);
-      } else {
-        setSaveMessage("保存に失敗しました");
-      }
-    } catch (error) {
-      console.error("Failed to save Grok tool settings:", error);
-      setSaveMessage("保存に失敗しました");
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const toolItems = [
-    { key: "generalChat" as const, label: "一般チャット", description: "通常のチャットでのWeb検索" },
-    { key: "researchCast" as const, label: "出演者リサーチ", description: "出演者候補調査でのWeb検索" },
-    { key: "researchLocation" as const, label: "場所リサーチ", description: "ロケ地調査でのWeb検索" },
-    { key: "researchInfo" as const, label: "情報リサーチ", description: "情報収集でのWeb検索（推奨）" },
-    { key: "researchEvidence" as const, label: "エビデンスリサーチ", description: "事実確認でのWeb検索（推奨）" },
-    { key: "minutes" as const, label: "議事録作成", description: "議事録作成でのWeb検索" },
-    { key: "proposal" as const, label: "新企画立案", description: "企画提案でのWeb検索" },
-    { key: "naScript" as const, label: "NA原稿作成", description: "NA原稿作成でのWeb検索" },
-  ];
-
-  return (
-    <SettingsCard
-      title="Grokツール設定"
-      description="機能別のWeb検索（X Search）有効化設定"
-      icon={<Bot className="w-5 h-5" />}
-    >
-      <div className="space-y-6">
-        {isLoading ? (
-          <div className="flex items-center justify-center py-8">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900" />
-          </div>
-        ) : (
-          <>
-            <div className="flex items-start gap-3 p-4 rounded-lg bg-gray-100 border border-gray-200">
-              <Search className="w-5 h-5 text-gray-600 flex-shrink-0 mt-0.5" />
-              <div>
-                <p className="text-sm font-medium text-gray-900">
-                  Web検索ツールについて
-                </p>
-                <p className="text-xs text-gray-600 mt-1">
-                  Grokモデル使用時に、各機能でWeb検索を有効にすると、
-                  最新情報をリアルタイムで検索して回答に含めることができます。
-                  検索が必要な機能（情報リサーチ・エビデンス検索など）ではデフォルトで有効になっています。
-                </p>
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <div className="flex items-center gap-2 pb-2 border-b border-gray-200">
-                <span className="text-sm font-medium text-gray-700">
-                  機能別設定
-                </span>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {toolItems.map((item) => (
-                  <Toggle
-                    key={item.key}
-                    checked={settings[item.key]}
-                    onChange={(checked) => updateSetting(item.key, checked)}
-                    label={item.label}
-                    description={item.description}
-                  />
-                ))}
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between pt-4 border-t border-gray-200">
-              <div>
-                {saveMessage && (
-                  <span className={cn(
-                    "text-sm",
-                    saveMessage === "保存しました" ? "text-gray-700" : "text-gray-600"
-                  )}>
-                    {saveMessage}
-                  </span>
-                )}
-              </div>
-              <button
-                onClick={handleSave}
-                disabled={isSaving}
-                className={cn(
-                  "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium",
-                  "bg-black text-white",
-                  "hover:bg-gray-800 transition-colors",
-                  "disabled:opacity-50 disabled:cursor-not-allowed"
-                )}
-              >
-                {isSaving ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    保存中...
-                  </>
-                ) : (
-                  <>
-                    <Save className="w-4 h-4" />
-                    設定を保存
-                  </>
-                )}
-              </button>
-            </div>
-          </>
-        )}
-      </div>
-    </SettingsCard>
-  );
-}
-
-/**
  * Data Management Section
  */
 function DataManagementSection() {
@@ -753,7 +577,6 @@ export default function SettingsPage() {
             <div className="space-y-6">
               <ProfileSection />
               <NotificationSection />
-              <GrokToolSection />
               <DataManagementSection />
             </div>
 

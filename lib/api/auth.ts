@@ -106,3 +106,29 @@ export async function requireRole(
 
   return authResult;
 }
+
+/**
+ * 管理者権限を持つユーザーのみ許可
+ * @param req - NextRequestオブジェクト
+ * @returns AuthResultまたはNextResponse（エラー時）
+ */
+export async function requireAdmin(
+  req: NextRequest
+): Promise<AuthResult | NextResponse> {
+  const authResult = await requireAuth(req);
+  
+  if (authResult instanceof NextResponse) {
+    return authResult;
+  }
+
+  // 管理者チェック（roleがadminのユーザーのみ許可）
+  const typedSession = await getServerSession(authOptions) as Session | null;
+  if (typedSession?.user?.role !== "admin") {
+    return NextResponse.json(
+      { error: "この操作を行う権限がありません。管理者のみアクセス可能です。" },
+      { status: 403 }
+    );
+  }
+
+  return authResult;
+}
