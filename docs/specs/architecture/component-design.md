@@ -2,7 +2,7 @@
 
 > **UIコンポーネントの構成と設計方針**
 > 
-> **最終更新**: 2026-02-20 13:10
+> **最終更新**: 2026-02-20 23:10
 
 ## コンポーネント階層
 
@@ -19,6 +19,11 @@ components/
 ├── chat/                  # 機能別（中レベル）
 │   ├── feature-chat.tsx
 │   └── message-bubble.tsx
+├── agent-thinking/        # エージェント思考プロセス表示
+│   ├── ThinkingProcess.tsx
+│   ├── ThinkingStep.tsx
+│   ├── SubStep.tsx
+│   └── ComputerPanel.tsx
 ├── research/              # 機能別
 ├── meeting-notes/         # 機能別
 └── transcripts/           # 機能別
