@@ -22,7 +22,8 @@ import {
   XCircle,
   DollarSign,
   ChevronRight,
-  Activity
+  Activity,
+  ScrollText
 } from "lucide-react";
 import Link from "next/link";
 
@@ -152,6 +153,25 @@ export default function AdminPage() {
                     <div>
                       <h3 className="font-semibold text-gray-900">使用量・コスト</h3>
                       <p className="text-sm text-gray-500">API使用状況の監視</p>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-5 h-5 text-gray-400" />
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+
+          <Link href="/admin/logs">
+            <Card className="hover:shadow-md transition-shadow cursor-pointer border-l-4 border-l-gray-500">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center">
+                      <ScrollText className="w-5 h-5 text-gray-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-gray-900">アプリケーションログ</h3>
+                      <p className="text-sm text-gray-500">システムログの閲覧</p>
                     </div>
                   </div>
                   <ChevronRight className="w-5 h-5 text-gray-400" />

@@ -4,10 +4,12 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Send, Copy, Check, Loader2, Sparkles, MessageSquare, Trash2 } from "lucide-react";
+import { Send, Copy, Check, Loader2, Sparkles, MessageSquare, Trash2, RotateCcw } from "lucide-react";
 import { WordExportButton } from "./WordExportButton";
 import { useLLMStream, StreamingMessage } from "./StreamingMessage";
 import { MessageBubble } from "./MessageBubble";
+import { ModelSelector } from "./ModelSelector";
+import { FileAttachButton, AttachedFile } from "./FileAttachment";
 import { DEFAULT_PROVIDER } from "@/lib/llm/config";
 import type { LLMProvider } from "@/lib/llm/types";
 
@@ -31,6 +33,10 @@ export interface FeatureChatProps {
   provider?: LLMProvider;
   /** 空の状態の説明 */
   emptyDescription?: string;
+  /** モデル選択を有効化 */
+  enableModelSelector?: boolean;
+  /** ファイル添付を有効化 */
+  enableFileAttachment?: boolean;
 }
 
 export function FeatureChat({
@@ -41,13 +47,17 @@ export function FeatureChat({
   inputLabel,
   outputFormat = "markdown",
   className,
-  provider = DEFAULT_PROVIDER,
+  provider: initialProvider = DEFAULT_PROVIDER,
   emptyDescription,
+  enableModelSelector = true,
+  enableFileAttachment = true,
 }: FeatureChatProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isCopied, setIsCopied] = useState(false);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+  const [provider, setProvider] = useState<LLMProvider>(initialProvider);
+  const [attachedFiles, setAttachedFiles] = useState<AttachedFile[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -106,17 +116,36 @@ export function FeatureChat({
   }, [input]);
 
   const handleSend = async () => {
-    if (!input.trim()) return;
+    if (!input.trim() && attachedFiles.length === 0) return;
+
+    // 添付ファイルを含むメッセージ内容を構築
+    let messageContent = input.trim();
+    
+    if (attachedFiles.length > 0) {
+      const fileContents = attachedFiles
+        .map((file) => {
+          if (file.type.startsWith("image/")) {
+            return `![${file.name}](${file.content})`;
+          }
+          return `<file name="${file.name}" type="${file.type}" size="${file.size}">\n${file.content?.substring(0, 10000) || ""}\n</file>`;
+        })
+        .join("\n\n");
+      
+      messageContent = messageContent 
+        ? `${messageContent}\n\n${fileContents}`
+        : fileContents;
+    }
 
     const userMessage: Message = {
       id: Date.now().toString(),
       role: "user",
-      content: input.trim(),
+      content: messageContent,
       timestamp: new Date(),
     };
 
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
+    setAttachedFiles([]);
 
     // ストリーミング開始
     const conversationHistory = messages.map((m) => ({
@@ -129,6 +158,34 @@ export function FeatureChat({
         { role: "system", content: systemPrompt },
         ...conversationHistory,
         { role: "user", content: userMessage.content },
+      ],
+      provider
+    );
+  };
+
+  const handleRegenerate = async () => {
+    // 最後のユーザーメッセージを取得
+    const lastUserIndex = [...messages].reverse().findIndex((m) => m.role === "user");
+    if (lastUserIndex === -1) return;
+
+    const actualIndex = messages.length - 1 - lastUserIndex;
+    const lastUserMessage = messages[actualIndex];
+
+    // 最後のアシスタントメッセージを削除
+    const newMessages = messages.slice(0, actualIndex);
+    setMessages(newMessages);
+
+    // 会話履歴を構築して再生成
+    const conversationHistory = newMessages.map((m) => ({
+      role: m.role,
+      content: m.content,
+    }));
+
+    await startStream(
+      [
+        { role: "system", content: systemPrompt },
+        ...conversationHistory,
+        { role: "user", content: lastUserMessage.content },
       ],
       provider
     );
@@ -212,6 +269,13 @@ export function FeatureChat({
         </div>
         
         <div className="flex items-center gap-2">
+          {enableModelSelector && (
+            <ModelSelector
+              value={provider}
+              onChange={setProvider}
+              disabled={!!isStreaming}
+            />
+          )}
           {hasMessages && (
             <Button
               variant="ghost"
@@ -303,6 +367,22 @@ export function FeatureChat({
               />
             )}
 
+            {/* Regenerate Button */}
+            {!isStreaming && hasMessages && messages.some(m => m.role === "assistant") && (
+              <div className="flex justify-center py-4">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleRegenerate}
+                  disabled={!!isStreaming}
+                  className="gap-2 border-[#2a2a35] bg-[#1e1e24] text-gray-400 hover:bg-[#2a2a35] hover:text-white"
+                >
+                  <RotateCcw className="w-4 h-4" />
+                  再生成
+                </Button>
+              </div>
+            )}
+
             {error && (
               <div className="mx-4 my-4 p-4 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
                 <p className="font-medium mb-1">エラーが発生しました</p>
@@ -322,6 +402,29 @@ export function FeatureChat({
             {inputLabel}
           </label>
         )}
+        
+        {/* Attached Files */}
+        {attachedFiles.length > 0 && (
+          <div className="flex flex-wrap gap-2 mb-3">
+            {attachedFiles.map((file) => (
+              <div
+                key={file.id}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#2a2a35] border border-[#3a3a45]"
+              >
+                <span className="text-xs text-gray-300 max-w-[150px] truncate">
+                  {file.name}
+                </span>
+                <button
+                  onClick={() => setAttachedFiles(prev => prev.filter(f => f.id !== file.id))}
+                  className="p-0.5 rounded hover:bg-[#3a3a45] text-gray-500 hover:text-red-400"
+                >
+                  <Trash2 className="w-3 h-3" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+
         <div className="flex gap-3 items-end">
           <div className="flex-1 relative">
             <Textarea
@@ -336,11 +439,17 @@ export function FeatureChat({
               }}
               placeholder={placeholder}
               disabled={!!isStreaming}
-              className="min-h-[80px] max-h-[200px] resize-none bg-[#1e1e24] border-[#2a2a35] text-white placeholder:text-gray-500 focus:border-[#ff6b00]/50 focus:ring-[#ff6b00]/20 pr-12"
+              className="min-h-[80px] max-h-[200px] resize-none bg-[#1e1e24] border-[#2a2a35] text-white placeholder:text-gray-500 focus:border-[#ff6b00]/50 focus:ring-[#ff6b00]/20 pr-24"
             />
-            <div className="absolute bottom-3 right-3 text-xs text-gray-500">
+            <div className="absolute bottom-3 right-3 flex items-center gap-2">
+              {enableFileAttachment && (
+                <FileAttachButton
+                  onFilesSelect={(files) => setAttachedFiles(prev => [...prev, ...files])}
+                  disabled={!!isStreaming}
+                />
+              )}
               {input.length > 0 && (
-                <span className="bg-[#2a2a35] px-2 py-0.5 rounded">
+                <span className="text-xs text-gray-500 bg-[#2a2a35] px-2 py-0.5 rounded">
                   {input.length}
                 </span>
               )}

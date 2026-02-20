@@ -92,6 +92,7 @@ model User {
   researchChats   ResearchChat[]
   schedules       LocationSchedule[]
   usageLogs       UsageLog[]
+  appLogs         AppLog[]
   programSettings ProgramSettings?
   createdAt       DateTime           @default(now())
   updatedAt       DateTime           @updatedAt
@@ -204,6 +205,64 @@ model ProgramSettings {
   pastProposals  String   @db.Text
   updatedAt      DateTime @updatedAt
   user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ============================================
+// アプリケーションログ
+// ============================================
+
+enum LogLevel {
+  DEBUG
+  INFO
+  WARN
+  ERROR
+  AUDIT
+}
+
+enum LogCategory {
+  AUTH
+  API
+  DB
+  SYSTEM
+  USER_ACTION
+  SECURITY
+  PERFORMANCE
+}
+
+model AppLog {
+  id          String      @id @default(uuid())
+  level       LogLevel
+  category    LogCategory
+  message     String      @db.Text
+  details     Json?       // 詳細情報（スタックトレース、パラメータなど）
+  
+  // ユーザー情報
+  userId      String?
+  user        User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
+  
+  // リクエスト情報
+  requestId   String?
+  path        String?     // APIパスやページパス
+  method      String?     // HTTPメソッド
+  ip          String?     // IPアドレス
+  userAgent   String?     // User-Agent
+  
+  // パフォーマンス
+  duration    Int?        // 処理時間（ms）
+  
+  // エラー情報
+  errorCode   String?     // エラーコード
+  stackTrace  String?     @db.Text
+  
+  createdAt   DateTime    @default(now())
+  
+  // インデックス
+  @@index([level, createdAt])
+  @@index([category, createdAt])
+  @@index([userId, createdAt])
+  @@index([createdAt])
+  @@index([requestId])
+  @@index([path])
 }
 
 // ============================================

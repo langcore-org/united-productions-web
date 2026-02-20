@@ -17,8 +17,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ADコパイロット - AD Production",
-  description: "制作支援統合プラットフォーム",
+  title: "Teddy - AI Assistant",
+  description: "Teddy - あなたのAIアシスタント",
 };
 
 export default async function RootLayout({

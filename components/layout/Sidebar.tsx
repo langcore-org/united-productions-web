@@ -15,14 +15,15 @@ import {
   Shield,
   ChevronRight,
   ChevronDown,
-  Edit3,
   Trash2,
   PanelLeft,
   Plus,
+  Loader2,
 } from "lucide-react";
+import { TeddyIcon } from "@/components/icons/TeddyIcon";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 
 interface SidebarProps {
@@ -32,27 +33,11 @@ interface SidebarProps {
 
 interface ChatHistory {
   id: string;
+  featureId: string;
   title: string;
-  timestamp: Date;
-}
-
-// モック履歴データ
-const mockHistory: ChatHistory[] = [
-  { id: "1", title: "制作会議の議事録作成", timestamp: new Date(Date.now() - 1000 * 60 * 30) },
-  { id: "2", title: "ロケ地候補のリサーチ", timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2) },
-  { id: "3", title: "新企画のアイデア出し", timestamp: new Date(Date.now() - 1000 * 60 * 60 * 5) },
-  { id: "4", title: "出演者リサーチ", timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24) },
-];
-
-// 相対時間を計算
-function getRelativeTime(date: Date): string {
-  const now = new Date();
-  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-  
-  if (diffInSeconds < 60) return "今";
-  if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}分前`;
-  if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}時間前`;
-  return `${Math.floor(diffInSeconds / 86400)}日前`;
+  agentType: string;
+  updatedAt: string;
+  messageCount: number;
 }
 
 // ナビゲーション項目
@@ -91,7 +76,18 @@ const navItems = [
   },
 ];
 
-// 管理画面はURL直接アクセス (/admin) のみとする
+// 相対時間を計算
+function getRelativeTime(dateStr: string): string {
+  const date = new Date(dateStr);
+  const now = new Date();
+  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+  
+  if (diffInSeconds < 60) return "今";
+  if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}分前`;
+  if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}時間前`;
+  if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}日前`;
+  return date.toLocaleDateString("ja-JP", { month: "short", day: "numeric" });
+}
 
 export function Sidebar({ className, onCollapseChange }: SidebarProps) {
   const pathname = usePathname();
@@ -100,12 +96,16 @@ export function Sidebar({ className, onCollapseChange }: SidebarProps) {
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  
+  // 履歴関連の状態
+  const [history, setHistory] = useState<ChatHistory[]>([]);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(true);
+  const [historyError, setHistoryError] = useState<string | null>(null);
 
   // マウント時にlocalStorageから状態を読み込む
   useEffect(() => {
     setIsMounted(true);
     
-    // サイドバー折りたたみ状態を読み込み
     try {
       const savedCollapsed = localStorage.getItem("sidebar-collapsed");
       if (savedCollapsed) {
@@ -117,7 +117,6 @@ export function Sidebar({ className, onCollapseChange }: SidebarProps) {
       // 読み込み失敗時はデフォルト
     }
 
-    // メニュー開閉状態を読み込み
     try {
       const saved = localStorage.getItem("sidebar-expanded-menus");
       if (saved) {
@@ -127,6 +126,38 @@ export function Sidebar({ className, onCollapseChange }: SidebarProps) {
       // 読み込み失敗時はデフォルト
     }
   }, [onCollapseChange]);
+
+  // 履歴を取得
+  const fetchHistory = useCallback(async () => {
+    setIsLoadingHistory(true);
+    setHistoryError(null);
+    try {
+      const response = await fetch("/api/chat/history");
+      if (!response.ok) {
+        throw new Error("履歴の取得に失敗しました");
+      }
+      const data = await response.json();
+      setHistory(data.history || []);
+    } catch (err) {
+      setHistoryError(err instanceof Error ? err.message : "エラーが発生しました");
+    } finally {
+      setIsLoadingHistory(false);
+    }
+  }, []);
+
+  // 初回マウント時に履歴を取得
+  useEffect(() => {
+    if (isMounted) {
+      fetchHistory();
+    }
+  }, [isMounted, fetchHistory]);
+
+  // ページ表示時にも履歴を更新
+  useEffect(() => {
+    if (isMounted) {
+      fetchHistory();
+    }
+  }, [pathname, isMounted, fetchHistory]);
 
   // サイドバー折りたたみ状態を保存
   const toggleCollapse = () => {
@@ -150,7 +181,7 @@ export function Sidebar({ className, onCollapseChange }: SidebarProps) {
   };
 
   const toggleMenu = (label: string) => {
-    if (isCollapsed) return; // 折りたたみ時は無効
+    if (isCollapsed) return;
     const newSet = new Set(expandedMenus);
     if (newSet.has(label)) {
       newSet.delete(label);
@@ -159,6 +190,27 @@ export function Sidebar({ className, onCollapseChange }: SidebarProps) {
     }
     setExpandedMenus(newSet);
     saveMenuState(newSet);
+  };
+
+  // 履歴を削除
+  const handleDeleteHistory = async (id: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (!confirm("このチャット履歴を削除しますか？")) return;
+    
+    try {
+      const response = await fetch(`/api/chat/history?id=${id}`, {
+        method: "DELETE",
+      });
+      if (!response.ok) {
+        throw new Error("削除に失敗しました");
+      }
+      // 削除後に履歴を更新
+      setHistory((prev) => prev.filter((h) => h.id !== id));
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "削除に失敗しました");
+    }
   };
 
   // アクティブ状態の判定
@@ -202,13 +254,16 @@ export function Sidebar({ className, onCollapseChange }: SidebarProps) {
         className
       )}
     >
-      {/* Header - アイコンのみ */}
+      {/* Header */}
       <div className={cn(
         "flex items-center h-14 bg-[#f9f9f9]",
         isCollapsed ? "px-2 justify-center" : "px-4"
       )}>
-        <div className="w-8 h-8 rounded-lg bg-black flex items-center justify-center flex-shrink-0">
-          <span className="text-white font-bold text-sm">UP</span>
+        <div className="flex items-center gap-2">
+          <TeddyIcon size={28} variant="filled" className="text-amber-700" />
+          {!isCollapsed && (
+            <span className="font-bold text-lg text-[#1a1a1a]">Teddy</span>
+          )}
         </div>
       </div>
 
@@ -291,7 +346,7 @@ export function Sidebar({ className, onCollapseChange }: SidebarProps) {
                       )}
                     </button>
 
-                    {/* Submenu - 折りたたみ時は表示しない */}
+                    {/* Submenu */}
                     {!isCollapsed && isExpanded && item.submenuItems && (
                       <div className="ml-4 mt-1 space-y-0.5 border-l-2 border-[#e5e5e5] pl-3">
                         {item.submenuItems.map((sub) => (
@@ -356,7 +411,7 @@ export function Sidebar({ className, onCollapseChange }: SidebarProps) {
           })}
         </div>
 
-        {/* History Section - 折りたたみ時は非表示 */}
+        {/* History Section */}
         {!isCollapsed && (
           <div className="flex-1 min-h-0 overflow-hidden mt-4">
             <div className="h-full flex flex-col">
@@ -367,49 +422,60 @@ export function Sidebar({ className, onCollapseChange }: SidebarProps) {
                     履歴
                   </span>
                 </div>
+                {isLoadingHistory && (
+                  <Loader2 className="w-3.5 h-3.5 text-[#6b7280] animate-spin" />
+                )}
               </div>
 
               <div className="flex-1 overflow-y-auto px-2 space-y-4 custom-scrollbar">
-                <div className="space-y-0.5">
-                  {mockHistory.map((item) => (
-                    <div
-                      key={item.id}
-                      className="group relative"
-                      onMouseEnter={() => setHoveredItem(item.id)}
-                      onMouseLeave={() => setHoveredItem(null)}
-                    >
-                      <Link
-                        href={`/chat/${item.id}`}
-                        className={cn(
-                          "flex items-center gap-2 px-2.5 py-2 rounded-lg",
-                          "text-left text-[13px] text-[#6b7280]",
-                          "hover:bg-white hover:text-[#1a1a1a]",
-                          "transition-all duration-150 ease-out"
-                        )}
+                {historyError ? (
+                  <p className="text-xs text-red-500 px-2">{historyError}</p>
+                ) : history.length === 0 && !isLoadingHistory ? (
+                  <p className="text-xs text-gray-400 px-2 py-2">履歴がありません</p>
+                ) : (
+                  <div className="space-y-0.5">
+                    {history.map((item) => (
+                      <div
+                        key={item.id}
+                        className="group relative"
+                        onMouseEnter={() => setHoveredItem(item.id)}
+                        onMouseLeave={() => setHoveredItem(null)}
                       >
-                        <MessageSquare className={cn(
-                          "w-3.5 h-3.5 flex-shrink-0 transition-colors duration-150",
-                          hoveredItem === item.id ? "text-black" : "text-[#9ca3af]"
-                        )} />
-                        <div className="flex-1 min-w-0">
-                          <span className="truncate block">{item.title}</span>
-                          <span className="text-[10px] text-gray-400">{getRelativeTime(item.timestamp)}</span>
-                        </div>
-                      </Link>
+                        <Link
+                          href={`/chat?gem=${item.featureId}`}
+                          className={cn(
+                            "flex items-center gap-2 px-2.5 py-2 rounded-lg",
+                            "text-left text-[13px] text-[#6b7280]",
+                            "hover:bg-white hover:text-[#1a1a1a]",
+                            "transition-all duration-150 ease-out"
+                          )}
+                        >
+                          <MessageSquare className={cn(
+                            "w-3.5 h-3.5 flex-shrink-0 transition-colors duration-150",
+                            hoveredItem === item.id ? "text-black" : "text-[#9ca3af]"
+                          )} />
+                          <div className="flex-1 min-w-0">
+                            <span className="truncate block">{item.title}</span>
+                            <span className="text-[10px] text-gray-400">
+                              {item.agentType} · {getRelativeTime(item.updatedAt)}
+                            </span>
+                          </div>
+                        </Link>
 
-                      {hoveredItem === item.id && (
-                        <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-0.5 bg-white rounded-md px-1 shadow-sm border border-[#e5e5e5]">
-                          <button className="p-1 rounded hover:bg-[#f0f0f0] text-[#6b7280] hover:text-[#1a1a1a] transition-colors">
-                            <Edit3 className="w-3 h-3" />
-                          </button>
-                          <button className="p-1 rounded hover:bg-[#f0f0f0] text-[#6b7280] hover:text-red-500 transition-colors">
-                            <Trash2 className="w-3 h-3" />
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
+                        {hoveredItem === item.id && (
+                          <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-0.5 bg-white rounded-md px-1 shadow-sm border border-[#e5e5e5]">
+                            <button 
+                              className="p-1 rounded hover:bg-[#f0f0f0] text-[#6b7280] hover:text-red-500 transition-colors"
+                              onClick={(e) => handleDeleteHistory(item.id, e)}
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -438,7 +504,7 @@ export function Sidebar({ className, onCollapseChange }: SidebarProps) {
           )}
         </Link>
 
-        {/* 展開/縮小ボタン - 常に一番下 */}
+        {/* 展開/縮小ボタン */}
         <button
           onClick={toggleCollapse}
           className={cn(
