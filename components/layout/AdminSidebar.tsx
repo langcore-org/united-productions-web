@@ -5,7 +5,6 @@ import {
   LayoutDashboard,
   Users,
   FileText,
-  Settings,
   BarChart3,
   Shield,
   ChevronRight,
@@ -48,11 +47,6 @@ const adminNavItems = [
     icon: <Shield className="w-[18px] h-[18px]" />,
     label: "ログ閲覧",
     href: "/admin/logs",
-  },
-  {
-    icon: <Settings className="w-[18px] h-[18px]" />,
-    label: "システム設定",
-    href: "/admin/settings",
   },
 ];
 
