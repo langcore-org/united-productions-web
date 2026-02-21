@@ -1,6 +1,8 @@
 # LLM統合仕様
 
 > **複数LLMプロバイダーを統一インターフェースで利用するための仕様**
+>
+> **最終更新**: 2026-02-21 17:25
 
 ## 概要
 
@@ -14,11 +16,11 @@ src/lib/llm/
 ├── factory.ts            # LLMClient生成ファクトリ
 ├── cache.ts              # レスポンスキャッシュ（Upstash Redis）
 └── clients/
-    ├── gemini.ts         # Google Gemini実装
-    ├── grok.ts           # xAI Grok実装
-    ├── openai.ts         # OpenAI実装
-    ├── anthropic.ts      # Anthropic実装
-    └── perplexity.ts     # Perplexity実装
+    ├── gemini.ts         # Google Gemini実装（✅ 連携済み）
+    ├── grok.ts           # xAI Grok実装（✅ 連携済み）
+    ├── openai.ts         # OpenAI実装（📝 将来連携予定）
+    ├── anthropic.ts      # Anthropic実装（📝 将来連携予定）
+    └── perplexity.ts     # Perplexity実装（📝 将来連携予定）
 ```
 
 ## API Routes
@@ -30,12 +32,19 @@ src/lib/llm/
 
 ## 対応モデル一覧
 
+### 現在連携済み
+
 | プロバイダー | モデル | 入力$/1M | 出力$/1M | コンテキスト | 主な用途 |
 |---|---|---|---|---|---|
 | Google | Gemini 2.5 Flash-Lite | $0.075 | $0.30 | 1M | デフォルト（最安値） |
 | Google | Gemini 3.0 Flash | $0.50 | $3.00 | 1M | 高品質タスク |
 | xAI | Grok 4.1 Fast | $0.20 | $0.50 | 2M | X検索 |
 | xAI | Grok 4 | $3.00 | $15.00 | 2M | 最高品質 |
+
+### 将来連携予定
+
+| プロバイダー | モデル | 入力$/1M | 出力$/1M | コンテキスト | 主な用途 |
+|---|---|---|---|---|---|
 | OpenAI | GPT-4o-mini | $0.15 | $0.60 | 128K | コスパ |
 | OpenAI | GPT-5 | $1.25 | $10.00 | 400K | フラッグシップ |
 | Anthropic | Claude 4.5 Sonnet | $3.00 | $15.00 | 200K | バランス |
@@ -123,9 +132,12 @@ aihub:llm:{hash_slice}:{provider}
 ## 環境変数
 
 ```bash
-GEMINI_API_KEY=         # 必須（Google AI Studio無料枠）
-XAI_API_KEY=            # PJ-C用（$25無料クレジット）
-PERPLEXITY_API_KEY=     # PJ-C用
-OPENAI_API_KEY=         # オプション
-ANTHROPIC_API_KEY=      # オプション
+# 連携済み（必須）
+GEMINI_API_KEY=         # Google AI Studio無料枠
+XAI_API_KEY=            # xAI（$25無料クレジット）
+
+# 将来連携予定（オプション）
+# PERPLEXITY_API_KEY=
+# OPENAI_API_KEY=
+# ANTHROPIC_API_KEY=
 ```

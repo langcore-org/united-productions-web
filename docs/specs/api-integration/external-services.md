@@ -2,21 +2,28 @@
 
 > **外部API・サービスの連携設計**
 > 
-> **最終更新**: 2026-02-20 13:10
+> **最終更新**: 2026-02-21 17:25
 
 ## 連携サービス一覧
 
-| サービス | 用途 | 認証方式 |
-|---------|------|---------|
-| **Google OAuth** | ユーザー認証 | OAuth 2.0 |
-| **Google Drive** | ファイル参照 | OAuth Scope |
-| **Google AI Studio** | Gemini API | API Key |
-| **xAI** | Grok API | API Key |
-| **Perplexity** | 検索API | API Key |
-| **OpenAI** | GPT API | API Key（オプション） |
-| **Anthropic** | Claude API | API Key（オプション） |
-| **Neon** | PostgreSQL | 接続文字列 |
-| **Upstash** | Redis | REST API Token |
+### 現在連携済み
+
+| サービス | 用途 | 認証方式 | 状態 |
+|---------|------|---------|------|
+| **Google OAuth** | ユーザー認証 | OAuth 2.0 | ✅ 連携済み |
+| **Google Drive** | ファイル参照 | OAuth Scope | ✅ 連携済み |
+| **Google AI Studio** | Gemini API | API Key | ✅ 連携済み |
+| **xAI** | Grok API | API Key | ✅ 連携済み |
+| **Neon** | PostgreSQL | 接続文字列 | ✅ 連携済み |
+| **Upstash** | Redis | REST API Token | ✅ 連携済み |
+
+### 将来連携予定
+
+| サービス | 用途 | 認証方式 | 状態 |
+|---------|------|---------|------|
+| **Perplexity** | 検索API | API Key | 📝 将来連携予定 |
+| **OpenAI** | GPT API | API Key | 📝 将来連携予定 |
+| **Anthropic** | Claude API | API Key | 📝 将来連携予定 |
 
 ## 認証情報管理
 
@@ -28,12 +35,14 @@ GOOGLE_CLIENT_ID=
 GOOGLE_CLIENT_SECRET=
 NEXTAUTH_SECRET=
 
-# LLM APIs
+# LLM APIs（連携済み）
 GEMINI_API_KEY=
 XAI_API_KEY=
-PERPLEXITY_API_KEY=
-OPENAI_API_KEY=        # オプション
-ANTHROPIC_API_KEY=     # オプション
+
+# LLM APIs（将来連携予定）
+# PERPLEXITY_API_KEY=
+# OPENAI_API_KEY=
+# ANTHROPIC_API_KEY=
 
 # インフラ
 DATABASE_URL=

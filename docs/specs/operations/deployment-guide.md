@@ -26,10 +26,12 @@ Vercelプラットフォームへのデプロイを前提とした構成。
 | `UPSTASH_REDIS_REST_URL` | Redis URL | Upstash Console |
 | `UPSTASH_REDIS_REST_TOKEN` | Redisトークン | Upstash Console |
 | `GEMINI_API_KEY` | Gemini APIキー | Google AI Studio |
-
-オプション:
 | `XAI_API_KEY` | Grok APIキー | xAI Console |
+
+将来連携予定（オプション）:
 | `PERPLEXITY_API_KEY` | Perplexity APIキー | Perplexity Settings |
+| `OPENAI_API_KEY` | OpenAI APIキー | OpenAI Platform |
+| `ANTHROPIC_API_KEY` | Anthropic APIキー | Anthropic Console |
 
 ## デプロイ手順
 
