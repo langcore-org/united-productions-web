@@ -143,6 +143,16 @@ export interface StreamResult {
   };
 }
 
+/** streamWithUsage が yield する値の型 */
+type StreamYield = {
+  chunk?: string;
+  usage?: { inputTokens: number; outputTokens: number; cost: number };
+  toolCall?: { id: string; type: string; name?: string; input?: string; status: 'pending' | 'running' | 'completed' | 'failed' };
+  toolUsage?: { web_search_calls?: number; x_search_calls?: number; code_interpreter_calls?: number; file_search_calls?: number; mcp_calls?: number; document_search_calls?: number };
+  reasoning?: { step: number; content: string; tokens?: number };
+  thinking?: string;
+};
+
 /**
  * Grokクライアント
  */
@@ -164,17 +174,17 @@ export class GrokClient implements LLMClient {
       enableFileSearch: false,  // vector_store_ids が必要なため無効化
       ...toolOptions,
     };
-    
+
     const apiKey = process.env.XAI_API_KEY;
     if (!apiKey) {
       logger.error('XAI_API_KEY environment variable is not set');
       throw new Error('XAI_API_KEY environment variable is not set');
     }
     this.apiKey = apiKey;
-    logger.info('GrokClient initialized', { 
-      provider, 
+    logger.info('GrokClient initialized', {
+      provider,
       model: this.model,
-      tools: this.toolOptions 
+      tools: this.toolOptions,
     });
   }
 
@@ -186,9 +196,8 @@ export class GrokClient implements LLMClient {
     logger.info('GrokClient tool options updated', { tools: this.toolOptions });
   }
 
-  /**
-   * プロバイダーからモデル名を取得
-   */
+  // ─── プライベートヘルパー ───────────────────────────────────
+
   private getModelName(provider: LLMProvider): string {
     switch (provider) {
       case 'grok-4-1-fast-reasoning':
@@ -200,75 +209,93 @@ export class GrokClient implements LLMClient {
     }
   }
 
-  /**
-   * ツール設定を取得
-   */
   private getTools(): Array<{ type: string }> | undefined {
     const tools: Array<{ type: string }> = [];
-    
-    if (this.toolOptions.enableWebSearch) {
-      tools.push({ type: 'web_search' });
-    }
-    
-    if (this.toolOptions.enableXSearch) {
-      tools.push({ type: 'x_search' });
-    }
-    
-    if (this.toolOptions.enableCodeExecution) {
-      tools.push({ type: 'code_execution' });
-    }
-    
+    if (this.toolOptions.enableWebSearch)    tools.push({ type: 'web_search' });
+    if (this.toolOptions.enableXSearch)      tools.push({ type: 'x_search' });
+    if (this.toolOptions.enableCodeExecution) tools.push({ type: 'code_execution' });
     // collections_search/file_search は vector_store_ids が必要なため現状未対応
-    // if (this.toolOptions.enableFileSearch) {
-    //   tools.push({ type: 'collections_search' });
-    // }
-    
     return tools.length > 0 ? tools : undefined;
   }
 
-  /**
-   * メッセージをResponses API形式に変換
-   */
   private convertMessages(messages: LLMMessage[]): Array<{ role: string; content: string }> {
-    return messages.map(msg => ({
-      role: msg.role,
-      content: msg.content,
-    }));
+    return messages.map(msg => ({ role: msg.role, content: msg.content }));
   }
 
-  /**
-   * チャット完了を取得（Responses API使用）
-   */
-  async chat(messages: LLMMessage[]): Promise<LLMResponse> {
-    logger.info('Starting chat request', { 
-      messageCount: messages.length, 
-      model: this.model,
-      enableWebSearch: this.toolOptions.enableWebSearch 
-    });
-    
-    const requestBody: {
+  /** コスト計算（3箇所で使っていたロジックを集約） */
+  private calcCost(usage: XAIResponse['usage']): number {
+    if (usage.cost_in_usd_ticks) {
+      return Number((usage.cost_in_usd_ticks / 1_000_000_000).toFixed(6));
+    }
+    const info = getProviderInfo(this.provider);
+    return Number((
+      (usage.input_tokens  / 1_000_000) * info.inputPrice +
+      (usage.output_tokens / 1_000_000) * info.outputPrice
+    ).toFixed(6));
+  }
+
+  /** リクエストボディを組み立てる（chat/streamで共通） */
+  private buildRequestBody(messages: LLMMessage[], stream = false) {
+    const body: {
       model: string;
       input: Array<{ role: string; content: string }>;
+      stream?: boolean;
       tools?: Array<{ type: string }>;
     } = {
       model: this.model,
       input: this.convertMessages(messages),
     };
-
-    // ツールが有効な場合は追加
+    if (stream) body.stream = true;
     const tools = this.getTools();
-    if (tools) {
-      requestBody.tools = tools;
-    }
-    
-    const response = await fetch(`${this.baseUrl}/responses`, {
+    if (tools) body.tools = tools;
+    return body;
+  }
+
+  /** xAI Responses APIを呼び出す */
+  private async fetchApi(body: object): Promise<Response> {
+    return fetch(`${this.baseUrl}/responses`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${this.apiKey}`,
       },
-      body: JSON.stringify(requestBody),
+      body: JSON.stringify(body),
     });
+  }
+
+  /**
+   * ストリームイベントのitem（added / done）をtoolCallに変換する
+   * 対象外のアイテムタイプの場合はnullを返す
+   */
+  private parseToolCallItem(
+    item: NonNullable<XAIStreamEvent['item']>,
+    status: 'running' | 'completed',
+  ): StreamYield['toolCall'] | null {
+    if (item.type === 'web_search_call') {
+      return { id: item.id, type: 'web_search', status };
+    }
+    if (item.type === 'custom_tool_call') {
+      return { id: item.id, type: item.name ?? 'custom_tool', name: item.name, input: item.input, status };
+    }
+    if (item.type === 'code_interpreter_call') {
+      return { id: item.id, type: 'code_interpreter', status };
+    }
+    return null;
+  }
+
+  // ─── パブリックAPI ────────────────────────────────────────
+
+  /**
+   * チャット完了を取得（Responses API使用）
+   */
+  async chat(messages: LLMMessage[]): Promise<LLMResponse> {
+    logger.info('Starting chat request', {
+      messageCount: messages.length,
+      model: this.model,
+      enableWebSearch: this.toolOptions.enableWebSearch,
+    });
+
+    const response = await this.fetchApi(this.buildRequestBody(messages));
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -277,32 +304,15 @@ export class GrokClient implements LLMClient {
     }
 
     const data: XAIResponse = await response.json();
-    
-    // メッセージ出力を抽出
+
     const messageOutput = data.output.find(item => item.type === 'message');
-    const content = messageOutput && 'content' in messageOutput 
-      ? messageOutput.content.map(c => c.text).join('') 
+    const content = messageOutput && 'content' in messageOutput
+      ? messageOutput.content.map(c => c.text).join('')
       : '';
-    
-    const usage = data.usage;
-    
-    // コスト計算（USD ticksからUSDに変換）
-    const providerInfo = getProviderInfo(this.provider);
-    const inputTokens = usage?.input_tokens || 0;
-    const outputTokens = usage?.output_tokens || 0;
-    
-    // cost_in_usd_ticksがある場合はそれを使用、なければ計算
-    let cost: number;
-    if (usage?.cost_in_usd_ticks) {
-      cost = Number((usage.cost_in_usd_ticks / 1000000000).toFixed(6));
-    } else {
-      cost = Number(
-        (
-          (inputTokens / 1000000) * providerInfo.inputPrice +
-          (outputTokens / 1000000) * providerInfo.outputPrice
-        ).toFixed(6)
-      );
-    }
+
+    const inputTokens  = data.usage?.input_tokens  ?? 0;
+    const outputTokens = data.usage?.output_tokens ?? 0;
+    const cost = this.calcCost(data.usage);
 
     logger.info('Chat request completed', {
       inputTokens,
@@ -310,62 +320,23 @@ export class GrokClient implements LLMClient {
       cost: cost.toFixed(6),
       contentLength: content.length,
       webSearchEnabled: this.toolOptions.enableWebSearch,
-      toolsUsed: usage?.server_side_tool_usage_details,
+      toolsUsed: data.usage?.server_side_tool_usage_details,
     });
 
-    return {
-      content,
-      usage: {
-        inputTokens,
-        outputTokens,
-        cost,
-      },
-    };
+    return { content, usage: { inputTokens, outputTokens, cost } };
   }
 
   /**
    * ストリーミングレスポンスを取得（usage付き）
-   * 返り値: { content: string, usage?: { inputTokens, outputTokens, cost } }
    */
-  async *streamWithUsage(messages: LLMMessage[]): AsyncIterable<{ 
-    chunk?: string; 
-    usage?: { inputTokens: number; outputTokens: number; cost: number };
-    toolCall?: { id: string; type: string; name?: string; input?: string; status: 'pending' | 'running' | 'completed' | 'failed' };
-    toolUsage?: { web_search_calls?: number; x_search_calls?: number; code_interpreter_calls?: number; file_search_calls?: number; mcp_calls?: number; document_search_calls?: number };
-    reasoning?: { step: number; content: string; tokens?: number };
-    thinking?: string;
-  }> {
-    logger.info('Starting stream request with usage tracking', { 
-      messageCount: messages.length, 
+  async *streamWithUsage(messages: LLMMessage[]): AsyncIterable<StreamYield> {
+    logger.info('Starting stream request with usage tracking', {
+      messageCount: messages.length,
       model: this.model,
-      enableWebSearch: this.toolOptions.enableWebSearch 
+      enableWebSearch: this.toolOptions.enableWebSearch,
     });
-    
-    const requestBody: {
-      model: string;
-      input: Array<{ role: string; content: string }>;
-      stream: boolean;
-      tools?: Array<{ type: string }>;
-    } = {
-      model: this.model,
-      input: this.convertMessages(messages),
-      stream: true,
-    };
 
-    // ツールが有効な場合は追加
-    const tools = this.getTools();
-    if (tools) {
-      requestBody.tools = tools;
-    }
-    
-    const response = await fetch(`${this.baseUrl}/responses`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.apiKey}`,
-      },
-      body: JSON.stringify(requestBody),
-    });
+    const response = await this.fetchApi(this.buildRequestBody(messages, true));
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -385,7 +356,66 @@ export class GrokClient implements LLMClient {
     let buffer = '';
     let chunkCount = 0;
     let totalLength = 0;
-    let finalUsage: { inputTokens: number; outputTokens: number; cost: number } | undefined;
+    let finalUsage: StreamYield['usage'] | undefined;
+
+    const processEvent = (event: XAIStreamEvent): StreamYield | null => {
+      // テキストチャンク
+      if (event.type === 'response.output_text.delta' && event.delta) {
+        chunkCount++;
+        totalLength += event.delta.length;
+        return { chunk: event.delta };
+      }
+
+      // 思考プロセス（thinking）のリアルタイム更新
+      if (event.type === 'response.reasoning_content.delta' && event.delta) {
+        chunkCount++;
+        totalLength += event.delta.length;
+        return { thinking: event.delta };
+      }
+
+      // ツール呼び出し開始
+      if (event.type === 'response.output_item.added' && event.item) {
+        const toolCall = this.parseToolCallItem(event.item, 'running');
+        if (toolCall) return { toolCall };
+      }
+
+      // ツール呼び出し完了
+      if (event.type === 'response.output_item.done' && event.item) {
+        const toolCall = this.parseToolCallItem(event.item, 'completed');
+        if (toolCall) return { toolCall };
+      }
+
+      // 推論ステップ
+      if (event.type === 'response.reasoning' && event.response?.reasoning?.summary) {
+        return {
+          reasoning: {
+            step: 1,
+            content: event.response.reasoning.summary,
+            tokens: event.response.usage?.output_tokens_details?.reasoning_tokens,
+          },
+        };
+      }
+
+      // usage情報（response.completedイベント）
+      if (event.type === 'response.completed' && event.response?.usage) {
+        const usage = event.response.usage;
+        const cost = this.calcCost(usage);
+        finalUsage = { inputTokens: usage.input_tokens, outputTokens: usage.output_tokens, cost };
+
+        logger.info('Stream usage received', {
+          inputTokens: usage.input_tokens,
+          outputTokens: usage.output_tokens,
+          cost: cost.toFixed(6),
+          toolUsage: usage.server_side_tool_usage_details,
+        });
+
+        if (usage.server_side_tool_usage_details) {
+          return { toolUsage: usage.server_side_tool_usage_details };
+        }
+      }
+
+      return null;
+    };
 
     try {
       while (true) {
@@ -397,211 +427,42 @@ export class GrokClient implements LLMClient {
 
         buffer += decoder.decode(value, { stream: true });
         const lines = buffer.split('\n');
-        buffer = lines.pop() || '';
+        buffer = lines.pop() ?? '';
 
         for (const line of lines) {
-          const trimmedLine = line.trim();
-          
-          // SSE形式: "event: xxx" または "data: xxx"
-          if (trimmedLine.startsWith('event: ')) {
-            // イベントタイプを記録（必要に応じて）
-            continue;
-          }
-          
-          if (!trimmedLine.startsWith('data: ')) continue;
+          const trimmed = line.trim();
+          if (trimmed.startsWith('event: ')) continue;
+          if (!trimmed.startsWith('data: ')) continue;
 
-          const data = trimmedLine.slice(6); // Remove 'data: ' prefix
-          
+          const data = trimmed.slice(6);
           if (data === '[DONE]') {
-            // 最後にusageを返す
-            if (finalUsage) {
-              yield { usage: finalUsage };
-            }
+            if (finalUsage) yield { usage: finalUsage };
             return;
           }
 
           try {
-            const event: XAIStreamEvent = JSON.parse(data);
-            
-            // テキストチャンクの抽出
-            if (event.type === 'response.output_text.delta' && event.delta) {
-              const text = event.delta;
-              chunkCount++;
-              totalLength += text.length;
-              yield { chunk: text };
-            }
-            
-            // 思考プロセス（thinking）のリアルタイム更新
-            if (event.type === 'response.reasoning_content.delta' && event.delta) {
-              const thinkingText = event.delta;
-              chunkCount++;
-              totalLength += thinkingText.length;
-              // thinking専用フィールドで送信
-              yield { thinking: thinkingText };
-            }
-            
-            // ツール呼び出しの検出（開始時）
-            if (event.type === 'response.output_item.added' && event.item) {
-              const item = event.item;
-              if (item.type === 'web_search_call') {
-                yield { 
-                  toolCall: { 
-                    id: item.id, 
-                    type: 'web_search', 
-                    status: 'running'
-                  } 
-                };
-              } else if (item.type === 'custom_tool_call') {
-                yield { 
-                  toolCall: { 
-                    id: item.id, 
-                    type: item.name || 'custom_tool', 
-                    name: item.name,
-                    input: item.input,
-                    status: 'running'
-                  } 
-                };
-              } else if (item.type === 'code_interpreter_call') {
-                yield { 
-                  toolCall: { 
-                    id: item.id, 
-                    type: 'code_interpreter', 
-                    status: 'running'
-                  } 
-                };
-              }
-            }
-            
-            // ツール呼び出しの完了検出
-            if (event.type === 'response.output_item.done' && event.item) {
-              const item = event.item;
-              if (item.type === 'web_search_call') {
-                yield { 
-                  toolCall: { 
-                    id: item.id, 
-                    type: 'web_search', 
-                    status: 'completed'
-                  } 
-                };
-              } else if (item.type === 'custom_tool_call') {
-                yield { 
-                  toolCall: { 
-                    id: item.id, 
-                    type: item.name || 'custom_tool', 
-                    name: item.name,
-                    input: item.input,
-                    status: 'completed'
-                  } 
-                };
-              } else if (item.type === 'code_interpreter_call') {
-                yield { 
-                  toolCall: { 
-                    id: item.id, 
-                    type: 'code_interpreter', 
-                    status: 'completed'
-                  } 
-                };
-              }
-            }
-            
-            // 推論ステップの検出（reasoning_tokensがある場合）
-            if (event.type === 'response.reasoning' && event.response?.reasoning) {
-              const reasoning = event.response.reasoning;
-              if (reasoning.summary) {
-                yield { 
-                  reasoning: { 
-                    step: 1, 
-                    content: reasoning.summary,
-                    tokens: event.response.usage?.output_tokens_details?.reasoning_tokens 
-                  } 
-                };
-              }
-            }
-            
-            // usage情報を記録（response.completedイベントで）
-            if (event.type === 'response.completed' && event.response?.usage) {
-              const usage = event.response.usage;
-              const providerInfo = getProviderInfo(this.provider);
-              const inputTokens = usage.input_tokens;
-              const outputTokens = usage.output_tokens;
-              
-              let cost: number;
-              if (usage.cost_in_usd_ticks) {
-                cost = Number((usage.cost_in_usd_ticks / 1000000000).toFixed(6));
-              } else {
-                cost = Number(
-                  (
-                    (inputTokens / 1000000) * providerInfo.inputPrice +
-                    (outputTokens / 1000000) * providerInfo.outputPrice
-                  ).toFixed(6)
-                );
-              }
-              
-              finalUsage = { inputTokens, outputTokens, cost };
-              
-              // ツール使用状況も返す
-              if (usage.server_side_tool_usage_details) {
-                yield { toolUsage: usage.server_side_tool_usage_details };
-              }
-              
-              logger.info('Stream usage received', {
-                inputTokens,
-                outputTokens,
-                cost: cost.toFixed(6),
-                toolUsage: usage.server_side_tool_usage_details,
-              });
-            }
+            const yieldValue = processEvent(JSON.parse(data) as XAIStreamEvent);
+            if (yieldValue) yield yieldValue;
           } catch {
-            // Ignore JSON parse errors for malformed chunks
-            continue;
+            // malformed chunkは無視
           }
         }
       }
 
-      // 残りのバッファを処理
-      if (buffer.trim()) {
-        const trimmedLine = buffer.trim();
-        if (trimmedLine.startsWith('data: ')) {
-          const data = trimmedLine.slice(6);
-          if (data !== '[DONE]') {
-            try {
-              const event: XAIStreamEvent = JSON.parse(data);
-              
-              // テキストチャンク
-              if (event.type === 'response.output_text.delta' && event.delta) {
-                yield { chunk: event.delta };
-              }
-              
-              // usage情報
-              if (event.type === 'response.completed' && event.response?.usage) {
-                const usage = event.response.usage;
-                const providerInfo = getProviderInfo(this.provider);
-                const inputTokens = usage.input_tokens;
-                const outputTokens = usage.output_tokens;
-                let cost: number;
-                if (usage.cost_in_usd_ticks) {
-                  cost = Number((usage.cost_in_usd_ticks / 1000000000).toFixed(6));
-                } else {
-                  cost = Number(
-                    (
-                      (inputTokens / 1000000) * providerInfo.inputPrice +
-                      (outputTokens / 1000000) * providerInfo.outputPrice
-                    ).toFixed(6)
-                  );
-                }
-                finalUsage = { inputTokens, outputTokens, cost };
-              }
-            } catch {
-              // Ignore
-            }
+      // 残バッファを処理
+      if (buffer.trim().startsWith('data: ')) {
+        const data = buffer.trim().slice(6);
+        if (data !== '[DONE]') {
+          try {
+            const yieldValue = processEvent(JSON.parse(data) as XAIStreamEvent);
+            if (yieldValue) yield yieldValue;
+          } catch {
+            // Ignore
           }
         }
       }
-      
-      // 最後にusageを返す
-      if (finalUsage) {
-        yield { usage: finalUsage };
-      }
+
+      if (finalUsage) yield { usage: finalUsage };
     } finally {
       reader.releaseLock();
     }
@@ -612,16 +473,13 @@ export class GrokClient implements LLMClient {
    */
   async *stream(messages: LLMMessage[]): AsyncIterable<string> {
     for await (const { chunk } of this.streamWithUsage(messages)) {
-      if (chunk) {
-        yield chunk;
-      }
+      if (chunk) yield chunk;
     }
   }
 }
 
 /**
- * ストリーミング結果から最終的なusageを取得
- * この関数はストリーム全体を消費してusageを返す
+ * ストリーム全体を消費してcontent + usageを返す
  */
 export async function streamWithUsageTracking(
   client: GrokClient,
@@ -629,15 +487,11 @@ export async function streamWithUsageTracking(
 ): Promise<{ content: string; usage?: { inputTokens: number; outputTokens: number; cost: number } }> {
   let content = '';
   let finalUsage: { inputTokens: number; outputTokens: number; cost: number } | undefined;
-  
+
   for await (const { chunk, usage } of client.streamWithUsage(messages)) {
-    if (chunk) {
-      content += chunk;
-    }
-    if (usage) {
-      finalUsage = usage;
-    }
+    if (chunk) content += chunk;
+    if (usage) finalUsage = usage;
   }
-  
+
   return { content, usage: finalUsage };
 }
