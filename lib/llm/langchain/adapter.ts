@@ -8,7 +8,8 @@
 import type { LLMClient, LLMMessage, LLMResponse } from '../types';
 import type { LLMProvider } from '../types';
 import { createLangChainModel } from './factory';
-import { executeChat, executeStreamingChat } from './chains/base';
+import { executeChat } from './chains/base';
+import { executeStreamingChat } from './chains/streaming';
 import type { LangChainOptions } from './types';
 
 /**

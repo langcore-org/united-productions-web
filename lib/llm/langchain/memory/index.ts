@@ -1,14 +1,12 @@
 /**
  * LangChain Memory
  * 
- * 会話履歴管理の高度化
+ * 会話履歴管理の高度化（簡略版）
+ * 
+ * 注: 完全なMemory機能は別途 langchain パッケージが必要
  */
 
-import { BufferMemory } from 'langchain/memory';
-import { ChatMessageHistory } from 'langchain/stores/message/in_memory';
-import type { BaseChatMessageHistory } from '@langchain/core/chat_history';
 import type { LLMMessage } from '../../types';
-import { toLangChainMessages } from '../types';
 
 /**
  * メモリ設定オプション
@@ -21,19 +19,48 @@ export interface MemoryOptions {
 }
 
 /**
+ * シンプルなインメモリ会話履歴
+ */
+export class SimpleChatMemory {
+  private messages: LLMMessage[] = [];
+  private maxMessages: number;
+
+  constructor(options: MemoryOptions = {}) {
+    this.maxMessages = options.maxMessages || 10;
+  }
+
+  /**
+   * メッセージを追加
+   */
+  async addMessage(message: LLMMessage): Promise<void> {
+    this.messages.push(message);
+    
+    // 最大数を超えたら古いものを削除
+    if (this.messages.length > this.maxMessages * 2) {
+      this.messages = this.messages.slice(-this.maxMessages * 2);
+    }
+  }
+
+  /**
+   * 会話履歴を取得
+   */
+  async getMessages(): Promise<LLMMessage[]> {
+    return [...this.messages];
+  }
+
+  /**
+   * 会話履歴をクリア
+   */
+  async clear(): Promise<void> {
+    this.messages = [];
+  }
+}
+
+/**
  * インメモリ会話履歴を作成
  */
-export function createChatMemory(options: MemoryOptions = {}): BufferMemory {
-  const { maxMessages = 10 } = options;
-
-  return new BufferMemory({
-    chatHistory: new ChatMessageHistory(),
-    returnMessages: true,
-    memoryKey: 'chat_history',
-    inputKey: 'input',
-    outputKey: 'output',
-    k: maxMessages,
-  });
+export function createChatMemory(options: MemoryOptions = {}): SimpleChatMemory {
+  return new SimpleChatMemory(options);
 }
 
 /**
@@ -42,19 +69,11 @@ export function createChatMemory(options: MemoryOptions = {}): BufferMemory {
 export async function createMemoryFromMessages(
   messages: LLMMessage[],
   options: MemoryOptions = {}
-): Promise<BufferMemory> {
+): Promise<SimpleChatMemory> {
   const memory = createChatMemory(options);
-  const langChainMessages = toLangChainMessages(messages);
-
-  // メッセージを履歴に追加
-  for (let i = 0; i < langChainMessages.length - 1; i += 2) {
-    const human = langChainMessages[i];
-    const ai = langChainMessages[i + 1];
-    
-    if (human && ai) {
-      await memory.chatHistory.addMessage(human);
-      await memory.chatHistory.addMessage(ai);
-    }
+  
+  for (const message of messages) {
+    await memory.addMessage(message);
   }
 
   return memory;
@@ -64,17 +83,16 @@ export async function createMemoryFromMessages(
  * メモリ付きChain実行ヘルパー
  */
 export async function executeWithMemory(
-  memory: BufferMemory,
+  memory: SimpleChatMemory,
   input: string,
-  executor: (input: string, memory: BufferMemory) => Promise<string>
-): Promise<{ output: string; memory: BufferMemory }> {
-  const output = await executor(input, memory);
+  executor: (input: string, history: LLMMessage[]) => Promise<string>
+): Promise<{ output: string; memory: SimpleChatMemory }> {
+  const history = await memory.getMessages();
+  const output = await executor(input, history);
   
   // メモリを更新
-  await memory.saveContext(
-    { input },
-    { output }
-  );
+  await memory.addMessage({ role: 'user', content: input });
+  await memory.addMessage({ role: 'assistant', content: output });
 
   return { output, memory };
 }
@@ -82,19 +100,13 @@ export async function executeWithMemory(
 /**
  * 会話履歴をクリア
  */
-export async function clearMemory(memory: BufferMemory): Promise<void> {
-  await memory.chatHistory.clear();
+export async function clearMemory(memory: SimpleChatMemory): Promise<void> {
+  await memory.clear();
 }
 
 /**
  * 会話履歴を取得
  */
-export async function getMemoryMessages(memory: BufferMemory): Promise<LLMMessage[]> {
-  const messages = await memory.chatHistory.getMessages();
-  
-  return messages.map(msg => ({
-    role: msg._getType() === 'human' ? 'user' : 
-          msg._getType() === 'ai' ? 'assistant' : 'system',
-    content: typeof msg.content === 'string' ? msg.content : JSON.stringify(msg.content),
-  }));
+export async function getMemoryMessages(memory: SimpleChatMemory): Promise<LLMMessage[]> {
+  return memory.getMessages();
 }

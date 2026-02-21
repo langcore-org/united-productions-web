@@ -52,29 +52,5 @@ export async function executeChat(
   };
 }
 
-/**
- * ストリーミングチャットを実行
- */
-export async function* executeStreamingChat(
-  model: BaseChatModel,
-  messages: LLMMessage[]
-): AsyncIterable<{ chunk?: string; usage?: LLMUsage }> {
-  const chain = createChatChain(model);
-  const stream = await chain.stream({ messages });
-
-  let totalLength = 0;
-
-  for await (const chunk of stream) {
-    totalLength += chunk.length;
-    yield { chunk };
-  }
-
-  // ストリーミング終了後のusage（推定値）
-  yield {
-    usage: {
-      inputTokens: 0,
-      outputTokens: Math.ceil(totalLength / 4), // おおよその推定
-      cost: 0,
-    },
-  };
-}
+// 注意: executeStreamingChatは streaming.ts に移動しました
+// ここではエクスポートしない

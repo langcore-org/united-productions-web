@@ -1,62 +1,14 @@
 /**
  * LangChain Agents
  * 
- * エージェントパターン実装
+ * エージェントパターン実装（簡略版）
+ * 
+ * 注: 完全なAgent機能は別途 langchain/agents パッケージが必要
  */
 
-import { ChatOpenAI } from '@langchain/openai';
-import { AgentExecutor, createOpenAIFunctionsAgent } from 'langchain/agents';
-import { ChatPromptTemplate } from '@langchain/core/prompts';
 import type { BaseChatModel } from '@langchain/core/language_models/chat_models';
 import type { DynamicTool } from '@langchain/core/tools';
 import { defaultTools } from '../tools';
-
-/**
- * OpenAI Functions Agentを作成
- */
-export async function createFunctionsAgent(
-  model: BaseChatModel,
-  tools: DynamicTool[] = defaultTools,
-  systemMessage?: string
-): Promise<AgentExecutor> {
-  const prompt = ChatPromptTemplate.fromMessages([
-    ['system', systemMessage || 'You are a helpful assistant with access to tools.'],
-    ['placeholder', '{chat_history}'],
-    ['human', '{input}'],
-    ['placeholder', '{agent_scratchpad}'],
-  ]);
-
-  const agent = await createOpenAIFunctionsAgent({
-    llm: model,
-    tools,
-    prompt,
-  });
-
-  return new AgentExecutor({
-    agent,
-    tools,
-    verbose: process.env.NODE_ENV === 'development',
-  });
-}
-
-/**
- * エージェントを実行
- */
-export async function runAgent(
-  executor: AgentExecutor,
-  input: string,
-  chatHistory: Array<{ role: 'user' | 'assistant'; content: string }> = []
-): Promise<{ output: string; intermediateSteps: unknown[] }> {
-  const result = await executor.invoke({
-    input,
-    chat_history: chatHistory,
-  });
-
-  return {
-    output: result.output as string,
-    intermediateSteps: result.intermediateSteps || [],
-  };
-}
 
 /**
  * シンプルなツール使用チェーン
@@ -110,4 +62,14 @@ User query: ${query}`;
   }
 
   return content;
+}
+
+/**
+ * デフォルトツールで実行
+ */
+export async function executeWithDefaultTools(
+  model: BaseChatModel,
+  query: string
+): Promise<string> {
+  return executeWithTools(model, defaultTools, query);
 }

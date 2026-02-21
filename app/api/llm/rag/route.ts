@@ -8,7 +8,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createLangChainModel } from '@/lib/llm/langchain/factory';
-import { executeRAG, splitText } from '@/lib/llm/langchain/rag';
+import { executeRAG } from '@/lib/llm/langchain/rag';
 import { requireAuth } from '@/lib/api/auth';
 import { isValidProvider } from '@/lib/llm/factory';
 import { DEFAULT_PROVIDER } from '@/lib/llm/config';
@@ -24,7 +24,7 @@ const ragRequestSchema = z.object({
   documents: z.array(
     z.object({
       content: z.string().min(1),
-      metadata: z.record(z.unknown()).optional(),
+      metadata: z.record(z.string(), z.unknown()).optional(),
     })
   ).min(1),
   question: z.string().min(1),
@@ -48,7 +48,7 @@ export type RAGRequest = z.infer<typeof ragRequestSchema>;
  * Response:
  * {
  *   "answer": "...",
- *   "sources": ["..."]
+ *   "sources": [0, 1, 2]
  * }
  */
 export async function POST(request: NextRequest): Promise<NextResponse> {
@@ -111,21 +111,11 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       streaming: false,
     });
 
-    // ドキュメントをチャンクに分割
-    const allChunks = [];
-    for (const doc of documents) {
-      const chunks = await splitText(doc.content);
-      chunks.forEach(chunk => {
-        chunk.metadata = { ...chunk.metadata, ...doc.metadata };
-      });
-      allChunks.push(...chunks);
-    }
-
     // RAG実行
     const startTime = Date.now();
     const { answer, sources } = await executeRAG(
       model,
-      allChunks,
+      documents.map(d => d.content),
       question,
       { topK }
     );

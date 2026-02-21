@@ -1,11 +1,12 @@
 /**
- * LangChain RAG (Retrieval-Augmented Generation)
+ * LangChain RAG Simple Implementation
  * 
- * 文書検索・RAG機能の基盤実装（シンプル版）
+ * 依存関係を最小限にしたRAG実装
  */
 
 import { OpenAIEmbeddings } from '@langchain/openai';
 import type { BaseChatModel } from '@langchain/core/language_models/chat_models';
+import type { Document } from '@langchain/core/documents';
 
 /**
  * シンプルなテキスト分割（フォールバック実装）
@@ -51,7 +52,7 @@ function cosineSimilarity(a: number[], b: number[]): number {
  * 
  * 注: 本番環境では適切なVectorStoreを使用すること
  */
-export async function executeRAG(
+export async function executeSimpleRAG(
   model: BaseChatModel,
   documents: string[],
   question: string,
