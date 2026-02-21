@@ -2,12 +2,12 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { cn } from "@/lib/utils";
+import { Loader2, MessageSquare, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Send, Copy, Check, Loader2, Sparkles, MessageSquare, Trash2, RotateCcw } from "lucide-react";
-import { WordExportButton } from "./WordExportButton";
 import { MessageBubble } from "./MessageBubble";
-import { FileAttachButton, AttachedFile } from "./FileAttachment";
+import { AttachedFile } from "./FileAttachment";
+import { ChatHeader } from "./ChatHeader";
+import { ChatInputArea } from "./ChatInputArea";
 import { DEFAULT_PROVIDER } from "@/lib/llm/config";
 import type { LLMProvider } from "@/lib/llm/types";
 import { AgenticResponse } from "@/components/chat/AgenticResponse";
@@ -73,7 +73,6 @@ export function FeatureChat({
 
   const provider: LLMProvider = initialProvider;
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const {
     content,
@@ -85,7 +84,6 @@ export function FeatureChat({
     toolUsage,
     reasoningSteps,
     startStream,
-    cancelStream,
     resetStream,
   } = useLLMStream();
 
@@ -121,91 +119,6 @@ export function FeatureChat({
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, content]);
 
-  // テキストエリアの自動リサイズ
-  useEffect(() => {
-    if (textareaRef.current) {
-      textareaRef.current.style.height = "auto";
-      textareaRef.current.style.height = `${Math.min(
-        textareaRef.current.scrollHeight,
-        200,
-      )}px`;
-    }
-  }, [input]);
-
-  const handleSend = async () => {
-    if (!input.trim() && attachedFiles.length === 0) return;
-
-    let messageContent = input.trim();
-
-    if (attachedFiles.length > 0) {
-      const fileContents = attachedFiles
-        .map((file) => {
-          if (file.type.startsWith("image/")) {
-            return `![${file.name}](${file.content})`;
-          }
-          return `<file name="${file.name}" type="${file.type}" size="${file.size}">\n${file.content?.substring(0, 10000) || ""}\n</file>`;
-        })
-        .join("\n\n");
-
-      messageContent = messageContent ? `${messageContent}\n\n${fileContents}` : fileContents;
-    }
-
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      role: "user",
-      content: messageContent,
-      timestamp: new Date(),
-    };
-
-    setMessages((prev) => [...prev, userMessage]);
-    setInput("");
-    setAttachedFiles([]);
-
-    const conversationHistory = messages.map((m) => ({
-      role: m.role,
-      content: m.content,
-    }));
-
-    const effectiveToolOptions = provider.startsWith("grok-") ? toolOptions : undefined;
-
-    await startStream(
-      [
-        { role: "system", content: systemPrompt },
-        ...conversationHistory,
-        { role: "user", content: userMessage.content },
-      ],
-      provider,
-      effectiveToolOptions,
-    );
-  };
-
-  const handleRegenerate = async () => {
-    const lastUserIndex = [...messages].reverse().findIndex((m) => m.role === "user");
-    if (lastUserIndex === -1) return;
-
-    const actualIndex = messages.length - 1 - lastUserIndex;
-    const lastUserMessage = messages[actualIndex];
-    const newMessages = messages.slice(0, actualIndex);
-    setMessages(newMessages);
-
-    const conversationHistory = newMessages.map((m) => ({
-      role: m.role,
-      content: m.content,
-    }));
-
-    const effectiveToolOptions = provider.startsWith("grok-") ? toolOptions : undefined;
-
-    await startStream(
-      [
-        { role: "system", content: systemPrompt },
-        ...conversationHistory,
-        { role: "user", content: lastUserMessage.content },
-      ],
-      provider,
-      effectiveToolOptions,
-    );
-  };
-
   // ストリーミング完了時にメッセージを保存
   useEffect(() => {
     if (isComplete && content) {
@@ -221,6 +134,68 @@ export function FeatureChat({
       saveConversation([...messages, assistantMessage], currentChatId);
     }
   }, [isComplete, content, messages, resetStream]);
+
+  const buildStreamPayload = (userContent: string, history: Message[]) => {
+    const conversationHistory = history.map((m) => ({ role: m.role, content: m.content }));
+    const effectiveToolOptions = provider.startsWith("grok-") ? toolOptions : undefined;
+    return {
+      messages: [
+        { role: "system" as const, content: systemPrompt },
+        ...conversationHistory,
+        { role: "user" as const, content: userContent },
+      ],
+      effectiveToolOptions,
+    };
+  };
+
+  const handleSend = async () => {
+    if (!input.trim() && attachedFiles.length === 0) return;
+
+    let messageContent = input.trim();
+    if (attachedFiles.length > 0) {
+      const fileContents = attachedFiles
+        .map((file) =>
+          file.type.startsWith("image/")
+            ? `![${file.name}](${file.content})`
+            : `<file name="${file.name}" type="${file.type}" size="${file.size}">\n${file.content?.substring(0, 10000) || ""}\n</file>`,
+        )
+        .join("\n\n");
+      messageContent = messageContent ? `${messageContent}\n\n${fileContents}` : fileContents;
+    }
+
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      role: "user",
+      content: messageContent,
+      timestamp: new Date(),
+    };
+
+    setMessages((prev) => [...prev, userMessage]);
+    setInput("");
+    setAttachedFiles([]);
+
+    const { messages: streamMessages, effectiveToolOptions } = buildStreamPayload(
+      userMessage.content,
+      messages,
+    );
+    await startStream(streamMessages, provider, effectiveToolOptions);
+  };
+
+  const handleRegenerate = async () => {
+    const lastUserIndex = [...messages].reverse().findIndex((m) => m.role === "user");
+    if (lastUserIndex === -1) return;
+
+    const actualIndex = messages.length - 1 - lastUserIndex;
+    const lastUserMessage = messages[actualIndex];
+    const newMessages = messages.slice(0, actualIndex);
+    setMessages(newMessages);
+
+    const { messages: streamMessages, effectiveToolOptions } = buildStreamPayload(
+      lastUserMessage.content,
+      newMessages,
+    );
+    await startStream(streamMessages, provider, effectiveToolOptions);
+  };
 
   const handleCopy = async () => {
     const lastAssistantMessage = [...messages].reverse().find((m) => m.role === "assistant");
@@ -251,92 +226,34 @@ export function FeatureChat({
   const handleSuggestionClick = useCallback(
     async (suggestionText: string) => {
       if (isStreaming || !suggestionText.trim()) return;
-
       const userMessage: Message = {
         id: Date.now().toString(),
         role: "user",
         content: suggestionText.trim(),
         timestamp: new Date(),
       };
-
       setMessages((prev) => [...prev, userMessage]);
-
-      const conversationHistory = messages.map((m) => ({
-        role: m.role,
-        content: m.content,
-      }));
-
-      const effectiveToolOptions = provider.startsWith("grok-") ? toolOptions : undefined;
-
-      await startStream(
-        [
-          { role: "system", content: systemPrompt },
-          ...conversationHistory,
-          { role: "user", content: userMessage.content },
-        ],
-        provider,
-        effectiveToolOptions,
+      const { messages: streamMessages, effectiveToolOptions } = buildStreamPayload(
+        userMessage.content,
+        messages,
       );
+      await startStream(streamMessages, provider, effectiveToolOptions);
     },
     [isStreaming, messages, provider, systemPrompt, toolOptions, startStream],
   );
 
   return (
     <div className={cn("flex flex-col h-full bg-white", className)}>
-      {/* Header */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-white">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-gray-900/20 to-gray-600/10 flex items-center justify-center border border-gray-900/20">
-            <Sparkles className="w-4 h-4 text-gray-900" />
-          </div>
-          <div>
-            <h1 className="text-base font-semibold text-gray-900">{title}</h1>
-            <p className="text-xs text-gray-500">AI Assistant</p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2">
-          {hasMessages && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleClear}
-              className="text-gray-500 hover:text-red-500 hover:bg-red-50"
-            >
-              <Trash2 className="w-4 h-4 mr-1" />
-              クリア
-            </Button>
-          )}
-
-          {outputFormat === "plaintext" && lastAssistantMessage && (
-            <>
-              <WordExportButton
-                content={lastAssistantMessage.content}
-                filename={`${featureId}_${new Date().toISOString().split("T")[0]}`}
-                title={title}
-              />
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleCopy}
-                className="gap-2 border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100 hover:text-gray-900"
-              >
-                {isCopied ? (
-                  <>
-                    <Check className="w-4 h-4 text-green-400" />
-                    コピー済み
-                  </>
-                ) : (
-                  <>
-                    <Copy className="w-4 h-4" />
-                    コピー
-                  </>
-                )}
-              </Button>
-            </>
-          )}
-        </div>
-      </div>
+      <ChatHeader
+        title={title}
+        featureId={featureId}
+        outputFormat={outputFormat}
+        hasMessages={hasMessages}
+        lastAssistantMessage={lastAssistantMessage}
+        isCopied={isCopied}
+        onClear={handleClear}
+        onCopy={handleCopy}
+      />
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto">
@@ -357,9 +274,7 @@ export function FeatureChat({
               {emptyDescription || "メッセージを送信して、AIと対話を始めましょう。"}
             </p>
             <div className="mt-6 flex items-center gap-2 text-xs text-gray-500">
-              <span className="px-2 py-1 rounded bg-gray-100 border border-gray-200">
-                Ctrl + Enter
-              </span>
+              <span className="px-2 py-1 rounded bg-gray-100 border border-gray-200">Ctrl + Enter</span>
               <span>で送信</span>
             </div>
           </div>
@@ -377,17 +292,27 @@ export function FeatureChat({
 
             {isStreaming && (
               <div className="px-4 py-2">
-                {thinkingSteps.length > 0 && (
-                  <ThinkingProcess
-                    steps={thinkingSteps}
-                    activeStepId={activeThinkingStepId}
-                    overallStatus="running"
-                    events={thinkingEvents}
-                    className="mb-4"
-                  />
-                )}
-
-                {thinkingSteps.length === 0 && (
+                {thinkingSteps.length > 0 ? (
+                  <>
+                    <ThinkingProcess
+                      steps={thinkingSteps}
+                      activeStepId={activeThinkingStepId}
+                      overallStatus="running"
+                      events={thinkingEvents}
+                      className="mb-4"
+                    />
+                    {content && (
+                      <div className="mt-4 pl-12">
+                        <div className="prose prose-neutral max-w-none">
+                          <div className="whitespace-pre-wrap text-sm leading-relaxed text-gray-800">
+                            {content}
+                            <span className="inline-block w-2 h-4 bg-gray-400 ml-1 animate-pulse rounded-sm" />
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                ) : (
                   <AgenticResponse
                     content={content}
                     thinking={thinking}
@@ -399,17 +324,6 @@ export function FeatureChat({
                     provider={provider}
                     variant="chat"
                   />
-                )}
-
-                {thinkingSteps.length > 0 && content && (
-                  <div className="mt-4 pl-12">
-                    <div className="prose prose-neutral max-w-none">
-                      <div className="whitespace-pre-wrap text-sm leading-relaxed text-gray-800">
-                        {content}
-                        <span className="inline-block w-2 h-4 bg-gray-400 ml-1 animate-pulse rounded-sm" />
-                      </div>
-                    </div>
-                  </div>
                 )}
               </div>
             )}
@@ -450,83 +364,17 @@ export function FeatureChat({
         )}
       </div>
 
-      {/* Input Area */}
-      <div className="border-t border-gray-200 px-6 py-4 bg-white">
-        {inputLabel && (
-          <label className="block text-sm font-medium text-gray-600 mb-2">{inputLabel}</label>
-        )}
-
-        {attachedFiles.length > 0 && (
-          <div className="flex flex-wrap gap-2 mb-3">
-            {attachedFiles.map((file) => (
-              <div
-                key={file.id}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-100 border border-gray-200"
-              >
-                <span className="text-xs text-gray-700 max-w-[150px] truncate">{file.name}</span>
-                <button
-                  onClick={() => setAttachedFiles((prev) => prev.filter((f) => f.id !== file.id))}
-                  className="p-0.5 rounded hover:bg-gray-200 text-gray-500 hover:text-red-500"
-                >
-                  <Trash2 className="w-3 h-3" />
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-
-        <div className="flex gap-3 items-end">
-          <div className="flex-1 relative">
-            <Textarea
-              ref={textareaRef}
-              value={input}
-              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setInput(e.target.value)}
-              onKeyDown={(e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-                if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
-                  e.preventDefault();
-                  handleSend();
-                }
-              }}
-              placeholder={placeholder}
-              disabled={!!isStreaming}
-              className="min-h-[80px] max-h-[200px] resize-none bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-gray-900/50 focus:ring-gray-900/20 pr-24"
-            />
-            <div className="absolute bottom-3 right-3 flex items-center gap-2">
-              {enableFileAttachment && (
-                <FileAttachButton
-                  onFilesSelect={(files) => setAttachedFiles((prev) => [...prev, ...files])}
-                  disabled={!!isStreaming}
-                />
-              )}
-              {input.length > 0 && (
-                <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded">
-                  {input.length}
-                </span>
-              )}
-            </div>
-          </div>
-          <Button
-            onClick={handleSend}
-            disabled={!input.trim() || !!isStreaming}
-            className={cn(
-              "h-10 w-10 p-0 transition-all duration-200",
-              !input.trim() || isStreaming
-                ? "bg-gray-200 text-gray-400"
-                : "bg-gray-900 hover:bg-gray-800 text-white shadow-lg shadow-gray-900/25",
-            )}
-          >
-            {isStreaming ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <Send className="w-4 h-4" />
-            )}
-          </Button>
-        </div>
-        <div className="mt-2 flex items-center justify-between text-xs">
-          <span className="text-gray-400">AIは正確でない情報を含むことがあります</span>
-          <span className="text-gray-400">Ctrl + Enter で送信</span>
-        </div>
-      </div>
+      <ChatInputArea
+        input={input}
+        onInputChange={setInput}
+        attachedFiles={attachedFiles}
+        onFilesChange={setAttachedFiles}
+        isStreaming={!!isStreaming}
+        inputLabel={inputLabel}
+        placeholder={placeholder}
+        enableFileAttachment={enableFileAttachment}
+        onSend={handleSend}
+      />
     </div>
   );
 }
