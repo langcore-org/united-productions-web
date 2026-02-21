@@ -174,11 +174,17 @@ export function useLLMStream() {
               // コンテンツチャンク
               if (data.content) {
                 setContent((prev) => prev + data.content);
+                // デバッグログ: content内容をコンソールに出力（開発時のみ）
+                if (process.env.NODE_ENV === 'development') {
+                  console.log('[Content]', data.content);
+                }
               }
 
               // 思考プロセス（Grok対応）
               if (data.thinking) {
                 setThinking((prev) => prev + data.thinking);
+                // デバッグログ: thinking内容をコンソールに出力
+                console.log('[Thinking]', data.thinking);
               }
 
               // ツール呼び出し
@@ -192,6 +198,8 @@ export function useLLMStream() {
                   }
                   return [...prev, data.toolCall];
                 });
+                // デバッグログ: toolCall内容をコンソールに出力
+                console.log('[ToolCall]', data.toolCall);
               }
 
               // 思考ステップ
@@ -208,6 +216,8 @@ export function useLLMStream() {
                 if (data.reasoning.tokens) {
                   setReasoningTokens(data.reasoning.tokens);
                 }
+                // デバッグログ: reasoning内容をコンソールに出力
+                console.log('[Reasoning]', data.reasoning);
               }
 
               // ツール使用状況

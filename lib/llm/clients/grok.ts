@@ -333,6 +333,7 @@ export class GrokClient implements LLMClient {
     toolCall?: { id: string; type: string; name?: string; input?: string; status: 'pending' | 'running' | 'completed' | 'failed' };
     toolUsage?: { web_search_calls?: number; x_search_calls?: number; code_interpreter_calls?: number; file_search_calls?: number; mcp_calls?: number; document_search_calls?: number };
     reasoning?: { step: number; content: string; tokens?: number };
+    thinking?: string;
   }> {
     logger.info('Starting stream request with usage tracking', { 
       messageCount: messages.length, 
@@ -428,6 +429,15 @@ export class GrokClient implements LLMClient {
               chunkCount++;
               totalLength += text.length;
               yield { chunk: text };
+            }
+            
+            // 思考プロセス（thinking）のリアルタイム更新
+            if (event.type === 'response.reasoning_content.delta' && event.delta) {
+              const thinkingText = event.delta;
+              chunkCount++;
+              totalLength += thinkingText.length;
+              // thinking専用フィールドで送信
+              yield { thinking: thinkingText };
             }
             
             // ツール呼び出しの検出（開始時）

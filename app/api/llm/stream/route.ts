@@ -48,6 +48,7 @@ export type StreamRequest = z.infer<typeof streamRequestSchema>;
 function createStreamResponse(
   iterator: AsyncIterable<{ 
     chunk?: string; 
+    thinking?: string;
     usage?: { inputTokens: number; outputTokens: number; cost: number };
     toolCall?: { id: string; type: string; name?: string; input?: string; status: 'pending' | 'running' | 'completed' | 'failed' };
     toolUsage?: { web_search_calls?: number; x_search_calls?: number; code_interpreter_calls?: number; file_search_calls?: number; mcp_calls?: number; document_search_calls?: number };
@@ -67,10 +68,16 @@ function createStreamResponse(
         
         let finalUsage: { inputTokens: number; outputTokens: number; cost: number } | undefined;
         
-        for await (const { chunk, usage, toolCall, toolUsage, reasoning } of iterator) {
+        for await (const { chunk, thinking, usage, toolCall, toolUsage, reasoning } of iterator) {
           if (chunk) {
             // SSE形式でデータを送信
             const data = JSON.stringify({ content: chunk });
+            controller.enqueue(encoder.encode(`data: ${data}\n\n`));
+          }
+          
+          // thinking内容を転送
+          if (thinking) {
+            const data = JSON.stringify({ thinking });
             controller.enqueue(encoder.encode(`data: ${data}\n\n`));
           }
           
