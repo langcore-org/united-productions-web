@@ -93,8 +93,8 @@ export const DEFAULT_SETTINGS: SettingItem[] = [
     label: "アプリケーション名",
     description: "ヘッダーに表示されるアプリケーション名",
     type: "string",
-    value: "ADコパイロット",
-    defaultValue: "ADコパイロット",
+    value: "Teddy",
+    defaultValue: "Teddy",
     required: true,
   },
   {

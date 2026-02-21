@@ -1,7 +1,7 @@
 import { ChatPage } from "@/components/chat/ChatPage";
 
 export const metadata = {
-  title: "議事録作成 - ADコパイロット",
+  title: "議事録作成 - Teddy",
 };
 
 export default function MinutesPage() {

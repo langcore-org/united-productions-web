@@ -1,7 +1,7 @@
 import { ChatPage } from "@/components/chat/ChatPage";
 
 export const metadata = {
-  title: "エビデンスリサーチ - ADコパイロット",
+  title: "エビデンスリサーチ - Teddy",
 };
 
 export default function ResearchEvidencePage() {

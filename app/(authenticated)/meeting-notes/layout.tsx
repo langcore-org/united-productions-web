@@ -2,7 +2,7 @@ import { Metadata } from "next";
 import { AppLayout } from "@/components/layout/AppLayout";
 
 export const metadata: Metadata = {
-  title: "議事録・文字起こし - ADコパイロット",
+  title: "議事録・文字起こし - Teddy",
   description: "Zoom文字起こしをAIで整形して議事録を作成",
 };
 

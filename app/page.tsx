@@ -91,7 +91,7 @@ export default function DashboardPage() {
                   <Sparkles className="w-6 h-6 text-white" />
                 </div>
                 <h1 className="text-4xl font-semibold tracking-tight text-gray-900">
-                  ADコパイロット
+                  Teddy
                 </h1>
               </div>
               {/* ロゴ下のサブタイトル削除 */}

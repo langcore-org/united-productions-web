@@ -50,7 +50,7 @@ export default function PreviewLoginPage() {
             <div className="w-16 h-16 rounded-2xl bg-[#ff6b00] flex items-center justify-center mx-auto mb-4">
               <span className="text-white font-bold text-2xl">UP</span>
             </div>
-            <h1 className="text-2xl font-bold text-white mb-2">ADコパイロット</h1>
+            <h1 className="text-2xl font-bold text-white mb-2">Teddy</h1>
           </div>
 
           {/* Error Card */}
@@ -85,7 +85,7 @@ export default function PreviewLoginPage() {
           <div className="w-16 h-16 rounded-2xl bg-[#ff6b00] flex items-center justify-center mx-auto mb-4">
             <span className="text-white font-bold text-2xl">UP</span>
           </div>
-          <h1 className="text-2xl font-bold text-white mb-2">ADコパイロット</h1>
+          <h1 className="text-2xl font-bold text-white mb-2">Teddy</h1>
           <p className="text-gray-400">Preview環境 ログイン</p>
         </div>
 

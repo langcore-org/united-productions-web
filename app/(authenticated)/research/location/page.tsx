@@ -1,7 +1,7 @@
 import { ChatPage } from "@/components/chat/ChatPage";
 
 export const metadata = {
-  title: "場所リサーチ - ADコパイロット",
+  title: "場所リサーチ - Teddy",
 };
 
 export default function ResearchLocationPage() {
