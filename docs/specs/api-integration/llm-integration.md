@@ -2,7 +2,7 @@
 
 > **複数LLMプロバイダーを統一インターフェースで利用するための仕様**
 >
-> **最終更新**: 2026-02-21 17:25
+> **最終更新**: 2026-02-21 18:50
 
 ## 概要
 
@@ -16,7 +16,7 @@ src/lib/llm/
 ├── factory.ts            # LLMClient生成ファクトリ
 ├── cache.ts              # レスポンスキャッシュ（Upstash Redis）
 └── clients/
-    ├── gemini.ts         # Google Gemini実装（✅ 連携済み）
+    ├── gemini.ts         # Google Gemini実装（📝 APIキー未取得、将来連携予定）
     ├── grok.ts           # xAI Grok実装（✅ 連携済み）
     ├── openai.ts         # OpenAI実装（📝 将来連携予定）
     ├── anthropic.ts      # Anthropic実装（📝 将来連携予定）
@@ -36,8 +36,8 @@ src/lib/llm/
 
 | プロバイダー | モデル | 入力$/1M | 出力$/1M | コンテキスト | 主な用途 |
 |---|---|---|---|---|---|
-| Google | Gemini 2.5 Flash-Lite | $0.075 | $0.30 | 1M | デフォルト（最安値） |
-| Google | Gemini 3.0 Flash | $0.50 | $3.00 | 1M | 高品質タスク |
+| Google | Gemini 2.5 Flash-Lite | $0.075 | $0.30 | 1M | デフォルト（最安値）※APIキー未取得 |
+| Google | Gemini 3.0 Flash | $0.50 | $3.00 | 1M | 高品質タスク ※APIキー未取得 |
 | xAI | Grok 4.1 Fast | $0.20 | $0.50 | 2M | X検索 |
 | xAI | Grok 4 | $3.00 | $15.00 | 2M | 最高品質 |
 
@@ -133,8 +133,10 @@ aihub:llm:{hash_slice}:{provider}
 
 ```bash
 # 連携済み（必須）
-GEMINI_API_KEY=         # Google AI Studio無料枠
 XAI_API_KEY=            # xAI（$25無料クレジット）
+
+# 将来連携予定（オプション）
+# GEMINI_API_KEY=       # Google AI Studio無料枠 ※APIキー未取得
 
 # 将来連携予定（オプション）
 # PERPLEXITY_API_KEY=
