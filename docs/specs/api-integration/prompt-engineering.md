@@ -2,7 +2,9 @@
 
 > **LLMプロンプトの設計と管理方針**
 > 
-> **最終更新**: 2026-02-20 13:10
+> **最終更新**: 2026-02-22 00:17
+
+---
 
 ## プロンプト構成
 
@@ -10,17 +12,23 @@
 
 ```typescript
 interface SystemPrompt {
-  // 役割定義
-  role: string;
+  // 識別子
+  key: string;
   
-  // 制約条件
-  constraints: string[];
+  // 表示名
+  name: string;
   
-  // 出力形式
-  outputFormat: string;
+  // 説明
+  description?: string;
   
-  // 例示（few-shot）
-  examples?: Example[];
+  // カテゴリ
+  category: 'general' | 'research' | 'minutes' | 'transcript' | 'document';
+  
+  // プロンプト本文
+  content: string;
+  
+  // 有効/無効
+  isActive: boolean;
 }
 ```
 
@@ -29,16 +37,16 @@ interface SystemPrompt {
 ```
 lib/prompts/
 ├── index.ts              # プロンプト統合エクスポート
-├── general-chat.ts       # 汎用チャット
-├── minutes.ts            # 議事録作成
-├── transcript.ts         # 文字起こし整形
-├── na-script.ts          # NA原稿作成
-├── proposal.ts           # 新企画立案
-├── research-cast.ts      # 出演者リサーチ
-├── research-location.ts  # 場所リサーチ
-├── research-info.ts      # 情報リサーチ
-└── research-evidence.ts  # エビデンスリサーチ
+├── db.ts                 # DB管理 + DEFAULT_PROMPTS（シードデータ）
+└── (廃止予定)
+    ├── minutes.ts        # → DB管理に移行済み
+    ├── transcript.ts     # → DB管理に移行済み
+    └── research-*.ts     # → DB管理に移行済み
 ```
+
+**注**: 個別のプロンプトファイルは廃止方向。全プロンプトはDBの `SystemPrompt` テーブルで管理。
+
+---
 
 ## プロンプト設計原則
 
@@ -77,7 +85,27 @@ const MINUTES_PROMPT = `議事録を作成してください。
 - [ ] （担当者）: （タスク）`;
 ```
 
-### 3. 動的プロンプト生成
+### 3. エージェント的振る舞い
+
+```typescript
+const AGENTIC_BASE_PROMPT = `## エージェント的振る舞いの原則
+
+あなたは自律的に情報を収集・整理するAIアシスタントです。
+
+### 1. ツール使用の原則
+- 最新情報が必要な場合は **Web検索** を使用
+- ソーシャルトレンドが必要な場合は **X検索** を使用
+- 複数のツールを組み合わせて包括的な回答を作成
+
+### 2. 思考プロセスの可視化
+1. **分析**: ユーザーの意図を分析
+2. **計画**: 必要な情報収集を計画
+3. **実行**: ツールを使用して情報収集
+4. **統合**: 収集した情報を統合・整理
+5. **出力**: 構造化された回答を生成`;
+```
+
+### 4. 動的プロンプト生成
 
 ```typescript
 // 番組設定を動的に挿入
@@ -94,6 +122,8 @@ ${programSettings.pastProposals}
 }
 ```
 
+---
+
 ## プロンプト管理
 
 ### DB管理（SystemPromptテーブル）
@@ -101,15 +131,36 @@ ${programSettings.pastProposals}
 | カラム | 用途 |
 |-------|------|
 | `key` | 識別子（`MINUTES`, `RESEARCH_CAST`等） |
+| `name` | 表示名 |
+| `description` | 説明 |
 | `category` | 分類（`general`, `research`, `minutes`等） |
 | `content` | プロンプト本文 |
 | `isActive` | 有効/無効 |
+| `currentVersion` | 現在のバージョン番号 |
+| `changedBy` | 最終更新者 |
+| `changeNote` | 変更理由 |
+
+### バージョン管理
+
+`SystemPromptVersion` テーブルで履歴を管理。
+
+| カラム | 用途 |
+|-------|------|
+| `promptId` | FK → SystemPrompt |
+| `version` | バージョン番号（連番） |
+| `content` | プロンプト本文（スナップショット） |
+| `changedBy` | 変更者 |
+| `changeNote` | 変更理由 |
+
+詳細: [system-prompt-management.md](./system-prompt-management.md)
 
 ### キャッシュ戦略
 
-- プロンプトは起動時にメモリにキャッシュ
-- DB更新時にキャッシュクリア
-- 詳細: [llm-integration.md](./llm-integration.md#キャッシュ)
+- プロンプトはリクエストごとにDBから取得（現行）
+- 将来的に `unstable_cache` によるキャッシュを検討
+- 更新時はキャッシュをパージ
+
+---
 
 ## プロンプト評価・改善
 
@@ -120,6 +171,7 @@ ${programSettings.pastProposals}
 | 出力品質 | 人手評価（5段階） |
 | トークン効率 | 入力/出力トークン比 |
 | 応答時間 | レイテンシ測定 |
+| ユーザ満足度 | フィードバック収集 |
 
 ### A/Bテスト
 
@@ -131,8 +183,12 @@ const variations = [
 ];
 ```
 
+---
+
 ## 関連ファイル
 
-- `lib/prompts/` - プロンプト定義
-- `lib/prompts/db.ts` - DB管理
+- `lib/prompts/db.ts` - DB管理 + シードデータ
+- `lib/prompts/index.ts` - エクスポート
+- `app/api/admin/prompts/` - 管理API
+- [system-prompt-management.md](./system-prompt-management.md) - 詳細設計
 - [llm-integration.md](./llm-integration.md) - LLM統合詳細

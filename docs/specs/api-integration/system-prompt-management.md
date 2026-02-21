@@ -2,7 +2,9 @@
 
 > **DB管理・バージョン履歴・管理画面の設計方針**
 >
-> **作成日**: 2026-02-20
+> **最終更新**: 2026-02-22 00:17
+
+---
 
 ## 現状の整理
 
@@ -12,66 +14,62 @@
 lib/prompts/
 ├── index.ts           # 統合エクスポート（DBファーストのフォールバック構成）
 ├── db.ts              # DB取得ユーティリティ + DEFAULT_PROMPTS（シードデータ）
-├── minutes.ts         # プロンプト本文（コード管理）
-├── research-cast.ts   # プロンプト本文（コード管理）
-└── ...                # その他コード管理のプロンプト
+└── (廃止予定)         # 個別プロンプトファイルは段階的に廃止
 ```
 
 `SystemPrompt` テーブルはすでに存在し、DB管理の基盤はある。
-ただし **バージョン履歴機能は未実装**。
+`SystemPromptVersion` テーブルも追加済みで、**バージョン履歴機能は実装済み**。
 
-### 問題点
+### 実装済み機能
 
-| 問題 | 現状 |
+| 機能 | 状態 |
 |------|------|
-| プロンプトの二重管理 | コードとDBに重複して存在 |
-| 変更履歴がない | `updatedAt` のみで差分不明 |
-| 復元が困難 | 過去バージョンに戻す手段がない |
-| 変更者不明 | 誰がいつ変更したか追跡できない |
-
----
-
-## 推奨構成
-
-### ソースコードにプロンプトを入れておく必要はあるか
-
-**結論: シードデータとしてのみ残す。ランタイムのフォールバックとしては使わない。**
-
-| ファイル | 役割 | 推奨 |
-|---------|------|------|
-| `lib/prompts/db.ts` 内の `DEFAULT_PROMPTS` | 初回デプロイ時のシード用初期値 | **残す** |
-| `lib/prompts/minutes.ts` 等の個別プロンプトファイル | ランタイムフォールバック | **廃止方向** |
-
-#### 理由
-
-- DB を正とすることで「実際に動いているプロンプト」を管理画面で常に確認できる
-- コードをフォールバックにすると「管理画面で変更したはずなのに DB 取得失敗時にコードの古い版が動く」という混乱が生じる
-- DB 接続障害時の対策は「エラーを明示する」方が安全。サイレントフォールバックは意図しない動作の原因になる
-
-#### 移行後の役割分担
-
-```
-lib/prompts/
-├── db.ts              # DB取得ユーティリティ + 初期シードデータ（残す）
-├── index.ts           # エクスポート（整理）
-└── (minutes.ts 等)    # 段階的に廃止。シード完了後は削除可
-```
+| SystemPromptテーブル | ✅ 実装済み |
+| SystemPromptVersionテーブル | ✅ 実装済み |
+| DB取得ユーティリティ | ✅ 実装済み |
+| シードデータ | ✅ 実装済み |
+| 管理API | 📝 実装中 |
+| 管理UI | 📝 実装中 |
 
 ---
 
 ## データベース設計
 
-### 新規テーブル: `SystemPromptVersion`
+### テーブル: `SystemPrompt`
+
+```prisma
+model SystemPrompt {
+  id             String   @id @default(cuid())
+  key            String   @unique
+  name           String
+  description    String?
+  content        String   @db.Text
+  category       String
+  isActive       Boolean  @default(true)
+  currentVersion Int      @default(1)
+  changedBy      String?
+  changeNote     String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  versions       SystemPromptVersion[]
+
+  @@index([category])
+  @@index([isActive])
+}
+```
+
+### テーブル: `SystemPromptVersion`
 
 ```prisma
 model SystemPromptVersion {
   id          String       @id @default(cuid())
-  promptId    String                            // FK -> SystemPrompt.id
+  promptId    String
   prompt      SystemPrompt @relation(fields: [promptId], references: [id], onDelete: Cascade)
-  version     Int                               // 連番（1, 2, 3...）
-  content     String       @db.Text            // プロンプト本文（スナップショット）
-  changedBy   String?                           // 変更者 UserId
-  changeNote  String?                           // 変更理由・メモ（任意）
+  version     Int
+  content     String       @db.Text
+  changedBy   String?
+  changeNote  String?
   createdAt   DateTime     @default(now())
 
   @@index([promptId, version])
@@ -79,20 +77,7 @@ model SystemPromptVersion {
 }
 ```
 
-### `SystemPrompt` テーブルへの追加カラム
-
-```prisma
-model SystemPrompt {
-  // ...既存カラム...
-  currentVersion  Int      @default(1)          // 現在のバージョン番号
-  changedBy       String?                        // 最終更新者 UserId
-  changeNote      String?                        // 最終更新の理由メモ
-
-  versions        SystemPromptVersion[]          // リレーション追加
-}
-```
-
-### ER図（変更後）
+### ER図
 
 ```mermaid
 erDiagram
@@ -125,19 +110,11 @@ erDiagram
     }
 ```
 
-### バージョニング動作
-
-1. 初回登録 → `version = 1` の `SystemPromptVersion` レコードを同時作成
-2. 更新時 → `currentVersion + 1` の新しい `SystemPromptVersion` を追加。`SystemPrompt.content` も更新
-3. 復元時 → 指定バージョンの `content` で現在の `SystemPrompt` を上書き。新バージョン番号でレコード追加（「復元」ノート付き）
-
-> **復元は新バージョンとして記録する**。`SystemPromptVersion` のレコードは削除・改変しない（監査証跡の保全）。
-
 ---
 
 ## API 設計
 
-すべて `/api/admin/prompts/` 配下。管理者権限（`ADMIN` ロール、または指定ユーザー）のみアクセス可。
+すべて `/api/admin/prompts/` 配下。管理者権限（`ADMIN` ロール）のみアクセス可。
 
 ### エンドポイント一覧
 
@@ -149,7 +126,6 @@ erDiagram
 | `GET` | `/api/admin/prompts/[key]/history` | バージョン履歴一覧 |
 | `GET` | `/api/admin/prompts/[key]/history/[version]` | 特定バージョンの内容取得 |
 | `POST` | `/api/admin/prompts/[key]/restore` | 指定バージョンに復元 |
-| `GET` | `/api/admin/prompts/[key]/diff` | バージョン間の差分（オプション） |
 
 ### リクエスト/レスポンス例
 
@@ -166,7 +142,7 @@ erDiagram
   "key": "MINUTES",
   "version": 3,
   "content": "## 議事録作成\n...",
-  "updatedAt": "2026-02-20T10:00:00Z"
+  "updatedAt": "2026-02-22T00:00:00Z"
 }
 ```
 
@@ -184,10 +160,17 @@ erDiagram
 #### `POST /api/admin/prompts/MINUTES/restore`
 ```json
 // Request
-{ "version": 1, "changeNote": "v1に戻す（v2,3の変更が本番に影響したため）" }
+{ 
+  "version": 1, 
+  "changeNote": "v1に戻す（v2,3の変更が本番に影響したため）" 
+}
 
 // Response
-{ "key": "MINUTES", "version": 4, "restoredFrom": 1 }
+{ 
+  "key": "MINUTES", 
+  "version": 4, 
+  "restoredFrom": 1 
+}
 ```
 
 ---
@@ -223,12 +206,6 @@ erDiagram
 - 各行に「内容を見る」「このバージョンに復元」ボタン
 - 復元時は確認モーダル（「バージョン X に戻します。現在の内容はバージョン Y として保存されます」）
 
-### バージョン参照ページ (`/admin/prompts/[key]/history/[v]`)
-
-- 指定バージョンの本文を読み取り専用表示
-- 「このバージョンに復元」ボタン
-- （オプション）現在バージョンとの差分表示（unified diff 形式）
-
 ---
 
 ## キャッシュ戦略
@@ -241,7 +218,7 @@ erDiagram
 | Next.js `unstable_cache` | プロンプト変更が月数回程度になった段階 |
 | Redis キャッシュ | 大量リクエスト時のみ（現時点では不要） |
 
-更新時のキャッシュ無効化：
+更新時のキャッシュ無効化:
 - `PUT /api/admin/prompts/[key]` および `POST .../restore` のレスポンス前に該当キャッシュをパージ
 
 ---
@@ -255,38 +232,37 @@ erDiagram
 | 履歴参照 | 管理者のみ |
 | バージョン復元 | 管理者のみ |
 
-**管理者の定義**（推奨）: `User` テーブルに `role` カラム（`ADMIN` / `USER`）を追加。または特定メールアドレスのホワイトリスト方式（小規模チームなら後者が簡単）。
+**管理者の定義**: `User` テーブルの `role` カラムが `ADMIN` のユーザー
 
 ---
 
 ## 実装フェーズ
 
-### Phase 1: DB 拡張とバージョン記録
+### Phase 1: DB 拡張 ✅ 完了
 
-1. `SystemPromptVersion` テーブルの追加マイグレーション
-2. `SystemPrompt` への `currentVersion`, `changedBy`, `changeNote` 追加
-3. 既存プロンプトへのバージョン1レコード自動作成（マイグレーションスクリプト）
-4. `lib/prompts/db.ts` の更新処理にバージョン記録ロジック追加
+- [x] `SystemPromptVersion` テーブルの追加マイグレーション
+- [x] `SystemPrompt` への `currentVersion`, `changedBy`, `changeNote` 追加
+- [x] 既存プロンプトへのバージョン1レコード自動作成
+- [x] `lib/prompts/db.ts` の更新処理にバージョン記録ロジック追加
 
-### Phase 2: 管理 API
+### Phase 2: 管理 API 📝 実装中
 
-1. `/api/admin/prompts/` 配下のエンドポイント実装
-2. 管理者権限ガード（middleware または API ルート内チェック）
-3. 更新・復元 API のバージョニングロジック実装
+- [ ] `/api/admin/prompts/` 配下のエンドポイント実装
+- [ ] 管理者権限ガード
+- [ ] 更新・復元 API のバージョニングロジック実装
 
-### Phase 3: 管理 UI
+### Phase 3: 管理 UI 📝 実装中
 
-1. `/admin/prompts` 一覧ページ
-2. `/admin/prompts/[key]` 編集ページ
-3. `/admin/prompts/[key]/history` 履歴ページ
-4. 復元確認モーダル
+- [ ] `/admin/prompts` 一覧ページ
+- [ ] `/admin/prompts/[key]` 編集ページ
+- [ ] `/admin/prompts/[key]/history` 履歴ページ
+- [ ] 復元確認モーダル
 
-### Phase 4: コードプロンプトの廃止
+### Phase 4: コードプロンプトの廃止（将来）
 
-1. DB シードが正常に動作していることを確認
-2. ランタイムフォールバックコードを「DB 取得失敗時はエラーを返す」に変更
-3. `lib/prompts/minutes.ts` 等の個別ファイルを削除
-4. `lib/prompts/index.ts` から個別ファイルのエクスポートを削除
+- [ ] DB シードが正常に動作していることを確認
+- [ ] ランタイムフォールバックコードを「DB 取得失敗時はエラーを返す」に変更
+- [ ] `lib/prompts/` 内の個別ファイルを削除
 
 > Phase 4 は Phase 1〜3 が安定稼働してから実施する。
 
@@ -321,3 +297,4 @@ erDiagram
 | 認証・認可 | [authentication.md](./authentication.md) |
 | Prisma スキーマ | `prisma/schema.prisma` |
 | DB ユーティリティ | `lib/prompts/db.ts` |
+| 管理画面 | `app/admin/prompts/` |
