@@ -15,8 +15,8 @@ import { useLLMStream } from "@/components/ui/StreamingMessage";
 import type { ToolOptions } from "@/lib/chat/chat-config";
 import { PromptSuggestions, PromptSuggestion } from "@/components/chat/PromptSuggestions";
 import { ThinkingProcess } from "@/components/agent-thinking/ThinkingProcess";
-import type { ThinkingStep, ThinkingEvent } from "@/types/agent-thinking";
-import { v4 as uuidv4 } from "uuid";
+import { useThinkingSteps } from "@/hooks/useThinkingSteps";
+import { useConversationSave } from "@/hooks/useConversationSave";
 
 export interface Message {
   id: string;
@@ -69,17 +69,8 @@ export function FeatureChat({
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isCopied, setIsCopied] = useState(false);
-  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [attachedFiles, setAttachedFiles] = useState<AttachedFile[]>([]);
-  // 現在のチャットセッションID（undefinedは新規チャット未保存状態）
-  const [currentChatId, setCurrentChatId] = useState<string | undefined>(initialChatId);
-  
-  // 思考プロセス状態
-  const [thinkingSteps, setThinkingSteps] = useState<ThinkingStep[]>([]);
-  const [thinkingEvents, setThinkingEvents] = useState<ThinkingEvent[]>([]);
-  const [activeThinkingStepId, setActiveThinkingStepId] = useState<string | undefined>();
-  
-  // Grok固定
+
   const provider: LLMProvider = initialProvider;
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -98,40 +89,32 @@ export function FeatureChat({
     resetStream,
   } = useLLMStream();
 
-  // 会話履歴を取得（chatIdがある場合のみ）
-  const loadConversation = useCallback(async (chatId: string) => {
-    setIsLoadingHistory(true);
-    try {
-      const response = await fetch(`/api/chat/feature?chatId=${chatId}`);
-      if (response.ok) {
-        const data = await response.json();
-        if (data.messages) {
-          setMessages(
-            data.messages.map((m: Message) => ({
-              ...m,
-              timestamp: new Date(m.timestamp),
-            }))
-          );
-        }
-      }
-    } catch (err) {
-      console.error("Failed to load conversation:", err);
-    } finally {
-      setIsLoadingHistory(false);
-    }
-  }, []);
+  const { thinkingSteps, thinkingEvents, activeThinkingStepId } = useThinkingSteps({
+    toolCalls,
+    thinking,
+    reasoningSteps,
+    isComplete,
+    content,
+  });
+
+  const {
+    currentChatId,
+    setCurrentChatId,
+    isLoadingHistory,
+    loadConversation,
+    saveConversation,
+  } = useConversationSave({ featureId, initialChatId, onChatCreated });
 
   // 初回マウント時: chatIdがあれば履歴を読み込む、なければ新規（空）
   useEffect(() => {
     if (initialChatId) {
       setCurrentChatId(initialChatId);
-      loadConversation(initialChatId);
+      loadConversation(initialChatId).then(setMessages);
     } else {
-      // 新規チャット: 状態をリセット
       setMessages([]);
       setCurrentChatId(undefined);
     }
-  }, [initialChatId, loadConversation]);
+  }, [initialChatId, loadConversation, setCurrentChatId]);
 
   // メッセージ追加時に自動スクロール
   useEffect(() => {
@@ -144,164 +127,16 @@ export function FeatureChat({
       textareaRef.current.style.height = "auto";
       textareaRef.current.style.height = `${Math.min(
         textareaRef.current.scrollHeight,
-        200
+        200,
       )}px`;
     }
   }, [input]);
 
-  // ツール呼び出しのタイトルを取得
-  const getToolCallTitle = useCallback((type: string, name?: string): string => {
-    const titleMap: Record<string, string> = {
-      web_search: "Web検索",
-      x_search: "X検索",
-      code_execution: "コード実行",
-      file_search: "ファイル検索",
-    };
-    return titleMap[type] || name || "ツール実行";
-  }, []);
-
-  // ツール呼び出しのラベルを取得
-  const getToolCallLabel = useCallback((type: string): string => {
-    const labelMap: Record<string, string> = {
-      web_search: "検索",
-      x_search: "X検索",
-      code_execution: "コード実行",
-      file_search: "ファイル検索",
-    };
-    return labelMap[type] || "ツール";
-  }, []);
-
-  // ツール呼び出しを思考ステップに変換
-  useEffect(() => {
-    if (toolCalls.length === 0) return;
-
-    const latestToolCall = toolCalls[toolCalls.length - 1];
-    
-    // 新しいツール呼び出しをステップとして追加
-    setThinkingSteps((prev) => {
-      const existingIndex = prev.findIndex(
-        (s) => s.metadata?.toolId === latestToolCall.id
-      );
-      
-      if (existingIndex >= 0) {
-        // 既存のステップを更新
-        const updated = [...prev];
-        updated[existingIndex] = {
-          ...updated[existingIndex],
-          status: latestToolCall.status === "completed" ? "completed" : "running",
-          subSteps: updated[existingIndex].subSteps.map((ss) =>
-            ss.id === latestToolCall.id
-              ? { ...ss, status: latestToolCall.status === "failed" ? "error" : latestToolCall.status }
-              : ss
-          ),
-        };
-        return updated;
-      }
-
-      // 新しいステップを追加
-      const newStep: ThinkingStep = {
-        id: uuidv4(),
-        stepNumber: prev.length + 1,
-        type: latestToolCall.type === "web_search" ? "search" : "thinking",
-        title: getToolCallTitle(latestToolCall.type, latestToolCall.name),
-        status: latestToolCall.status === "completed" ? "completed" : "running",
-        subSteps: [
-          {
-            id: latestToolCall.id,
-            type: latestToolCall.type === "web_search" ? "search" : "tool_use",
-            label: getToolCallLabel(latestToolCall.type),
-            searchQuery: latestToolCall.input,
-            toolName: latestToolCall.name,
-            status: latestToolCall.status === "failed" ? "error" : latestToolCall.status,
-            timestamp: new Date(),
-          },
-        ],
-        metadata: {
-          toolId: latestToolCall.id,
-          toolName: latestToolCall.name,
-        },
-        timestamp: new Date(),
-      };
-
-      return [...prev, newStep];
-    });
-
-    // アクティブステップを更新
-    if (latestToolCall.status === "running") {
-      setActiveThinkingStepId(latestToolCall.id);
-    }
-  }, [toolCalls, getToolCallTitle, getToolCallLabel]);
-
-  // thinkingやreasoningStepsから思考ステップを生成
-  useEffect(() => {
-    // ストリーミング中でない場合はスキップ
-    const currentlyStreaming = !isComplete && (content || thinking);
-    if (!currentlyStreaming) return;
-
-    // thinkingがある場合、表示用ステップを生成・更新
-    if (thinking && thinking.length > 0) {
-      if (thinkingSteps.length === 0) {
-        // 初回: 新しいステップを作成
-        const newStep: ThinkingStep = {
-          id: uuidv4(),
-          stepNumber: 1,
-          type: "thinking",
-          title: "思考中...",
-          content: thinking,
-          status: "running",
-          subSteps: [],
-          timestamp: new Date(),
-        };
-        setThinkingSteps([newStep]);
-        setActiveThinkingStepId(newStep.id);
-      } else {
-        // 以降: 既存ステップのcontentを更新
-        setThinkingSteps((prev) =>
-          prev.map((step, i) =>
-            i === prev.length - 1 && step.type === "thinking"
-              ? { ...step, content: thinking }
-              : step
-          )
-        );
-      }
-    }
-
-    // reasoningStepsがある場合、ステップを生成
-    if (reasoningSteps.length > 0 && thinkingSteps.length === 0) {
-      const steps: ThinkingStep[] = reasoningSteps.map((rs, index) => ({
-        id: uuidv4(),
-        stepNumber: index + 1,
-        type: index === reasoningSteps.length - 1 ? "thinking" : "analysis",
-        title: `ステップ ${rs.step}`,
-        content: rs.content,
-        status: index === reasoningSteps.length - 1 ? "running" : "completed",
-        subSteps: [],
-        timestamp: new Date(),
-      }));
-      setThinkingSteps(steps);
-      if (steps.length > 0) {
-        setActiveThinkingStepId(steps[steps.length - 1].id);
-      }
-    }
-  }, [isComplete, content, thinking, reasoningSteps, thinkingSteps.length]);
-
-  // ストリーミング開始時に思考ステップをリセット
-  useEffect(() => {
-    const currentlyStreaming = !isComplete && (content || thinking);
-    if (!isComplete && !currentlyStreaming && toolCalls.length === 0 && content === "" && thinking === "") {
-      // 新しいストリーム開始
-      setThinkingSteps([]);
-      setThinkingEvents([]);
-      setActiveThinkingStepId(undefined);
-    }
-  }, [isComplete, content, thinking, toolCalls.length]);
-
   const handleSend = async () => {
     if (!input.trim() && attachedFiles.length === 0) return;
 
-    // 添付ファイルを含むメッセージ内容を構築
     let messageContent = input.trim();
-    
+
     if (attachedFiles.length > 0) {
       const fileContents = attachedFiles
         .map((file) => {
@@ -311,10 +146,8 @@ export function FeatureChat({
           return `<file name="${file.name}" type="${file.type}" size="${file.size}">\n${file.content?.substring(0, 10000) || ""}\n</file>`;
         })
         .join("\n\n");
-      
-      messageContent = messageContent 
-        ? `${messageContent}\n\n${fileContents}`
-        : fileContents;
+
+      messageContent = messageContent ? `${messageContent}\n\n${fileContents}` : fileContents;
     }
 
     const userMessage: Message = {
@@ -328,13 +161,11 @@ export function FeatureChat({
     setInput("");
     setAttachedFiles([]);
 
-    // ストリーミング開始
     const conversationHistory = messages.map((m) => ({
       role: m.role,
       content: m.content,
     }));
 
-    // ツールオプションを設定（Grokの場合のみ）
     const effectiveToolOptions = provider.startsWith("grok-") ? toolOptions : undefined;
 
     await startStream(
@@ -344,29 +175,24 @@ export function FeatureChat({
         { role: "user", content: userMessage.content },
       ],
       provider,
-      effectiveToolOptions
+      effectiveToolOptions,
     );
   };
 
   const handleRegenerate = async () => {
-    // 最後のユーザーメッセージを取得
     const lastUserIndex = [...messages].reverse().findIndex((m) => m.role === "user");
     if (lastUserIndex === -1) return;
 
     const actualIndex = messages.length - 1 - lastUserIndex;
     const lastUserMessage = messages[actualIndex];
-
-    // 最後のアシスタントメッセージを削除
     const newMessages = messages.slice(0, actualIndex);
     setMessages(newMessages);
 
-    // 会話履歴を構築して再生成
     const conversationHistory = newMessages.map((m) => ({
       role: m.role,
       content: m.content,
     }));
 
-    // ツールオプションを設定（Grokの場合のみ）
     const effectiveToolOptions = provider.startsWith("grok-") ? toolOptions : undefined;
 
     await startStream(
@@ -376,7 +202,7 @@ export function FeatureChat({
         { role: "user", content: lastUserMessage.content },
       ],
       provider,
-      effectiveToolOptions
+      effectiveToolOptions,
     );
   };
 
@@ -392,40 +218,12 @@ export function FeatureChat({
       };
       setMessages((prev) => [...prev, assistantMessage]);
       resetStream();
-
-      // 会話履歴を保存（currentChatIdが未定義の場合は新規作成）
       saveConversation([...messages, assistantMessage], currentChatId);
     }
   }, [isComplete, content, messages, resetStream]);
 
-  const saveConversation = async (updatedMessages: Message[], chatId: string | undefined) => {
-    try {
-      const response = await fetch("/api/chat/feature", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          chatId,
-          featureId,
-          messages: updatedMessages,
-        }),
-      });
-      if (response.ok) {
-        const data = await response.json();
-        // 新規チャットの場合、返ってきたchatIdを保存してURLを更新
-        if (!chatId && data.chatId) {
-          setCurrentChatId(data.chatId);
-          onChatCreated?.(data.chatId);
-        }
-      }
-    } catch (err) {
-      console.error("Failed to save conversation:", err);
-    }
-  };
-
   const handleCopy = async () => {
-    const lastAssistantMessage = [...messages]
-      .reverse()
-      .find((m) => m.role === "assistant");
+    const lastAssistantMessage = [...messages].reverse().find((m) => m.role === "assistant");
     if (lastAssistantMessage) {
       await navigator.clipboard.writeText(lastAssistantMessage.content);
       setIsCopied(true);
@@ -439,9 +237,7 @@ export function FeatureChat({
     setCurrentChatId(undefined);
     if (chatIdToDelete) {
       try {
-        await fetch(`/api/chat/feature?chatId=${chatIdToDelete}`, {
-          method: "DELETE",
-        });
+        await fetch(`/api/chat/feature?chatId=${chatIdToDelete}`, { method: "DELETE" });
       } catch (err) {
         console.error("Failed to clear conversation:", err);
       }
@@ -449,43 +245,41 @@ export function FeatureChat({
   };
 
   const isStreaming = !isComplete && (content || thinking);
-  const lastAssistantMessage = [...messages]
-    .reverse()
-    .find((m) => m.role === "assistant");
+  const lastAssistantMessage = [...messages].reverse().find((m) => m.role === "assistant");
   const hasMessages = messages.length > 0;
 
-  // サジェストをクリックしたら即送信
-  const handleSuggestionClick = useCallback(async (suggestionText: string) => {
-    if (isStreaming || !suggestionText.trim()) return;
+  const handleSuggestionClick = useCallback(
+    async (suggestionText: string) => {
+      if (isStreaming || !suggestionText.trim()) return;
 
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      role: "user",
-      content: suggestionText.trim(),
-      timestamp: new Date(),
-    };
+      const userMessage: Message = {
+        id: Date.now().toString(),
+        role: "user",
+        content: suggestionText.trim(),
+        timestamp: new Date(),
+      };
 
-    setMessages((prev) => [...prev, userMessage]);
+      setMessages((prev) => [...prev, userMessage]);
 
-    // ストリーミング開始
-    const conversationHistory = messages.map((m) => ({
-      role: m.role,
-      content: m.content,
-    }));
+      const conversationHistory = messages.map((m) => ({
+        role: m.role,
+        content: m.content,
+      }));
 
-    // ツールオプションを設定（Grokの場合のみ）
-    const effectiveToolOptions = provider.startsWith("grok-") ? toolOptions : undefined;
+      const effectiveToolOptions = provider.startsWith("grok-") ? toolOptions : undefined;
 
-    await startStream(
-      [
-        { role: "system", content: systemPrompt },
-        ...conversationHistory,
-        { role: "user", content: userMessage.content },
-      ],
-      provider,
-      effectiveToolOptions
-    );
-  }, [isStreaming, messages, provider, systemPrompt, toolOptions, startStream]);
+      await startStream(
+        [
+          { role: "system", content: systemPrompt },
+          ...conversationHistory,
+          { role: "user", content: userMessage.content },
+        ],
+        provider,
+        effectiveToolOptions,
+      );
+    },
+    [isStreaming, messages, provider, systemPrompt, toolOptions, startStream],
+  );
 
   return (
     <div className={cn("flex flex-col h-full bg-white", className)}>
@@ -500,7 +294,7 @@ export function FeatureChat({
             <p className="text-xs text-gray-500">AI Assistant</p>
           </div>
         </div>
-        
+
         <div className="flex items-center gap-2">
           {hasMessages && (
             <Button
@@ -513,7 +307,7 @@ export function FeatureChat({
               クリア
             </Button>
           )}
-          
+
           {outputFormat === "plaintext" && lastAssistantMessage && (
             <>
               <WordExportButton
@@ -554,14 +348,11 @@ export function FeatureChat({
             </div>
           </div>
         ) : !hasMessages && !isStreaming ? (
-          // 空の状態
           <div className="flex flex-col items-center justify-center h-full text-center px-6">
             <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-gray-900/20 to-gray-600/10 flex items-center justify-center border border-gray-900/20 mb-4">
               <MessageSquare className="w-8 h-8 text-gray-900" />
             </div>
-            <h2 className="text-lg font-medium text-gray-900 mb-2">
-              {title}
-            </h2>
+            <h2 className="text-lg font-medium text-gray-900 mb-2">{title}</h2>
             <p className="text-sm text-gray-500 max-w-md">
               {emptyDescription || "メッセージを送信して、AIと対話を始めましょう。"}
             </p>
@@ -586,7 +377,6 @@ export function FeatureChat({
 
             {isStreaming && (
               <div className="px-4 py-2">
-                {/* 新しい思考プロセスUI */}
                 {thinkingSteps.length > 0 && (
                   <ThinkingProcess
                     steps={thinkingSteps}
@@ -596,8 +386,7 @@ export function FeatureChat({
                     className="mb-4"
                   />
                 )}
-                
-                {/* 従来のレスポンス表示（フォールバック） */}
+
                 {thinkingSteps.length === 0 && (
                   <AgenticResponse
                     content={content}
@@ -611,8 +400,7 @@ export function FeatureChat({
                     variant="chat"
                   />
                 )}
-                
-                {/* コンテンツ表示（思考ステップがある場合） */}
+
                 {thinkingSteps.length > 0 && content && (
                   <div className="mt-4 pl-12">
                     <div className="prose prose-neutral max-w-none">
@@ -626,7 +414,6 @@ export function FeatureChat({
               </div>
             )}
 
-            {/* Prompt Suggestions - 最後のアシスタントメッセージの後に表示 */}
             {!isStreaming && hasMessages && lastAssistantMessage && promptSuggestions.length > 0 && (
               <div className="px-4 py-4 max-w-3xl mx-auto">
                 <PromptSuggestions
@@ -636,8 +423,7 @@ export function FeatureChat({
               </div>
             )}
 
-            {/* Regenerate Button */}
-            {!isStreaming && hasMessages && messages.some(m => m.role === "assistant") && (
+            {!isStreaming && hasMessages && messages.some((m) => m.role === "assistant") && (
               <div className="flex justify-center py-4">
                 <Button
                   variant="outline"
@@ -667,12 +453,9 @@ export function FeatureChat({
       {/* Input Area */}
       <div className="border-t border-gray-200 px-6 py-4 bg-white">
         {inputLabel && (
-          <label className="block text-sm font-medium text-gray-600 mb-2">
-            {inputLabel}
-          </label>
+          <label className="block text-sm font-medium text-gray-600 mb-2">{inputLabel}</label>
         )}
-        
-        {/* Attached Files */}
+
         {attachedFiles.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-3">
             {attachedFiles.map((file) => (
@@ -680,11 +463,9 @@ export function FeatureChat({
                 key={file.id}
                 className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-100 border border-gray-200"
               >
-                <span className="text-xs text-gray-700 max-w-[150px] truncate">
-                  {file.name}
-                </span>
+                <span className="text-xs text-gray-700 max-w-[150px] truncate">{file.name}</span>
                 <button
-                  onClick={() => setAttachedFiles(prev => prev.filter(f => f.id !== file.id))}
+                  onClick={() => setAttachedFiles((prev) => prev.filter((f) => f.id !== file.id))}
                   className="p-0.5 rounded hover:bg-gray-200 text-gray-500 hover:text-red-500"
                 >
                   <Trash2 className="w-3 h-3" />
@@ -713,7 +494,7 @@ export function FeatureChat({
             <div className="absolute bottom-3 right-3 flex items-center gap-2">
               {enableFileAttachment && (
                 <FileAttachButton
-                  onFilesSelect={(files) => setAttachedFiles(prev => [...prev, ...files])}
+                  onFilesSelect={(files) => setAttachedFiles((prev) => [...prev, ...files])}
                   disabled={!!isStreaming}
                 />
               )}
@@ -731,7 +512,7 @@ export function FeatureChat({
               "h-10 w-10 p-0 transition-all duration-200",
               !input.trim() || isStreaming
                 ? "bg-gray-200 text-gray-400"
-                : "bg-gray-900 hover:bg-gray-800 text-white shadow-lg shadow-gray-900/25"
+                : "bg-gray-900 hover:bg-gray-800 text-white shadow-lg shadow-gray-900/25",
             )}
           >
             {isStreaming ? (
@@ -742,12 +523,8 @@ export function FeatureChat({
           </Button>
         </div>
         <div className="mt-2 flex items-center justify-between text-xs">
-          <span className="text-gray-400">
-            AIは正確でない情報を含むことがあります
-          </span>
-          <span className="text-gray-400">
-            Ctrl + Enter で送信
-          </span>
+          <span className="text-gray-400">AIは正確でない情報を含むことがあります</span>
+          <span className="text-gray-400">Ctrl + Enter で送信</span>
         </div>
       </div>
     </div>
