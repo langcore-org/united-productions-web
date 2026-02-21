@@ -3,10 +3,9 @@
  * 各種リサーチタイプの共通処理
  */
 
-import { GrokClient } from "@/lib/llm/clients/grok";
+import { createLLMClient } from "@/lib/llm";
 import { getPromptFromDB, PROMPT_KEYS } from "@/lib/prompts/db";
 import type { LLMMessage } from "@/lib/llm/types";
-import { resolveProvider } from "@/lib/llm/utils";
 
 export type ResearchType = "cast" | "location" | "info" | "evidence";
 
@@ -62,11 +61,8 @@ export async function executeResearch(
     throw new Error(`Research prompt not found for type: ${type}`);
   }
 
-  // プロバイダー決定
-  const provider = resolveProvider(undefined, RESEARCH_PROJECT_CODES[type]);
-
   // クライアント初期化
-  const client = new GrokClient(provider);
+  const client = createLLMClient("grok-4-1-fast-reasoning");
 
   // メッセージ構築
   const messages: LLMMessage[] = [
@@ -101,8 +97,7 @@ export async function* streamResearch(
     throw new Error(`Research prompt not found for type: ${type}`);
   }
 
-  const provider = resolveProvider(undefined, RESEARCH_PROJECT_CODES[type]);
-  const client = new GrokClient(provider);
+  const client = createLLMClient("grok-4-1-fast-reasoning");
 
   const messages: LLMMessage[] = [
     { role: "system", content: systemPrompt },

@@ -12,7 +12,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/api/auth";
 import { logger } from "@/lib/logger";
-import { GrokClient } from "@/lib/llm/clients/grok";
+import { createLLMClient } from "@/lib/llm";
 
 /**
  * チャットのタイトルをGrokで自動生成する（バックグラウンド実行）
@@ -21,12 +21,7 @@ import { GrokClient } from "@/lib/llm/clients/grok";
 async function generateAndSaveChatTitle(chatId: string, firstUserMessage: string): Promise<void> {
   try {
     // ツールを全て無効化した安価なモデルでタイトル生成
-    const grok = new GrokClient("grok-4-0709", {
-      enableWebSearch: false,
-      enableXSearch: false,
-      enableCodeExecution: false,
-      enableFileSearch: false,
-    });
+    const grok = createLLMClient("grok-4-0709");
     const response = await grok.chat([
       {
         role: "system",

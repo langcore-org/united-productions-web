@@ -7,8 +7,7 @@
 
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { GrokClient } from '@/lib/llm/clients/grok';
-import { resolveProvider } from '@/lib/llm/utils';
+import { createLLMClient } from '@/lib/llm';
 import { getPromptFromDB, PROMPT_KEYS } from '@/lib/prompts/db';
 import type { MeetingTemplate } from '@/prompts/meeting-format';
 import { createApiHandler } from '@/lib/api/handler';
@@ -16,8 +15,7 @@ import type { LLMMessage } from '@/lib/llm/types';
 
 const meetingNotesRequestSchema = z.object({
   transcript: z.string().min(1, '文字起こしテキストを入力してください'),
-  template: z.enum(['meeting', 'interview'] as const),
-  provider: z.string().optional(), // デフォルトは resolveProvider() を使用
+  template: z.enum(['meeting', 'interview'] as const)
 });
 
 export type MeetingNotesRequest = z.infer<typeof meetingNotesRequestSchema>;
@@ -49,9 +47,7 @@ export interface MeetingNotesResponse {
  */
 export const POST = createApiHandler(
   async ({ data }) => {
-    const { transcript, template, provider: requestedProvider } = data;
-    
-    const provider = resolveProvider(requestedProvider, 'PJ-A');
+    const { transcript, template } = data;
     
     // DBからプロンプトを取得（フォールバック付き）
     const promptKey = template === 'meeting' 
@@ -63,7 +59,7 @@ export const POST = createApiHandler(
       throw new Error(`System prompt not found for template: ${template}`);
     }
     
-    const client = new GrokClient(provider);
+    const client = createLLMClient('grok-4-1-fast-reasoning');
 
     const messages: LLMMessage[] = [
       { role: 'system', content: systemPrompt },

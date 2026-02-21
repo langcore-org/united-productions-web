@@ -1,83 +1,32 @@
 /**
  * LLM Factory
  * 
- * 複数のLLMプロバイダーを統一インターフェースで生成するFactoryパターン
- * Wave 2で各クライアントが実装された後、実際のインスタンス生成が有効になる
+ * LangChainベースのLLMクライアント生成
  */
 
-import { LLMProvider, LLMClient, LLMResponse, VALID_PROVIDERS } from './types';
+import { LLMProvider, LLMClient, VALID_PROVIDERS } from './types';
 import { getProviderInfo } from './config';
-import { GeminiClient } from './clients/gemini';
-import { PerplexityClient } from './clients/perplexity';
-import { GrokClient, type GrokToolOptions } from './clients/grok';
+import { createLangChainClient } from './langchain/adapter';
+import type { LangChainOptions } from './langchain/types';
 
 /**
- * 未実装エラークラス
- * Wave 2で各クライアントが実装されるまで使用
- */
-class NotImplementedClient implements LLMClient {
-  constructor(private provider: LLMProvider) {}
-
-  async chat(): Promise<LLMResponse> {
-    throw new Error(
-      `Provider "${this.provider}" is not implemented yet. ` +
-      `It will be available in Wave 2.`
-    );
-  }
-
-  async *stream(): AsyncIterable<string> {
-    throw new Error(
-      `Provider "${this.provider}" streaming is not implemented yet. ` +
-      `It will be available in Wave 2.`
-    );
-  }
-}
-
-/**
- * LLMクライアントを生成するFactory関数
+ * LLMクライアントを生成するFactory関数（LangChain版）
  * 
  * @param provider - 使用するLLMプロバイダー
+ * @param options - LangChainオプション
  * @returns LLMClientインターフェースを実装したクライアントインスタンス
  * 
  * @example
  * ```typescript
- * const client = createLLMClient('gemini-2.5-flash-lite');
+ * const client = createLLMClient('grok-4-1-fast-reasoning');
  * const response = await client.chat([{ role: 'user', content: 'Hello' }]);
  * ```
  */
-export function createLLMClient(provider: LLMProvider): LLMClient {
-  // Wave 2で各クライアントが実装されたら、ここで実際のクライアントを返す
-  // 現在は未実装のプレースホルダーを返す
-  
-  switch (provider) {
-    case 'gemini-2.5-flash-lite':
-    case 'gemini-3.0-flash':
-      return new GeminiClient(provider);
-      
-    case 'grok-4-1-fast-reasoning':
-    case 'grok-4-0709':
-      return new GrokClient(provider);
-      
-    case 'gpt-4o-mini':
-    case 'gpt-5':
-      // TODO: Wave 2で import { OpenAIClient } from './clients/openai' して返す
-      return new NotImplementedClient(provider);
-      
-    case 'claude-sonnet-4.5':
-    case 'claude-opus-4.6':
-      // TODO: Wave 2で import { AnthropicClient } from './clients/anthropic' して返す
-      return new NotImplementedClient(provider);
-      
-    case 'perplexity-sonar':
-    case 'perplexity-sonar-pro':
-      return new PerplexityClient(provider);
-      
-    default:
-      // 型安全性のため、never型で網羅性チェック
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const _exhaustiveCheck: never = provider;
-      throw new Error(`Unknown provider: ${provider}`);
-  }
+export function createLLMClient(
+  provider: LLMProvider,
+  options?: LangChainOptions
+): LLMClient {
+  return createLangChainClient(provider, options);
 }
 
 /**
@@ -119,21 +68,4 @@ export function getSameVendorProviders(provider: LLMProvider): LLMProvider[] {
   };
   
   return vendorMap[vendor] || [provider];
-}
-
-/**
- * Grokクライアントをツールオプション付きで作成
- * 
- * @param provider - Grokプロバイダー
- * @param toolOptions - ツールオプション
- * @returns GrokClientインスタンス
- */
-export function createGrokClientWithTools(
-  provider: LLMProvider, 
-  toolOptions: GrokToolOptions
-): GrokClient {
-  if (!provider.startsWith('grok-')) {
-    throw new Error(`Provider "${provider}" is not a Grok provider`);
-  }
-  return new GrokClient(provider, toolOptions);
 }

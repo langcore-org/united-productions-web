@@ -2,10 +2,9 @@
  * 新企画立案サービス
  */
 
-import { GrokClient } from "@/lib/llm/clients/grok";
+import { createLLMClient } from "@/lib/llm";
 import { getPromptFromDB, PROMPT_KEYS } from "@/lib/prompts/db";
 import type { LLMMessage } from "@/lib/llm/types";
-import { resolveProvider } from "@/lib/llm/utils";
 
 export interface ProposalRequest {
   programInfo: string; // 番組情報
@@ -54,9 +53,8 @@ export async function generateProposals(
     throw new Error("Proposal prompt not found");
   }
 
-  // プロバイダー決定
-  const provider = resolveProvider(undefined, "PJ-D");
-  const client = new GrokClient(provider);
+  // クライアント初期化
+  const client = createLLMClient("grok-4-1-fast-reasoning");
 
   // ユーザークエリ作成
   const userQuery = createProposalQuery({
