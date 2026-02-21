@@ -2,7 +2,7 @@
 
 > **本ディレクトリは「UPエージェント」（AI Hub）開発用のドキュメント群です。**
 > 
-> **最終更新**: 2026-02-21 17:16
+> **最終更新**: 2026-02-21 17:20
 
 ---
 
@@ -44,7 +44,6 @@
 | `user-docs/` | **ユーザードキュメント** - 機能の使い方・運用 | 制作スタッフ、管理職 | 機能変更時 |
 | `plans/` | **計画・設計** - 特定の機能開発や改善計画 | 開発者、制作部 | 進行中のみ |
 | `guides/` | **手順書** - 環境構築、開発手順、ツール使い方 | 開発者 | 環境変化時 |
-| `logs/` | **議事録・記録** - 会議、開発ログ、トラブル記録 | 全員 | 都度 |
 | `archive/` | **過去資料** - 参照のみ、更新しない | 全員 | なし |
 
 ---
@@ -68,7 +67,10 @@ docs/
 │   │   ├── database-schema.md         # DB設計
 │   │   ├── llm-integration.md         # LLM統合仕様
 │   │   ├── prompt-engineering.md      # プロンプト設計
-│   │   └── external-services.md       # 外部サービス連携
+│   │   ├── external-services.md       # 外部サービス連携
+│   │   ├── genspark-api-research.md   # Genspark API調査
+│   │   ├── grok-agent-tools.md        # Grok Agentツール
+│   │   └── system-prompt-management.md # システムプロンプト管理
 │   ├── operations/                    # 運用・品質
 │   │   ├── deployment-guide.md        # デプロイ構成
 │   │   ├── logging-monitoring.md      # ログ・監視設計
@@ -109,8 +111,6 @@ docs/
 │   │   ├── vercel-authentication.md   # Vercel認証設定
 │   │   └── google-oauth-setup.md      # Google OAuth設定
 │   ├── development/                   # 開発ガイド
-│   │   ├── parallel-development.md    # 並列開発ガイド
-│   │   ├── human-checkpoints.md       # 人間の介入ポイント
 │   │   ├── workflow-standards.md      # 開発ワークフロー標準
 │   │   ├── code-review-checklist.md   # コードレビューチェックリスト
 │   │   ├── naming-conventions.md      # 命名規約と型定義
@@ -121,6 +121,7 @@ docs/
 │   └── troubleshooting.md             # トラブルシューティングガイド
 │
 ├── archive/                           # 過去資料（参照のみ、更新しない）
+│   ├── SUMMARY.md                     # アーカイブサマリー
 │   ├── 2〜4月ロードマップ.md
 │   ├── LC開発プラン.md
 │   ├── human-checkpoints.md
@@ -143,6 +144,10 @@ docs/
 │       ├── pj-c-research.md
 │       ├── pj-d-schedule.md
 │       └── template.md
+│
+├── theme-system.md                    # テーマシステム仕様
+├── sns-research-agent-spec.md         # SNSリサーチエージェント仕様
+├── sns-research-agent-ui-spec.md      # SNSリサーチエージェントUI仕様
 │
 └── assets/                            # 添付ファイル
     └── ...
