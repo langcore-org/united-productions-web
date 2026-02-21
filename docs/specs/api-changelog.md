@@ -2,7 +2,7 @@
 
 > **APIのバージョン履歴と破壊的変更の追跡**
 > 
-> **最終更新**: 2026-02-20 13:16
+> **最終更新**: 2026-02-21 17:15
 
 ---
 
@@ -31,6 +31,54 @@
 ---
 
 ## 変更履歴
+
+### v1.2.0 (2026-02-21)
+
+#### 追加
+
+| エンドポイント | 説明 | 関連PR |
+|--------------|------|--------|
+| `GET /api/chat/feature?chatId={id}` | 特定チャットの履歴取得 | - |
+| `DELETE /api/chat/feature?chatId={id}` | 特定チャット削除 | - |
+
+#### 変更
+
+| エンドポイント | 変更内容 | 移行期間 |
+|--------------|---------|---------|
+| `POST /api/chat/feature` | chatIdパラメータ追加（新規/既存判定） | 即時（後方互換あり） |
+| `GET /api/chat/feature?featureId={id}` | レスポンス形式変更（messages → chats） | 即時（後方互換あり） |
+
+**新規チャットフロー:**
+```typescript
+// 1. 新規チャット開始（chatIdなし）
+const response = await fetch('/api/chat/feature', {
+  method: 'POST',
+  body: JSON.stringify({
+    featureId: 'research-cast',
+    messages: [{ role: 'user', content: '...' }],
+    // chatId: undefined（新規作成）
+  }),
+});
+const { chatId } = await response.json(); // 新規chatIdを取得
+
+// 2. 以降のメッセージはchatIdを指定
+await fetch('/api/chat/feature', {
+  method: 'POST',
+  body: JSON.stringify({
+    chatId, // 既存チャットに追加
+    featureId: 'research-cast',
+    messages: [...],
+  }),
+});
+```
+
+#### データベース
+
+| テーブル | 変更内容 |
+|---------|---------|
+| `ResearchChat` | `title` カラム追加（自動生成） |
+
+---
 
 ### v1.1.0 (2026-02-20)
 

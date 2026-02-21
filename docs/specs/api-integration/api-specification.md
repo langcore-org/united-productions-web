@@ -53,8 +53,10 @@
 
 | メソッド | パス | 説明 |
 |---------|------|------|
-| GET | `/api/chat/feature?featureId={id}` | 会話履歴取得 |
-| POST | `/api/chat/feature` | 会話履歴保存 |
+| GET | `/api/chat/feature?chatId={id}` | 特定チャットの履歴取得 |
+| GET | `/api/chat/feature?featureId={id}` | チャット一覧取得（サイドバー用） |
+| POST | `/api/chat/feature` | 新規チャット作成 or メッセージ追加 |
+| DELETE | `/api/chat/feature?chatId={id}` | 特定チャット削除 |
 
 **featureId一覧:**
 | ID | 機能 |

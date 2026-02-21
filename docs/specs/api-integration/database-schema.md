@@ -54,6 +54,7 @@ erDiagram
         string id PK
         string userId FK
         string agentType
+        string title
         string llmProvider
         json results
         datetime createdAt
@@ -111,6 +112,23 @@ erDiagram
 | `ResearchChat` | チャットセッション |
 | `ResearchMessage` | メッセージ履歴 |
 
+**ResearchChatカラム:**
+
+| カラム | 型 | 説明 |
+|--------|-----|------|
+| `id` | String | PK, UUID |
+| `userId` | String | FK → User |
+| `agentType` | String | `PEOPLE` \| `LOCATION` \| `EVIDENCE` |
+| `title` | String? | チャットタイトル（自動生成） |
+| `llmProvider` | LLMProvider | 使用プロバイダー |
+| `results` | Json? | リサーチ結果 |
+| `createdAt` | DateTime | 作成日時 |
+| `updatedAt` | DateTime | 更新日時 |
+
+**タイトル自動生成:**
+- 新規チャット作成時、最初のユーザーメッセージからGrok(grok-4-0709)で自動生成
+- バックグラウンド実行（レスポンスを遅延させない）
+
 ### UsageLog
 LLM使用量ログ
 
@@ -156,6 +174,7 @@ enum LLMProvider {
 | 2 | `20260216045708_add_refresh_token_expires_in` | Account更新 |
 | 3 | `20260219105000_add_system_prompts` | SystemPrompt追加 |
 | 4 | `20260220000000_update_grok_enum` | Grok Enum更新 |
+| 5 | `20260221000000_add_chat_title` | ResearchChatにtitleカラム追加 |
 
 実行コマンド:
 ```bash
