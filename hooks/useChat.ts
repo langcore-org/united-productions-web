@@ -5,6 +5,7 @@ import { ChatMessageType, ChatStreamState } from "@/components/chat";
 import { LLMProvider } from "@/lib/llm/types";
 import { createClientLogger } from "@/lib/logger";
 import { ProcessingStep, defaultProcessingSteps, startProcessingStep, completeProcessingStep, failProcessingStep } from "@/components/chat/ProcessingFlow";
+import { parseSSEStream } from '@/lib/llm/sse-parser';
 
 const logger = createClientLogger("useChat");
 
@@ -143,130 +144,83 @@ export function useChat(options: UseChatOptions) {
         }
 
         logger.info(`[${requestId}] Starting to read stream`);
-        
+
         // ステップ5: ツール実行（必要に応じて）
         setProcessingSteps(prev => startProcessingStep(prev, "tool-execution"));
-        
+
         // ステップ6: ストリーミング
         setProcessingSteps(prev => completeProcessingStep(prev, "tool-execution"));
         setProcessingSteps(prev => startProcessingStep(prev, "streaming"));
 
-        const decoder = new TextDecoder();
-        let buffer = "";
         let fullContent = "";
         let fullThinking = "";
         let chunkCount = 0;
         const toolCallsMap = new Map<string, { id: string; type: string; name?: string; input?: string; status: 'pending' | 'running' | 'completed' | 'failed' }>();
         const reasoningStepsList: { step: number; content: string; tokens?: number }[] = [];
 
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) {
-            logger.info(`[${requestId}] Stream reader done`, { chunkCount });
+        for await (const event of parseSSEStream(reader)) {
+          if (event.error) {
+            logger.error(`[${requestId}] Error in stream data`, { error: event.error });
+            setStreamState((prev) => ({ ...prev, error: event.error! }));
             break;
           }
 
-          buffer += decoder.decode(value, { stream: true });
-          const lines = buffer.split("\n");
-          buffer = lines.pop() || "";
+          if (event.thinking) {
+            fullThinking += event.thinking;
+            setStreamState((prev) => ({
+              ...prev,
+              thinking: fullThinking,
+              isThinking: true,
+            }));
+          }
 
-          for (const line of lines) {
-            const trimmedLine = line.trim();
-            if (!trimmedLine.startsWith("data: ")) continue;
+          if (event.content) {
+            chunkCount++;
+            fullContent += event.content;
+            setStreamState((prev) => ({
+              ...prev,
+              content: fullContent,
+              isThinking: false,
+            }));
+          }
 
-            const data = trimmedLine.slice(6);
+          if (event.toolCall) {
+            const tc = event.toolCall;
+            toolCallsMap.set(tc.id, { ...tc });
+            setStreamState((prev) => ({
+              ...prev,
+              toolCalls: Array.from(toolCallsMap.values()),
+            }));
+          }
 
-            if (data === "[DONE]") {
-              logger.info(`[${requestId}] Stream done marker received`);
-              setStreamState((prev) => ({ ...prev, isComplete: true }));
-              break;
+          if (event.reasoning) {
+            const existingIndex = reasoningStepsList.findIndex(r => r.step === event.reasoning!.step);
+            if (existingIndex >= 0) {
+              reasoningStepsList[existingIndex] = { ...reasoningStepsList[existingIndex], ...event.reasoning };
+            } else {
+              reasoningStepsList.push(event.reasoning);
             }
+            setStreamState((prev) => ({
+              ...prev,
+              reasoningSteps: [...reasoningStepsList],
+              reasoningTokens: event.reasoning!.tokens ?? prev.reasoningTokens,
+            }));
+          }
 
-            try {
-              const parsed = JSON.parse(data);
+          if (event.toolUsage) {
+            setStreamState((prev) => ({
+              ...prev,
+              toolUsage: event.toolUsage,
+            }));
+          }
 
-              if (parsed.error) {
-                logger.error(`[${requestId}] Error in stream data`, { error: parsed.error });
-                setStreamState((prev) => ({ ...prev, error: parsed.error }));
-                break;
-              }
-
-              if (parsed.thinking) {
-                fullThinking += parsed.thinking;
-                setStreamState((prev) => ({
-                  ...prev,
-                  thinking: fullThinking,
-                  isThinking: true,
-                }));
-              }
-
-              if (parsed.content) {
-                chunkCount++;
-                fullContent += parsed.content;
-                setStreamState((prev) => ({
-                  ...prev,
-                  content: fullContent,
-                  isThinking: false,
-                }));
-              }
-
-              // ツール呼び出し
-              if (parsed.toolCall) {
-                const tc = parsed.toolCall;
-                toolCallsMap.set(tc.id, { ...tc });
-                setStreamState((prev) => ({
-                  ...prev,
-                  toolCalls: Array.from(toolCallsMap.values()),
-                }));
-              }
-
-              // 思考ステップ
-              if (parsed.reasoning) {
-                const existingIndex = reasoningStepsList.findIndex(r => r.step === parsed.reasoning.step);
-                if (existingIndex >= 0) {
-                  reasoningStepsList[existingIndex] = { ...reasoningStepsList[existingIndex], ...parsed.reasoning };
-                } else {
-                  reasoningStepsList.push(parsed.reasoning);
-                }
-                setStreamState((prev) => ({
-                  ...prev,
-                  reasoningSteps: [...reasoningStepsList],
-                  reasoningTokens: parsed.reasoning.tokens || prev.reasoningTokens,
-                }));
-              }
-
-              // ツール使用状況
-              if (parsed.toolUsage) {
-                setStreamState((prev) => ({
-                  ...prev,
-                  toolUsage: parsed.toolUsage,
-                }));
-              }
-            } catch (parseError) {
-              logger.warn(`[${requestId}] Failed to parse SSE data`, { data, error: parseError });
-              continue;
-            }
+          if (event.done) {
+            logger.info(`[${requestId}] Stream done marker received`);
+            setStreamState((prev) => ({ ...prev, isComplete: true }));
           }
         }
 
-        // 残りのバッファを処理
-        if (buffer.trim()) {
-          const trimmedLine = buffer.trim();
-          if (trimmedLine.startsWith("data: ")) {
-            const data = trimmedLine.slice(6);
-            if (data !== "[DONE]") {
-              try {
-                const parsed = JSON.parse(data);
-                if (parsed.content) {
-                  fullContent += parsed.content;
-                }
-              } catch {
-                // Ignore
-              }
-            }
-          }
-        }
-
+        logger.info(`[${requestId}] Stream reader done`, { chunkCount });
         // ステップ7: レスポンス解析
         setProcessingSteps(prev => completeProcessingStep(prev, "streaming"));
         setProcessingSteps(prev => startProcessingStep(prev, "response-parse"));

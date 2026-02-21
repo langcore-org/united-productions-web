@@ -13,6 +13,7 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { cn } from '@/lib/utils';
 import { Loader2, Bot, Lightbulb, Search, Twitter, Terminal, FileSearch, BrainCircuit, CheckCircle2 } from 'lucide-react';
 import type { LLMMessage, LLMProvider } from '@/lib/llm/types';
+import { parseSSEStream } from '@/lib/llm/sse-parser';
 
 /**
  * ツールオプションの型
@@ -152,103 +153,57 @@ export function useLLMStream() {
         throw new Error('レスポンスボディを読み取れません');
       }
 
-      const decoder = new TextDecoder();
+      for await (const event of parseSSEStream(reader)) {
+        if (event.error) {
+          throw new Error(event.error);
+        }
 
-      try {
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
+        if (event.content) {
+          setContent((prev) => prev + event.content);
+        }
 
-          const chunk = decoder.decode(value, { stream: true });
-          const lines = chunk.split('\n');
+        if (event.thinking) {
+          setThinking((prev) => prev + event.thinking);
+        }
 
-          for (const line of lines) {
-            if (!line.trim() || !line.startsWith('data: ')) continue;
-
-            const dataStr = line.slice(6); // Remove 'data: ' prefix
-            if (dataStr === '[DONE]') continue;
-
-            try {
-              const data = JSON.parse(dataStr);
-
-              // コンテンツチャンク
-              if (data.content) {
-                setContent((prev) => prev + data.content);
-                // デバッグログ: content内容をコンソールに出力（開発時のみ）
-                if (process.env.NODE_ENV === 'development') {
-                  console.log('[Content]', data.content);
-                }
-              }
-
-              // 思考プロセス（Grok対応）
-              if (data.thinking) {
-                setThinking((prev) => prev + data.thinking);
-                // デバッグログ: thinking内容をコンソールに出力
-                console.log('[Thinking]', data.thinking);
-              }
-
-              // ツール呼び出し
-              if (data.toolCall) {
-                setToolCalls((prev) => {
-                  const existing = prev.findIndex(t => t.id === data.toolCall.id);
-                  if (existing >= 0) {
-                    const updated = [...prev];
-                    updated[existing] = { ...updated[existing], ...data.toolCall };
-                    return updated;
-                  }
-                  return [...prev, data.toolCall];
-                });
-                // デバッグログ: toolCall内容をコンソールに出力
-                console.log('[ToolCall]', data.toolCall);
-              }
-
-              // 思考ステップ
-              if (data.reasoning) {
-                setReasoningSteps((prev) => {
-                  const existing = prev.findIndex(r => r.step === data.reasoning.step);
-                  if (existing >= 0) {
-                    const updated = [...prev];
-                    updated[existing] = { ...updated[existing], ...data.reasoning };
-                    return updated;
-                  }
-                  return [...prev, data.reasoning];
-                });
-                if (data.reasoning.tokens) {
-                  setReasoningTokens(data.reasoning.tokens);
-                }
-                // デバッグログ: reasoning内容をコンソールに出力
-                console.log('[Reasoning]', data.reasoning);
-              }
-
-              // ツール使用状況
-              if (data.toolUsage) {
-                setToolUsage(data.toolUsage);
-              }
-
-              // 完了時のusage情報
-              if (data.done) {
-                setIsComplete(true);
-                if (data.usage) {
-                  setUsage(data.usage);
-                }
-              }
-
-              // エラー
-              if (data.error) {
-                throw new Error(data.error);
-              }
-            } catch (parseError) {
-              // JSONパースエラーは無視
-              if (!(parseError instanceof SyntaxError)) {
-                throw parseError;
-              }
+        if (event.toolCall) {
+          setToolCalls((prev) => {
+            const existing = prev.findIndex(t => t.id === event.toolCall!.id);
+            if (existing >= 0) {
+              const updated = [...prev];
+              updated[existing] = { ...updated[existing], ...event.toolCall };
+              return updated;
             }
+            return [...prev, event.toolCall!];
+          });
+        }
+
+        if (event.reasoning) {
+          setReasoningSteps((prev) => {
+            const existing = prev.findIndex(r => r.step === event.reasoning!.step);
+            if (existing >= 0) {
+              const updated = [...prev];
+              updated[existing] = { ...updated[existing], ...event.reasoning };
+              return updated;
+            }
+            return [...prev, event.reasoning!];
+          });
+          if (event.reasoning.tokens) {
+            setReasoningTokens(event.reasoning.tokens);
           }
         }
-      } finally {
-        reader.releaseLock();
-      }
 
+        if (event.toolUsage) {
+          setToolUsage(event.toolUsage);
+        }
+
+        if (event.done) {
+          setIsComplete(true);
+          if (event.usage) {
+            setUsage(event.usage);
+          }
+        }
+      }
       setIsComplete(true);
     } catch (err) {
       if (err instanceof Error && err.name === 'AbortError') {

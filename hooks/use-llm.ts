@@ -8,6 +8,7 @@
 
 import { useState, useCallback, useRef } from 'react';
 import type { LLMMessage, LLMProvider } from '@/lib/llm/types';
+import { parseSSEStream } from '@/lib/llm/sse-parser';
 
 interface UseLLMOptions {
   provider?: LLMProvider;
@@ -209,53 +210,23 @@ export function useLLM(options: UseLLMOptions = {}): UseLLMReturn {
         throw new Error('レスポンスボディを読み取れません');
       }
 
-      const decoder = new TextDecoder();
       let content = '';
       let finalUsage: UsageInfo | undefined;
 
-      try {
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-
-          const chunk = decoder.decode(value, { stream: true });
-          const lines = chunk.split('\n');
-
-          for (const line of lines) {
-            if (!line.trim() || !line.startsWith('data: ')) continue;
-
-            const dataStr = line.slice(6); // Remove 'data: ' prefix
-            if (dataStr === '[DONE]') continue;
-
-            try {
-              const data = JSON.parse(dataStr);
-              
-              // コンテンツチャンク
-              if (data.content) {
-                content += data.content;
-                onChunk(data.content);
-              }
-              
-              // 完了時のusage情報
-              if (data.done && data.usage) {
-                finalUsage = data.usage;
-                setLastUsage(data.usage);
-              }
-              
-              // エラー
-              if (data.error) {
-                throw new Error(data.error);
-              }
-            } catch (parseError) {
-              // JSONパースエラーは無視
-              if (!(parseError instanceof SyntaxError)) {
-                throw parseError;
-              }
-            }
-          }
+      for await (const event of parseSSEStream(reader)) {
+        if (event.error) {
+          throw new Error(event.error);
         }
-      } finally {
-        reader.releaseLock();
+
+        if (event.content) {
+          content += event.content;
+          onChunk(event.content);
+        }
+
+        if (event.done && event.usage) {
+          finalUsage = event.usage;
+          setLastUsage(event.usage);
+        }
       }
 
       return { content, usage: finalUsage };
@@ -318,66 +289,35 @@ export function useLLM(options: UseLLMOptions = {}): UseLLMReturn {
         throw new Error('レスポンスボディを読み取れません');
       }
 
-      const decoder = new TextDecoder();
+      for await (const event of parseSSEStream(reader)) {
+        if (event.error) {
+          throw new Error(event.error);
+        }
 
-      try {
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
+        if (event.content) {
+          setStreamState(prev => ({
+            ...prev,
+            content: prev.content + event.content!,
+          }));
+        }
 
-          const chunk = decoder.decode(value, { stream: true });
-          const lines = chunk.split('\n');
+        if (event.thinking) {
+          setStreamState(prev => ({
+            ...prev,
+            thinking: prev.thinking + event.thinking!,
+          }));
+        }
 
-          for (const line of lines) {
-            if (!line.trim() || !line.startsWith('data: ')) continue;
-
-            const dataStr = line.slice(6);
-            if (dataStr === '[DONE]') continue;
-
-            try {
-              const data = JSON.parse(dataStr);
-
-              // コンテンツチャンク
-              if (data.content) {
-                setStreamState(prev => ({
-                  ...prev,
-                  content: prev.content + data.content,
-                }));
-              }
-
-              // 思考プロセス（Grok対応）
-              if (data.thinking) {
-                setStreamState(prev => ({
-                  ...prev,
-                  thinking: prev.thinking + data.thinking,
-                }));
-              }
-
-              // 完了時のusage情報
-              if (data.done) {
-                setStreamState(prev => ({
-                  ...prev,
-                  isComplete: true,
-                  usage: data.usage || null,
-                }));
-                if (data.usage) {
-                  setLastUsage(data.usage);
-                }
-              }
-
-              // エラー
-              if (data.error) {
-                throw new Error(data.error);
-              }
-            } catch (parseError) {
-              if (!(parseError instanceof SyntaxError)) {
-                throw parseError;
-              }
-            }
+        if (event.done) {
+          setStreamState(prev => ({
+            ...prev,
+            isComplete: true,
+            usage: event.usage ?? null,
+          }));
+          if (event.usage) {
+            setLastUsage(event.usage);
           }
         }
-      } finally {
-        reader.releaseLock();
       }
 
       setStreamState(prev => ({ ...prev, isComplete: true }));
