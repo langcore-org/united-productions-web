@@ -11,9 +11,10 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { cn } from '@/lib/utils';
-import { Loader2, Bot, Lightbulb, Search, Twitter, Terminal, FileSearch, BrainCircuit, CheckCircle2 } from 'lucide-react';
+import { Loader2, Bot, Lightbulb, BrainCircuit, CheckCircle2 } from 'lucide-react';
 import type { LLMMessage, LLMProvider } from '@/lib/llm/types';
 import { parseSSEStream } from '@/lib/llm/sse-parser';
+import { getToolConfig, TOOL_CONFIG } from '@/lib/tools/config';
 
 /**
  * ツールオプションの型
@@ -63,31 +64,6 @@ export interface ToolUsageInfo {
   document_search_calls?: number;
 }
 
-// ツールアイコンマップ
-const toolIcons: Record<string, React.ElementType> = {
-  web_search: Search,
-  x_search: Twitter,
-  x_keyword_search: Twitter,
-  x_semantic_search: Twitter,
-  code_execution: Terminal,
-  code_interpreter: Terminal,
-  collections_search: FileSearch,
-  file_search: FileSearch,
-  custom_tool: BrainCircuit,
-};
-
-// ツールラベルマップ
-const toolLabels: Record<string, string> = {
-  web_search: 'Web検索',
-  x_search: 'X検索',
-  x_keyword_search: 'Xキーワード検索',
-  x_semantic_search: 'X意味検索',
-  code_execution: 'コード実行',
-  code_interpreter: 'コード実行',
-  collections_search: 'ファイル検索',
-  file_search: 'ファイル検索',
-  custom_tool: 'ツール実行',
-};
 
 /**
  * useLLMStream Hook
@@ -265,8 +241,9 @@ function ToolCallIndicator({ toolCalls }: { toolCalls: ToolCallInfo[] }) {
   return (
     <div className="flex flex-wrap gap-2 mb-3">
       {toolCalls.map((tool) => {
-        const Icon = toolIcons[tool.type] || toolIcons[tool.name || ''] || BrainCircuit;
-        const label = toolLabels[tool.type] || toolLabels[tool.name || ''] || tool.name || tool.type;
+        const config = getToolConfig(tool.type, tool.name);
+        const Icon = config.icon;
+        const label = config.label;
         
         return (
           <div
@@ -297,10 +274,10 @@ function ToolUsageSummary({ toolUsage }: { toolUsage: ToolUsageInfo | null }) {
   if (!toolUsage) return null;
 
   const items = [
-    { key: 'web_search_calls', label: 'Web検索', count: toolUsage.web_search_calls, icon: Search },
-    { key: 'x_search_calls', label: 'X検索', count: toolUsage.x_search_calls, icon: Twitter },
-    { key: 'code_interpreter_calls', label: 'コード実行', count: toolUsage.code_interpreter_calls, icon: Terminal },
-    { key: 'file_search_calls', label: 'ファイル検索', count: toolUsage.file_search_calls, icon: FileSearch },
+    { key: 'web_search_calls',       ...TOOL_CONFIG.web_search,       count: toolUsage.web_search_calls },
+    { key: 'x_search_calls',         ...TOOL_CONFIG.x_search,         count: toolUsage.x_search_calls },
+    { key: 'code_interpreter_calls', ...TOOL_CONFIG.code_interpreter, count: toolUsage.code_interpreter_calls },
+    { key: 'file_search_calls',      ...TOOL_CONFIG.file_search,      count: toolUsage.file_search_calls },
   ].filter(item => item.count && item.count > 0);
 
   if (items.length === 0) return null;

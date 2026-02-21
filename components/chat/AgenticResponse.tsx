@@ -16,16 +16,13 @@ import {
   Loader2,
   CheckCircle2,
   XCircle,
-  Search,
-  Twitter,
-  Terminal,
-  FileSearch,
   BrainCircuit,
   Sparkles,
   ChevronDown,
   ChevronUp,
   Bot,
 } from "lucide-react";
+import { getToolConfig, TOOL_CONFIG } from "@/lib/tools/config";
 
 // ============================================
 // 型定義
@@ -89,21 +86,6 @@ export interface AgenticResponseProps {
   variant?: "default" | "chat";
 }
 
-// ============================================
-// ツール設定
-// ============================================
-
-const toolConfig: Record<string, { icon: React.ElementType; label: string; color: string }> = {
-  web_search: { icon: Search, label: "Web検索", color: "text-blue-500" },
-  x_search: { icon: Twitter, label: "X検索", color: "text-sky-500" },
-  x_keyword_search: { icon: Twitter, label: "Xキーワード検索", color: "text-sky-500" },
-  x_semantic_search: { icon: Twitter, label: "X意味検索", color: "text-sky-500" },
-  code_execution: { icon: Terminal, label: "コード実行", color: "text-green-500" },
-  code_interpreter: { icon: Terminal, label: "コード実行", color: "text-green-500" },
-  collections_search: { icon: FileSearch, label: "ファイル検索", color: "text-purple-500" },
-  file_search: { icon: FileSearch, label: "ファイル検索", color: "text-purple-500" },
-  custom_tool: { icon: BrainCircuit, label: "ツール実行", color: "text-orange-500" },
-};
 
 // ============================================
 // サブコンポーネント
@@ -141,11 +123,7 @@ function ToolCallIndicator({ toolCalls }: { toolCalls: ToolCallInfo[] }) {
       </div>
       <div className="flex flex-wrap gap-2">
         {uniqueCalls.map((tool) => {
-          const config = toolConfig[tool.type] || toolConfig[tool.name || ""] || {
-            icon: BrainCircuit,
-            label: tool.name || tool.type,
-            color: "text-gray-500",
-          };
+          const config = getToolConfig(tool.type, tool.name);
           const Icon = config.icon;
 
           return (
@@ -236,10 +214,10 @@ function ToolUsageSummary({ toolUsage }: { toolUsage: ToolUsageInfo | null }) {
   if (!toolUsage) return null;
 
   const items = [
-    { key: "web_search_calls", label: "Web検索", count: toolUsage.web_search_calls, icon: Search },
-    { key: "x_search_calls", label: "X検索", count: toolUsage.x_search_calls, icon: Twitter },
-    { key: "code_interpreter_calls", label: "コード実行", count: toolUsage.code_interpreter_calls, icon: Terminal },
-    { key: "file_search_calls", label: "ファイル検索", count: toolUsage.file_search_calls, icon: FileSearch },
+    { key: "web_search_calls",       ...TOOL_CONFIG.web_search,       count: toolUsage.web_search_calls },
+    { key: "x_search_calls",         ...TOOL_CONFIG.x_search,         count: toolUsage.x_search_calls },
+    { key: "code_interpreter_calls", ...TOOL_CONFIG.code_interpreter, count: toolUsage.code_interpreter_calls },
+    { key: "file_search_calls",      ...TOOL_CONFIG.file_search,      count: toolUsage.file_search_calls },
   ].filter((item) => item.count && item.count > 0);
 
   if (items.length === 0) return null;
