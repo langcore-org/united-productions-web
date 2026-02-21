@@ -3,25 +3,10 @@
 import { useEffect, useState } from "react";
 import { FeatureChat } from "@/components/ui/FeatureChat";
 import { getChatConfig, ChatFeatureId, updateChatConfigSystemPrompt, ToolOptions } from "@/lib/chat/chat-config";
-import { featureIdToToolKey } from "@/lib/settings/db";
+import { featureIdToToolKey, GrokToolSettings } from "@/lib/settings/db";
 
 interface ChatPageProps {
   featureId: ChatFeatureId;
-}
-
-/**
- * Grokツール設定の型
- */
-interface GrokToolSettings {
-  generalChat: boolean;
-  researchCast: boolean;
-  researchLocation: boolean;
-  researchInfo: boolean;
-  researchEvidence: boolean;
-  minutes: boolean;
-  proposal: boolean;
-  naScript: boolean;
-  [key: string]: boolean | undefined;
 }
 
 export function ChatPage({ featureId }: ChatPageProps) {

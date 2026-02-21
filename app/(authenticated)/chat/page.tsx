@@ -5,26 +5,8 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { FeatureChat } from "@/components/ui/FeatureChat";
 import { getGemById, GEMS, isProposalGem } from "@/lib/chat/gems";
 import { updateProposalSystemPrompt } from "@/lib/chat/gems";
-import { featureIdToToolKey } from "@/lib/settings/db";
+import { featureIdToToolKey, GrokToolSettings } from "@/lib/settings/db";
 import type { ChatFeatureId, ToolOptions } from "@/lib/chat/chat-config";
-
-/**
- * Grokツール設定の型（Web検索のみ）
- * システム設定から取得した値を使用
- */
-interface GrokToolSettings {
-  generalChat: boolean;
-  researchCast: boolean;
-  researchLocation: boolean;
-  researchInfo: boolean;
-  researchEvidence: boolean;
-  minutes: boolean;
-  proposal: boolean;
-  naScript: boolean;
-  
-  // 他のツール設定（型互換性のため）
-  [key: string]: boolean | undefined;
-}
 
 /**
  * 統合チャットページ

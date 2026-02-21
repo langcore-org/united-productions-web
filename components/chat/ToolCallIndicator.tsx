@@ -37,7 +37,11 @@ const toolConfig: Record<string, { icon: React.ElementType; label: string; color
   custom_tool: { icon: BrainCircuit, label: "ツール実行", color: "text-orange-500" },
 };
 
-function ToolCallItem({ tool }: { tool: ToolCall }) {
+interface ToolCallItemProps {
+  tool: ToolCall;
+}
+
+function ToolCallItem({ tool }: ToolCallItemProps) {
   const config = toolConfig[tool.type] || toolConfig[tool.name || ""] || {
     icon: BrainCircuit,
     label: tool.name || tool.type,

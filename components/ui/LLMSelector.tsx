@@ -54,14 +54,16 @@ const CATEGORY_GRADIENTS: Record<string, string> = {
   perplexity: "from-gray-500/20 to-gray-600/10",
 };
 
+interface ProviderIconProps {
+  category: keyof typeof PROVIDER_CATEGORIES;
+  className?: string;
+}
+
 // ProviderIconコンポーネントをメモ化
 const ProviderIcon = memo(function ProviderIcon({
   category,
   className,
-}: {
-  category: keyof typeof PROVIDER_CATEGORIES;
-  className?: string;
-}) {
+}: ProviderIconProps) {
   const iconProps = { className: cn("w-4 h-4", className) };
 
   switch (category) {

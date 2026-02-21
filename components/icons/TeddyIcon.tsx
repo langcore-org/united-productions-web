@@ -114,15 +114,17 @@ export function TeddyIcon({
   );
 }
 
-export function TeddyLogo({ 
-  className,
-  size = 40,
-  showText = true 
-}: { 
-  className?: string; 
+interface TeddyLogoProps {
+  className?: string;
   size?: number;
   showText?: boolean;
-}) {
+}
+
+export function TeddyLogo({
+  className,
+  size = 40,
+  showText = true
+}: TeddyLogoProps) {
   return (
     <div className={cn("flex items-center gap-2", className)}>
       <div className="relative">

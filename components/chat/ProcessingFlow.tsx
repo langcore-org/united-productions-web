@@ -48,7 +48,12 @@ const stepIcons: Record<string, React.ElementType> = {
   "complete": CheckCircle2,
 };
 
-function StepItem({ step, isLast }: { step: ProcessingStep; isLast: boolean }) {
+interface StepItemProps {
+  step: ProcessingStep;
+  isLast: boolean;
+}
+
+function StepItem({ step, isLast }: StepItemProps) {
   const Icon = stepIcons[step.id] || Loader2;
   const duration = step.endTime && step.startTime 
     ? `${(step.endTime - step.startTime).toFixed(0)}ms` 
