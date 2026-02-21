@@ -32,18 +32,18 @@ const PRIMARY_MODELS: ModelInfo[] = [
     icon: <Sparkles className="w-4 h-4" />,
     isRecommended: true,
   },
-  {
-    id: "gemini-3.0-flash",
-    name: "Gemini 3.0 Flash",
-    description: "Google - マルチモーダル対応",
-    icon: <Brain className="w-4 h-4" />,
-  },
-  {
-    id: "perplexity-sonar-pro",
-    name: "Perplexity Pro",
-    description: "最新情報を含む検索対応",
-    icon: <Zap className="w-4 h-4" />,
-  },
+  // {
+  //   id: "gemini-3.0-flash",
+  //   name: "Gemini 3.0 Flash",
+  //   description: "Google - マルチモーダル対応",
+  //   icon: <Brain className="w-4 h-4" />,
+  // },
+  // {
+  //   id: "perplexity-sonar-pro",
+  //   name: "Perplexity Pro",
+  //   description: "最新情報を含む検索対応",
+  //   icon: <Zap className="w-4 h-4" />,
+  // },
 ];
 
 const OTHER_MODELS: ModelInfo[] = [
@@ -53,12 +53,12 @@ const OTHER_MODELS: ModelInfo[] = [
   //   description: "Anthropic - 長文理解に強い",
   //   icon: <Bot className="w-4 h-4" />,
   // },
-  {
-    id: "gpt-5",
-    name: "GPT-5",
-    description: "OpenAI - 高い汎用性",
-    icon: <Bot className="w-4 h-4" />,
-  },
+  // {
+  //   id: "gpt-5",
+  //   name: "GPT-5",
+  //   description: "OpenAI - 高い汎用性",
+  //   icon: <Bot className="w-4 h-4" />,
+  // },
 ];
 
 interface ModelSelectorProps {

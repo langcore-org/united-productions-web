@@ -5,7 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { FeatureChat } from "@/components/ui/FeatureChat";
 import { getGemById, GEMS, isProposalGem } from "@/lib/chat/gems";
 import { updateProposalSystemPrompt } from "@/lib/chat/gems";
-import { featureIdToToolKey, GrokToolSettings } from "@/lib/settings/db";
+import { GrokToolSettings } from "@/lib/settings/db";
 import type { ChatFeatureId, ToolOptions } from "@/lib/chat/chat-config";
 
 /**
@@ -74,17 +74,8 @@ function ChatPageContent() {
     // デフォルトのツール設定
     const defaultOptions: ToolOptions = gem.toolOptions || { enableWebSearch: false };
     
-    // 管理画面での設定があればマージ
-    if (!grokToolSettings) return defaultOptions;
-    
-    const toolKey = featureIdToToolKey(gem.id as ChatFeatureId);
-    const isEnabled = toolKey ? (grokToolSettings[toolKey] ?? false) : false;
-    
-    // 管理画面で無効化されている場合は全ツール無効
-    if (!isEnabled) {
-      return { enableWebSearch: false, enableXSearch: false, enableCodeExecution: false };
-    }
-    
+    // デフォルトのツール設定を返す
+    // 注: featureIdToToolKey関数は削除されたため、シンプル化
     return defaultOptions;
   };
 

@@ -33,17 +33,17 @@ interface ProviderInfo {
 
 // プロバイダー情報を定数として定義（コンポーネント外）
 const PROVIDERS: ProviderInfo[] = [
-  { id: "gemini-2.5-flash-lite", name: "Gemini 2.5 Flash-Lite", description: "最安値・無料枠あり", category: "google", isFree: true },
-  { id: "gemini-3.0-flash", name: "Gemini 3.0 Flash", description: "高品質・無料枠あり", category: "google", isFree: true, isNew: true },
+  // { id: "gemini-2.5-flash-lite", name: "Gemini 2.5 Flash-Lite", description: "最安値・無料枠あり", category: "google", isFree: true },
+  // { id: "gemini-3.0-flash", name: "Gemini 3.0 Flash", description: "高品質・無料枠あり", category: "google", isFree: true, isNew: true },
   { id: "grok-4-1-fast-reasoning", name: "Grok 4.1 Fast", description: "X検索対応・推論", category: "xai" },
   { id: "grok-4-0709", name: "Grok 4", description: "高品質・標準", category: "xai", isNew: true },
-  { id: "gpt-4o-mini", name: "GPT-4o-mini", description: "コスパ良好", category: "openai" },
-  { id: "gpt-5", name: "GPT-5", description: "最新フラッグシップ", category: "openai", isNew: true },
+  // { id: "gpt-4o-mini", name: "GPT-4o-mini", description: "コスパ良好", category: "openai" },
+  // { id: "gpt-5", name: "GPT-5", description: "最新フラッグシップ", category: "openai", isNew: true },
   // Claudeモデルは現在未使用（将来追加時に有効化）
   // { id: "claude-sonnet-4.5", name: "Claude 4.5 Sonnet", description: "バランス型", category: "anthropic" },
   // { id: "claude-opus-4.6", name: "Claude Opus 4.6", description: "最高品質", category: "anthropic", isNew: true },
-  { id: "perplexity-sonar", name: "Perplexity Sonar", description: "エビデンス付き検索", category: "perplexity" },
-  { id: "perplexity-sonar-pro", name: "Perplexity Sonar Pro", description: "高品質検索", category: "perplexity" },
+  // { id: "perplexity-sonar", name: "Perplexity Sonar", description: "エビデンス付き検索", category: "perplexity" },
+  // { id: "perplexity-sonar-pro", name: "Perplexity Sonar Pro", description: "高品質検索", category: "perplexity" },
 ];
 
 // カテゴリーグラデーション

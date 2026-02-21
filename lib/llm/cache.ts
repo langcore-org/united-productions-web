@@ -301,7 +301,7 @@ export async function setCachedResponse(
     const entry: CacheEntry = {
       response,
       cachedAt: new Date().toISOString(),
-      provider: 'gemini-2.5-flash-lite', // デフォルト値（汎用キャッシュ用）
+      provider: 'grok-4-1-fast-reasoning', // デフォルト値（汎用キャッシュ用）
       promptHash: key.slice(0, 16),
     };
 

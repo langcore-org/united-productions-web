@@ -17,16 +17,16 @@ interface UsageData {
 // アプリのProvider型をPrismaのenum形式に変換
 function toPrismaProvider(provider: LLMProvider): string {
   const mapping: Record<string, string> = {
-    "gemini-2.5-flash-lite": "GEMINI_25_FLASH_LITE",
-    "gemini-3.0-flash": "GEMINI_30_FLASH",
+    // "gemini-2.5-flash-lite": "GEMINI_25_FLASH_LITE",
+    // "gemini-3.0-flash": "GEMINI_30_FLASH",
     "grok-4.1-fast-reasoning": "GROK_4_1_FAST_REASONING",
     "grok-4-0709": "GROK_4_0709",
-    "gpt-4o-mini": "GPT_4O_MINI",
-    "gpt-5": "GPT_5",
+    // "gpt-4o-mini": "GPT_4O_MINI",
+    // "gpt-5": "GPT_5",
     // "claude-sonnet-4.5": "CLAUDE_SONNET_45",
     // "claude-opus-4.6": "CLAUDE_OPUS_46",
-    "perplexity-sonar": "PERPLEXITY_SONAR",
-    "perplexity-sonar-pro": "PERPLEXITY_SONAR_PRO",
+    // "perplexity-sonar": "PERPLEXITY_SONAR",
+    // "perplexity-sonar-pro": "PERPLEXITY_SONAR_PRO",
   };
   return mapping[provider] || provider.toUpperCase().replace(/-/g, "_");
 }

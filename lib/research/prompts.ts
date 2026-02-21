@@ -3,8 +3,10 @@ import type { LLMProvider } from "@/lib/llm/types";
 
 export const AGENT_DEFAULT_PROVIDERS: Record<ResearchAgentType, LLMProvider> = {
   people: "grok-4-1-fast-reasoning",
-  evidence: "perplexity-sonar",
-  location: "perplexity-sonar",
+  // evidence: "perplexity-sonar",
+  // location: "perplexity-sonar",
+  evidence: "grok-4-1-fast-reasoning",
+  location: "grok-4-1-fast-reasoning",
 };
 
 export const AGENT_SYSTEM_PROMPTS: Record<ResearchAgentType, string> = {

@@ -1,27 +1,36 @@
 /**
  * LLM統合の型定義
  * 
- * 複数のLLMプロバイダーを統一インターフェースで利用するための型定義
- * 対応プロバイダー: Gemini, Grok, OpenAI, Perplexity
- * 
- * 注意: Claudeは現在未使用（将来追加時に有効化）
+ * 現在使用中: Grokのみ
+ * 将来追加予定: Gemini, OpenAI, Perplexity, Claude
  */
 
 /**
  * LLMプロバイダー定数配列
  * Single Source of Truth - 全てのプロバイダー定義はここから派生
+ * 
+ * 注意: 現在使用しているのはgrokのみ
  */
 export const VALID_PROVIDERS = [
-  'gemini-2.5-flash-lite',
-  'gemini-3.0-flash',
+  // Google Gemini - 将来追加予定
+  // 'gemini-2.5-flash-lite',
+  // 'gemini-3.0-flash',
+  
+  // xAI Grok - 現在使用中
   'grok-4-1-fast-reasoning',
   'grok-4-0709',
-  'gpt-4o-mini',
-  'gpt-5',
-  // 'claude-sonnet-4.5',  // 現在未使用
-  // 'claude-opus-4.6',    // 現在未使用
-  'perplexity-sonar',
-  'perplexity-sonar-pro',
+  
+  // OpenAI - 将来追加予定
+  // 'gpt-4o-mini',
+  // 'gpt-5',
+  
+  // Anthropic Claude - 将来追加予定
+  // 'claude-sonnet-4.5',
+  // 'claude-opus-4.6',
+  
+  // Perplexity - 将来追加予定
+  // 'perplexity-sonar',
+  // 'perplexity-sonar-pro',
 ] as const;
 
 /**

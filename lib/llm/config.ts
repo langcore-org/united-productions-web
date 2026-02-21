@@ -3,14 +3,20 @@
  * 
  * 各モデルの価格、コンテキスト長、推奨用途等の設定
  * 2026年2月時点の最新情報
+ * 
+ * 現在使用中: Grokのみ
  */
 
 import { LLMProvider, ProviderInfo } from './types';
 
 /**
  * プロバイダー情報マップ
+ * 
+ * 注意: 現在使用しているのはgrokのみ
  */
 export const PROVIDER_CONFIG: Record<LLMProvider, ProviderInfo> = {
+  // Google Gemini - 将来追加予定
+  /*
   'gemini-2.5-flash-lite': {
     id: 'gemini-2.5-flash-lite',
     name: 'Gemini 2.5 Flash-Lite',
@@ -33,6 +39,9 @@ export const PROVIDER_CONFIG: Record<LLMProvider, ProviderInfo> = {
     recommendedFor: ['高品質タスク', '複雑な推論'],
     isAvailable: true,
   },
+  */
+
+  // xAI Grok - 現在使用中
   'grok-4-1-fast-reasoning': {
     id: 'grok-4-1-fast-reasoning',
     name: 'Grok 4.1 Fast',
@@ -55,6 +64,9 @@ export const PROVIDER_CONFIG: Record<LLMProvider, ProviderInfo> = {
     recommendedFor: ['高品質タスク', '複雑なタスク'],
     isAvailable: true,
   },
+
+  // OpenAI - 将来追加予定
+  /*
   'gpt-4o-mini': {
     id: 'gpt-4o-mini',
     name: 'GPT-4o-mini',
@@ -77,9 +89,14 @@ export const PROVIDER_CONFIG: Record<LLMProvider, ProviderInfo> = {
     recommendedFor: ['高品質タスク', '長文コンテキスト'],
     isAvailable: true,
   },
-  // Claudeモデルは現在未使用（将来追加時に有効化）
+  */
+
+  // Anthropic Claude - 将来追加予定
   // 'claude-sonnet-4.5': { ... },
   // 'claude-opus-4.6': { ... },
+
+  // Perplexity - 将来追加予定
+  /*
   'perplexity-sonar': {
     id: 'perplexity-sonar',
     name: 'Perplexity Sonar',
@@ -102,6 +119,7 @@ export const PROVIDER_CONFIG: Record<LLMProvider, ProviderInfo> = {
     recommendedFor: ['高品質検索', '詳細な調査'],
     isAvailable: true,
   },
+  */
 };
 
 /**
@@ -110,51 +128,28 @@ export const PROVIDER_CONFIG: Record<LLMProvider, ProviderInfo> = {
 export const DEFAULT_PROVIDER: LLMProvider = 'grok-4-1-fast-reasoning';
 
 /**
- * PJ別デフォルトプロバイダー
+ * レート制限設定（リクエスト/分、リクエスト/日）
  */
-export const PROJECT_DEFAULT_PROVIDERS: Record<string, LLMProvider> = {
-  'PJ-A': 'grok-4-1-fast-reasoning',      // 議事録整形
-  'PJ-B': 'grok-4-1-fast-reasoning',      // 書き起こし整形
-  'PJ-C-people': 'grok-4-1-fast-reasoning',       // 人探し（X検索）
-  'PJ-C-evidence': 'grok-4-1-fast-reasoning',  // エビデンス検索
-  // PJ-D（ロケスケ）は削除
-};
+export const RATE_LIMITS: Record<LLMProvider, { rpm: number; rpd: number }> = {
+  // Google Gemini - 将来追加予定
+  // 'gemini-2.5-flash-lite': { rpm: 30, rpd: 1500 },
+  // 'gemini-3.0-flash': { rpm: 30, rpd: 1500 },
 
-/**
- * Google AI Studio 無料枠設定
- * https://ai.google.dev/pricing?hl=ja
- */
-export const GEMINI_FREE_TIER = {
-  'gemini-2.5-flash-lite': {
-    rpm: 30,  // Requests Per Minute
-    rpd: 1500, // Requests Per Day
-  },
-  'gemini-3.0-flash': {
-    rpm: 30,
-    rpd: 1500,
-  },
-} as const;
-
-/**
- * 無料枠制限設定（全プロバイダー）
- * 各プロバイダーの無料枠またはデフォルト制限
- */
-export const FREE_TIER_LIMITS: Record<LLMProvider, { rpm: number; rpd: number }> = {
-  // Google AI Studio 無料枠: 30 RPM / 1,500 RPD
-  'gemini-2.5-flash-lite': { rpm: 30, rpd: 1500 },
-  'gemini-3.0-flash': { rpm: 30, rpd: 1500 },
-  // xAI Grok: デフォルト制限（有料API前提）
+  // xAI Grok - 現在使用中
   'grok-4-1-fast-reasoning': { rpm: 60, rpd: 10000 },
   'grok-4-0709': { rpm: 60, rpd: 10000 },
-  // OpenAI: デフォルト制限（有料API前提）
-  'gpt-4o-mini': { rpm: 60, rpd: 10000 },
-  'gpt-5': { rpm: 60, rpd: 10000 },
+
+  // OpenAI - 将来追加予定
+  // 'gpt-4o-mini': { rpm: 60, rpd: 10000 },
+  // 'gpt-5': { rpm: 60, rpd: 10000 },
+
   // Anthropic: 現在未使用（将来追加時に有効化）
   // 'claude-sonnet-4.5': { rpm: 60, rpd: 10000 },
   // 'claude-opus-4.6': { rpm: 60, rpd: 10000 },
-  // Perplexity: デフォルト制限（有料API前提）
-  'perplexity-sonar': { rpm: 60, rpd: 10000 },
-  'perplexity-sonar-pro': { rpm: 60, rpd: 10000 },
+
+  // Perplexity - 将来追加予定
+  // 'perplexity-sonar': { rpm: 60, rpd: 10000 },
+  // 'perplexity-sonar-pro': { rpm: 60, rpd: 10000 },
 } as const;
 
 /**
@@ -162,68 +157,43 @@ export const FREE_TIER_LIMITS: Record<LLMProvider, { rpm: number; rpd: number }>
  * https://upstash.com/pricing
  */
 export const UPSTASH_FREE_TIER = {
-  /** 1日あたりの最大コマンド数 */
-  maxCommandsPerDay: 10000,
-  /** 1秒あたりの最大リクエスト数 */
-  maxRequestsPerSecond: 100,
-  /** ストレージ容量（MB） */
-  storageMB: 256,
-  /** 最大キー数 */
-  maxKeys: 10000,
+  // 無料枠: 10,000 requests/day
+  dailyLimit: 10000,
+  // レート制限: 100 requests/10s
+  rateLimitPerSecond: 10,
 } as const;
 
 /**
  * キャッシュ設定
  */
 export const CACHE_CONFIG = {
-  /** LLMレスポンスキャッシュ有効期限（秒）: 24時間 */
-  ttlSeconds: 24 * 60 * 60,
-  /** 最大キャッシュサイズ（キー数） */
-  maxKeys: UPSTASH_FREE_TIER.maxKeys,
-  /** キャッシュキープレフィックス */
-  keyPrefix: 'aihub:llm:',
+  // キャッシュ有効期限（秒）
+  ttl: 60 * 60 * 24, // 24時間
+  // キャッシュキープレフィックス
+  keyPrefix: 'llm:',
 } as const;
 
 /**
- * レート制限設定
+ * 無料枠レート制限設定
  */
-export const RATE_LIMIT_CONFIG = {
-  /** 識別子の種類 */
-  identifierType: 'ip', // 'ip' | 'user' | 'session'
-  /** レート制限超過時のリトライ間隔（秒） */
-  retryAfterSeconds: 60,
-  /** ヘッダーに制限情報を含めるか */
-  includeHeaders: true,
-} as const;
+export const FREE_TIER_LIMITS: Record<LLMProvider, { rpm: number; rpd: number }> = {
+  'grok-4-1-fast-reasoning': { rpm: 60, rpd: 10000 },
+  'grok-4-0709': { rpm: 60, rpd: 10000 },
+};
 
 /**
- * プロバイダー一覧を取得
+ * プロジェクト別デフォルトプロバイダー
  */
-export function getAvailableProviders(): ProviderInfo[] {
-  return Object.values(PROVIDER_CONFIG).filter(p => p.isAvailable);
-}
+export const PROJECT_DEFAULT_PROVIDERS: Record<string, LLMProvider> = {
+  'PJ-A': 'grok-4-1-fast-reasoning',
+  'PJ-B': 'grok-4-1-fast-reasoning',
+  'PJ-C': 'grok-4-1-fast-reasoning',
+  'PJ-D': 'grok-4-1-fast-reasoning',
+};
 
 /**
  * プロバイダー情報を取得
  */
-export function getProviderInfo(provider: LLMProvider): ProviderInfo {
+export function getProviderInfo(provider: LLMProvider) {
   return PROVIDER_CONFIG[provider];
-}
-
-/**
- * コストを計算
- * @param provider - プロバイダー
- * @param inputTokens - 入力トークン数
- * @param outputTokens - 出力トークン数
- * @returns コスト（USD）
- */
-export function calculateCost(
-  provider: LLMProvider,
-  inputTokens: number,
-  outputTokens: number
-): number {
-  const config = PROVIDER_CONFIG[provider];
-  const inputCost = (inputTokens / 1000000) * config.inputPrice;
-  const outputCost = (outputTokens / 1000000) * config.outputPrice;
-  return Number((inputCost + outputCost).toFixed(6));
 }

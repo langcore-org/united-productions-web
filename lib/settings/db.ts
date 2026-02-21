@@ -6,10 +6,13 @@
  */
 
 import { prisma } from '@/lib/prisma';
+import type { Prisma } from '@prisma/client';
 import { DEFAULT_PROVIDER } from '@/lib/llm/config';
 import { isValidProvider } from '@/lib/llm/factory';
+import { logger } from '@/lib/logger';
 import type { LLMProvider } from '@/lib/llm/types';
 import type { ChatFeatureId } from '@/lib/chat/chat-config';
+import { CACHE_TTL_MS } from '@/config/constants';
 
 /**
  * 管理可能なシステム設定キーの定数
@@ -30,7 +33,6 @@ type CacheEntry<T> = {
 };
 
 const cache = new Map<string, CacheEntry<unknown>>();
-const CACHE_TTL_MS = 60 * 1000; // 1分間キャッシュ
 
 /**
  * キャッシュから値を取得
@@ -71,8 +73,10 @@ export async function getSystemSetting(key: SystemSettingKey): Promise<string | 
   try {
     const setting = await prisma.systemSettings.findUnique({ where: { key } });
     return setting?.value ?? null;
-  } catch {
-    return null;
+  } catch (error) {
+    const err = error instanceof Error ? error : new Error(String(error));
+    logger.error(`Failed to get system setting: ${key}`, { error: err.message, stack: err.stack });
+    throw err;
   }
 }
 
@@ -111,163 +115,83 @@ export async function getDefaultLLMProvider(): Promise<LLMProvider> {
 // ============================================
 
 /**
- * Grokツール設定の型
- * 
- * 各機能でどのツールを有効にするかを設定
- * - search: Web検索（web_search）
- * - xSearch: X検索（x_search）
- * - codeExecution: コード実行（code_execution）
- * - fileSearch: ファイル検索（collections_search）
+ * ツールタイプ（正規名）
+ *
+ * - web_search: Web検索
+ * - x_search: X検索
+ * - code_execution: コード実行
+ * - collections_search: ファイル検索
  */
-export interface GrokToolSettings {
-  // 機能別の検索ツール設定（デフォルトでON）
-  generalChat: boolean;
-  researchCast: boolean;
-  researchLocation: boolean;
-  researchInfo: boolean;
-  researchEvidence: boolean;
-  minutes: boolean;
-  proposal: boolean;
-  naScript: boolean;
-  
-  // 追加ツール設定
-  xSearchGeneralChat: boolean;
-  xSearchResearchCast: boolean;
-  xSearchResearchLocation: boolean;
-  xSearchResearchInfo: boolean;
-  xSearchResearchEvidence: boolean;
-  xSearchMinutes: boolean;
-  xSearchProposal: boolean;
-  xSearchNaScript: boolean;
-  
-  codeExecutionGeneralChat: boolean;
-  codeExecutionResearchCast: boolean;
-  codeExecutionResearchLocation: boolean;
-  codeExecutionResearchInfo: boolean;
-  codeExecutionResearchEvidence: boolean;
-  codeExecutionMinutes: boolean;
-  codeExecutionProposal: boolean;
-  codeExecutionNaScript: boolean;
-  
-  fileSearchGeneralChat: boolean;
-  fileSearchResearchCast: boolean;
-  fileSearchResearchLocation: boolean;
-  fileSearchResearchInfo: boolean;
-  fileSearchResearchEvidence: boolean;
-  fileSearchMinutes: boolean;
-  fileSearchProposal: boolean;
-  fileSearchNaScript: boolean;
+export type GrokToolType = 'web_search' | 'x_search' | 'code_execution' | 'collections_search';
+
+/** すべてのツールタイプ一覧 */
+export const ALL_TOOL_TYPES: GrokToolType[] = [
+  'web_search', 'x_search', 'code_execution', 'collections_search',
+];
+
+/**
+ * レスポンス用ツールタイプ（エイリアス含む）
+ * code_interpreter → code_execution, file_search → collections_search
+ */
+export type GrokToolTypeWithAlias = GrokToolType | 'code_interpreter' | 'file_search';
+
+/** エイリアスを正規名に変換 */
+export function normalizeToolType(toolType: GrokToolTypeWithAlias): GrokToolType {
+  if (toolType === 'code_interpreter') return 'code_execution';
+  if (toolType === 'file_search') return 'collections_search';
+  return toolType;
 }
+
+/**
+ * Grokツール設定の型（ネスト構造）
+ *
+ * 各機能（ChatFeatureId）に対して、有効なツールタイプの配列を持つ。
+ * 例: { 'general-chat': ['web_search', 'x_search'], 'minutes': [] }
+ */
+export type GrokToolSettings = Record<ChatFeatureId, GrokToolType[]>;
 
 /**
  * デフォルトのGrokツール設定
- * 
- * すべてのツールをデフォルトでONに設定
+ * すべての機能で全ツールを有効化
  */
 export const DEFAULT_GROK_TOOL_SETTINGS: GrokToolSettings = {
-  // Web検索（デフォルトON）
-  generalChat: true,
-  researchCast: true,
-  researchLocation: true,
-  researchInfo: true,
-  researchEvidence: true,
-  minutes: true,
-  proposal: true,
-  naScript: true,
-  
-  // X検索（デフォルトON）
-  xSearchGeneralChat: true,
-  xSearchResearchCast: true,
-  xSearchResearchLocation: true,
-  xSearchResearchInfo: true,
-  xSearchResearchEvidence: true,
-  xSearchMinutes: true,
-  xSearchProposal: true,
-  xSearchNaScript: true,
-  
-  // コード実行（デフォルトON）
-  codeExecutionGeneralChat: true,
-  codeExecutionResearchCast: true,
-  codeExecutionResearchLocation: true,
-  codeExecutionResearchInfo: true,
-  codeExecutionResearchEvidence: true,
-  codeExecutionMinutes: true,
-  codeExecutionProposal: true,
-  codeExecutionNaScript: true,
-  
-  // ファイル検索（デフォルトON）
-  fileSearchGeneralChat: true,
-  fileSearchResearchCast: true,
-  fileSearchResearchLocation: true,
-  fileSearchResearchInfo: true,
-  fileSearchResearchEvidence: true,
-  fileSearchMinutes: true,
-  fileSearchProposal: true,
-  fileSearchNaScript: true,
+  'general-chat': [...ALL_TOOL_TYPES],
+  'research-cast': [...ALL_TOOL_TYPES],
+  'research-location': [...ALL_TOOL_TYPES],
+  'research-info': [...ALL_TOOL_TYPES],
+  'research-evidence': [...ALL_TOOL_TYPES],
+  'minutes': [...ALL_TOOL_TYPES],
+  'proposal': [...ALL_TOOL_TYPES],
+  'na-script': [...ALL_TOOL_TYPES],
 };
 
 /**
- * featureIdからGrokToolSettingsのキーに変換
+ * 設定内で特定の機能×ツールが有効かチェック
  */
-export function featureIdToToolKey(featureId: ChatFeatureId): keyof GrokToolSettings | null {
-  const mapping: Record<ChatFeatureId, keyof GrokToolSettings> = {
-    'general-chat': 'generalChat',
-    'research-cast': 'researchCast',
-    'research-location': 'researchLocation',
-    'research-info': 'researchInfo',
-    'research-evidence': 'researchEvidence',
-    'minutes': 'minutes',
-    'proposal': 'proposal',
-    'na-script': 'naScript',
-  };
-  return mapping[featureId] ?? null;
+export function isToolEnabledInSettings(
+  settings: GrokToolSettings,
+  featureId: ChatFeatureId,
+  toolType: GrokToolTypeWithAlias,
+): boolean {
+  const tools = settings[featureId];
+  if (!tools) return false;
+  return tools.includes(normalizeToolType(toolType));
 }
 
 /**
- * ツールタイプ
+ * 設定内で特定の機能にツールが1つでも有効かチェック
  */
-// 注意: code_execution はレスポンスでは code_interpreter として記録される
-export type GrokToolType = 'web_search' | 'x_search' | 'code_execution' | 'code_interpreter' | 'collections_search' | 'file_search';
-
-/**
- * featureIdとツールタイプから設定キーを取得
- */
-export function getToolSettingKey(
-  featureId: ChatFeatureId, 
-  toolType: GrokToolType
-): keyof GrokToolSettings | null {
-  const featureMap: Record<ChatFeatureId, string> = {
-    'general-chat': 'GeneralChat',
-    'research-cast': 'ResearchCast',
-    'research-location': 'ResearchLocation',
-    'research-info': 'ResearchInfo',
-    'research-evidence': 'ResearchEvidence',
-    'minutes': 'Minutes',
-    'proposal': 'Proposal',
-    'na-script': 'NaScript',
-  };
-  
-  const toolPrefixMap: Partial<Record<GrokToolType, string>> = {
-    'web_search': '',
-    'x_search': 'xSearch',
-    'code_execution': 'codeExecution',
-    'code_interpreter': 'codeExecution',  // エイリアス
-    'collections_search': 'fileSearch',
-    'file_search': 'fileSearch',  // エイリアス
-  };
-  
-  const feature = featureMap[featureId];
-  const prefix = toolPrefixMap[toolType];
-  
-  if (!feature) return null;
-  
-  const key = `${prefix}${feature}`;
-  return key as keyof GrokToolSettings;
+export function hasAnyToolEnabled(
+  settings: GrokToolSettings,
+  featureId: ChatFeatureId,
+): boolean {
+  const tools = settings[featureId];
+  return Array.isArray(tools) && tools.length > 0;
 }
 
 /**
  * 特定の機能で特定のツールが有効かどうか
- * 
+ *
  * 【変更】2026-02-20: DBからの設定取得を廃止し、常に全ツール有効を返す
  * 全機能ですべてのツール（Web検索、X検索、コード実行、ファイル検索）を使用可能
  */
@@ -275,10 +199,21 @@ export async function isToolEnabled(
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _featureId: ChatFeatureId,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  _toolType: GrokToolType
+  _toolType: GrokToolTypeWithAlias
 ): Promise<boolean> {
   // 常に全ツール有効
   return true;
+}
+
+/** 部分設定をデフォルトとマージ */
+function mergeWithDefaults(partial: Partial<GrokToolSettings>): GrokToolSettings {
+  const result = { ...DEFAULT_GROK_TOOL_SETTINGS };
+  for (const key of Object.keys(result) as ChatFeatureId[]) {
+    if (key in partial && Array.isArray(partial[key])) {
+      result[key] = partial[key];
+    }
+  }
+  return result;
 }
 
 /**
@@ -286,19 +221,16 @@ export async function isToolEnabled(
  */
 export async function getGrokToolSettings(userId: string): Promise<GrokToolSettings> {
   try {
-    const settings = await (prisma as unknown as { 
-      grokToolSettings: { 
-        findUnique: (args: { where: { userId: string } }) => Promise<GrokToolSettings | null> 
-      } 
-    }).grokToolSettings.findUnique({
+    const record = await prisma.grokToolSettings.findUnique({
       where: { userId },
     });
 
-    if (settings) {
-      return settings;
+    if (record?.settings) {
+      return mergeWithDefaults(record.settings as Partial<GrokToolSettings>);
     }
   } catch (error) {
-    console.error('Failed to get Grok tool settings:', error);
+    const err = error instanceof Error ? error : new Error(String(error));
+    logger.error('Failed to get Grok tool settings', { error: err.message });
   }
 
   return DEFAULT_GROK_TOOL_SETTINGS;
@@ -308,43 +240,32 @@ export async function getGrokToolSettings(userId: string): Promise<GrokToolSetti
  * ユーザーのGrokツール設定を保存
  */
 export async function saveGrokToolSettings(
-  userId: string, 
+  userId: string,
   settings: Partial<GrokToolSettings>
 ): Promise<GrokToolSettings> {
-  const data = {
-    ...DEFAULT_GROK_TOOL_SETTINGS,
-    ...settings,
-  };
+  const data = mergeWithDefaults(settings);
 
-  const result = await (prisma as unknown as { 
-    grokToolSettings: { 
-      upsert: (args: {
-        where: { userId: string };
-        update: GrokToolSettings;
-        create: GrokToolSettings & { userId: string };
-      }) => Promise<GrokToolSettings>;
-    } 
-  }).grokToolSettings.upsert({
+  await prisma.grokToolSettings.upsert({
     where: { userId },
-    update: data,
+    update: { settings: data as unknown as Prisma.InputJsonValue },
     create: {
       userId,
-      ...data,
+      settings: data as unknown as Prisma.InputJsonValue,
     },
   });
 
-  return result;
+  return data;
 }
 
 /**
- * 特定の機能でGrokツール（Web検索）が有効かどうか
- * 
+ * 特定の機能でGrokツールが有効かどうか
+ *
  * 【変更】2026-02-20: DBからの設定取得を廃止し、常に有効を返す
  * 全機能ですべてのツールを使用可能
  */
 export async function isGrokToolEnabled(
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  _userId: string, 
+  _userId: string,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _featureId: ChatFeatureId
 ): Promise<boolean> {
@@ -362,21 +283,18 @@ export async function isGrokToolEnabled(
  */
 export async function getSystemGrokToolSettings(): Promise<GrokToolSettings | null> {
   const cacheKey = SYSTEM_SETTING_KEYS.GROK_TOOL_SETTINGS;
-  
+
   // キャッシュチェック
   const cached = getCache<GrokToolSettings>(cacheKey);
   if (cached) {
     return cached;
   }
-  
+
   try {
     const value = await getSystemSetting(SYSTEM_SETTING_KEYS.GROK_TOOL_SETTINGS);
     if (value) {
       const parsed = JSON.parse(value) as Partial<GrokToolSettings>;
-      const settings = {
-        ...DEFAULT_GROK_TOOL_SETTINGS,
-        ...parsed,
-      };
+      const settings = mergeWithDefaults(parsed);
       // キャッシュに保存
       setCache(cacheKey, settings);
       return settings;
@@ -405,15 +323,12 @@ export async function getSystemGrokToolSettingsOrDefault(): Promise<GrokToolSett
 export async function setSystemGrokToolSettings(
   settings: Partial<GrokToolSettings>
 ): Promise<GrokToolSettings> {
-  const data: GrokToolSettings = {
-    ...DEFAULT_GROK_TOOL_SETTINGS,
-    ...settings,
-  };
+  const data = mergeWithDefaults(settings);
 
   await setSystemSetting(SYSTEM_SETTING_KEYS.GROK_TOOL_SETTINGS, JSON.stringify(data));
-  
+
   // キャッシュをクリア（次回取得時に新しい値をDBから取得）
   clearCache(SYSTEM_SETTING_KEYS.GROK_TOOL_SETTINGS);
-  
+
   return data;
 }

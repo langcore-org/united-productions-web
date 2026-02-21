@@ -1,13 +1,16 @@
 /**
  * LangChain Chat Component
- * 
- * LangChainバックエンドと連携するシンプルなチャットUI
+ *
+ * LangChainバックエンドと連携するチャットUI
+ * ツール呼び出し・思考ステップ表示にも対応
  */
 
 'use client';
 
 import { useLangChainChat } from '@/hooks/useLangChainChat';
 import type { LLMProvider } from '@/lib/llm/types';
+import { Loader2, CheckCircle2, BrainCircuit } from 'lucide-react';
+import { getToolConfig } from '@/lib/tools/config';
 
 interface LangChainChatProps {
   provider?: LLMProvider;
@@ -15,7 +18,20 @@ interface LangChainChatProps {
 }
 
 export function LangChainChat({ provider, temperature = 0.7 }: LangChainChatProps) {
-  const { messages, input, isLoading, error, setInput, handleSubmit, stop } = useLangChainChat({
+  const {
+    messages,
+    input,
+    isLoading,
+    error,
+    toolCalls,
+    reasoningSteps,
+    streamingContent,
+    thinking,
+    isComplete,
+    setInput,
+    handleSubmit,
+    stop,
+  } = useLangChainChat({
     provider,
     temperature,
   });
@@ -23,7 +39,7 @@ export function LangChainChat({ provider, temperature = 0.7 }: LangChainChatProp
   return (
     <div className="flex flex-col h-full max-w-4xl mx-auto p-4">
       <h2 className="text-xl font-bold mb-4">LangChain Chat ({provider || 'default'})</h2>
-      
+
       {/* エラー表示 */}
       {error && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
@@ -60,9 +76,61 @@ export function LangChainChat({ provider, temperature = 0.7 }: LangChainChatProp
             </div>
           ))
         )}
-        
+
+        {/* ツール呼び出し表示 */}
+        {isLoading && toolCalls.length > 0 && (
+          <div className="flex flex-wrap gap-2 px-2">
+            {toolCalls.map((tool) => {
+              const config = getToolConfig(tool.type, tool.name);
+              const Icon = config.icon;
+              return (
+                <div
+                  key={tool.id}
+                  className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${
+                    tool.status === 'running'
+                      ? 'bg-blue-50 text-blue-700 border-blue-200 animate-pulse'
+                      : tool.status === 'completed'
+                      ? 'bg-green-50 text-green-700 border-green-200'
+                      : 'bg-gray-50 text-gray-600 border-gray-200'
+                  }`}
+                >
+                  <Icon className="w-3 h-3" />
+                  <span>{config.label}</span>
+                  {tool.status === 'running' && <Loader2 className="w-3 h-3 animate-spin" />}
+                  {tool.status === 'completed' && <CheckCircle2 className="w-3 h-3" />}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* 思考ステップ表示 */}
+        {isLoading && reasoningSteps.length > 0 && (
+          <div className="px-2 space-y-1">
+            {reasoningSteps.map((step) => (
+              <div key={step.step} className="flex items-start gap-2 p-2 rounded bg-purple-50 border border-purple-100">
+                <BrainCircuit className="w-4 h-4 text-purple-600 flex-shrink-0 mt-0.5" />
+                <p className="text-sm text-purple-900">{step.content}</p>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* ストリーミング中のコンテンツ表示 */}
+        {isLoading && streamingContent && (
+          <div className="flex justify-start">
+            <div className="max-w-[80%] rounded-lg px-4 py-2 bg-white border border-gray-200">
+              <div className="text-sm font-semibold mb-1">Assistant</div>
+              <div className="whitespace-pre-wrap">
+                {streamingContent}
+                <span className="inline-block w-2 h-4 bg-gray-400 ml-1 animate-pulse rounded-sm" />
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* ローディングインジケータ */}
-        {isLoading && (
+        {isLoading && !streamingContent && (
           <div className="flex justify-start">
             <div className="bg-white border border-gray-200 rounded-lg px-4 py-2">
               <div className="flex items-center space-x-2">

@@ -5,9 +5,13 @@
  */
 
 import { LLMProvider, LLMClient, VALID_PROVIDERS } from './types';
-import { getProviderInfo } from './config';
+import { PROVIDER_CONFIG } from './config';
 import { createLangChainClient } from './langchain/adapter';
 import type { LangChainOptions } from './langchain/types';
+
+export function getProviderInfo(provider: LLMProvider) {
+  return PROVIDER_CONFIG[provider];
+}
 
 /**
  * LLMクライアントを生成するFactory関数（LangChain版）

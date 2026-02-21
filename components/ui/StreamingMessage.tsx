@@ -13,7 +13,7 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { cn } from '@/lib/utils';
 import { Loader2, Bot, Lightbulb, BrainCircuit, CheckCircle2 } from 'lucide-react';
 import type { LLMMessage, LLMProvider } from '@/lib/llm/types';
-import { parseSSEStream } from '@/lib/llm/sse-parser';
+import { streamLLMResponse, LLMApiError } from '@/lib/api/llm-client';
 import { getToolConfig, TOOL_CONFIG } from '@/lib/tools/config';
 
 /**
@@ -106,30 +106,10 @@ export function useLLMStream() {
     abortControllerRef.current = new AbortController();
 
     try {
-      const response = await fetch('/api/llm/stream', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          messages,
-          provider,
-          toolOptions,
-        }),
-        signal: abortControllerRef.current.signal,
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
-      }
-
-      const reader = response.body?.getReader();
-      if (!reader) {
-        throw new Error('レスポンスボディを読み取れません');
-      }
-
-      for await (const event of parseSSEStream(reader)) {
+      for await (const event of streamLLMResponse(
+        { messages, provider, toolOptions },
+        { signal: abortControllerRef.current.signal },
+      )) {
         if (event.error) {
           throw new Error(event.error);
         }
@@ -186,7 +166,9 @@ export function useLLMStream() {
         // キャンセルは正常
         setIsComplete(true);
       } else {
-        const errorMessage = err instanceof Error ? err.message : '予期しないエラーが発生しました';
+        const errorMessage = err instanceof LLMApiError
+          ? err.message
+          : err instanceof Error ? err.message : '予期しないエラーが発生しました';
         setError(errorMessage);
         setIsComplete(true);
       }

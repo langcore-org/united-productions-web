@@ -39,7 +39,7 @@ export default async function LangChainTestPage({ searchParams }: PageProps) {
         <div className="mt-6 bg-white shadow rounded-lg p-6">
           <h2 className="text-lg font-semibold mb-4">Available Providers</h2>
           <div className="flex flex-wrap gap-2">
-            {['grok-4-1-fast-reasoning', 'grok-4-0709', 'gpt-4o-mini'/*, 'claude-sonnet-4.5'*/].map((p) => (
+            {['grok-4-1-fast-reasoning', 'grok-4-0709'/*, 'gpt-4o-mini', 'claude-sonnet-4.5'*/].map((p) => (
               <a
                 key={p}
                 href={`/langchain-test?provider=${p}`}

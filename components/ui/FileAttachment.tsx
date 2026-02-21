@@ -31,7 +31,7 @@ const ACCEPTED_TYPES = {
   "code/*": [".js", ".ts", ".tsx", ".jsx", ".py", ".html", ".css"],
 };
 
-const MAX_FILE_SIZE_MB = 10;
+import { MAX_FILE_SIZE_MB } from "@/config/constants";
 
 function getFileIcon(type: string) {
   if (type.startsWith("image/")) return Image;

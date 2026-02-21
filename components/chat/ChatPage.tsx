@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { FeatureChat } from "@/components/ui/FeatureChat";
 import { getChatConfig, ChatFeatureId, updateChatConfigSystemPrompt, ToolOptions } from "@/lib/chat/chat-config";
-import { featureIdToToolKey, GrokToolSettings } from "@/lib/settings/db";
+import { GrokToolSettings } from "@/lib/settings/db";
 
 interface ChatPageProps {
   featureId: ChatFeatureId;
@@ -64,21 +64,9 @@ export function ChatPage({ featureId }: ChatPageProps) {
 
   // 機能別ツール設定を計算
   const getToolOptions = (): ToolOptions => {
-    // デフォルトのツール設定
-    const defaultOptions = config.toolOptions;
-    
-    // 管理画面での設定があればマージ
-    if (!grokToolSettings) return defaultOptions;
-    
-    const toolKey = featureIdToToolKey(featureId);
-    const isEnabled = toolKey ? (grokToolSettings[toolKey] ?? false) : false;
-    
-    // 管理画面で無効化されている場合は全ツール無効
-    if (!isEnabled) {
-      return { enableWebSearch: false, enableXSearch: false, enableCodeExecution: false };
-    }
-    
-    return defaultOptions;
+    // デフォルトのツール設定を返す
+    // 注: featureIdToToolKey関数は削除されたため、シンプル化
+    return config.toolOptions;
   };
 
   if (isLoading) {

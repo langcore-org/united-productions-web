@@ -46,15 +46,16 @@ export function isGrokProvider(provider: LLMProvider): boolean {
 /**
  * プロバイダーがGemini系かどうかを判定
  */
-export function isGeminiProvider(provider: LLMProvider): boolean {
-  return provider.includes("gemini");
-}
+// export function isGeminiProvider(provider: LLMProvider): boolean {
+//   return provider.includes("gemini");
+// }
 
 /**
  * プロバイダーが検索機能を持つかどうかを判定
  */
 export function hasSearchCapability(provider: LLMProvider): boolean {
-  return provider.includes("grok") || provider.includes("perplexity");
+  return provider.includes("grok");
+  // || provider.includes("perplexity");
 }
 
 /**
@@ -62,16 +63,16 @@ export function hasSearchCapability(provider: LLMProvider): boolean {
  */
 export function getProviderDisplayName(provider: LLMProvider): string {
   const names: Record<string, string> = {
-    "gemini-2.5-flash-lite": "Gemini 2.5 Flash-Lite",
-    "gemini-3.0-flash": "Gemini 3.0 Flash",
+    // "gemini-2.5-flash-lite": "Gemini 2.5 Flash-Lite",
+    // "gemini-3.0-flash": "Gemini 3.0 Flash",
     "grok-4-1-fast-reasoning": "Grok 4.1 Fast",
     "grok-4-0709": "Grok 4",
-    "gpt-4o-mini": "GPT-4o Mini",
-    "gpt-5": "GPT-5",
+    // "gpt-4o-mini": "GPT-4o Mini",
+    // "gpt-5": "GPT-5",
     // "claude-sonnet-4.5": "Claude 4.5 Sonnet",
     // "claude-opus-4.6": "Claude 4.6 Opus",
-    "perplexity-sonar": "Perplexity Sonar",
-    "perplexity-sonar-pro": "Perplexity Sonar Pro",
+    // "perplexity-sonar": "Perplexity Sonar",
+    // "perplexity-sonar-pro": "Perplexity Sonar Pro",
   };
   return names[provider] || provider;
 }

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Send, Loader2, Trash2 } from "lucide-react";
 import { FileAttachButton, AttachedFile } from "./FileAttachment";
+import { TEXTAREA_MAX_HEIGHT_PX } from "@/config/constants";
 
 export interface ChatInputAreaProps {
   input: string;
@@ -38,7 +39,7 @@ export function ChatInputArea({
       textareaRef.current.style.height = "auto";
       textareaRef.current.style.height = `${Math.min(
         textareaRef.current.scrollHeight,
-        200,
+        TEXTAREA_MAX_HEIGHT_PX,
       )}px`;
     }
   }, [input]);
