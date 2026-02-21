@@ -47,12 +47,12 @@ const PRIMARY_MODELS: ModelInfo[] = [
 ];
 
 const OTHER_MODELS: ModelInfo[] = [
-  {
-    id: "claude-sonnet-4.5",
-    name: "Claude 4.5 Sonnet",
-    description: "Anthropic - 長文理解に強い",
-    icon: <Bot className="w-4 h-4" />,
-  },
+  // {
+  //   id: "claude-sonnet-4.5",
+  //   name: "Claude 4.5 Sonnet",
+  //   description: "Anthropic - 長文理解に強い",
+  //   icon: <Bot className="w-4 h-4" />,
+  // },
   {
     id: "gpt-5",
     name: "GPT-5",

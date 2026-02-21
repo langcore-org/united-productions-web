@@ -2,7 +2,9 @@
  * LLM統合の型定義
  * 
  * 複数のLLMプロバイダーを統一インターフェースで利用するための型定義
- * 対応プロバイダー: Gemini, Grok, OpenAI, Anthropic, Perplexity
+ * 対応プロバイダー: Gemini, Grok, OpenAI, Perplexity
+ * 
+ * 注意: Claudeは現在未使用（将来追加時に有効化）
  */
 
 /**
@@ -16,8 +18,8 @@ export const VALID_PROVIDERS = [
   'grok-4-0709',
   'gpt-4o-mini',
   'gpt-5',
-  'claude-sonnet-4.5',
-  'claude-opus-4.6',
+  // 'claude-sonnet-4.5',  // 現在未使用
+  // 'claude-opus-4.6',    // 現在未使用
   'perplexity-sonar',
   'perplexity-sonar-pro',
 ] as const;

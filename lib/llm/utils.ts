@@ -68,8 +68,8 @@ export function getProviderDisplayName(provider: LLMProvider): string {
     "grok-4-0709": "Grok 4",
     "gpt-4o-mini": "GPT-4o Mini",
     "gpt-5": "GPT-5",
-    "claude-sonnet-4.5": "Claude 4.5 Sonnet",
-    "claude-opus-4.6": "Claude 4.6 Opus",
+    // "claude-sonnet-4.5": "Claude 4.5 Sonnet",
+    // "claude-opus-4.6": "Claude 4.6 Opus",
     "perplexity-sonar": "Perplexity Sonar",
     "perplexity-sonar-pro": "Perplexity Sonar Pro",
   };

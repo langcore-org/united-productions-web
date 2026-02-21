@@ -23,8 +23,8 @@ function toPrismaProvider(provider: LLMProvider): string {
     "grok-4-0709": "GROK_4_0709",
     "gpt-4o-mini": "GPT_4O_MINI",
     "gpt-5": "GPT_5",
-    "claude-sonnet-4.5": "CLAUDE_SONNET_45",
-    "claude-opus-4.6": "CLAUDE_OPUS_46",
+    // "claude-sonnet-4.5": "CLAUDE_SONNET_45",
+    // "claude-opus-4.6": "CLAUDE_OPUS_46",
     "perplexity-sonar": "PERPLEXITY_SONAR",
     "perplexity-sonar-pro": "PERPLEXITY_SONAR_PRO",
   };

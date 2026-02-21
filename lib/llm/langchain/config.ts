@@ -17,8 +17,9 @@ export const PROVIDER_MODEL_MAP: Record<LLMProvider, { model: string; provider: 
   'grok-4-0709': { model: 'grok-4-0709', provider: 'xai' },
   'gpt-4o-mini': { model: 'gpt-4o-mini', provider: 'openai' },
   'gpt-5': { model: 'gpt-5', provider: 'openai' },
-  'claude-sonnet-4.5': { model: 'claude-3-5-sonnet-20241022', provider: 'anthropic' },
-  'claude-opus-4.6': { model: 'claude-3-opus-20240229', provider: 'anthropic' },
+  // Claudeモデルは現在未使用（将来追加時に有効化）
+  // 'claude-sonnet-4.5': { model: 'claude-3-5-sonnet-20241022', provider: 'anthropic' },
+  // 'claude-opus-4.6': { model: 'claude-3-opus-20240229', provider: 'anthropic' },
   'perplexity-sonar': { model: 'sonar', provider: 'perplexity' },
   'perplexity-sonar-pro': { model: 'sonar-pro', provider: 'perplexity' },
 };

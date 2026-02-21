@@ -77,28 +77,9 @@ export const PROVIDER_CONFIG: Record<LLMProvider, ProviderInfo> = {
     recommendedFor: ['高品質タスク', '長文コンテキスト'],
     isAvailable: true,
   },
-  'claude-sonnet-4.5': {
-    id: 'claude-sonnet-4.5',
-    name: 'Claude 4.5 Sonnet',
-    provider: 'Anthropic',
-    description: 'バランス型モデル。思考プロセス表示対応。',
-    inputPrice: 3.00,
-    outputPrice: 15.00,
-    contextLength: 200000,
-    recommendedFor: ['バランス重視', '推論タスク'],
-    isAvailable: true,
-  },
-  'claude-opus-4.6': {
-    id: 'claude-opus-4.6',
-    name: 'Claude Opus 4.6',
-    provider: 'Anthropic',
-    description: 'Anthropic最高品質モデル。',
-    inputPrice: 5.00,
-    outputPrice: 25.00,
-    contextLength: 200000,
-    recommendedFor: ['最高品質', '複雑なコーディング', '研究'],
-    isAvailable: true,
-  },
+  // Claudeモデルは現在未使用（将来追加時に有効化）
+  // 'claude-sonnet-4.5': { ... },
+  // 'claude-opus-4.6': { ... },
   'perplexity-sonar': {
     id: 'perplexity-sonar',
     name: 'Perplexity Sonar',
@@ -168,9 +149,9 @@ export const FREE_TIER_LIMITS: Record<LLMProvider, { rpm: number; rpd: number }>
   // OpenAI: デフォルト制限（有料API前提）
   'gpt-4o-mini': { rpm: 60, rpd: 10000 },
   'gpt-5': { rpm: 60, rpd: 10000 },
-  // Anthropic: デフォルト制限（有料API前提）
-  'claude-sonnet-4.5': { rpm: 60, rpd: 10000 },
-  'claude-opus-4.6': { rpm: 60, rpd: 10000 },
+  // Anthropic: 現在未使用（将来追加時に有効化）
+  // 'claude-sonnet-4.5': { rpm: 60, rpd: 10000 },
+  // 'claude-opus-4.6': { rpm: 60, rpd: 10000 },
   // Perplexity: デフォルト制限（有料API前提）
   'perplexity-sonar': { rpm: 60, rpd: 10000 },
   'perplexity-sonar-pro': { rpm: 60, rpd: 10000 },

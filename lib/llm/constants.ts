@@ -16,8 +16,8 @@ export const PROVIDER_LABELS: Record<LLMProvider, string> = {
   "grok-4-0709": "Grok 4",
   "gpt-4o-mini": "GPT-4o-mini",
   "gpt-5": "GPT-5",
-  "claude-sonnet-4.5": "Claude 4.5 Sonnet",
-  "claude-opus-4.6": "Claude Opus 4.6",
+  // "claude-sonnet-4.5": "Claude 4.5 Sonnet",
+  // "claude-opus-4.6": "Claude Opus 4.6",
   "perplexity-sonar": "Perplexity Sonar",
   "perplexity-sonar-pro": "Perplexity Sonar Pro",
 };
@@ -32,8 +32,8 @@ export const PROVIDER_COLORS: Record<LLMProvider, string> = {
   "grok-4-0709": "#ff6b00",
   "gpt-4o-mini": "#10a37f",
   "gpt-5": "#10a37f",
-  "claude-sonnet-4.5": "#d4a574",
-  "claude-opus-4.6": "#d4a574",
+  // "claude-sonnet-4.5": "#d4a574",
+  // "claude-opus-4.6": "#d4a574",
   "perplexity-sonar": "#22c55e",
   "perplexity-sonar-pro": "#22c55e",
 };
@@ -45,7 +45,7 @@ export const PROVIDER_CATEGORIES: Record<string, LLMProvider[]> = {
   google: ["gemini-2.5-flash-lite", "gemini-3.0-flash"],
   xai: ["grok-4-1-fast-reasoning", "grok-4-0709"],
   openai: ["gpt-4o-mini", "gpt-5"],
-  anthropic: ["claude-sonnet-4.5", "claude-opus-4.6"],
+  // anthropic: ["claude-sonnet-4.5", "claude-opus-4.6"],
   perplexity: ["perplexity-sonar", "perplexity-sonar-pro"],
 };
 

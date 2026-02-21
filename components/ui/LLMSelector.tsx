@@ -39,8 +39,9 @@ const PROVIDERS: ProviderInfo[] = [
   { id: "grok-4-0709", name: "Grok 4", description: "高品質・標準", category: "xai", isNew: true },
   { id: "gpt-4o-mini", name: "GPT-4o-mini", description: "コスパ良好", category: "openai" },
   { id: "gpt-5", name: "GPT-5", description: "最新フラッグシップ", category: "openai", isNew: true },
-  { id: "claude-sonnet-4.5", name: "Claude 4.5 Sonnet", description: "バランス型", category: "anthropic" },
-  { id: "claude-opus-4.6", name: "Claude Opus 4.6", description: "最高品質", category: "anthropic", isNew: true },
+  // Claudeモデルは現在未使用（将来追加時に有効化）
+  // { id: "claude-sonnet-4.5", name: "Claude 4.5 Sonnet", description: "バランス型", category: "anthropic" },
+  // { id: "claude-opus-4.6", name: "Claude Opus 4.6", description: "最高品質", category: "anthropic", isNew: true },
   { id: "perplexity-sonar", name: "Perplexity Sonar", description: "エビデンス付き検索", category: "perplexity" },
   { id: "perplexity-sonar-pro", name: "Perplexity Sonar Pro", description: "高品質検索", category: "perplexity" },
 ];

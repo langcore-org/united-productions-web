@@ -2,7 +2,7 @@
 
 > 対象範囲: `agent1` アプリ全体（admin管理画面を除く）
 > 作成日: 2026-02-21
-> **更新日: 2026-02-21 23:40** - LangChain移行完了に伴う更新
+> **更新日: 2026-02-21 23:55** - LangChain移行完了に伴う更新・追加調査反映
 
 ---
 
@@ -282,6 +282,211 @@ LangChain移行完了後、`useChat.ts`（従来API用）と `useLangChainChat.t
 
 ---
 
+## 13. API Routesの完全重複（新規）
+
+**優先度: 🔴 高 / 難易度: 🟨 低**
+
+**追加日: 2026-02-21**
+
+### 問題
+
+`app/api/llm/stream/route.ts` と `app/api/llm/langchain/stream/route.ts` が**ほぼ完全に同じ**実装になっている。requestIdのプレフィックス（`stream_` vs `lcs_`）以外は同一。
+
+### 詳細
+
+| ファイル | 内容 | 重複度 |
+|----------|------|--------|
+| `app/api/llm/stream/route.ts` | SSEストリーミング（LangChain版） | 100% |
+| `app/api/llm/langchain/stream/route.ts` | SSEストリーミング（LangChain版） | 100% |
+
+両ファイルとも：
+- 同じZodスキーマ
+- 同じ認証・バリデーションフロー
+- 同じエラーハンドリング
+- 同じストリーミング処理
+
+### 改善方向
+
+**即座に統合可能**: `/api/llm/stream` を残し、`/api/llm/langchain/stream` は削除またはリダイレクト
+
+```typescript
+// app/api/llm/langchain/stream/route.ts
+import { POST as streamPOST } from '../../stream/route';
+export const POST = streamPOST; // 単純なリエクスポート
+```
+
+### 関連ファイル
+
+- `app/api/llm/stream/route.ts`
+- `app/api/llm/langchain/stream/route.ts`
+
+---
+
+## 14. ChatInputコンポーネントの重複（新規）
+
+**優先度: 🟠 中 / 難易度: 🟫 中**
+
+**追加日: 2026-02-21**
+
+### 問題
+
+チャット入力コンポーネントが3箇所で重複して実装されている。
+
+| ファイル | 用途 | 重複内容 |
+|----------|------|----------|
+| `components/chat/ChatInput.tsx` | 一般チャット用 | テキストエリア自動リサイズ、送信/停止ボタン |
+| `components/research/ChatInput.tsx` | リサーチ用 | 同上（placeholderのみ差異） |
+| `components/ui/ChatInputArea.tsx` | UIライブラリ用 | 同上 |
+
+### 詳細
+
+- テキストエリアの自動リサイズ処理
+- 送信ボタンと停止ボタンの表示制御
+- キーボードショートカット（Enter送信、Shift+Enter改行）
+
+これらはすべて同じ機能を提供している。
+
+### 改善方向
+
+`components/ui/ChatInputArea.tsx` をベースに統合：
+- `variant` propsで見た目をカスタマイズ
+- `placeholder` propsでテキストを変更
+- `onSubmit`, `onStop` コールバックで動作を統一
+
+```typescript
+// 統合案
+interface ChatInputAreaProps {
+  variant?: 'default' | 'research' | 'chat';
+  placeholder?: string;
+  onSubmit: (value: string) => void;
+  onStop?: () => void;
+  // ...
+}
+```
+
+### 関連ファイル
+
+- `components/ui/ChatInputArea.tsx` - 統合ベース
+- `components/chat/ChatInput.tsx` - 統合対象
+- `components/research/ChatInput.tsx` - 統合対象
+
+---
+
+## 15. EmptyStateコンポーネントの重複（新規）
+
+**優先度: 🟡 低 / 難易度: 🟨 低**
+
+**追加日: 2026-02-21**
+
+### 問題
+
+空状態表示コンポーネントが2箇所で重複している。
+
+| ファイル | 用途 |
+|----------|------|
+| `components/chat/EmptyState.tsx` | 一般チャット用 |
+| `components/research/EmptyState.tsx` | リサーチ用 |
+
+### 詳細
+
+- 空状態のアイコン表示
+- サジェスト表示
+- agent固有の設定（リサーチ用のみ）
+
+### 改善方向
+
+propsでカスタマイズ可能な1コンポーネントに統合：
+
+```typescript
+interface EmptyStateProps {
+  title?: string;
+  suggestions?: string[];
+  agentConfig?: AgentConfig; // リサーチ用の設定
+}
+```
+
+### 関連ファイル
+
+- `components/chat/EmptyState.tsx`
+- `components/research/EmptyState.tsx`
+
+---
+
+## 16. 環境変数名の不整合（新規）
+
+**優先度: 🔴 高 / 難易度: 🟨 低**
+
+**追加日: 2026-02-21**
+
+### 問題
+
+Google/Gemini APIキーの環境変数名に不整合がある。
+
+| 場所 | 環境変数名 |
+|------|-----------|
+| `.env.example`, `.env.local` | `GEMINI_API_KEY` |
+| `lib/llm/langchain/config.ts:31` | `GOOGLE_API_KEY` |
+
+### 詳細
+
+```typescript
+// lib/llm/langchain/config.ts
+const PROVIDER_ENV_KEYS: Record<string, string> = {
+  google: 'GOOGLE_API_KEY',  // ← ここが不整合
+  // ...
+};
+```
+
+これにより、Geminiモデルが使用できない可能性がある。
+
+### 改善方向
+
+**推奨**: コード側を修正（既存の `.env` 設定を壊さない）
+
+```typescript
+// lib/llm/langchain/config.ts
+const PROVIDER_ENV_KEYS: Record<string, string> = {
+  google: 'GEMINI_API_KEY',  // GOOGLE_API_KEY → GEMINI_API_KEY
+  // ...
+};
+```
+
+### 関連ファイル
+
+- `lib/llm/langchain/config.ts`
+- `.env.example`
+- `.env.local`
+
+---
+
+## 17. 未使用/空の環境変数（新規）
+
+**優先度: 🟡 低 / 難易度: 🟨 低**
+
+**追加日: 2026-02-21**
+
+### 問題
+
+以下の環境変数が未使用または空の状態になっている。
+
+| 環境変数 | 状態 | 備考 |
+|---------|------|------|
+| `OPENAI_API_KEY` | 空文字 | コメント「いったん使わない」 |
+| `ANTHROPIC_API_KEY` | 空文字 | コメント「いったん使わない」 |
+| `PLAYWRIGHT_BASE_URL` | `.env.local` に欠落 | `.env.example` にのみ存在 |
+
+### 改善方向
+
+- `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`: 将来使用予定がある場合は `.env.example` に残す、なければ削除検討
+- `PLAYWRIGHT_BASE_URL`: `.env.local` に追加（E2Eテスト用）
+
+### 関連ファイル
+
+- `.env.example`
+- `.env.local`
+
+---
+
 ## 関連性・重複性マップ
 
 各課題は独立しているわけではなく、同一ファイル・同一コンテキストで絡み合っている。以下に依存関係と重複を整理する。
@@ -308,6 +513,15 @@ LangChain移行完了後、`useChat.ts`（従来API用）と `useLangChainChat.t
   ├── #4 handleStream肥大化 （統合時に解消される可能性）
   ├── #7 状態の三重管理     （useLangChainChat.tsはシンプルな状態管理）
   └── #9 fetchの直接呼び出し（APIクライアント層の導入機会）
+
+#13 API Routes重複
+  └── #12 LangChain統合     （API統合はフック統合と並行して実施可能）
+
+#14 ChatInput重複
+  └── #12 LangChain統合     （UI統合はフック統合後に実施が効率的）
+
+#16 環境変数不整合
+  └── #8 GrokToolSettings   （設定周りはまとめて対応すると効率的）
 ```
 
 ### 一緒に実装すべきグループ
@@ -332,9 +546,30 @@ LangChain移行完了後、`useChat.ts`（従来API用）と `useLangChainChat.t
 
 **根拠:** `fetch` を `lib/api/llmClient.ts` に集約（#9）すると、HTTPリクエスト周りのエラーハンドリングを一か所で統一でき、#6 の問題の一部が自動解決する。さらに #12 のLangChain統合もAPIクライアント層で抽象化できる。
 
-#### グループE: コードクリーンアップ ― **#10 + #11（Props命名部分）**
+#### グループE: コードクリーンアップ ― **#10 + #11（Props命名部分）+ #15 + #17**
 
 **根拠:** どちらも単一ファイル内で完結する軽微な変更。コンテキストの切り替えコストが低いため、一括でクリーンアップするのが効率的。
+
+#### グループF: API Routes統合 ― **#13**
+
+**根拠:** `app/api/llm/stream/route.ts` と `app/api/llm/langchain/stream/route.ts` は完全に重複している。即座に統合可能で、影響範囲も限定されている。
+
+- `/api/llm/langchain/stream` を `/api/llm/stream` に統合
+- リダイレクトまたは単純なリエクスポートで対応
+
+#### グループG: UIコンポーネント統合 ― **#14 + #15**
+
+**根拠:** ChatInput（#14）とEmptyState（#15）は両方ともUIコンポーネントの重複。同じ設計思想で統合できる。
+
+- `components/ui/` をベースに統合
+- `variant` propsでカスタマイズ可能にする
+
+#### グループH: 設定・環境変数整理 ― **#16 + #17**
+
+**根拠:** 環境変数名の不整合（#16）と未使用変数（#17）は設定周りの整理。まとめて対応すると効率的。
+
+- #16は即座に修正が必要（Geminiが使用できない可能性）
+- #17は整理整頓として実施
 
 ---
 
@@ -354,13 +589,21 @@ LangChain移行完了後、`useChat.ts`（従来API用）と `useLangChainChat.t
 | 10 | ハードコードされた定数 | 🟡 低 | 🟨 低 | **グループE** | 対応待ち |
 | 11 | ~~命名の非一貫性~~ | 🟡 低 | 🟨 低 | **グループC / E** | ✅ 完了 |
 | 12 | LangChain移行後のフック統合 | 🟠 中 | ⬛ 高 | **グループA / D** | 対応待ち |
+| 13 | API Routesの完全重複 | 🔴 高 | 🟨 低 | **グループF** | 対応待ち |
+| 14 | ChatInputコンポーネントの重複 | 🟠 中 | 🟫 中 | **グループG** | 対応待ち |
+| 15 | EmptyStateコンポーネントの重複 | 🟡 低 | 🟨 低 | **グループG** | 対応待ち |
+| 16 | 環境変数名の不整合 | 🔴 高 | 🟨 低 | **グループH** | 対応待ち |
+| 17 | 未使用/空の環境変数 | 🟡 低 | 🟨 低 | **グループH** | 対応待ち |
 
 ### 推奨対応順序
 
-1. **グループB** (`lib/settings/db.ts` 一括修正): #5 + #6 ― 同一ファイルで完結、高優先度
-2. **グループA/D** (フック統合・APIクライアント層): #4 + #7 + #9 + #12 ― 関連性が高いため一括対応
-3. **グループC** (設定スキーマ再設計): #8 + #11（featureId）― 大規模改修のため単独スプリントで対応
-4. **グループE** (コードクリーンアップ): #10 + #11（Props命名）― いつでも対応可能
+1. **グループH** (環境変数修正): #16 ― 即座に修正が必要（Gemini使用不可の可能性）
+2. **グループF** (API Routes統合): #13 ― 完全重複のため即座に統合可能
+3. **グループB** (`lib/settings/db.ts` 一括修正): #5 + #6 ― 同一ファイルで完結、高優先度
+4. **グループA/D** (フック統合・APIクライアント層): #4 + #7 + #9 + #12 ― 関連性が高いため一括対応
+5. **グループC** (設定スキーマ再設計): #8 + #11（featureId）― 大規模改修のため単独スプリントで対応
+6. **グループG** (UIコンポーネント統合): #14 + #15 ― フック統合後に実施
+7. **グループE** (コードクリーンアップ): #10 + #11（Props命名）+ #17 ― いつでも対応可能
 
 ### LangChain移行完了に伴う特記事項
 
