@@ -34,6 +34,10 @@ export interface FeatureChatProps {
   inputLabel?: string;
   outputFormat?: "markdown" | "plaintext";
   className?: string;
+  /** チャットセッションID（指定なしの場合は新規チャット） */
+  chatId?: string;
+  /** チャットが新規作成されたときに呼ばれるコールバック */
+  onChatCreated?: (chatId: string) => void;
   /** 使用するLLMプロバイダー（未指定時はデフォルト） */
   provider?: LLMProvider;
   /** 空の状態の説明 */
@@ -54,6 +58,8 @@ export function FeatureChat({
   inputLabel,
   outputFormat = "markdown",
   className,
+  chatId: initialChatId,
+  onChatCreated,
   provider: initialProvider = DEFAULT_PROVIDER,
   emptyDescription,
   enableFileAttachment = true,
@@ -65,6 +71,8 @@ export function FeatureChat({
   const [isCopied, setIsCopied] = useState(false);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [attachedFiles, setAttachedFiles] = useState<AttachedFile[]>([]);
+  // 現在のチャットセッションID（undefinedは新規チャット未保存状態）
+  const [currentChatId, setCurrentChatId] = useState<string | undefined>(initialChatId);
   
   // 思考プロセス状態
   const [thinkingSteps, setThinkingSteps] = useState<ThinkingStep[]>([]);
@@ -90,11 +98,11 @@ export function FeatureChat({
     resetStream,
   } = useLLMStream();
 
-  // 会話履歴を取得
-  const loadConversation = useCallback(async () => {
+  // 会話履歴を取得（chatIdがある場合のみ）
+  const loadConversation = useCallback(async (chatId: string) => {
     setIsLoadingHistory(true);
     try {
-      const response = await fetch(`/api/chat/feature?featureId=${featureId}`);
+      const response = await fetch(`/api/chat/feature?chatId=${chatId}`);
       if (response.ok) {
         const data = await response.json();
         if (data.messages) {
@@ -111,12 +119,19 @@ export function FeatureChat({
     } finally {
       setIsLoadingHistory(false);
     }
-  }, [featureId]);
+  }, []);
 
-  // 初回マウント時に履歴を読み込む
+  // 初回マウント時: chatIdがあれば履歴を読み込む、なければ新規（空）
   useEffect(() => {
-    loadConversation();
-  }, [loadConversation]);
+    if (initialChatId) {
+      setCurrentChatId(initialChatId);
+      loadConversation(initialChatId);
+    } else {
+      // 新規チャット: 状態をリセット
+      setMessages([]);
+      setCurrentChatId(undefined);
+    }
+  }, [initialChatId, loadConversation]);
 
   // メッセージ追加時に自動スクロール
   useEffect(() => {
@@ -378,21 +393,30 @@ export function FeatureChat({
       setMessages((prev) => [...prev, assistantMessage]);
       resetStream();
 
-      // 会話履歴を保存
-      saveConversation([...messages, assistantMessage]);
+      // 会話履歴を保存（currentChatIdが未定義の場合は新規作成）
+      saveConversation([...messages, assistantMessage], currentChatId);
     }
   }, [isComplete, content, messages, resetStream]);
 
-  const saveConversation = async (updatedMessages: Message[]) => {
+  const saveConversation = async (updatedMessages: Message[], chatId: string | undefined) => {
     try {
-      await fetch("/api/chat/feature", {
+      const response = await fetch("/api/chat/feature", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          chatId,
           featureId,
           messages: updatedMessages,
         }),
       });
+      if (response.ok) {
+        const data = await response.json();
+        // 新規チャットの場合、返ってきたchatIdを保存してURLを更新
+        if (!chatId && data.chatId) {
+          setCurrentChatId(data.chatId);
+          onChatCreated?.(data.chatId);
+        }
+      }
     } catch (err) {
       console.error("Failed to save conversation:", err);
     }
@@ -411,14 +435,16 @@ export function FeatureChat({
 
   const handleClear = async () => {
     setMessages([]);
-    try {
-      await fetch("/api/chat/feature", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ featureId }),
-      });
-    } catch (err) {
-      console.error("Failed to clear conversation:", err);
+    const chatIdToDelete = currentChatId;
+    setCurrentChatId(undefined);
+    if (chatIdToDelete) {
+      try {
+        await fetch(`/api/chat/feature?chatId=${chatIdToDelete}`, {
+          method: "DELETE",
+        });
+      } catch (err) {
+        console.error("Failed to clear conversation:", err);
+      }
     }
   };
 

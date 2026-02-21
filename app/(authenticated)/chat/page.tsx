@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import { useEffect, useState, Suspense, useCallback } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { FeatureChat } from "@/components/ui/FeatureChat";
 import { getGemById, GEMS, isProposalGem } from "@/lib/chat/gems";
 import { updateProposalSystemPrompt } from "@/lib/chat/gems";
@@ -34,9 +34,11 @@ interface GrokToolSettings {
  */
 function ChatPageContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const gemId = searchParams.get("gem") || "general";
-  const isNewChat = searchParams.get("new") === "1";
-  
+  // chatId指定なし = 新規チャット、指定あり = 既存チャットの続き
+  const chatId = searchParams.get("chatId") ?? undefined;
+
   const [gem, setGem] = useState(GEMS[0]);
   const [systemPrompt, setSystemPrompt] = useState<string>("");
   const [isLoading, setIsLoading] = useState(true);
@@ -104,6 +106,13 @@ function ChatPageContent() {
     return defaultOptions;
   };
 
+  // 新規チャット作成時にURLを更新（ブラウザ履歴を汚さないようreplaceState）
+  const handleChatCreated = useCallback((newChatId: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("chatId", newChatId);
+    router.replace(`/chat?${params.toString()}`);
+  }, [searchParams, router]);
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -114,8 +123,10 @@ function ChatPageContent() {
 
   return (
     <FeatureChat
-      key={`${gem.id}-${isNewChat ? Date.now() : "default"}`}
+      key={`${gem.id}-${chatId ?? "new"}`}
       featureId={gem.id}
+      chatId={chatId}
+      onChatCreated={handleChatCreated}
       title={gem.name}
       systemPrompt={systemPrompt}
       placeholder={gem.placeholder}

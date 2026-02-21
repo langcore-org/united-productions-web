@@ -142,6 +142,7 @@ model ResearchChat {
   userId      String
   user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   agentType   String            // PEOPLE | LOCATION | EVIDENCE
+  title       String?           // チャットのタイトル（最初のメッセージから自動生成）
   llmProvider LLMProvider       @default(GROK_4_1_FAST_REASONING)
   messages    ResearchMessage[]
   results     Json?
