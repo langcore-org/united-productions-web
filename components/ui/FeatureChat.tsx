@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { cn } from "@/lib/utils";
-import { Loader2, MessageSquare, RotateCcw } from "lucide-react";
+import { Loader2, MessageSquare, RotateCcw, Bot, CheckCircle2, BrainCircuit, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MessageBubble } from "./MessageBubble";
 import { AttachedFile } from "./FileAttachment";
@@ -10,13 +10,11 @@ import { ChatHeader } from "./ChatHeader";
 import { ChatInputArea } from "./ChatInputArea";
 import { DEFAULT_PROVIDER } from "@/lib/llm/config";
 import type { LLMProvider } from "@/lib/llm/types";
-import { AgenticResponse } from "@/components/chat/AgenticResponse";
-import { useLLMStream } from "@/components/ui/StreamingMessage";
+import { useLLMStream, ToolCallInfo, ReasoningStepInfo } from "@/components/ui/StreamingMessage";
 import type { ToolOptions } from "@/lib/chat/chat-config";
 import { PromptSuggestions, PromptSuggestion } from "@/components/chat/PromptSuggestions";
-import { ThinkingProcess } from "@/components/agent-thinking/ThinkingProcess";
-import { useThinkingSteps } from "@/hooks/useThinkingSteps";
 import { useConversationSave } from "@/hooks/useConversationSave";
+import { getToolConfig } from "@/lib/tools/config";
 
 export interface Message {
   id: string;
@@ -73,6 +71,9 @@ export function FeatureChat({
 
   const provider: LLMProvider = initialProvider;
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const [isUserScrolling, setIsUserScrolling] = useState(false);
+  const userScrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const {
     content,
@@ -87,13 +88,7 @@ export function FeatureChat({
     resetStream,
   } = useLLMStream();
 
-  const { thinkingSteps, thinkingEvents, activeThinkingStepId } = useThinkingSteps({
-    toolCalls,
-    thinking,
-    reasoningSteps,
-    isComplete,
-    content,
-  });
+  // 不要なフック呼び出しを削除（thinkingStepsは直接使用しない）
 
   const {
     currentChatId,
@@ -114,10 +109,40 @@ export function FeatureChat({
     }
   }, [initialChatId, loadConversation, setCurrentChatId]);
 
-  // メッセージ追加時に自動スクロール
+  // スクロール制御: ユーザーが手動スクロールした場合は自動スクロールを一時停止
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, content]);
+    const container = messagesContainerRef.current;
+    if (!container) return;
+
+    const handleScroll = () => {
+      setIsUserScrolling(true);
+      if (userScrollTimeoutRef.current) {
+        clearTimeout(userScrollTimeoutRef.current);
+      }
+      // ユーザーが最下部に近い場合は自動スクロールを再有効化
+      const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 100;
+      if (isNearBottom) {
+        userScrollTimeoutRef.current = setTimeout(() => setIsUserScrolling(false), 500);
+      } else {
+        userScrollTimeoutRef.current = setTimeout(() => setIsUserScrolling(false), 3000);
+      }
+    };
+
+    container.addEventListener("scroll", handleScroll, { passive: true });
+    return () => {
+      container.removeEventListener("scroll", handleScroll);
+      if (userScrollTimeoutRef.current) {
+        clearTimeout(userScrollTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  // メッセージ追加時に自動スクロール（ユーザーが手動スクロール中でない場合のみ）
+  useEffect(() => {
+    if (!isUserScrolling) {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages, isUserScrolling]);
 
   // ストリーミング完了時にメッセージを保存
   useEffect(() => {
@@ -256,7 +281,7 @@ export function FeatureChat({
       />
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto">
+      <div ref={messagesContainerRef} className="flex-1 overflow-y-auto">
         {isLoadingHistory ? (
           <div className="flex items-center justify-center h-full">
             <div className="flex items-center gap-3 text-gray-500">
@@ -291,41 +316,16 @@ export function FeatureChat({
             ))}
 
             {isStreaming && (
-              <div className="px-4 py-2">
-                {thinkingSteps.length > 0 ? (
-                  <>
-                    <ThinkingProcess
-                      steps={thinkingSteps}
-                      activeStepId={activeThinkingStepId}
-                      overallStatus="running"
-                      events={thinkingEvents}
-                      className="mb-4"
-                    />
-                    {content && (
-                      <div className="mt-4 pl-12">
-                        <div className="prose prose-neutral max-w-none">
-                          <div className="whitespace-pre-wrap text-sm leading-relaxed text-gray-800">
-                            {content}
-                            <span className="inline-block w-2 h-4 bg-gray-400 ml-1 animate-pulse rounded-sm" />
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  <AgenticResponse
-                    content={content}
-                    thinking={thinking}
-                    toolCalls={toolCalls}
-                    reasoningSteps={reasoningSteps}
-                    toolUsage={toolUsage}
-                    usage={usage}
-                    isComplete={false}
-                    provider={provider}
-                    variant="chat"
-                  />
-                )}
-              </div>
+              <StreamingSteps
+                content={content}
+                thinking={thinking}
+                toolCalls={toolCalls}
+                reasoningSteps={reasoningSteps}
+                toolUsage={toolUsage}
+                usage={usage}
+                provider={provider}
+                isComplete={isComplete}
+              />
             )}
 
             {!isStreaming && hasMessages && lastAssistantMessage && promptSuggestions.length > 0 && (
@@ -375,6 +375,276 @@ export function FeatureChat({
         enableFileAttachment={enableFileAttachment}
         onSend={handleSend}
       />
+    </div>
+  );
+}
+
+// ============================================
+// ストリーミングステップ表示コンポーネント
+// ============================================
+
+interface StreamingStepsProps {
+  content: string;
+  thinking: string;
+  toolCalls: ToolCallInfo[];
+  reasoningSteps: ReasoningStepInfo[];
+  toolUsage: { web_search_calls?: number; x_search_calls?: number; code_interpreter_calls?: number; file_search_calls?: number; mcp_calls?: number; document_search_calls?: number } | null;
+  usage: { inputTokens: number; outputTokens: number; cost: number } | null;
+  provider: LLMProvider | string;
+  isComplete: boolean;
+}
+
+function StreamingSteps({
+  content,
+  thinking,
+  toolCalls,
+  reasoningSteps,
+  toolUsage,
+  usage,
+  provider,
+  isComplete,
+}: StreamingStepsProps) {
+  // 重複を除去したツール呼び出し
+  const uniqueToolCalls = toolCalls.filter((call, index, self) => 
+    index === self.findIndex((c) => c.id === call.id)
+  );
+
+  // 完了したツール呼び出し
+  const completedToolCalls = uniqueToolCalls.filter((call) => call.status === "completed");
+  // 実行中のツール呼び出し
+  const runningToolCalls = uniqueToolCalls.filter((call) => call.status === "running");
+
+  // 完了した思考ステップ
+  const completedReasoningSteps = reasoningSteps.slice(0, -1);
+  // 現在の思考ステップ
+  const currentReasoningStep = reasoningSteps[reasoningSteps.length - 1];
+  const hasCurrentReasoning = reasoningSteps.length > 0 && !isComplete;
+
+  return (
+    <div className="space-y-3">
+      {/* 完了したツール呼び出し - 各ツールを個別のメッセージとして表示 */}
+      {completedToolCalls.map((toolCall) => (
+        <ToolCallMessage key={toolCall.id} toolCall={toolCall} status="completed" provider={provider} />
+      ))}
+
+      {/* 実行中のツール呼び出し */}
+      {runningToolCalls.map((toolCall) => (
+        <ToolCallMessage key={toolCall.id} toolCall={toolCall} status="running" provider={provider} />
+      ))}
+
+      {/* 完了した思考ステップ */}
+      {completedReasoningSteps.map((step, index) => (
+        <ThinkingStepMessage key={index} step={step} provider={provider} />
+      ))}
+
+      {/* 現在の思考ステップ（実行中） */}
+      {hasCurrentReasoning && currentReasoningStep && (
+        <ThinkingStepMessage step={currentReasoningStep} provider={provider} isActive />
+      )}
+
+      {/* レガシー思考表示 */}
+      {thinking && reasoningSteps.length === 0 && (
+        <LegacyThinkingMessage thinking={thinking} provider={provider} isComplete={isComplete} />
+      )}
+
+      {/* メインコンテンツ */}
+      {(content || !isComplete) && (
+        <ContentMessage 
+          content={content} 
+          provider={provider} 
+          isComplete={isComplete}
+          toolUsage={toolUsage}
+          usage={usage}
+        />
+      )}
+    </div>
+  );
+}
+
+// ツール呼び出しメッセージ
+interface ToolCallMessageProps {
+  toolCall: ToolCallInfo;
+  status: "completed" | "running" | "failed";
+  provider: LLMProvider | string;
+}
+
+function ToolCallMessage({ toolCall, status, provider }: ToolCallMessageProps) {
+  const config = getToolConfig(toolCall.type, toolCall.name);
+  const Icon = config.icon;
+
+  return (
+    <div className="flex gap-4 px-4 py-2">
+      <div className="flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center bg-gradient-to-br from-blue-500 to-blue-700 shadow-lg">
+        <Icon className="w-4 h-4 text-white" />
+      </div>
+      <div className="flex-1 max-w-[85%] items-start">
+        <div className="flex items-center gap-2 mb-1.5">
+          <span className="text-sm font-medium text-gray-600">AI Assistant</span>
+          <span className="text-[10px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 border border-gray-200">
+            {provider}
+          </span>
+        </div>
+        <div className="relative px-4 py-3 text-sm leading-relaxed rounded-2xl bg-blue-50 text-blue-900 border border-blue-200 rounded-tl-sm">
+          <div className="flex items-center gap-2">
+            {status === "running" ? (
+              <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
+            ) : (
+              <CheckCircle2 className="w-4 h-4 text-green-600" />
+            )}
+            <span className="font-medium">{config.label}</span>
+            {toolCall.input && (
+              <span className="text-blue-700/70 text-xs truncate max-w-[200px]">
+                {toolCall.input}
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// 思考ステップメッセージ
+interface ThinkingStepMessageProps {
+  step: ReasoningStepInfo;
+  provider: LLMProvider | string;
+  isActive?: boolean;
+}
+
+function ThinkingStepMessage({ step, provider, isActive }: ThinkingStepMessageProps) {
+  return (
+    <div className="flex gap-4 px-4 py-2">
+      <div className="flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center bg-gradient-to-br from-purple-500 to-purple-700 shadow-lg">
+        {isActive ? (
+          <Sparkles className="w-4 h-4 text-white animate-pulse" />
+        ) : (
+          <BrainCircuit className="w-4 h-4 text-white" />
+        )}
+      </div>
+      <div className="flex-1 max-w-[85%] items-start">
+        <div className="flex items-center gap-2 mb-1.5">
+          <span className="text-sm font-medium text-gray-600">AI Assistant</span>
+          <span className="text-[10px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 border border-gray-200">
+            {provider}
+          </span>
+          {isActive && (
+            <span className="flex items-center gap-1.5 text-xs text-gray-600">
+              <span className="w-1.5 h-1.5 bg-purple-500 rounded-full animate-pulse" />
+              思考中...
+            </span>
+          )}
+        </div>
+        <div className="relative px-4 py-3 text-sm leading-relaxed rounded-2xl bg-purple-50 text-purple-900 border border-purple-200 rounded-tl-sm">
+          <div className="flex items-start gap-2">
+            <span className="flex-shrink-0 w-5 h-5 rounded-full bg-purple-200 flex items-center justify-center text-xs font-medium text-purple-700">
+              {step.step}
+            </span>
+            <p className="whitespace-pre-wrap">{step.content}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// レガシー思考メッセージ
+interface LegacyThinkingMessageProps {
+  thinking: string;
+  provider: LLMProvider | string;
+  isComplete: boolean;
+}
+
+function LegacyThinkingMessage({ thinking, provider, isComplete }: LegacyThinkingMessageProps) {
+  return (
+    <div className="flex gap-4 px-4 py-2">
+      <div className="flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center bg-gradient-to-br from-amber-500 to-amber-700 shadow-lg">
+        {!isComplete ? (
+          <Sparkles className="w-4 h-4 text-white animate-pulse" />
+        ) : (
+          <BrainCircuit className="w-4 h-4 text-white" />
+        )}
+      </div>
+      <div className="flex-1 max-w-[85%] items-start">
+        <div className="flex items-center gap-2 mb-1.5">
+          <span className="text-sm font-medium text-gray-600">AI Assistant</span>
+          <span className="text-[10px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 border border-gray-200">
+            {provider}
+          </span>
+          {!isComplete && (
+            <span className="flex items-center gap-1.5 text-xs text-gray-600">
+              <span className="w-1.5 h-1.5 bg-amber-500 rounded-full animate-pulse" />
+              思考中...
+            </span>
+          )}
+        </div>
+        <div className="relative px-4 py-3 text-sm leading-relaxed rounded-2xl bg-amber-50 text-amber-900 border border-amber-200 rounded-tl-sm">
+          <p className="whitespace-pre-wrap text-xs">{thinking}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// メインコンテンツメッセージ
+interface ContentMessageProps {
+  content: string;
+  provider: LLMProvider | string;
+  isComplete: boolean;
+  toolUsage: { web_search_calls?: number; x_search_calls?: number; code_interpreter_calls?: number; file_search_calls?: number; mcp_calls?: number; document_search_calls?: number } | null;
+  usage: { inputTokens: number; outputTokens: number; cost: number } | null;
+}
+
+function ContentMessage({ content, provider, isComplete, toolUsage, usage }: ContentMessageProps) {
+  return (
+    <div className="flex gap-4 px-4 py-2">
+      <div className="flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center bg-gradient-to-br from-black to-gray-800 shadow-lg">
+        {isComplete ? (
+          <Bot className="w-4 h-4 text-white" />
+        ) : (
+          <Loader2 className="w-4 h-4 text-white animate-spin" />
+        )}
+      </div>
+      <div className="flex-1 max-w-[85%] items-start">
+        <div className="flex items-center gap-2 mb-1.5">
+          <span className="text-sm font-medium text-gray-600">AI Assistant</span>
+          <span className="text-[10px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 border border-gray-200">
+            {provider}
+          </span>
+          {!isComplete && (
+            <span className="flex items-center gap-1.5 text-xs text-gray-600">
+              <span className="w-1.5 h-1.5 bg-gray-500 rounded-full animate-pulse" />
+              生成中...
+            </span>
+          )}
+        </div>
+        <div className="relative px-4 py-3 text-sm leading-relaxed rounded-2xl bg-white text-gray-800 border border-gray-200 rounded-tl-sm">
+          {content ? (
+            <div className="whitespace-pre-wrap">
+              {content}
+              {!isComplete && (
+                <span className="inline-block w-2 h-4 bg-gray-400 ml-1 animate-pulse rounded-sm" />
+              )}
+            </div>
+          ) : (
+            <div className="flex items-center gap-3 text-gray-400 py-1">
+              <div className="flex gap-1">
+                <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.3s]" />
+                <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.15s]" />
+                <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" />
+              </div>
+              <span className="text-xs">考え中...</span>
+            </div>
+          )}
+        </div>
+        
+        {/* Usage Info */}
+        {isComplete && usage && (
+          <div className="mt-2 text-xs text-gray-400">
+            {usage.inputTokens.toLocaleString()} 入力 / {usage.outputTokens.toLocaleString()} 出力
+            {" "}• ${usage.cost.toFixed(6)}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
