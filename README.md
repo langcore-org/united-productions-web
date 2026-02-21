@@ -85,6 +85,8 @@ AI Hubは、テレビ制作現場の様々な業務をAIで支援する統合プ
 ```typescript
 interface FeatureChatProps {
   featureId: string;          // 機能識別子
+  chatId?: string;            // チャットセッションID（指定なしで新規チャット）
+  onChatCreated?: (chatId: string) => void; // 新規チャット作成時のコールバック
   title: string;              // ページタイトル
   systemPrompt: string;       // システムプロンプト
   placeholder: string;        // 入力欄プレースホルダー
@@ -96,6 +98,8 @@ interface FeatureChatProps {
 **特徴:**
 - ストリーミングレスポンス対応（SSE）
 - 会話履歴の自動保存（Prisma）
+- チャットセッション管理（chatIdベースのCRUD）
+- 新規チャット時の自動タイトル生成（Grok）
 - plaintextモード時のWordコピー機能
 - 各機能別のシステムプロンプト切り替え
 
@@ -241,11 +245,12 @@ npx prisma studio        # DB GUI
 
 ## ドキュメント
 
-- [アーキテクチャ設計](./docs/ARCHITECTURE.md)
-- [API仕様書](./docs/API.md)
-- [デプロイ手順](./docs/DEPLOYMENT.md)
-- [Google OAuth設定](./docs/GOOGLE_OAUTH_SETUP.md)
-- [改善プラン](./docs/IMPROVEMENT_PLAN.md)
+- [ドキュメントガイド](./docs/README.md)
+- [アーキテクチャ設計](./docs/specs/architecture/system-architecture.md)
+- [API仕様書](./docs/specs/api-integration/api-specification.md)
+- [データベーススキーマ](./docs/specs/api-integration/database-schema.md)
+- [デプロイ手順](./docs/specs/operations/deployment-guide.md)
+- [開発ガイド](./docs/guides/development/workflow-standards.md)
 
 ## ライセンス
 
