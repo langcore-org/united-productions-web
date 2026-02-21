@@ -1,19 +1,23 @@
 /**
- * LLM Chat API Route
+ * LLM Chat API Route (LangChain版)
  * 
  * POST /api/llm/chat
  * 非同期チャット完了を行うエンドポイント
- * キャッシュとレート制限対応
+ * LangChainを使用して実装
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { createLLMClient, isValidProvider } from '@/lib/llm/factory';
-import { getCachedLLMResponse, cacheLLMResponse } from '@/lib/llm/cache';
+import { createLangChainModel } from '@/lib/llm/langchain/factory';
+import { executeChat } from '@/lib/llm/langchain/chains/base';
 import { requireAuth } from '@/lib/api/auth';
-import { handleApiError } from '@/lib/api/utils';
+import { isValidProvider } from '@/lib/llm/factory';
 import { getDefaultLLMProvider } from '@/lib/settings/db';
 import type { LLMMessage, LLMProvider } from '@/lib/llm/types';
+import { createClientLogger } from '@/lib/logger';
+import { trackUsage } from '@/lib/usage/tracker';
+
+const logger = createClientLogger('LangChainChatAPI');
 
 /**
  * リクエストバリデーションスキーマ
@@ -26,6 +30,8 @@ const chatRequestSchema = z.object({
     })
   ).min(1),
   provider: z.string().optional(),
+  temperature: z.number().min(0).max(2).optional(),
+  maxTokens: z.number().positive().optional(),
 });
 
 export type ChatRequest = z.infer<typeof chatRequestSchema>;
@@ -36,40 +42,52 @@ export type ChatRequest = z.infer<typeof chatRequestSchema>;
  * Request:
  * {
  *   "messages": [{"role": "user", "content": "..."}],
- *   "provider": "gemini-2.5-flash-lite" // オプション
+ *   "provider": "grok-4-1-fast-reasoning",
+ *   "temperature": 0.7
  * }
  * 
  * Response:
  * {
  *   "content": "...",
- *   "thinking": "...",
  *   "usage": {"inputTokens": 100, "outputTokens": 50, "cost": 0.0001}
  * }
  */
 export async function POST(request: NextRequest): Promise<NextResponse> {
+  const requestId = `chat_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  
   try {
+    logger.info(`[${requestId}] Chat API request started`);
+
     // 認証チェック
     const authResult = await requireAuth(request);
     if (authResult instanceof NextResponse) {
       return authResult;
     }
 
+    const userId = authResult.user.id;
+
     // リクエストボディのパース
     const body = await request.json();
+    logger.info(`[${requestId}] Request received`, {
+      messageCount: body.messages?.length,
+      provider: body.provider,
+    });
 
     // バリデーション
     const validationResult = chatRequestSchema.safeParse(body);
     if (!validationResult.success) {
+      logger.warn(`[${requestId}] Validation failed`);
       return NextResponse.json(
         {
           error: 'リクエストが無効です',
           details: validationResult.error.format(),
+          requestId,
         },
         { status: 400 }
       );
     }
 
-    const { messages, provider: requestedProvider } = validationResult.data;
+    const { messages, provider: requestedProvider, temperature, maxTokens } = validationResult.data;
 
     // プロバイダーの決定
     let provider: LLMProvider;
@@ -79,48 +97,73 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
           {
             error: '無効なプロバイダーです',
             message: `プロバイダー "${requestedProvider}" はサポートされていません`,
+            requestId,
           },
           { status: 400 }
         );
       }
       provider = requestedProvider;
     } else {
-      // 管理画面で設定されたグローバルデフォルト（DB）を使用
       provider = await getDefaultLLMProvider();
     }
 
-    // キャッシュをチェック
-    const cachedResponse = await getCachedLLMResponse(messages as LLMMessage[], provider);
-    if (cachedResponse) {
-      // キャッシュヒット時はキャッシュから返却
-      return NextResponse.json({
-        content: cachedResponse.content,
-        thinking: cachedResponse.thinking ?? null,
-        usage: cachedResponse.usage ?? null,
-        cached: true,
-        cachedAt: new Date().toISOString(),
-      });
+    logger.info(`[${requestId}] Using provider`, { provider });
+
+    // LangChainモデルの作成
+    const model = createLangChainModel(provider, {
+      temperature,
+      maxTokens,
+      streaming: false,
+    });
+
+    // チャット実行
+    const startTime = Date.now();
+    const response = await executeChat(model, messages as LLMMessage[], provider);
+    const duration = Date.now() - startTime;
+
+    logger.info(`[${requestId}] Chat completed`, {
+      duration,
+      contentLength: response.content.length,
+    });
+
+    // usage記録（推定値）
+    if (response.usage) {
+      try {
+        await trackUsage({
+          userId,
+          provider,
+          inputTokens: response.usage.inputTokens,
+          outputTokens: response.usage.outputTokens,
+          metadata: {
+            requestId,
+            method: 'chat',
+            duration,
+          },
+        });
+      } catch (trackError) {
+        logger.error(`[${requestId}] Failed to track usage`, { error: trackError });
+      }
     }
-
-    // LLMクライアントの作成
-    const client = createLLMClient(provider);
-
-    // チャット完了の実行
-    const response = await client.chat(messages as LLMMessage[]);
-
-    // レスポンスをキャッシュに保存
-    await cacheLLMResponse(messages as LLMMessage[], provider, response);
 
     // レスポンスの返却
     return NextResponse.json({
       content: response.content,
-      thinking: response.thinking ?? null,
-      usage: response.usage ?? null,
-      cached: false,
+      usage: response.usage,
+      provider,
+      requestId,
     });
 
   } catch (error) {
-    console.error('LLM Chat API Error:', error);
-    return handleApiError(error);
+    const errorMessage = error instanceof Error ? error.message : '予期しないエラーが発生しました';
+    logger.error(`[${requestId}] Unexpected error`, { error: errorMessage });
+    
+    return NextResponse.json(
+      {
+        error: '内部サーバーエラー',
+        message: errorMessage,
+        requestId,
+      },
+      { status: 500 }
+    );
   }
 }
