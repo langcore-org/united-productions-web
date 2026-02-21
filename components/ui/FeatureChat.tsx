@@ -414,25 +414,15 @@ function StreamingSteps({
   // 実行中のツール呼び出し
   const runningToolCalls = uniqueToolCalls.filter((call) => call.status === "running");
 
-  // reasoningStepsのcontentをパースしてサブステップに分割
-  // サーバーからは step: 1 で content に複数ステップが含まれる形式で送られてくる
-  const parsedReasoningSteps = reasoningSteps.flatMap((step) => {
-    const subSteps = parseSubSteps(step.content);
-    return subSteps.map((subStep, index) => ({
-      step: index + 1,
-      content: `${subStep.title}: ${subStep.content}`,
-      tokens: index === subSteps.length - 1 ? step.tokens : undefined,
-    }));
-  });
-
+  // サーバー側で既に分割送信されているため、クライアント側ではそのまま使用
   // 完了した思考ステップ（最後のステップが完了している場合は全て完了とみなす）
-  const isReasoningComplete = isComplete && parsedReasoningSteps.length > 0;
+  const isReasoningComplete = isComplete && reasoningSteps.length > 0;
   const completedReasoningSteps = isReasoningComplete 
-    ? parsedReasoningSteps 
-    : parsedReasoningSteps.slice(0, -1);
+    ? reasoningSteps 
+    : reasoningSteps.slice(0, -1);
   // 現在の思考ステップ（実行中のみ）
-  const currentReasoningStep = isReasoningComplete ? null : parsedReasoningSteps[parsedReasoningSteps.length - 1];
-  const hasCurrentReasoning = !isReasoningComplete && parsedReasoningSteps.length > 0;
+  const currentReasoningStep = isReasoningComplete ? null : reasoningSteps[reasoningSteps.length - 1];
+  const hasCurrentReasoning = !isReasoningComplete && reasoningSteps.length > 0;
 
   return (
     <div className="space-y-3">
@@ -526,10 +516,7 @@ interface ThinkingStepMessageProps {
 }
 
 function ThinkingStepMessage({ step, provider, isActive }: ThinkingStepMessageProps) {
-  // content内に複数のサブステップ（分析、計画、実行など）が含まれている場合、それらを個別に表示
-  const subSteps = parseSubSteps(step.content);
-  const hasSubSteps = subSteps.length > 1;
-
+  // サーバー側で既に分割送信されているため、シンプルに表示
   return (
     <div className="flex gap-4 px-4 py-2">
       <div className="flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center bg-gradient-to-br from-purple-500 to-purple-700 shadow-lg">
@@ -552,98 +539,17 @@ function ThinkingStepMessage({ step, provider, isActive }: ThinkingStepMessagePr
             </span>
           )}
         </div>
-        
-        {/* サブステップが複数ある場合は個別に表示 */}
-        {hasSubSteps ? (
-          <div className="space-y-2">
-            {subSteps.map((subStep, index) => (
-              <div 
-                key={index}
-                className="relative px-4 py-2 text-sm leading-relaxed rounded-xl bg-purple-50 text-purple-900 border border-purple-200"
-              >
-                <div className="flex items-start gap-2">
-                  <span className="flex-shrink-0 w-5 h-5 rounded-full bg-purple-200 flex items-center justify-center text-xs font-medium text-purple-700">
-                    {index + 1}
-                  </span>
-                  <div>
-                    <span className="font-medium text-purple-800">{subStep.title}</span>
-                    <p className="whitespace-pre-wrap text-purple-900/80">{subStep.content}</p>
-                  </div>
-                </div>
-              </div>
-            ))}
+        <div className="relative px-4 py-3 text-sm leading-relaxed rounded-2xl bg-purple-50 text-purple-900 border border-purple-200 rounded-tl-sm">
+          <div className="flex items-start gap-2">
+            <span className="flex-shrink-0 w-5 h-5 rounded-full bg-purple-200 flex items-center justify-center text-xs font-medium text-purple-700">
+              {step.step}
+            </span>
+            <p className="whitespace-pre-wrap">{step.content}</p>
           </div>
-        ) : (
-          <div className="relative px-4 py-3 text-sm leading-relaxed rounded-2xl bg-purple-50 text-purple-900 border border-purple-200 rounded-tl-sm">
-            <div className="flex items-start gap-2">
-              <span className="flex-shrink-0 w-5 h-5 rounded-full bg-purple-200 flex items-center justify-center text-xs font-medium text-purple-700">
-                {step.step}
-              </span>
-              <p className="whitespace-pre-wrap">{step.content}</p>
-            </div>
-          </div>
-        )}
+        </div>
       </div>
     </div>
   );
-}
-
-// ステップ内容をパースしてサブステップに分割
-interface SubStep {
-  title: string;
-  content: string;
-}
-
-function parseSubSteps(content: string): SubStep[] {
-  // 「分析:」「計画:」「実行:」「統合:」「出力:」などのパターンで分割
-  const patterns = [
-    /^分析[:：]\s*/m,
-    /^計画[:：]\s*/m,
-    /^実行[:：]\s*/m,
-    /^統合[:：]\s*/m,
-    /^出力[:：]\s*/m,
-    /^検索[:：]\s*/m,
-    /^調査[:：]\s*/m,
-    /^確認[:：]\s*/m,
-    /^まとめ[:：]\s*/m,
-    /^結論[:：]\s*/m,
-  ];
-  
-  const lines = content.split('\n');
-  const subSteps: SubStep[] = [];
-  let currentSubStep: SubStep | null = null;
-  
-  for (const line of lines) {
-    const trimmedLine = line.trim();
-    if (!trimmedLine) continue;
-    
-    // 新しいサブステップの開始を検出
-    const matchedPattern = patterns.find(p => p.test(trimmedLine));
-    
-    if (matchedPattern) {
-      // 前のサブステップを保存
-      if (currentSubStep) {
-        subSteps.push(currentSubStep);
-      }
-      // 新しいサブステップを開始
-      const title = trimmedLine.split(/[:：]/)[0];
-      const content = trimmedLine.replace(matchedPattern, '').trim();
-      currentSubStep = { title, content };
-    } else if (currentSubStep) {
-      // 現在のサブステップに追加
-      currentSubStep.content += '\n' + trimmedLine;
-    } else {
-      // 最初のサブステップ（タイトルなし）
-      currentSubStep = { title: '思考', content: trimmedLine };
-    }
-  }
-  
-  // 最後のサブステップを保存
-  if (currentSubStep) {
-    subSteps.push(currentSubStep);
-  }
-  
-  return subSteps.length > 0 ? subSteps : [{ title: '思考', content }];
 }
 
 // レガシー思考メッセージ

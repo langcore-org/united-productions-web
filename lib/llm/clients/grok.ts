@@ -13,6 +13,67 @@ import { createClientLogger } from '@/lib/logger';
 const logger = createClientLogger('GrokClient');
 
 /**
+ * 推論ステップのサブステップをパース
+ * 「分析:」「計画:」「実行:」等のパターンで分割
+ */
+function parseReasoningSteps(summary: string, totalTokens?: number): Array<{ step: number; content: string; tokens?: number }> {
+  const patterns = [
+    /^分析[:：]\s*/m,
+    /^計画[:：]\s*/m,
+    /^実行[:：]\s*/m,
+    /^統合[:：]\s*/m,
+    /^出力[:：]\s*/m,
+    /^検索[:：]\s*/m,
+    /^調査[:：]\s*/m,
+    /^確認[:：]\s*/m,
+    /^まとめ[:：]\s*/m,
+    /^結論[:：]\s*/m,
+  ];
+
+  const lines = summary.split('\n');
+  const steps: Array<{ step: number; content: string; tokens?: number }> = [];
+  let currentStep: { title: string; content: string } | null = null;
+
+  for (const line of lines) {
+    const trimmedLine = line.trim();
+    if (!trimmedLine) continue;
+
+    const matchedPattern = patterns.find((p) => p.test(trimmedLine));
+
+    if (matchedPattern) {
+      // 前のステップを保存
+      if (currentStep) {
+        steps.push({
+          step: steps.length + 1,
+          content: `${currentStep.title}: ${currentStep.content}`,
+        });
+      }
+      // 新しいステップを開始
+      const title = trimmedLine.split(/[:：]/)[0];
+      const content = trimmedLine.replace(matchedPattern, '').trim();
+      currentStep = { title, content };
+    } else if (currentStep) {
+      // 現在のステップに追加
+      currentStep.content += '\n' + trimmedLine;
+    } else {
+      // タイトルなしの最初のステップ
+      currentStep = { title: '思考', content: trimmedLine };
+    }
+  }
+
+  // 最後のステップを保存
+  if (currentStep) {
+    steps.push({
+      step: steps.length + 1,
+      content: `${currentStep.title}: ${currentStep.content}`,
+      tokens: totalTokens,
+    });
+  }
+
+  return steps.length > 0 ? steps : [{ step: 1, content: summary, tokens: totalTokens }];
+}
+
+/**
  * Grokツール定義
  */
 export const GROK_TOOLS = {
@@ -152,6 +213,11 @@ type StreamYield = {
   reasoning?: { step: number; content: string; tokens?: number };
   thinking?: string;
 };
+
+/** processEvent の戻り値型（内部処理用） */
+type ProcessEventResult =
+  | StreamYield
+  | { reasoningSteps: Array<{ step: number; content: string; tokens?: number }> };
 
 /**
  * Grokクライアント
@@ -358,7 +424,7 @@ export class GrokClient implements LLMClient {
     let totalLength = 0;
     let finalUsage: StreamYield['usage'] | undefined;
 
-    const processEvent = (event: XAIStreamEvent): StreamYield | null => {
+    const processEvent = (event: XAIStreamEvent): ProcessEventResult | null => {
       // テキストチャンク
       if (event.type === 'response.output_text.delta' && event.delta) {
         chunkCount++;
@@ -385,15 +451,16 @@ export class GrokClient implements LLMClient {
         if (toolCall) return { toolCall };
       }
 
-      // 推論ステップ
+      // 推論ステップ - サーバー側で分割して送信
       if (event.type === 'response.reasoning' && event.response?.reasoning?.summary) {
-        return {
-          reasoning: {
-            step: 1,
-            content: event.response.reasoning.summary,
-            tokens: event.response.usage?.output_tokens_details?.reasoning_tokens,
-          },
-        };
+        const summary = event.response.reasoning.summary;
+        const totalTokens = event.response.usage?.output_tokens_details?.reasoning_tokens;
+        
+        // サブステップに分割
+        const steps = parseReasoningSteps(summary, totalTokens);
+        
+        // 複数ステップを順番に返す（呼び出し側でfor...ofで処理）
+        return { reasoningSteps: steps };
       }
 
       // usage情報（response.completedイベント）
@@ -442,7 +509,16 @@ export class GrokClient implements LLMClient {
 
           try {
             const yieldValue = processEvent(JSON.parse(data) as XAIStreamEvent);
-            if (yieldValue) yield yieldValue;
+            if (yieldValue) {
+              // reasoningStepsが複数ある場合は個別にyield
+              if ('reasoningSteps' in yieldValue && Array.isArray(yieldValue.reasoningSteps)) {
+                for (const step of yieldValue.reasoningSteps) {
+                  yield { reasoning: step };
+                }
+              } else {
+                yield yieldValue as StreamYield;
+              }
+            }
           } catch {
             // malformed chunkは無視
           }
@@ -455,7 +531,16 @@ export class GrokClient implements LLMClient {
         if (data !== '[DONE]') {
           try {
             const yieldValue = processEvent(JSON.parse(data) as XAIStreamEvent);
-            if (yieldValue) yield yieldValue;
+            if (yieldValue) {
+              // reasoningStepsが複数ある場合は個別にyield
+              if ('reasoningSteps' in yieldValue && Array.isArray(yieldValue.reasoningSteps)) {
+                for (const step of yieldValue.reasoningSteps) {
+                  yield { reasoning: step };
+                }
+              } else {
+                yield yieldValue as StreamYield;
+              }
+            }
           } catch {
             // Ignore
           }
