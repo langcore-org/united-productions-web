@@ -223,20 +223,32 @@ export function FeatureChat({
     const currentlyStreaming = !isComplete && (content || thinking);
     if (!currentlyStreaming) return;
 
-    // thinkingがある場合、表示用ステップを生成
-    if (thinking && thinking.length > 0 && thinkingSteps.length === 0) {
-      const newStep: ThinkingStep = {
-        id: uuidv4(),
-        stepNumber: 1,
-        type: "thinking",
-        title: "思考中...",
-        content: thinking,
-        status: "running",
-        subSteps: [],
-        timestamp: new Date(),
-      };
-      setThinkingSteps([newStep]);
-      setActiveThinkingStepId(newStep.id);
+    // thinkingがある場合、表示用ステップを生成・更新
+    if (thinking && thinking.length > 0) {
+      if (thinkingSteps.length === 0) {
+        // 初回: 新しいステップを作成
+        const newStep: ThinkingStep = {
+          id: uuidv4(),
+          stepNumber: 1,
+          type: "thinking",
+          title: "思考中...",
+          content: thinking,
+          status: "running",
+          subSteps: [],
+          timestamp: new Date(),
+        };
+        setThinkingSteps([newStep]);
+        setActiveThinkingStepId(newStep.id);
+      } else {
+        // 以降: 既存ステップのcontentを更新
+        setThinkingSteps((prev) =>
+          prev.map((step, i) =>
+            i === prev.length - 1 && step.type === "thinking"
+              ? { ...step, content: thinking }
+              : step
+          )
+        );
+      }
     }
 
     // reasoningStepsがある場合、ステップを生成
