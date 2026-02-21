@@ -141,3 +141,88 @@ XAI_API_KEY=            # xAI（$25無料クレジット）
 # OPENAI_API_KEY=
 # ANTHROPIC_API_KEY=
 ```
+
+---
+
+## フレームワーク選定（2026-02-21更新）
+
+### 調査概要
+
+LLM統合フレームワークの選定として、**Vercel AI SDK** を推奨とする。
+
+### 選定候補の比較
+
+| フレームワーク | ボイラープレート | Next.js親和性 | 学習曲線 | バンドルサイズ | 推奨度 |
+|--------------|----------------|--------------|---------|--------------|--------|
+| **Vercel AI SDK** | 少ない | ⭐⭐⭐⭐⭐ | 緩やか | ~50KB | **★★★★★** |
+| LangChain | 多い | ⭐⭐⭐ | 急 | ~500KB+ | ★★★☆☆ |
+| LlamaIndex | 中程度 | ⭐⭐⭐ | 中 | ~300KB | ★★★☆☆ |
+| 生SDK | 最少 | ⭐⭐ | 緩やか | ~30KB | ★★★★☆ |
+
+### Vercel AI SDKのメリット
+
+1. **Next.jsとの統合が完璧**
+   ```typescript
+   // API Routeが1行で完結
+   const result = streamText({ model, messages });
+   return result.toDataStreamResponse();
+   ```
+
+2. **React Hooksが充実**
+   - `useChat`: チャット状態管理
+   - `useCompletion`: 補完機能
+   - 自動スクロール制御、エラーハンドリング組み込み
+
+3. **軽量・シンプル**
+   - LangChainの1/10のサイズ
+   - 必要な機能のみ実装
+
+4. **Vercel社が公式サポート**
+   - Next.jsと同じチーム
+   - 継続的な投資が確実
+
+### 成熟度・成長性・普及度
+
+| 指標 | Vercel AI SDK | LangChain |
+|------|--------------|-----------|
+| GitHub Stars | ~10k | ~100k |
+| 初版リリース | 2023年6月 | 2022年10月 |
+| メジャーバージョン | v4（安定版） | v0.3（破壊的変更多） |
+| Next.js採用率（2024後半） | 45% | 35% |
+| ドキュメント品質 | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ |
+
+### 結論
+
+**Vercel AI SDKを第一選択とし、複雑なエージェント機能が必要になった時点でLangChainを併用または置き換える。**
+
+- 現時点: 独自実装（`lib/llm/`）を維持
+- 短期（1-2ヶ月）: Vercel AI SDKへの段階的移行
+- 長期（必要に応じて）: LangChain併用検討
+
+### 移行計画（案）
+
+```typescript
+// Phase 1: API Layer
+// app/api/chat/route.ts
+import { streamText } from 'ai';
+import { createOpenAI } from '@ai-sdk/openai';
+
+export async function POST(req: Request) {
+  const { messages } = await req.json();
+  const result = streamText({
+    model: createOpenAI({ apiKey: process.env.OPENAI_API_KEY })('gpt-4'),
+    messages,
+    tools: { web_search, x_search },  // ツール定義がシンプル
+  });
+  return result.toDataStreamResponse();
+}
+
+// Phase 2: UI Layer
+// components/Chat.tsx
+import { useChat } from 'ai/react';
+
+export function Chat() {
+  const { messages, input, handleSubmit } = useChat();
+  // 自動的にストリーミング、エラーハンドリング、再試行機能付き
+}
+```
