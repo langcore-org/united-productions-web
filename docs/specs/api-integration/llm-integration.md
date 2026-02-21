@@ -2,7 +2,7 @@
 
 > **複数LLMプロバイダーを統一インターフェースで利用するための仕様**
 >
-> **最終更新**: 2026-02-21 18:50
+> **最終更新**: 2026-02-21 19:10
 
 ## 概要
 
@@ -36,10 +36,10 @@ src/lib/llm/
 
 | プロバイダー | モデル | 入力$/1M | 出力$/1M | コンテキスト | 主な用途 |
 |---|---|---|---|---|---|
-| Google | Gemini 2.5 Flash-Lite | $0.075 | $0.30 | 1M | デフォルト（最安値）※APIキー未取得 |
-| Google | Gemini 3.0 Flash | $0.50 | $3.00 | 1M | 高品質タスク ※APIキー未取得 |
-| xAI | Grok 4.1 Fast | $0.20 | $0.50 | 2M | X検索 |
+| xAI | Grok 4.1 Fast | $0.20 | $0.50 | 2M | X検索、高速推論 |
+| xAI | Grok 4.1 Fast Reasoning | $0.20 | $0.50 | 2M | X検索、推論機能付き |
 | xAI | Grok 4 | $3.00 | $15.00 | 2M | 最高品質 |
+| xAI | Grok 4.1 | $3.00 | $15.00 | 2M | 標準モデル |
 
 ### 将来連携予定
 
@@ -51,10 +51,16 @@ src/lib/llm/
 | Anthropic | Claude Opus 4.6 | $5.00 | $25.00 | 200K+ | 最高品質 |
 | Perplexity | Sonar | $1.00 | - | - | エビデンス検索 |
 
-## Google AI Studio 無料枠
+## 無料枠・クレジット情報
+
+### xAI
+- $25無料クレジット（新規登録時）
+- クレジットカード登録で追加クレジット購入可能
+
+### Google AI Studio（将来連携予定）
 - Gemini 2.5 Flash-Lite: 30 RPM / 1,500 RPD
 - Gemini 3.0 Flash: 30 RPM / 1,500 RPD
-- 初期運用はこの無料枠で十分。超えたら従量課金。
+- ※APIキー未取得、連携時に検討
 
 ## アーキテクチャ
 
@@ -136,9 +142,7 @@ aihub:llm:{hash_slice}:{provider}
 XAI_API_KEY=            # xAI（$25無料クレジット）
 
 # 将来連携予定（オプション）
-# GEMINI_API_KEY=       # Google AI Studio無料枠 ※APIキー未取得
-
-# 将来連携予定（オプション）
+# GEMINI_API_KEY=       # Google AI Studio無料枠
 # PERPLEXITY_API_KEY=
 # OPENAI_API_KEY=
 # ANTHROPIC_API_KEY=
