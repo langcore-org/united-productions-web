@@ -54,6 +54,7 @@ specs/
 |-----|--------|
 | 環境構築手順 | [guides/setup/](../guides/setup/) |
 | 開発ガイド | [guides/development/](../guides/development/) |
+| API変更履歴 | [api-changelog.md](./api-changelog.md) |
 | API詳細実装 | `app/api/` ディレクトリ |
 | スキーマ定義 | `prisma/schema.prisma` |
 | コンポーネント実装 | `components/` ディレクトリ |

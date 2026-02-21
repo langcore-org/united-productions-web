@@ -96,10 +96,12 @@ docs/
 │   │   ├── tasks-overview.md          # タスク一覧（概要）
 │   │   ├── tasks-detailed.md          # タスク一覧（詳細）
 │   │   ├── status-dashboard.md        # 実装状況
-│   │   └── sidebar-redesign.md        # サイドバー改修計画
+│   │   ├── sidebar-redesign.md        # サイドバー改修計画
+│   │   └── agentic-chat-design.md     # Agentic Chat設計
 │   └── archive/                       # 完了した計画
 │       ├── 2026-02-improvements.md
-│       └── 2026-02-refactoring.md
+│       ├── 2026-02-refactoring.md
+│       └── 2026-02-20-refactoring-completed.md
 │
 ├── guides/                            # 手順書・チュートリアル（開発者向け）
 │   ├── setup/                         # 環境構築
@@ -118,19 +120,6 @@ docs/
 │   ├── ui-ux-guidelines.md            # UI/UXガイドライン
 │   └── troubleshooting.md             # トラブルシューティングガイド
 │
-├── logs/                              # 議事録・開発記録
-│   ├── README.md                      # ログ仕様
-│   ├── SUMMARY.md                     # ログサマリー
-│   ├── meeting-20260219.md            # 会議記録
-│   ├── cache-rate-limit.md            # キャッシュ・レート制限検証
-│   ├── dashboard.md                   # ダッシュボード検証
-│   ├── llm-streaming.md               # LLMストリーミング検証
-│   ├── pj-a-meeting.md                # プロジェクトA会議
-│   ├── pj-b-transcript.md             # プロジェクトB文字起こし
-│   ├── pj-c-research.md               # プロジェクトCリサーチ
-│   ├── pj-d-schedule.md               # プロジェクトDスケジュール
-│   └── template.md                    # ログテンプレート
-│
 ├── archive/                           # 過去資料（参照のみ、更新しない）
 │   ├── 2〜4月ロードマップ.md
 │   ├── LC開発プラン.md
@@ -142,8 +131,9 @@ docs/
 │   ├── 今後のプラン.md
 │   ├── 書き起こし機能のメモ.md
 │   ├── 業務洗い出しとソリューション.md
-│   └── logs/                          # 過去のログ
+│   └── logs/                          # 過去のログ（アーカイブ済み）
 │       ├── README.md
+│       ├── SUMMARY.md
 │       ├── cache-rate-limit.md
 │       ├── dashboard.md
 │       ├── llm-streaming.md
