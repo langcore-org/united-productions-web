@@ -1,6 +1,8 @@
 # LangChain移行 網羅的確認レポート
 
-> **確認日時**: 2026-02-21 23:45
+> **確認日時**: 2026-02-21 23:45  
+> **アーカイブ日**: 2026-02-22  
+> **ステータス**: 完了・保管
 > **確認方法**: 自動スクリプト + 手動レビュー
 
 ---
@@ -66,8 +68,8 @@ lib/llm/langchain/
 | `/api/llm/chat` | ✅ | `createLangChainModel` | ✅ |
 | `/api/llm/stream` | ✅ | `createLangChainModel` | ✅ |
 | `/api/llm/rag` | ✅ | `createLangChainModel` | ✅ |
-| `/api/llm/langchain` | ✅ | `createLangChainModel` | ✅ |
-| `/api/llm/langchain/stream` | ✅ | `createLangChainModel` | ✅ |
+| ~~`/api/llm/langchain`~~ | ~~削除済み~~ | ~~-~~ | ~~-~~ |
+| ~~`/api/llm/langchain/stream`~~ | ~~削除済み~~ | ~~-~~ | ~~-~~ |
 
 ### 2.5 型定義確認
 

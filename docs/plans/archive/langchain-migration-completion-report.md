@@ -1,6 +1,8 @@
 # LangChain移行完了レポート
 
-> **移行完了日**: 2026-02-21 20:00
+> **移行完了日**: 2026-02-21 20:00  
+> **アーカイブ日**: 2026-02-22  
+> **ステータス**: 完了・保管
 > **実施者**: AI開発エージェント
 
 ---
@@ -45,8 +47,8 @@
 | `/api/llm/chat` | POST | 非同期チャット（LangChain版） |
 | `/api/llm/stream` | POST | ストリーミングチャット（LangChain版） |
 | `/api/llm/rag` | POST | RAG（文書検索） |
-| `/api/llm/langchain` | POST | テスト用エンドポイント |
-| `/api/llm/langchain/stream` | POST | テスト用ストリーミング |
+| ~~`/api/llm/langchain`~~ | ~~POST~~ | ~~削除済み（テスト用）~~ |
+| ~~`/api/llm/langchain/stream`~~ | ~~POST~~ | ~~削除済み（テスト用）~~ |
 
 ### 2.3 フロントエンド機能
 
