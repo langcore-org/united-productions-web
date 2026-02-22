@@ -20,6 +20,7 @@ import {
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
+import { signOut } from "next-auth/react";
 
 interface SidebarProps {
   className?: string;
@@ -270,10 +271,10 @@ export function Sidebar({ className, onCollapseChange }: SidebarProps) {
         "py-2 space-y-0.5 border-t border-[#e5e5e5] flex-shrink-0 bg-[#f9f9f9]",
         isCollapsed ? "px-1.5" : "px-2"
       )}>
-        <Link
-          href="/logout"
+        <button
+          onClick={() => signOut({ callbackUrl: "/auth/signin" })}
           className={cn(
-            "flex items-center rounded-xl transition-all duration-200 ease-out group",
+            "flex items-center rounded-xl transition-all duration-200 ease-out group w-full",
             isCollapsed ? "w-10 h-10 justify-center p-0 mx-auto" : "gap-3 px-3 py-2",
             "text-[#6b7280] hover:bg-white hover:text-[#1a1a1a]"
           )}
@@ -285,7 +286,7 @@ export function Sidebar({ className, onCollapseChange }: SidebarProps) {
           {!isCollapsed && (
             <span className="text-sm font-medium">ログアウト</span>
           )}
-        </Link>
+        </button>
 
         {/* 展開/縮小ボタン */}
         <button

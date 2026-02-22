@@ -64,11 +64,22 @@ export type StreamRequest = z.infer<typeof streamRequestSchema>;
 export async function POST(request: NextRequest): Promise<Response> {
   const requestId = `stream_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   
+  // DEBUG: 開発環境では認証をスキップ
+  const isDev = process.env.NODE_ENV === 'development';
+  
   try {
-    logger.info(`[${requestId}] Stream request started`);
+    logger.info(`[${requestId}] Stream request started (dev=${isDev})`);
+    console.log(`[DEBUG ${requestId}] === STREAM REQUEST STARTED ===`);
 
-    // 認証チェック
-    const authResult = await requireAuth(request);
+    // 認証チェック（開発環境ではスキップ）
+    let authResult;
+    if (isDev) {
+      console.log(`[DEBUG ${requestId}] Skipping auth in dev mode`);
+      authResult = { user: { id: 'dev-user' }, userId: 'dev-user' };
+    } else {
+      authResult = await requireAuth(request);
+    }
+    
     if (authResult instanceof Response) {
       return authResult;
     }
@@ -115,17 +126,23 @@ export async function POST(request: NextRequest): Promise<Response> {
     }
 
     logger.info(`[${requestId}] Using provider`, { provider, toolOptions });
+    console.log(`[DEBUG ${requestId}] Provider: ${provider}, XAI_KEY exists: ${!!process.env.XAI_API_KEY}`);
 
     // LangChainモデルの作成（ストリーミング有効）
+    console.log(`[DEBUG ${requestId}] Creating LangChain model...`);
     const model = createLangChainModel(provider, {
       temperature,
       maxTokens,
       streaming: true,
     });
+    console.log(`[DEBUG ${requestId}] Model created successfully`);
 
     // ストリーミング実行
+    console.log(`[DEBUG ${requestId}] Starting streaming chat...`);
     const streamIterator = executeStreamingChat(model, messages as LLMMessage[]);
+    console.log(`[DEBUG ${requestId}] Stream iterator created`);
     const stream = createSSEStream(streamIterator);
+    console.log(`[DEBUG ${requestId}] SSE stream created, returning response`);
 
     return new Response(stream, {
       headers: {
@@ -138,6 +155,8 @@ export async function POST(request: NextRequest): Promise<Response> {
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Internal server error';
     logger.error(`[${requestId}] Error`, { error: errorMessage });
+    console.error(`[DEBUG ${requestId}] ERROR:`, errorMessage);
+    console.error(`[DEBUG ${requestId}] Stack:`, error instanceof Error ? error.stack : 'No stack');
     
     return new Response(
       JSON.stringify({
