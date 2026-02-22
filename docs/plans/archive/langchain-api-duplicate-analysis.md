@@ -1,6 +1,8 @@
 # LangChain API重複問題の分析と対応方針
 
 > **調査日**: 2026-02-22  
+> **対応完了日**: 2026-02-22  
+> **ステータス**: 完了・保管  
 > **調査対象**: `/api/llm/langchain`, `/api/llm/langchain/stream`  
 > **関連ドキュメント**: `docs/plans/current/langchain-migration-*.md`
 

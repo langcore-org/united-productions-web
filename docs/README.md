@@ -2,7 +2,7 @@
 
 > **本ディレクトリは「UPエージェント」（AI Hub）開発用のドキュメント群です。**
 > 
-> **最終更新**: 2026-02-21 17:20
+> **最終更新**: 2026-02-22 11:00
 
 ---
 
@@ -99,11 +99,19 @@ docs/
 │   │   ├── tasks-detailed.md          # タスク一覧（詳細）
 │   │   ├── status-dashboard.md        # 実装状況
 │   │   ├── sidebar-redesign.md        # サイドバー改修計画
-│   │   └── agentic-chat-design.md     # Agentic Chat設計
-│   └── archive/                       # 完了した計画
+│   │   ├── agentic-chat-design.md     # Agentic Chat設計
+│   │   └── langchain-migration-plan.md # LangChain移行計画
+│   └── archive/                       # 完了した計画・分析レポート
 │       ├── 2026-02-improvements.md
 │       ├── 2026-02-refactoring.md
-│       └── 2026-02-20-refactoring-completed.md
+│       ├── 2026-02-20-refactoring-completed.md
+│       ├── 2026-02-22-refactoring-completed.md
+│       ├── langchain-migration-completion-report.md
+│       ├── langchain-migration-verification-report.md
+│       ├── unused-code-report.md           # 未使用コード調査
+│       ├── unused-code-detailed-report.md  # 未使用コード詳細
+│       ├── duplicate-api-resolution.md     # API重複解消
+│       └── langchain-api-duplicate-analysis.md # LangChain API分析
 │
 ├── guides/                            # 手順書・チュートリアル（開発者向け）
 │   ├── setup/                         # 環境構築
