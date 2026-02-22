@@ -2,7 +2,7 @@
 
 > **本ディレクトリは「UPエージェント」（AI Hub）開発用のドキュメント群です。**
 > 
-> **最終更新**: 2026-02-22 11:00
+> **最終更新**: 2026-02-22 11:16
 
 ---
 
@@ -187,6 +187,56 @@ docs/
 - [`guides/development/code-review-checklist.md`](guides/development/code-review-checklist.md) - レビューチェックリスト
 - [`guides/development/naming-conventions.md`](guides/development/naming-conventions.md) - 命名規約
 - [`guides/troubleshooting.md`](guides/troubleshooting.md) - トラブルシューティング
+
+---
+
+## 📋 運用ルール
+
+### 計画書のライフサイクル
+
+```
+計画作成 → plans/current/ に配置 → 実装 → 完了 → plans/archive/ に移動
+```
+
+| ステータス | 場所 | 操作 |
+|-----------|------|------|
+| 進行中 | `plans/current/` | 随時更新 |
+| 完了 | `plans/archive/` | 参照のみ、更新禁止 |
+
+### 情報の信頼順位
+
+実装と矛盾した場合の優先順位：
+
+1. `specs/` - 技術仕様（最優先）
+2. 実装コード（ソースコード）
+3. `guides/` - 手順書
+4. その他
+
+### ファイル命名規則
+
+- **ケバブケース**（例: `api-specification.md`）
+- **日本語ファイル名は避ける**
+- **日付プレフィックス**は計画書のみ（例: `2026-02-22-refactoring.md`）
+
+---
+
+## 🔍 検索・活用方法
+
+### コマンド例
+
+```bash
+# キーワードで全文検索
+grep -r "LangChain" docs/specs/ --include="*.md"
+
+# 特定ディレクトリ内のみ検索
+grep -r "認証" docs/specs/api-integration/ --include="*.md"
+
+# 最近更新されたファイルを確認
+ls -lt docs/**/*.md | head -10
+
+# ファイル名で検索
+find docs/ -name "*auth*.md"
+```
 
 ---
 

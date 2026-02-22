@@ -46,6 +46,16 @@ export function useLLMStream() {
   const abortControllerRef = useRef<AbortController | null>(null);
 
   /**
+   * クリーンアップ関数
+   */
+  const cleanup = useCallback(() => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+  }, []);
+
+  /**
    * ストリームを開始
    */
   const startStream = useCallback(async (
@@ -53,6 +63,9 @@ export function useLLMStream() {
     provider: LLMProvider,
     toolOptions?: ToolOptions
   ) => {
+    // 前回のストリームを確実にクリーンアップ
+    cleanup();
+
     setContent('');
     setThinking('');
     setIsComplete(false);
@@ -65,8 +78,7 @@ export function useLLMStream() {
     setThinkingSteps([]);
     setIsAccepted(false);
 
-    // 既存のリクエストをキャンセル
-    abortControllerRef.current?.abort();
+    // 新しいAbortControllerを作成
     abortControllerRef.current = new AbortController();
 
     try {
@@ -190,14 +202,15 @@ export function useLLMStream() {
    * ストリームをキャンセル
    */
   const cancelStream = useCallback(() => {
-    abortControllerRef.current?.abort();
+    cleanup();
     setIsComplete(true);
-  }, []);
+  }, [cleanup]);
 
   /**
    * ストリームをリセット
    */
   const resetStream = useCallback(() => {
+    cleanup();
     setContent('');
     setThinking('');
     setIsComplete(true);
@@ -209,7 +222,7 @@ export function useLLMStream() {
     setReasoningTokens(0);
     setThinkingSteps([]);
     setIsAccepted(false);
-  }, []);
+  }, [cleanup]);
 
   return {
     content,

@@ -4,10 +4,20 @@
  * LangChain Agentの実行過程をイベントとして送信
  * 
  * @created 2026-02-22 11:30
+ * @updated 2026-02-22 12:00
  */
 
 import { BaseCallbackHandler } from '@langchain/core/callbacks/base';
-import type { Tool } from '@langchain/core/tools';
+
+/**
+ * コールバック設定
+ */
+const CALLBACK_CONFIG = {
+  /** イベント送信間隔（ms） */
+  EMIT_INTERVAL_MS: 100,
+  /** バッファの最大サイズ */
+  MAX_BUFFER_SIZE: 10000,
+} as const;
 
 /**
  * ストリーミングイベントの型
@@ -64,7 +74,6 @@ export class StreamingCallbackHandler extends BaseCallbackHandler {
   private toolCalls = new Map<string, { name: string; input: string }>();
   private buffer = '';
   private lastEmitTime = 0;
-  private readonly emitInterval = 100; // ms
 
   constructor(private onEvent: (event: StreamingEvent) => void) {
     super();
@@ -105,10 +114,15 @@ export class StreamingCallbackHandler extends BaseCallbackHandler {
     
     // スロットリング：一定間隔でイベントを送信
     const now = Date.now();
-    if (now - this.lastEmitTime < this.emitInterval) {
+    if (now - this.lastEmitTime < CALLBACK_CONFIG.EMIT_INTERVAL_MS) {
       return;
     }
     this.lastEmitTime = now;
+
+    // バッファサイズの制限
+    if (this.buffer.length > CALLBACK_CONFIG.MAX_BUFFER_SIZE) {
+      this.buffer = this.buffer.slice(-CALLBACK_CONFIG.MAX_BUFFER_SIZE);
+    }
 
     // ステップ内容を更新
     if (this.currentStepId) {
