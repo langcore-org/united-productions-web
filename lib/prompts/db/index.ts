@@ -7,3 +7,4 @@
 export * from "./types";
 export * from "./crud";
 export * from "./version";
+export { seedPrompts } from "./seed";

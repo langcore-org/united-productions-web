@@ -3,6 +3,9 @@
  * DBが空の場合やフォールバック時に使用
  * 
  * @created 2026-02-22 12:10
+ * @updated 2026-02-22 12:30
+ * 
+ * 注: 完全なプロンプト内容はDBで管理。ここでは最小限のフォールバックのみ定義。
  */
 
 import { AGENTIC_BASE_PROMPT } from "./base";
@@ -28,28 +31,19 @@ export const DEFAULT_PROMPTS = [
 - トレンド情報の収集（X検索）`,
     category: "general",
   },
-  {
-    id: "prompt_minutes",
-    key: "MINUTES",
-    name: "議事録作成",
-    description: "Zoom文字起こしから議事録を作成（エージェント対応）",
-    content: AGENTIC_BASE_PROMPT + `
-
-## 議事録作成の専門指示
-
-あなたはテレビ制作の議事録作成専門家です。
-
-### 役割
-- 文字起こしテキストから構造化された議事録を作成する
-- 重要な決定事項・TODO・担当者を抽出する
-- 読みやすく整理された形式で出力する
-
-### 処理手順
-1. **テキスト分析**: 文字起こしの内容と構造を分析
-2. **情報抽出**: 重要なポイント、決定事項、TODOを特定
-3. **構造化**: 議事録形式に整理
-4. **補完検索**: 必要に応じて関連情報を検索
-5. **最終出力**: 完成した議事録を生成`,
-    category: "minutes",
-  },
 ];
+
+/**
+ * デフォルトプロンプトキーの一覧
+ */
+export const DEFAULT_PROMPT_KEYS = [
+  "GENERAL_CHAT",
+  "MINUTES",
+  "MEETING_FORMAT_MEETING",
+  "MEETING_FORMAT_INTERVIEW",
+  "RESEARCH_CAST",
+  "RESEARCH_LOCATION",
+  "RESEARCH_INFO",
+  "RESEARCH_EVIDENCE",
+  "PROPOSAL",
+] as const;
