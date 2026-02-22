@@ -9,6 +9,12 @@ const nextConfig: NextConfig = {
   images: {
     unoptimized: false, // 画像最適化を有効化（Vercelで推奨）
   },
+
+  // ビルド並列化設定
+  experimental: {
+    parallelServerBuildTraces: true,
+    parallelServerCompiles: true,
+  },
   async headers() {
     return [
       {

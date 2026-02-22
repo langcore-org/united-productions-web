@@ -1,8 +1,18 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { FeatureChat } from "@/components/ui/FeatureChat";
+import dynamic from "next/dynamic";
 import { getChatConfig, ChatFeatureId, updateChatConfigSystemPrompt } from "@/lib/chat/chat-config";
+
+// FeatureChatを動的インポート
+const FeatureChat = dynamic(() => import("@/components/ui/FeatureChat").then(mod => mod.FeatureChat), {
+  ssr: false,
+  loading: () => (
+    <div className="flex items-center justify-center h-full">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
+    </div>
+  ),
+});
 
 interface ChatPageProps {
   featureId: ChatFeatureId;

@@ -2,8 +2,18 @@
 
 import { useEffect, useState, Suspense, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { FeatureChat } from "@/components/ui/FeatureChat";
+import dynamic from "next/dynamic";
 import { getAgentById, AGENTS, isProposalAgent, updateProposalSystemPrompt } from "@/lib/chat/agents";
+
+// FeatureChatを動的インポート
+const FeatureChat = dynamic(() => import("@/components/ui/FeatureChat").then(mod => mod.FeatureChat), {
+  ssr: false,
+  loading: () => (
+    <div className="flex items-center justify-center h-full">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
+    </div>
+  ),
+});
 
 /**
  * 統合チャットページ
