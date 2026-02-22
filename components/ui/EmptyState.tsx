@@ -9,6 +9,8 @@ export interface EmptyStateProps {
   suggestions?: string[];
   onSuggestionClick?: (suggestion: string) => void;
   icon?: React.ReactNode;
+  /** アイコンコンテナのTailwindクラス（デフォルト: bg-gray-100） */
+  iconContainerClassName?: string;
   /** サジェストのレイアウト */
   suggestionVariant?: "chip" | "list";
   /** サジェストセクションのラベル */
@@ -21,6 +23,7 @@ export function EmptyState({
   suggestions,
   onSuggestionClick,
   icon,
+  iconContainerClassName,
   suggestionVariant = "chip",
   suggestionLabel = "おすすめの質問",
 }: EmptyStateProps) {
@@ -28,7 +31,12 @@ export function EmptyState({
     <div className="flex flex-col items-center justify-center h-full px-4 py-12">
       <div className="text-center max-w-md">
         {/* Icon */}
-        <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gray-100 mb-6">
+        <div
+          className={cn(
+            "inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-6",
+            iconContainerClassName ?? "bg-gray-100",
+          )}
+        >
           {icon || <MessageSquare className="w-8 h-8 text-gray-600" />}
         </div>
 

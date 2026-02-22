@@ -2,7 +2,7 @@
 
 > 対象範囲: `agent1` アプリ全体（admin管理画面を除く）
 > 作成日: 2026-02-21
-> **更新日: 2026-02-22 00:05** - リファクタリング進行に伴う更新（useChat.ts削除、APIクライアント層追加）
+> **更新日: 2026-02-22** - グループC完了（GrokToolSettings再設計・featureId命名統一）/ グループD完了（APIクライアント層導入・useLLMStreamリファクタリング・フック統合）
 
 ---
 
@@ -159,24 +159,35 @@
 
 ---
 
-## 8. `GrokToolSettings` インターフェースの設計問題
+## 8. ~~`GrokToolSettings` インターフェースの設計問題~~ ✅ 完了
 
 **優先度: 🟠 中 / 難易度: ⬛ 高**
 
-### 問題
+### 対応内容
 
-[lib/settings/db.ts](lib/settings/db.ts) の `GrokToolSettings` インターフェース（約行122〜160）が、機能数 × ツール数のbooleanフィールド（32個程度）を持つ平坦な構造になっている。
+**2026-02-22完了**: 32フィールドの平坦な構造を `Record<ChatFeatureId, GrokToolType[]>` のネスト構造に再設計しました。
 
-例: `generalChat`, `xSearchGeneralChat`, `xSearchResearchCast`, ...
+| 変更点 | 修正前 | 修正後 |
+|--------|--------|--------|
+| 型定義 | `interface GrokToolSettings` (32 boolean fields) | `type GrokToolSettings = Record<ChatFeatureId, GrokToolType[]>` |
+| DBスキーマ | 8個の個別booleanカラム | `settings Json` 1カラム |
+| 変換関数 | `featureIdToToolKey()`, `getToolSettingKey()` 存在 | 削除（不要） |
+| 命名ルール | camelCase (`generalChat`, `xSearchResearchCast`) | kebab-case (`ChatFeatureId`) をそのまま使用 |
+| 管理画面 | camelCase キーを動的構築 | `GrokToolType[]` 配列の includes/filter で操作 |
 
-### 詳細
+### 改善結果
 
-- 新しい機能やツールを追加するたびにインターフェース・DB・UIすべての修正が必要
-- 「すべてのツールを常に有効」というポリシー（約行270〜282）が既に実装されているにもかかわらず、32フィールドの設定が残っている
+- 機能・ツール追加時の修正箇所が `chat-config.ts` のみに集約
+- `featureIdToToolKey` / `getToolSettingKey` の変換関数を削除（ケバブ/キャメル変換が不要）
+- `as unknown` キャストも除去（Prisma JSON 型で適切に扱える）
+- DBマイグレーション `20260222000000_refactor_grok_tool_settings_to_json` 適用済み
 
-### 改善方向
+### 関連ファイル
 
-`Map<FeatureId, ToolType[]>` やネストしたオブジェクト構造に再設計し、機能・ツールの追加がスケーラブルになるようにする。
+- [lib/settings/db.ts](lib/settings/db.ts) - 型定義・DB操作・ヘルパー関数を再設計
+- [prisma/schema.prisma](prisma/schema.prisma) - `GrokToolSettings` モデルを JSON 型に変更
+- [app/api/settings/grok-tools/route.ts](app/api/settings/grok-tools/route.ts) - Zod スキーマを新構造に対応
+- [app/admin/grok-tools/page.tsx](app/admin/grok-tools/page.tsx) - 管理UIを新構造に対応
 
 ---
 
@@ -186,42 +197,46 @@
 
 ### 対応内容
 
-**2026-02-22更新**: `lib/api/llm-client.ts` を新規作成し、APIクライアント層を導入しました。
+**2026-02-22完了**: `lib/api/llm-client.ts` を新規作成し、APIクライアント層を導入しました。
 
 - `lib/api/llm-client.ts` - 新規作成。LLM APIクライアント層
-  - `streamChat()` - ストリーミングチャット
-  - `chat()` - 非ストリーミングチャット
-- `hooks/useLangChainChat.ts` - APIクライアントを使用するよう更新
+  - `streamLLMResponse(request, options?)` - fetch + SSEパースを一括で行う非同期ジェネレータ
+  - `LLMApiError` - HTTPエラーを構造化して保持するエラークラス（ステータスコード・サーバーリクエストID付き）
+  - `LLMStreamRequest` - リクエストの型定義
+- `components/ui/StreamingMessage.tsx`（`useLLMStream`） - `fetch` 直接呼び出しを `streamLLMResponse()` に置き換え
+- `hooks/useLangChainChat.ts` - `useLLMStream` への委譲により間接的に恩恵を受ける
 
 ### 改善結果
 
-- HTTPリクエストとUIロジックが分離され、単体テストが容易に
-- API呼び出しが一元化され、エラーハンドリングも統一
+- `fetch` 呼び出しが `lib/api/llm-client.ts` に集約され、エンドポイント変更・ヘッダー追加が一箇所で済む
+- `LLMApiError` によりHTTPエラーが構造化され、エラーの握りつぶしを防止
+- `streamLLMResponse` をモックすれば `useLLMStream` の単体テストが容易に
 
 ### 関連ファイル
 
 - `lib/api/llm-client.ts` - 新規APIクライアント層
-- `hooks/useLangChainChat.ts` - APIクライアントを使用
+- `components/ui/StreamingMessage.tsx` - `useLLMStream` フックが `streamLLMResponse` を使用
+- `hooks/useLangChainChat.ts` - `useLLMStream` 経由でAPIクライアントを使用
 
 ---
 
-## 10. ハードコードされた定数
+## 10. ~~ハードコードされた定数~~ ✅ 完了
 
 **優先度: 🟡 低 / 難易度: 🟨 低**
 
-### 問題
+### 対応内容
 
-設定値がファイルをまたいでハードコードされており、変更時に複数箇所の修正が必要。
+**2026-02-22完了**: `config/constants.ts` を新規作成し、ハードコードされた定数を一元管理。
 
-| ファイル | 値 | 内容 |
-|----------|-----|------|
-| [lib/settings/db.ts](lib/settings/db.ts) 行33 | `60 * 1000` | キャッシュTTL（1分） |
-| [components/ui/FeatureChat.tsx](components/ui/FeatureChat.tsx) 行145〜148 | `200` | テキストエリアの最大高さ(px) |
-| [components/ui/FileAttachment.tsx](components/ui/FileAttachment.tsx) 行34 | `10` | ファイルサイズ上限(MB) |
+| 定数 | 値 | 使用箇所 |
+|------|-----|------|
+| `CACHE_TTL_MS` | `60 * 1000` | [lib/settings/db.ts](lib/settings/db.ts) |
+| `TEXTAREA_MAX_HEIGHT_PX` | `200` | [components/ui/ChatInputArea.tsx](components/ui/ChatInputArea.tsx) |
+| `MAX_FILE_SIZE_MB` | `10` | [components/ui/FileAttachment.tsx](components/ui/FileAttachment.tsx) |
 
-### 改善方向
+### 関連ファイル
 
-`config/constants.ts` などに集約して一元管理する。
+- [config/constants.ts](config/constants.ts) - 新規作成
 
 ---
 
@@ -232,7 +247,7 @@
 ### 対応内容
 
 - Props型の命名を `コンポーネント名 + Props` に統一
-- featureIdのキー文字列については、別途検討が必要（#8と関連）
+- featureIdのケバブ/キャメル混在: `GrokToolSettings`（#8）の再設計により `featureIdToToolKey` 変換関数が削除され、kebab-case の `ChatFeatureId` をそのまま設定キーとして使用するよう統一
 
 ---
 
@@ -265,43 +280,23 @@
 
 ---
 
-## 13. API Routesの完全重複（新規）
+## 13. ~~API Routesの完全重複~~ ✅ 完了
 
 **優先度: 🔴 高 / 難易度: 🟨 低**
 
 **追加日: 2026-02-21**
 
-### 問題
+### 対応内容
 
-`app/api/llm/stream/route.ts` と `app/api/llm/langchain/stream/route.ts` が**ほぼ完全に同じ**実装になっている。requestIdのプレフィックス（`stream_` vs `lcs_`）以外は同一。
+**2026-02-22完了**: `app/api/llm/langchain/stream/route.ts` を単純なリエクスポートに置き換えました。
 
-### 詳細
-
-| ファイル | 内容 | 重複度 |
-|----------|------|--------|
-| `app/api/llm/stream/route.ts` | SSEストリーミング（LangChain版） | 100% |
-| `app/api/llm/langchain/stream/route.ts` | SSEストリーミング（LangChain版） | 100% |
-
-両ファイルとも：
-- 同じZodスキーマ
-- 同じ認証・バリデーションフロー
-- 同じエラーハンドリング
-- 同じストリーミング処理
-
-### 改善方向
-
-**即座に統合可能**: `/api/llm/stream` を残し、`/api/llm/langchain/stream` は削除またはリダイレクト
-
-```typescript
-// app/api/llm/langchain/stream/route.ts
-import { POST as streamPOST } from '../../stream/route';
-export const POST = streamPOST; // 単純なリエクスポート
-```
+- `app/api/llm/stream/route.ts` - 正規実装として維持
+- `app/api/llm/langchain/stream/route.ts` - `POST` ハンドラと `LangChainStreamRequest` 型を `stream/route` からリエクスポート
 
 ### 関連ファイル
 
-- `app/api/llm/stream/route.ts`
-- `app/api/llm/langchain/stream/route.ts`
+- [app/api/llm/stream/route.ts](app/api/llm/stream/route.ts)
+- [app/api/llm/langchain/stream/route.ts](app/api/llm/langchain/stream/route.ts)
 
 ---
 
@@ -355,43 +350,27 @@ interface ChatInputAreaProps {
 
 ---
 
-## 15. EmptyStateコンポーネントの重複（新規）
+## 15. ~~EmptyStateコンポーネントの重複~~ ✅ 完了
 
 **優先度: 🟡 低 / 難易度: 🟨 低**
 
 **追加日: 2026-02-21**
 
-### 問題
+### 対応内容
 
-空状態表示コンポーネントが2箇所で重複している。
+**2026-02-22完了**: `components/ui/EmptyState.tsx` を共通基盤として新規作成し、両コンポーネントを統合。
 
-| ファイル | 用途 |
-|----------|------|
-| `components/chat/EmptyState.tsx` | 一般チャット用 |
-| `components/research/EmptyState.tsx` | リサーチ用 |
-
-### 詳細
-
-- 空状態のアイコン表示
-- サジェスト表示
-- agent固有の設定（リサーチ用のみ）
-
-### 改善方向
-
-propsでカスタマイズ可能な1コンポーネントに統合：
-
-```typescript
-interface EmptyStateProps {
-  title?: string;
-  suggestions?: string[];
-  agentConfig?: AgentConfig; // リサーチ用の設定
-}
-```
+| コンポーネント | 変更内容 |
+|---------------|----------|
+| `components/ui/EmptyState.tsx` | 新規作成。`suggestionVariant`・`iconContainerClassName` propsで両用途に対応 |
+| `components/chat/EmptyState.tsx` | `components/ui/EmptyState` の再エクスポートに変更 |
+| `components/research/EmptyState.tsx` | `components/ui/EmptyState` を使った薄いラッパーに変更 |
 
 ### 関連ファイル
 
-- `components/chat/EmptyState.tsx`
-- `components/research/EmptyState.tsx`
+- [components/ui/EmptyState.tsx](components/ui/EmptyState.tsx) - 共通コンポーネント（新規）
+- [components/chat/EmptyState.tsx](components/chat/EmptyState.tsx) - 再エクスポート
+- [components/research/EmptyState.tsx](components/research/EmptyState.tsx) - ラッパー
 
 ---
 
@@ -544,9 +523,11 @@ const PROVIDER_ENV_KEYS: Record<string, string> = {
 
 **2026-02-22完了**: `as unknown` キャスト除去・エラーハンドリング統一を実施。
 
-#### グループC: 設定スキーマ再設計 ― **#8 + #11（featureId部分）**
+#### ~~グループC: 設定スキーマ再設計~~ ― **~~#8 + #11（featureId部分）~~** ✅ 完了
 
 **根拠:** `GrokToolSettings`（#8）を再設計すると `featureIdToToolKey` の変換関数が不要になり、ケバブケース/キャメルケース混在（#11 の featureId 部分）も自然に解消する。
+
+**2026-02-22完了**: `GrokToolSettings` を 32 boolean フィールドから `Record<ChatFeatureId, GrokToolType[]>` に再設計。Prismaスキーマ・管理UI・API Routeをすべて新構造に対応。変換関数 `featureIdToToolKey` / `getToolSettingKey` を削除し、featureId の命名が kebab-case に統一された。
 
 #### ~~グループD: APIクライアント層の導入~~ ― **~~#9~~ + #6（API呼び出し部分）+ ~~#12~~** ✅ 完了
 
@@ -558,12 +539,11 @@ const PROVIDER_ENV_KEYS: Record<string, string> = {
 
 **根拠:** どちらも単一ファイル内で完結する軽微な変更。コンテキストの切り替えコストが低いため、一括でクリーンアップするのが効率的。
 
-#### グループF: API Routes統合 ― **#13**
+#### ~~グループF: API Routes統合~~ ― **~~#13~~** ✅ 完了
 
 **根拠:** `app/api/llm/stream/route.ts` と `app/api/llm/langchain/stream/route.ts` は完全に重複している。即座に統合可能で、影響範囲も限定されている。
 
-- `/api/llm/langchain/stream` を `/api/llm/stream` に統合
-- リダイレクトまたは単純なリエクスポートで対応
+**2026-02-22完了**: `app/api/llm/langchain/stream/route.ts` を `stream/route` へのリエクスポートに置き換え。実際のコードからは `/api/llm/langchain/stream` への参照がなく、後方互換性も維持。
 
 #### グループG: UIコンポーネント統合 ― **#14 + #15**
 
@@ -592,14 +572,14 @@ const PROVIDER_ENV_KEYS: Record<string, string> = {
 | 5 | ~~`as unknown` キャストの多用~~ | 🔴 高 | 🟫 中 | **グループB** | ✅ 完了 |
 | 6 | ~~エラーの握りつぶし~~ | 🟠 中 | 🟨 低 | **グループB / D** | ✅ 完了 |
 | 7 | ~~状態の二重・三重管理~~ | 🟠 中 | 🟫 中 | **グループA** | ✅ 完了 |
-| 8 | `GrokToolSettings` の設計問題 | 🟠 中 | ⬛ 高 | **グループC** | 対応待ち |
+| 8 | ~~`GrokToolSettings` の設計問題~~ | 🟠 中 | ⬛ 高 | **グループC** | ✅ 完了 |
 | 9 | ~~`fetch` の直接呼び出し~~ | 🟠 中 | ⬛ 高 | **グループD** | ✅ 完了 |
-| 10 | ハードコードされた定数 | 🟡 低 | 🟨 低 | **グループE** | 対応待ち |
+| 10 | ~~ハードコードされた定数~~ | 🟡 低 | 🟨 低 | **グループE** | ✅ 完了 |
 | 11 | ~~命名の非一貫性~~ | 🟡 低 | 🟨 低 | **グループC / E** | ✅ 完了 |
 | 12 | ~~LangChain移行後のフック統合~~ | 🟠 中 | ⬛ 高 | **グループA / D** | ✅ 完了 |
-| 13 | API Routesの完全重複 | 🔴 高 | 🟨 低 | **グループF** | 対応待ち |
+| 13 | ~~API Routesの完全重複~~ | 🔴 高 | 🟨 低 | **グループF** | ✅ 完了 |
 | 14 | ChatInputコンポーネントの重複 | 🟠 中 | 🟫 中 | **グループG** | 対応待ち |
-| 15 | EmptyStateコンポーネントの重複 | 🟡 低 | 🟨 低 | **グループG** | 対応待ち |
+| 15 | ~~EmptyStateコンポーネントの重複~~ | 🟡 低 | 🟨 低 | **グループE** | ✅ 完了 |
 | 16 | 環境変数名の不整合 | 🔴 高 | 🟨 低 | **グループH** | 対応待ち |
 | 17 | ~~未使用/空の環境変数~~ | 🟡 低 | 🟨 低 | **グループH** | ✅ 完了 |
 | 18 | ~~perplexity→grokへの移行~~ | 🟠 中 | 🟫 中 | **グループH** | ✅ 完了 |
@@ -610,7 +590,7 @@ const PROVIDER_ENV_KEYS: Record<string, string> = {
 2. **グループF** (API Routes統合): #13 ― 完全重複のため即座に統合可能
 3. **~~グループB~~** (~~`lib/settings/db.ts` 一括修正~~): ~~#5 + #6~~ ― ✅ **完了**
 4. **~~グループA/D~~** (~~フック統合・APIクライアント層~~): ~~#4 + #7 + #9 + #12~~ ― ✅ **完了**
-5. **グループC** (設定スキーマ再設計): #8 + #11（featureId）― 大規模改修のため単独スプリントで対応
+5. **~~グループC~~** (~~設定スキーマ再設計~~): ~~#8 + #11（featureId）~~ ― ✅ **完了**
 6. **グループG** (UIコンポーネント統合): #14 + #15 ― フック統合後に実施
 7. **~~グループE~~** (~~コードクリーンアップ~~): #10 + #11（Props命名）+ ~~#17~~ ― ✅ **完了**
 
@@ -624,12 +604,13 @@ const PROVIDER_ENV_KEYS: Record<string, string> = {
 - ✅ プロバイダーをgrokのみに統一（OpenAI, Anthropic, Geminiをコメントアウト）
 - ✅ リサーチ機能のperplexity→grok移行完了
 - ✅ `lib/settings/db.ts` の `as unknown` キャスト除去・エラーハンドリング統一完了
+- ✅ `GrokToolSettings` を 32 boolean フィールド → `Record<ChatFeatureId, GrokToolType[]>` に再設計完了
+- ✅ `featureIdToToolKey` / `getToolSettingKey` 変換関数を削除、featureId 命名を kebab-case に統一
 
-**完了した項目**: #1, #2, #3, #4, #5, #6, #7, #9, #11, #12, #17, #18
+**完了した項目**: #1, #2, #3, #4, #5, #6, #7, #8, #9, #11, #12, #17, #18
 
 **残存する項目**:
-- #8 - `GrokToolSettings` の設計問題（スキーマはJSON化済み、DB層は完了）
 - #10 - ハードコードされた定数
-- #13 - API Routesの完全重複（統合待ち）
+- #13 - API Routesの完全重複
 - #14, #15 - UIコンポーネントの重複
-- #16 - 環境変数名の不整合（#17でコメントアウトにより解消済み）
+- #16 - 環境変数名の不整合（#17でコメントアウトにより実害なし）

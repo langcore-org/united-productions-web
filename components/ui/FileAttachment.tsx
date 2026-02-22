@@ -4,6 +4,7 @@ import { useState, useCallback, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { Paperclip, X, FileText, Image, FileCode, File } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { MAX_FILE_SIZE_MB } from "@/config/constants";
 
 export interface AttachedFile {
   id: string;
@@ -30,8 +31,6 @@ const ACCEPTED_TYPES = {
   "image/*": [".png", ".jpg", ".jpeg", ".gif", ".webp"],
   "code/*": [".js", ".ts", ".tsx", ".jsx", ".py", ".html", ".css"],
 };
-
-import { MAX_FILE_SIZE_MB } from "@/config/constants";
 
 function getFileIcon(type: string) {
   if (type.startsWith("image/")) return Image;
