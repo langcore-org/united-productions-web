@@ -17,4 +17,4 @@ export interface PromptWithVersions extends SystemPrompt {
   versions: SystemPromptVersion[];
 }
 
-export { SystemPrompt, SystemPromptVersion };
+export type { SystemPrompt, SystemPromptVersion };
