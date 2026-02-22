@@ -1,286 +1,58 @@
 /**
- * StreamingMessage Component & useLLMStream Hook
+ * StreamingMessage Component
  * 
- * ストリーミングレスポンスを表示するコンポーネントとフック
+ * ストリーミングレスポンスを表示するコンポーネント
  * usage情報、ツール使用状況、思考ステップを表示
  * 
- * 統合版: components/chat/StreamingMessage と components/research/message/StreamingMessage を統合
+ * @created 2026-02-22 11:55
  */
 
 'use client';
 
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { Loader2, Bot, Lightbulb, BrainCircuit, CheckCircle2 } from 'lucide-react';
-import type { LLMMessage, LLMProvider } from '@/lib/llm/types';
-import { streamLLMResponse, LLMApiError } from '@/lib/api/llm-client';
+import type { LLMProvider } from '@/lib/llm/types';
 import { getToolConfig, TOOL_CONFIG } from '@/lib/tools/config';
+import type {
+  UsageInfo,
+  ToolCallInfo,
+  ReasoningStepInfo,
+  ToolUsageInfo,
+} from '@/hooks/useLLMStream/types';
+
+export type { UsageInfo, ToolCallInfo, ReasoningStepInfo, ToolUsageInfo };
 
 /**
- * ツールオプションの型
+ * StreamingMessage Component Props
  */
-export interface ToolOptions {
-  enableWebSearch?: boolean;
-}
-
-/**
- * Usage情報の型
- */
-interface UsageInfo {
-  inputTokens: number;
-  outputTokens: number;
-  cost: number;
-}
-
-/**
- * ツール呼び出し情報
- */
-export interface ToolCallInfo {
-  id: string;
-  type: string;
-  name?: string;
-  input?: string;
-  status: 'pending' | 'running' | 'completed' | 'failed';
-}
-
-/**
- * 思考ステップ情報
- */
-export interface ReasoningStepInfo {
-  step: number;
+interface StreamingMessageProps {
+  /** プロバイダー（表示用） */
+  provider?: LLMProvider | string;
+  /** メッセージ内容 */
   content: string;
-  tokens?: number;
-}
-
-/**
- * ツール使用状況
- */
-export interface ToolUsageInfo {
-  web_search_calls?: number;
-  x_search_calls?: number;
-  code_interpreter_calls?: number;
-  file_search_calls?: number;
-  mcp_calls?: number;
-  document_search_calls?: number;
-}
-
-
-/**
- * 思考ステップ情報（新しい形式）
- */
-export interface ThinkingStepInfo {
-  step: number;
-  id: string;
-  title: string;
-  content?: string;
-  status: 'pending' | 'running' | 'completed' | 'error';
-  type: 'thinking' | 'search' | 'analysis' | 'synthesis' | 'complete';
-}
-
-/**
- * useLLMStream Hook
- * 
- * LLMストリーミングAPIとの連携を行うカスタムフック
- * usage情報、ツール使用状況、思考ステップをサーバーから受信して表示
- * 
- * @updated 2026-02-22 11:45
- */
-export function useLLMStream() {
-  const [content, setContent] = useState('');
-  const [thinking, setThinking] = useState('');
-  const [isComplete, setIsComplete] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [usage, setUsage] = useState<UsageInfo | null>(null);
-  const [toolCalls, setToolCalls] = useState<ToolCallInfo[]>([]);
-  const [toolUsage, setToolUsage] = useState<ToolUsageInfo | null>(null);
-  const [reasoningSteps, setReasoningSteps] = useState<ReasoningStepInfo[]>([]);
-  const [reasoningTokens, setReasoningTokens] = useState<number>(0);
-  // 新しい状態
-  const [thinkingSteps, setThinkingSteps] = useState<ThinkingStepInfo[]>([]);
-  const [isAccepted, setIsAccepted] = useState(false);
-  const abortControllerRef = useRef<AbortController | null>(null);
-
-  /**
-   * ストリームを開始
-   */
-  const startStream = useCallback(async (
-    messages: LLMMessage[],
-    provider: LLMProvider,
-    toolOptions?: ToolOptions
-  ) => {
-    setContent('');
-    setThinking('');
-    setIsComplete(false);
-    setError(null);
-    setUsage(null);
-    setToolCalls([]);
-    setToolUsage(null);
-    setReasoningSteps([]);
-    setReasoningTokens(0);
-    setThinkingSteps([]);
-    setIsAccepted(false);
-
-    // 既存のリクエストをキャンセル
-    abortControllerRef.current?.abort();
-    abortControllerRef.current = new AbortController();
-
-    try {
-      for await (const event of streamLLMResponse(
-        { messages, provider, toolOptions },
-        { signal: abortControllerRef.current.signal },
-      )) {
-        if (event.error) {
-          throw new Error(event.error);
-        }
-
-        // リクエスト受理イベント
-        if (event.accepted) {
-          setIsAccepted(true);
-        }
-
-        // コンテンツチャンク
-        if (event.content) {
-          setContent((prev) => prev + event.content);
-        }
-
-        // レガシー思考プロセス
-        if (event.thinking) {
-          setThinking((prev) => prev + event.thinking);
-        }
-
-        // レガシーツール呼び出し
-        if (event.toolCall) {
-          setToolCalls((prev) => {
-            const existing = prev.findIndex(t => t.id === event.toolCall!.id);
-            if (existing >= 0) {
-              const updated = [...prev];
-              updated[existing] = { ...updated[existing], ...event.toolCall };
-              return updated;
-            }
-            return [...prev, event.toolCall!];
-          });
-        }
-
-        // レガシー思考ステップ
-        if (event.reasoning) {
-          setReasoningSteps((prev) => {
-            const existing = prev.findIndex(r => r.step === event.reasoning!.step);
-            if (existing >= 0) {
-              const updated = [...prev];
-              updated[existing] = { ...updated[existing], ...event.reasoning };
-              return updated;
-            }
-            return [...prev, event.reasoning!];
-          });
-          if (event.reasoning.tokens) {
-            setReasoningTokens(event.reasoning.tokens);
-          }
-        }
-
-        // 新しい思考ステップ開始
-        if (event.stepStart) {
-          setThinkingSteps((prev) => [...prev, event.stepStart!]);
-        }
-
-        // 思考ステップ更新
-        if (event.stepUpdate) {
-          setThinkingSteps((prev) =>
-            prev.map((step) =>
-              step.id === event.stepUpdate!.id
-                ? { ...step, ...event.stepUpdate }
-                : step
-            )
-          );
-        }
-
-        // ツール呼び出しイベント
-        if (event.toolCallEvent) {
-          setToolCalls((prev) => {
-            const existing = prev.findIndex(t => t.id === event.toolCallEvent!.id);
-            const toolCallInfo: ToolCallInfo = {
-              id: event.toolCallEvent!.id,
-              type: event.toolCallEvent!.type,
-              name: event.toolCallEvent!.name,
-              input: event.toolCallEvent!.input,
-              status: event.toolCallEvent!.status,
-            };
-            if (existing >= 0) {
-              const updated = [...prev];
-              updated[existing] = { ...updated[existing], ...toolCallInfo };
-              return updated;
-            }
-            return [...prev, toolCallInfo];
-          });
-        }
-
-        // ツール使用状況
-        if (event.toolUsage) {
-          setToolUsage(event.toolUsage);
-        }
-
-        // 完了イベント
-        if (event.done) {
-          setIsComplete(true);
-          if (event.usage) {
-            setUsage(event.usage);
-          }
-        }
-      }
-      setIsComplete(true);
-    } catch (err) {
-      if (err instanceof Error && err.name === 'AbortError') {
-        // キャンセルは正常
-        setIsComplete(true);
-      } else {
-        const errorMessage = err instanceof LLMApiError
-          ? err.message
-          : err instanceof Error ? err.message : '予期しないエラーが発生しました';
-        setError(errorMessage);
-        setIsComplete(true);
-      }
-    }
-  }, []);
-
-  /**
-   * ストリームをキャンセル
-   */
-  const cancelStream = useCallback(() => {
-    abortControllerRef.current?.abort();
-    setIsComplete(true);
-  }, []);
-
-  /**
-   * ストリームをリセット
-   */
-  const resetStream = useCallback(() => {
-    setContent('');
-    setThinking('');
-    setIsComplete(true);
-    setError(null);
-    setUsage(null);
-    setToolCalls([]);
-    setToolUsage(null);
-    setReasoningSteps([]);
-    setReasoningTokens(0);
-  }, []);
-
-  return {
-    content,
-    thinking,
-    isComplete,
-    error,
-    usage,
-    toolCalls,
-    toolUsage,
-    reasoningSteps,
-    reasoningTokens,
-    // 新しい戻り値
-    thinkingSteps,
-    isAccepted,
-    startStream,
-    cancelStream,
-    resetStream,
-  };
+  /** 思考プロセス内容 */
+  thinking?: string;
+  /** 完了フラグ */
+  isComplete?: boolean;
+  /** 追加クラス */
+  className?: string;
+  /** Usage情報 */
+  usage?: UsageInfo | null;
+  /** 思考プロセスを表示するか */
+  showThinking?: boolean;
+  /** アバターを表示するか */
+  showAvatar?: boolean;
+  /** バリアント（デフォルト or チャット風） */
+  variant?: 'default' | 'chat';
+  /** ツール呼び出し情報 */
+  toolCalls?: ToolCallInfo[];
+  /** ツール使用状況 */
+  toolUsage?: ToolUsageInfo | null;
+  /** 思考ステップ */
+  reasoningSteps?: ReasoningStepInfo[];
+  /** 推論トークン数 */
+  reasoningTokens?: number;
 }
 
 /**
@@ -390,41 +162,9 @@ function ReasoningSteps({ steps, totalTokens }: { steps: ReasoningStepInfo[]; to
 }
 
 /**
- * StreamingMessage Component Props
- */
-interface StreamingMessageProps {
-  /** プロバイダー（表示用） */
-  provider?: LLMProvider | string;
-  /** メッセージ内容 */
-  content: string;
-  /** 思考プロセス内容 */
-  thinking?: string;
-  /** 完了フラグ */
-  isComplete?: boolean;
-  /** 追加クラス */
-  className?: string;
-  /** Usage情報 */
-  usage?: UsageInfo | null;
-  /** 思考プロセスを表示するか */
-  showThinking?: boolean;
-  /** アバターを表示するか */
-  showAvatar?: boolean;
-  /** バリアント（デフォルト or チャット風） */
-  variant?: 'default' | 'chat';
-  /** ツール呼び出し情報 */
-  toolCalls?: ToolCallInfo[];
-  /** ツール使用状況 */
-  toolUsage?: ToolUsageInfo | null;
-  /** 思考ステップ */
-  reasoningSteps?: ReasoningStepInfo[];
-  /** 推論トークン数 */
-  reasoningTokens?: number;
-}
-
-/**
  * StreamingMessage Component
  * 
- * ストリーミングレスポンスを表示するコンポーネント（統合版）
+ * ストリーミングレスポンスを表示するコンポーネント
  * ツール使用状況と思考ステップを表示
  */
 export function StreamingMessage({
@@ -625,3 +365,5 @@ export function StreamingMessage({
     </div>
   );
 }
+
+export default StreamingMessage;

@@ -2,7 +2,15 @@
 
 import { cn } from "@/lib/utils";
 import { Bot, User, Lightbulb } from "lucide-react";
-import { ChatMessage as ChatMessageType } from "./index";
+// ChatMessage型はローカルで定義
+interface ChatMessageType {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  thinking?: string;
+  citations?: string[];
+  llmProvider?: string;
+}
 import { ResearchMessage } from "@/types/research";
 
 interface ChatMessageProps {
@@ -69,7 +77,7 @@ export function ChatMessage({ message, showThinking = true, showCitations = true
           <div className="mb-3 p-3 rounded-xl bg-gray-50 border border-gray-200">
             <p className="text-xs text-gray-600 font-medium mb-2">情報源</p>
             <ul className="space-y-1">
-              {message.citations.map((citation, index) => (
+              {message.citations.map((citation: string, index: number) => (
                 <li key={index} className="text-xs text-gray-600 truncate">
                   [{index + 1}] {citation}
                 </li>

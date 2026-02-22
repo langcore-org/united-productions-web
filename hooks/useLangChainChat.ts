@@ -12,7 +12,7 @@
 
 import { useState, useCallback, useEffect, useRef } from 'react';
 import type { LLMProvider } from '@/lib/llm/types';
-import { useLLMStream, type ToolCallInfo, type ReasoningStepInfo, type ToolUsageInfo } from '@/components/ui/StreamingMessage';
+import { useLLMStream, type ToolCallInfo, type ReasoningStepInfo, type ToolUsageInfo } from '@/hooks/useLLMStream';
 
 export interface ChatMessage {
   id: string;
