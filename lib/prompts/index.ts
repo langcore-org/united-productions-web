@@ -11,4 +11,11 @@ export * from "./constants";
 export * from "./db";
 
 // 後方互換性のため、元のdb.tsからのエクスポートも維持
-export { AGENTIC_BASE_PROMPT, DEFAULT_PROMPTS } from "./constants";
+export {
+  AGENTIC_BASE_PROMPT,
+  DEFAULT_PROMPTS,
+  PROMPT_KEYS,
+  PROMPT_CATEGORIES,
+  type PromptKey,
+  type PromptCategory,
+} from "./constants";
