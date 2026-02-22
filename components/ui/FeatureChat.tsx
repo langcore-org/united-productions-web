@@ -414,15 +414,8 @@ function StreamingSteps({
   // 実行中のツール呼び出し
   const runningToolCalls = uniqueToolCalls.filter((call) => call.status === "running");
 
-  // サーバー側で既に分割送信されているため、クライアント側ではそのまま使用
-  // 完了した思考ステップ（最後のステップが完了している場合は全て完了とみなす）
-  const isReasoningComplete = isComplete && reasoningSteps.length > 0;
-  const completedReasoningSteps = isReasoningComplete 
-    ? reasoningSteps 
-    : reasoningSteps.slice(0, -1);
-  // 現在の思考ステップ（実行中のみ）
-  const currentReasoningStep = isReasoningComplete ? null : reasoningSteps[reasoningSteps.length - 1];
-  const hasCurrentReasoning = !isReasoningComplete && reasoningSteps.length > 0;
+  // 何もない場合は「考え中...」を表示
+  const hasAnyActivity = reasoningSteps.length > 0 || toolCalls.length > 0 || content || thinking;
 
   return (
     <div className="space-y-3">
@@ -436,23 +429,33 @@ function StreamingSteps({
         <ToolCallMessage key={toolCall.id} toolCall={toolCall} status="running" provider={provider} />
       ))}
 
-      {/* 完了した思考ステップ - 各ステップを個別のメッセージとして表示 */}
-      {completedReasoningSteps.map((step) => (
-        <ThinkingStepMessage key={step.step} step={step} provider={provider} />
-      ))}
-
-      {/* 現在の思考ステップ（実行中） */}
-      {hasCurrentReasoning && currentReasoningStep && (
-        <ThinkingStepMessage step={currentReasoningStep} provider={provider} isActive />
-      )}
+      {/* 思考ステップ - 各ステップを個別のメッセージとして表示（完了・進行中問わず） */}
+      {reasoningSteps.map((step, index) => {
+        const isLastStep = index === reasoningSteps.length - 1;
+        const isActive = isLastStep && !isComplete;
+        return (
+          <ThinkingStepMessage 
+            key={`${step.step}-${index}`} 
+            step={step} 
+            provider={provider} 
+            isActive={isActive}
+            stepNumber={index + 1}
+          />
+        );
+      })}
 
       {/* レガシー思考表示 */}
       {thinking && reasoningSteps.length === 0 && (
         <LegacyThinkingMessage thinking={thinking} provider={provider} isComplete={isComplete} />
       )}
 
+      {/* 何もない場合は「考え中...」を表示 */}
+      {!hasAnyActivity && !isComplete && (
+        <ThinkingPlaceholderMessage provider={provider} />
+      )}
+
       {/* メインコンテンツ */}
-      {(content || !isComplete) && (
+      {(content || (isComplete && !content)) && (
         <ContentMessage 
           content={content} 
           provider={provider} 

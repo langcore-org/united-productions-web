@@ -57,9 +57,9 @@
 | REST API | ✅ | `POST /api/research` |
 | ストリーミング | ✅ | `GET /api/research/stream` |
 | 出演者リサーチ | ✅ | `PJ-C-people` |
-| 場所リサーチ | ✅ | `PJ-C-location` |
-| 情報リサーチ | ✅ | `PJ-C-info` |
 | エビデンスリサーチ | ✅ | `PJ-C-evidence` |
+| 場所リサーチ | ⏸️ | 4月以降実装予定 |
+| 情報リサーチ | ⏸️ | 4月以降実装予定 |
 
 **ファイル**:
 - `lib/research/service.ts`

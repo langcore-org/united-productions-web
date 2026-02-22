@@ -12,8 +12,6 @@ import {
   Loader2,
   MessageSquare,
   Users,
-  MapPin,
-  Info,
   Shield,
   FileText,
   Lightbulb,
@@ -48,8 +46,6 @@ const FEATURE_FILTERS = [
   { id: "all", label: "すべて", icon: MessageSquare },
   { id: "general-chat", label: "一般チャット", icon: MessageSquare },
   { id: "research-cast", label: "出演者リサーチ", icon: Users },
-  { id: "research-location", label: "場所リサーチ", icon: MapPin },
-  { id: "research-info", label: "情報リサーチ", icon: Info },
   { id: "research-evidence", label: "エビデンスリサーチ", icon: Shield },
   { id: "minutes", label: "議事録作成", icon: FileText },
   { id: "proposal", label: "新企画立案", icon: Lightbulb },
@@ -165,7 +161,7 @@ export default function ChatHistoryPage() {
 
   // チャットを開く
   const handleOpenChat = (featureId: string) => {
-    router.push(`/chat?gem=${featureId}`);
+    router.push(`/chat?agent=${featureId}`);
   };
 
   // フィルタリングとソート

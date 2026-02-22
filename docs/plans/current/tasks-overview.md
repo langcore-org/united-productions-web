@@ -303,9 +303,11 @@ async *streamWithSearch(messages: LLMMessage[]): AsyncIterable<string>
 ```
 リサーチ ▼
 ├── 出演者リサーチ (/agent/cast)
-├── 場所リサーチ (/agent/location)
-├── 情報リサーチ (/agent/info)
 └── エビデンスリサーチ (/agent/evidence)
+
+# 場所リサーチ・情報リサーチは4月以降実装予定
+# ├── 場所リサーチ (/agent/location)
+# └── 情報リサーチ (/agent/info)
 ```
 
 #### タスク3.4: オンボーディング導線

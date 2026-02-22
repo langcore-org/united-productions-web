@@ -50,14 +50,14 @@ const FEATURES = [
     name: "出演者リサーチ",
     description: "企画に最適な出演者候補をリサーチ",
     icon: Users,
-    path: "/chat?gem=research-cast",
+    path: "/chat?agent=research-cast",
   },
   {
     id: "PJ-C-evidence",
     name: "エビデンスリサーチ",
     description: "情報の真偽を検証・ファクトチェック",
     icon: Shield,
-    path: "/chat?gem=research-evidence",
+    path: "/chat?agent=research-evidence",
   },
 ];
 

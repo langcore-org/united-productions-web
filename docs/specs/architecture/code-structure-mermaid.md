@@ -780,9 +780,9 @@ graph LR
 
         subgraph "リサーチ系"
             RCAST["👥 research-cast<br/>出演者リサーチ"]
-            RLOC["📍 research-location<br/>場所リサーチ"]
-            RINFO["🔍 research-info<br/>情報リサーチ"]
             REVI["✅ research-evidence<br/>エビデンス"]
+            RLOC["📍 research-location<br/>場所リサーチ（4月以降）"]
+            RINFO["🔍 research-info<br/>情報リサーチ（4月以降）"]
         end
 
         subgraph "ドキュメント系"

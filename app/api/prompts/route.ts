@@ -3,15 +3,15 @@
  * 
  * GET /api/prompts?key=xxx - 特定のプロンプトを取得
  * GET /api/prompts?category=xxx - カテゴリ別プロンプト一覧
- * GET /api/prompts?gemId=xxx - Gem用のプロンプトを取得
+ * GET /api/prompts?agentId=xxx - Agent用のプロンプトを取得
  */
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/api/auth";
 
-// Gem IDとプロンプトキーのマッピング
-const GEM_PROMPT_MAP: Record<string, string> = {
+// Agent IDとプロンプトキーのマッピング
+const AGENT_PROMPT_MAP: Record<string, string> = {
   "general": "GENERAL_CHAT",
   "research-cast": "RESEARCH_CAST",
   "research-location": "RESEARCH_LOCATION",
@@ -37,14 +37,14 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const key = searchParams.get("key");
     const category = searchParams.get("category");
-    const gemId = searchParams.get("gemId");
+    const agentId = searchParams.get("agentId");
 
-    // Gem IDが指定された場合
-    if (gemId) {
-      const promptKey = GEM_PROMPT_MAP[gemId];
+    // Agent IDが指定された場合
+    if (agentId) {
+      const promptKey = AGENT_PROMPT_MAP[agentId];
       if (!promptKey) {
         return NextResponse.json(
-          { success: false, error: "Unknown gem ID" },
+          { success: false, error: "Unknown agent ID" },
           { status: 400 }
         );
       }

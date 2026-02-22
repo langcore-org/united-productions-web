@@ -12,9 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Sidebar Navigation Overhaul**
   - Implemented collapsible menu for Research section
     - 出演者リサーチ (/agent/cast)
-    - 場所リサーチ (/agent/location)
-    - 情報リサーチ (/agent/info)
     - エビデンスリサーチ (/agent/evidence)
+    - ~~場所リサーチ (/agent/location)~~ → 4月以降実装予定
+    - ~~情報リサーチ (/agent/info)~~ → 4月以降実装予定
   - Implemented collapsible menu for Transcript section
     - 文字起こしフォーマット変換 (/transcript)
     - NA原稿作成 (/transcript/na)
@@ -35,9 +35,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Feature Pages**
   - `/agent/cast` - 出演者リサーチ (Cast Research)
-  - `/agent/location` - 場所リサーチ (Location Research)
-  - `/agent/info` - 情報リサーチ (Information Research)
   - `/agent/evidence` - エビデンスリサーチ (Evidence Research)
+  - `/agent/location` - 場所リサーチ (Location Research) - 4月以降実装予定
+  - `/agent/info` - 情報リサーチ (Information Research) - 4月以降実装予定
   - `/minutes` - 議事録作成 (Meeting Minutes)
   - `/proposal` - 新企画立案 (New Proposal)
   - `/transcript` - 文字起こしフォーマット変換 (Transcript Formatting)
@@ -48,9 +48,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Created `lib/prompts/` directory for system prompt management
   - Added prompt files:
     - `research-cast.ts` - Cast research system prompt
-    - `research-location.ts` - Location research system prompt
-    - `research-info.ts` - Information research system prompt
     - `research-evidence.ts` - Evidence research system prompt
+    - `research-location.ts` - Location research system prompt (4月以降実装予定)
+    - `research-info.ts` - Information research system prompt (4月以降実装予定)
     - `minutes.ts` - Meeting minutes system prompt
     - `proposal.ts` - Proposal system prompt (dynamic generation with program settings)
     - `transcript.ts` - Transcript formatting system prompt

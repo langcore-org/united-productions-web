@@ -26,8 +26,6 @@ import type { ChatFeatureId } from "@/lib/chat/chat-config";
 const TOOL_FEATURES: { id: ChatFeatureId; label: string }[] = [
   { id: "general-chat", label: "一般チャット" },
   { id: "research-cast", label: "出演者リサーチ" },
-  { id: "research-location", label: "場所リサーチ" },
-  { id: "research-info", label: "情報リサーチ" },
   { id: "research-evidence", label: "エビデンスリサーチ" },
   { id: "minutes", label: "議事録作成" },
   { id: "proposal", label: "新企画立案" },

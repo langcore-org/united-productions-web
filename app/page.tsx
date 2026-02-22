@@ -27,25 +27,25 @@ const modeButtons: ModeButton[] = [
     id: "research",
     label: "リサーチ",
     icon: <Search className="w-4 h-4" />,
-    href: "/chat?gem=research-cast",
+    href: "/chat?agent=research-cast",
   },
   {
     id: "minutes",
     label: "議事録",
     icon: <FileText className="w-4 h-4" />,
-    href: "/chat?gem=minutes",
+    href: "/chat?agent=minutes",
   },
   {
     id: "na-script",
     label: "NA原稿",
     icon: <Mic className="w-4 h-4" />,
-    href: "/chat?gem=na-script",
+    href: "/chat?agent=na-script",
   },
   {
     id: "proposal",
     label: "新企画立案",
     icon: <Sparkles className="w-4 h-4" />,
-    href: "/chat?gem=proposal",
+    href: "/chat?agent=proposal",
   },
 ];
 

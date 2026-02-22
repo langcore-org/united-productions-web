@@ -12,9 +12,8 @@
 ```
 ├── リサーチ（折りたたみメニュー）
 │   ├── 出演者リサーチ → /research/cast
-│   ├── 場所リサーチ   → /research/location
-│   ├── 情報リサーチ   → /research/info
 │   └── エビデンスリサーチ → /research/evidence
+│   # 場所リサーチ・情報リサーチは4月以降実装予定
 ├── 議事録作成         → /minutes
 ├── 新企画立案         → /proposal
 ├── 文字起こし（折りたたみメニュー）
@@ -46,9 +45,8 @@
 - 各アイコンは lucide-react から適切なものを選ぶ
   - リサーチ: Search
   - 出演者: Users
-  - 場所: MapPin
-  - 情報: Info
   - エビデンス: Shield
+  # 場所: MapPin, 情報: Info は4月以降実装予定
   - 議事録: FileText
   - 新企画: Lightbulb
   - 文字起こし: Mic
@@ -124,23 +122,7 @@ placeholder: "企画内容・テーマを入力してください"
 outputFormat: "markdown"
 ```
 
-#### 4-2. 場所リサーチ
-**ファイル**: `app/(authenticated)/research/location/page.tsx`
-**プロンプト定数**: `lib/prompts/research-location.ts`
-```
-placeholder: "企画内容・テーマを入力してください"
-outputFormat: "markdown"
-```
-
-#### 4-3. 情報リサーチ
-**ファイル**: `app/(authenticated)/research/info/page.tsx`
-**プロンプト定数**: `lib/prompts/research-info.ts`
-```
-placeholder: "リサーチしたいテーマを入力してください"
-outputFormat: "markdown"
-```
-
-#### 4-4. エビデンスリサーチ
+#### 4-2. エビデンスリサーチ
 **ファイル**: `app/(authenticated)/research/evidence/page.tsx`
 **プロンプト定数**: `lib/prompts/research-evidence.ts`
 ```
@@ -239,9 +221,8 @@ ${pastProposals}
 app/(authenticated)/
 ├── research/
 │   ├── cast/page.tsx
-│   ├── location/page.tsx
-│   ├── info/page.tsx
 │   └── evidence/page.tsx
+│   # location/page.tsx, info/page.tsx は4月以降実装予定
 ├── minutes/page.tsx
 ├── proposal/page.tsx
 ├── transcript/
@@ -257,9 +238,8 @@ components/
 lib/
 └── prompts/
     ├── research-cast.ts
-    ├── research-location.ts
-    ├── research-info.ts
     ├── research-evidence.ts
+    # research-location.ts, research-info.ts は4月以降実装予定
     ├── minutes.ts
     ├── proposal.ts
     ├── transcript.ts

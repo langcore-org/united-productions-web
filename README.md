@@ -37,8 +37,6 @@ AI Hubは、テレビ制作現場の様々な業務をAIで支援する統合プ
 ```
 ├── リサーチ（折りたたみメニュー）
 │   ├── 出演者リサーチ → /research/cast
-│   ├── 場所リサーチ   → /research/location
-│   ├── 情報リサーチ   → /research/info
 │   └── エビデンスリサーチ → /research/evidence
 ├── 議事録作成         → /minutes
 ├── 新企画立案         → /proposal
@@ -53,9 +51,9 @@ AI Hubは、テレビ制作現場の様々な業務をAIで支援する統合プ
 | 機能 | パス | 説明 |
 |------|------|------|
 | **出演者リサーチ** | `/research/cast` | 企画に適した出演者候補を提案。プロフィール、出演実績、相性分析を含む |
-| **場所リサーチ** | `/research/location` | ロケ地候補と撮影条件を調査。アクセス、許可要件、周辺情報を含む |
-| **情報リサーチ** | `/research/info` | テーマに関する情報を収集・整理。信頼性の高い情報源を提示 |
 | **エビデンスリサーチ** | `/research/evidence` | 情報の真偽を検証。ファクトチェック・一次情報源を特定 |
+
+> **注記**: 場所リサーチ・情報リサーチは4月以降に実装予定
 
 ### 議事録・文字起こし (PJ-A/PJ-B)
 
@@ -111,9 +109,8 @@ interface FeatureChatProps {
 │   ├── (authenticated)/          # 認証必須ページ
 │   │   ├── research/
 │   │   │   ├── cast/page.tsx     # 出演者リサーチ
-│   │   │   ├── location/page.tsx # 場所リサーチ
-│   │   │   ├── info/page.tsx     # 情報リサーチ
 │   │   │   └── evidence/page.tsx # エビデンスリサーチ
+│   │   │   # 場所リサーチ・情報リサーチは4月以降実装予定
 │   │   ├── minutes/page.tsx      # 議事録作成
 │   │   ├── proposal/page.tsx     # 新企画立案
 │   │   ├── transcript/
@@ -137,9 +134,8 @@ interface FeatureChatProps {
 ├── lib/
 │   ├── prompts/                  # プロンプト定数
 │   │   ├── research-cast.ts
-│   │   ├── research-location.ts
-│   │   ├── research-info.ts
 │   │   ├── research-evidence.ts
+│   │   # research-location.ts, research-info.ts は4月以降実装予定
 │   │   ├── minutes.ts
 │   │   ├── proposal.ts
 │   │   ├── transcript.ts

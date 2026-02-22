@@ -11,8 +11,6 @@ import { DEFAULT_PROMPTS, PROMPT_KEYS } from "@/lib/prompts/db";
 export type AgentId =
   | "general"
   | "research-cast"
-  | "research-location"
-  | "research-info"
   | "research-evidence"
   | "minutes"
   | "proposal"
@@ -51,8 +49,6 @@ function getDefaultPromptContent(key: string): string {
 const agentToolDefaults: Record<AgentId, ToolOptions> = {
   "general": { enableWebSearch: true },
   "research-cast": { enableWebSearch: true, enableXSearch: true },
-  "research-location": { enableWebSearch: true },
-  "research-info": { enableWebSearch: true, enableXSearch: true },
   "research-evidence": { enableWebSearch: true },
   "minutes": { enableWebSearch: false },
   "proposal": { enableWebSearch: true, enableXSearch: true },
@@ -102,32 +98,6 @@ export const AGENTS: Agent[] = [
     color: "#ec4899",
     promptKey: PROMPT_KEYS.RESEARCH_CAST,
     toolOptions: agentToolDefaults["research-cast"],
-  },
-  {
-    id: "research-location",
-    name: "場所リサーチ",
-    description: "ロケ地候補と撮影条件を調査",
-    icon: "MapPin",
-    systemPrompt: getDefaultPromptContent(PROMPT_KEYS.RESEARCH_LOCATION),
-    placeholder: "企画内容・テーマを入力してください",
-    outputFormat: "markdown",
-    category: "research",
-    color: "#22c55e",
-    promptKey: PROMPT_KEYS.RESEARCH_LOCATION,
-    toolOptions: agentToolDefaults["research-location"],
-  },
-  {
-    id: "research-info",
-    name: "情報リサーチ",
-    description: "テーマに関する情報を収集・整理",
-    icon: "Search",
-    systemPrompt: getDefaultPromptContent(PROMPT_KEYS.RESEARCH_INFO),
-    placeholder: "リサーチしたいテーマを入力してください",
-    outputFormat: "markdown",
-    category: "research",
-    color: "#3b82f6",
-    promptKey: PROMPT_KEYS.RESEARCH_INFO,
-    toolOptions: agentToolDefaults["research-info"],
   },
   {
     id: "research-evidence",
@@ -229,33 +199,3 @@ export function updateProposalSystemPrompt(agent: Agent, programInfo: string, pa
   };
 }
 
-// ============================================
-// 後方互換性のためのエイリアス（移行期間中）
-// ============================================
-
-/** @deprecated Use AgentId instead */
-export type GemId = AgentId;
-
-/** @deprecated Use Agent instead */
-export type Gem = Agent;
-
-/** @deprecated Use AGENTS instead */
-export const GEMS = AGENTS;
-
-/** @deprecated Use getAgentById instead */
-export const getGemById = getAgentById;
-
-/** @deprecated Use getAgentsByCategory instead */
-export const getGemsByCategory = getAgentsByCategory;
-
-/** @deprecated Use getResearchAgents instead */
-export const getResearchGems = getResearchAgents;
-
-/** @deprecated Use getDocumentAgents instead */
-export const getDocumentGems = getDocumentAgents;
-
-/** @deprecated Use getGeneralAgents instead */
-export const getGeneralGems = getGeneralAgents;
-
-/** @deprecated Use isProposalAgent instead */
-export const isProposalGem = isProposalAgent;

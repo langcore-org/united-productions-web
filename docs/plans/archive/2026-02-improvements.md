@@ -307,9 +307,9 @@ export const CATEGORY_COLORS: Record<string, string>
 **新機能:**
 - リサーチメニュー（折りたたみ）
   - 出演者リサーチ → /research/cast
-  - 場所リサーチ → /research/location
-  - 情報リサーチ → /research/info
   - エビデンスリサーチ → /research/evidence
+  - ~~場所リサーチ → /research/location~~（4月以降実装予定）
+  - ~~情報リサーチ → /research/info~~（4月以降実装予定）
 - 文字起こしメニュー（折りたたみ）
   - NA原稿作成 → /transcript/na
 - 追加トップレベル項目
@@ -318,9 +318,10 @@ export const CATEGORY_COLORS: Record<string, string>
 - localStorageでの開閉状態永続化
 
 **追加アイコン:**
-- Users, MapPin, Info, Shield, Lightbulb, FileEdit
+- Users, Shield, Lightbulb, FileEdit
 - ChevronDown, ChevronRight（折りたたみ用）
 - Tv（番組設定用）
+- ~~MapPin, Info~~（場所・情報リサーチ用 - 4月以降）
 
 #### 15. FeatureChatコンポーネント
 

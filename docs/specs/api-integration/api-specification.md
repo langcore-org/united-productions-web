@@ -2,7 +2,7 @@
 
 > **REST APIエンドポイント定義**
 > 
-> **最終更新**: 2026-02-22 00:17
+> **最終更新**: 2026-02-22 11:05
 
 ---
 
@@ -79,18 +79,18 @@
 | GET | `/api/chat/history` | 全機能のチャット履歴一覧 |
 
 **featureId一覧:**
-| ID | 機能 |
-|---|------|
-| `chat` | 汎用チャット |
-| `research-cast` | 出演者リサーチ |
-| `research-location` | 場所リサーチ |
-| `research-info` | 情報リサーチ |
-| `research-evidence` | エビデンスリサーチ |
-| `minutes` | 議事録作成 |
-| `proposal` | 新企画立案 |
-| `transcript` | 文字起こし変換 |
-| `na-script` | NA原稿作成 |
-| `meeting-notes` | 会議メモ |
+| ID | 機能 | 状態 |
+|---|------|------|
+| `chat` | 汎用チャット | ✅ 利用可能 |
+| `research-cast` | 出演者リサーチ | ✅ 利用可能 |
+| `research-evidence` | エビデンスリサーチ | ✅ 利用可能 |
+| `minutes` | 議事録作成 | ✅ 利用可能 |
+| `proposal` | 新企画立案 | ✅ 利用可能 |
+| `transcript` | 文字起こし変換 | ✅ 利用可能 |
+| `na-script` | NA原稿作成 | ✅ 利用可能 |
+| `meeting-notes` | 会議メモ | ✅ 利用可能 |
+| `research-location` | 場所リサーチ | ⏸️ 4月以降実装予定 |
+| `research-info` | 情報リサーチ | ⏸️ 4月以降実装予定 |
 
 ---
 
