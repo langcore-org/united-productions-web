@@ -96,9 +96,11 @@ export async function POST(request: NextRequest): Promise<Response> {
     const validationResult = streamRequestSchema.safeParse(body);
     if (!validationResult.success) {
       logger.warn(`[${requestId}] Validation failed`);
+      console.error(`[DEBUG ${requestId}] Validation error:`, validationResult.error.errors);
       return new Response(
         JSON.stringify({
           error: 'Invalid request',
+          message: validationResult.error.errors.map(e => `${e.path.join('.')}: ${e.message}`).join(', '),
           details: validationResult.error.format(),
           requestId,
         }),

@@ -81,22 +81,31 @@ export function useLLMStream() {
     // 新しいAbortControllerを作成
     abortControllerRef.current = new AbortController();
 
+    console.log('[useLLMStream] Starting stream...');
+    
     try {
+      let eventCount = 0;
       for await (const event of streamLLMResponse(
         { messages, provider, toolOptions },
         { signal: abortControllerRef.current.signal },
       )) {
+        eventCount++;
+        console.log(`[useLLMStream] Event #${eventCount}:`, Object.keys(event));
+        
         if (event.error) {
+          console.error('[useLLMStream] Event error:', event.error);
           throw new Error(event.error);
         }
 
         // リクエスト受理イベント
         if (event.accepted) {
+          console.log('[useLLMStream] Event: accepted');
           setIsAccepted(true);
         }
 
         // コンテンツチャンク
         if (event.content) {
+          console.log('[useLLMStream] Event: content chunk');
           setContent((prev) => prev + event.content);
         }
 
@@ -177,12 +186,14 @@ export function useLLMStream() {
 
         // 完了イベント
         if (event.done) {
+          console.log('[useLLMStream] Event: done');
           setIsComplete(true);
           if (event.usage) {
             setUsage(event.usage);
           }
         }
       }
+      console.log(`[useLLMStream] Stream ended, total events: ${eventCount}`);
       setIsComplete(true);
     } catch (err) {
       if (err instanceof Error && err.name === 'AbortError') {
