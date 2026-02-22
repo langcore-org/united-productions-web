@@ -6,7 +6,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/api/auth";
-import { getPromptVersionHistory } from "@/lib/prompts/db";
+import { getPromptVersionHistory } from "@/lib/prompts";
 
 interface RouteParams {
   params: Promise<{ key: string }>;

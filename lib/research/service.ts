@@ -4,7 +4,7 @@
  */
 
 import { createLLMClient } from "@/lib/llm";
-import { getPromptFromDB, PROMPT_KEYS } from "@/lib/prompts/db";
+import { getPromptFromDB, PROMPT_KEYS } from "@/lib/prompts";
 import type { LLMMessage } from "@/lib/llm/types";
 
 export type ResearchType = "cast" | "location" | "info" | "evidence";

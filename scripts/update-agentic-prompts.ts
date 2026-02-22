@@ -6,7 +6,7 @@
  */
 
 import { prisma } from "@/lib/prisma";
-import { DEFAULT_PROMPTS, AGENTIC_BASE_PROMPT, PROMPT_KEYS } from "@/lib/prompts/db";
+import { DEFAULT_PROMPTS, AGENTIC_BASE_PROMPT, PROMPT_KEYS } from "@/lib/prompts";
 
 async function updateAgenticPrompts() {
   console.log("=== エージェンティックプロンプト更新開始 ===\n");

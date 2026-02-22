@@ -7,7 +7,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { requireAuth } from "@/lib/api/auth";
-import { restorePromptVersion } from "@/lib/prompts/db";
+import { restorePromptVersion } from "@/lib/prompts";
 
 // 復元リクエストスキーマ
 const restoreSchema = z.object({

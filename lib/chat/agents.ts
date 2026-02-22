@@ -5,7 +5,7 @@
  * プロンプトはDB管理（lib/prompts/db.ts）がSingle Source of Truth
  */
 
-import { DEFAULT_PROMPTS, PROMPT_KEYS } from "@/lib/prompts/db";
+import { DEFAULT_PROMPTS, PROMPT_KEYS } from "@/lib/prompts";
 
 /** Agentの識別子 */
 export type AgentId =

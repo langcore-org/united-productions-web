@@ -8,7 +8,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createLLMClient } from '@/lib/llm';
-import { getPromptFromDB, PROMPT_KEYS } from '@/lib/prompts/db';
+import { getPromptFromDB, PROMPT_KEYS } from '@/lib/prompts';
 import type { MeetingTemplate } from '@/prompts/meeting-format';
 import { createApiHandler } from '@/lib/api/handler';
 import type { LLMMessage } from '@/lib/llm/types';

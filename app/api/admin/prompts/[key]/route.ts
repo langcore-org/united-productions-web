@@ -9,7 +9,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/api/auth";
-import { updatePromptWithVersion, getPromptWithHistory } from "@/lib/prompts/db";
+import { updatePromptWithVersion, getPromptWithHistory } from "@/lib/prompts";
 
 // プロンプト更新用スキーマ
 const updatePromptSchema = z.object({

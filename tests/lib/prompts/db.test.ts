@@ -35,7 +35,7 @@ import {
   getPromptWithHistory,
   PROMPT_KEYS,
   PROMPT_CATEGORIES,
-} from "@/lib/prompts/db";
+} from "@/lib/prompts";
 
 const mockPrisma = prisma as unknown as {
   systemPrompt: {
