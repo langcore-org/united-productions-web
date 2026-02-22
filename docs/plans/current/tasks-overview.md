@@ -12,7 +12,7 @@
 |------|------|------|
 | 認証システム | ✅ | NextAuth.js + Google認証 |
 | サイドバーUI | ✅ | 折りたたみ可能 |
-| Gemシステム | ✅ | 8種類のGem定義済み |
+| Agentシステム | ✅ | 8種類のAgent定義済み（旧Gemシステムから移行） |
 | チャットUI | ✅ | FeatureChatコンポーネント |
 | 議事録作成API | ✅ | `/api/meeting-notes` |
 | NA原稿作成API | ✅ | `/api/transcripts` |
@@ -24,7 +24,7 @@
 |------|------|--------|
 | Word出力 | ❌ | 高 |
 | ファイルアップロード | ❌ | 高 |
-| リサーチAPI連携 | ❌ | 高 |
+| リサーチAPI連携 | ✅ | Agent版（/agent/*）に統合完了 |
 | 新企画立案機能改善 | ❌ | 中 |
 | 過去データ参照 | ❌ | 低（3月以降） |
 
@@ -202,18 +202,17 @@ async *streamWithSearch(messages: LLMMessage[]): AsyncIterable<string>
 ### Day 3-4: リサーチUI実装
 
 #### タスク2.3: リサーチページ改良
-**ファイル**: `app/(authenticated)/research/*/page.tsx`
+**ファイル**: `app/(authenticated)/agent/*/page.tsx`
 
 ```typescript
 // 各リサーチページの実装
-- research/cast/page.tsx
-- research/location/page.tsx
-- research/info/page.tsx
-- research/evidence/page.tsx
+- agent/cast/page.tsx
+- agent/location/page.tsx
+- agent/info/page.tsx
+- agent/evidence/page.tsx
 
 // 共通コンポーネント
-- ResearchChat.tsx (FeatureChatをラップ)
-- SearchOptions.tsx (検索オプション)
+- ChatPage.tsx (FeatureChatをラップ)
 ```
 
 **受け入れ条件**:
@@ -303,10 +302,10 @@ async *streamWithSearch(messages: LLMMessage[]): AsyncIterable<string>
 **変更点**:
 ```
 リサーチ ▼
-├── 出演者リサーチ
-├── 場所リサーチ
-├── 情報リサーチ
-└── エビデンスリサーチ
+├── 出演者リサーチ (/agent/cast)
+├── 場所リサーチ (/agent/location)
+├── 情報リサーチ (/agent/info)
+└── エビデンスリサーチ (/agent/evidence)
 ```
 
 #### タスク3.4: オンボーディング導線
@@ -477,11 +476,13 @@ app/
 │   │   └── page.tsx              # 議事録作成
 │   ├── transcripts/
 │   │   └── page.tsx              # NA原稿作成
-│   ├── research/
+│   ├── agent/
 │   │   ├── cast/page.tsx         # 出演者リサーチ
 │   │   ├── location/page.tsx     # 場所リサーチ
 │   │   ├── info/page.tsx         # 情報リサーチ
 │   │   └── evidence/page.tsx     # エビデンスリサーチ
+│   ├── research/
+│   │   └── page.tsx              # リダイレクト (/agent/cast)
 │   ├── proposal/
 │   │   └── page.tsx              # 新企画立案
 │   └── admin/
@@ -510,7 +511,8 @@ app/
     ├── prompts/
     │   └── db.ts                 # プロンプトDB管理
     └── chat/
-        └── gems.ts               # Gem定義
+        ├── agents.ts             # Agent定義（正規版）
+        └── gems.ts               # Gem定義（後方互換性のためエイリアスとして維持）
 ```
 
 ---

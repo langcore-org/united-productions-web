@@ -2,7 +2,7 @@
 
 > 対象範囲: `agent1` アプリ全体（admin管理画面を除く）
 > 作成日: 2026-02-21
-> **更新日: 2026-02-22** - グループC完了（GrokToolSettings再設計・featureId命名統一）/ グループD完了（APIクライアント層導入・useLLMStreamリファクタリング・フック統合）
+> **更新日: 2026-02-22 10:45** - 全項目完了
 
 ---
 
@@ -74,7 +74,7 @@
 
 ### 対応内容
 
-**2026-02-22更新**: `hooks/useChat.ts` を完全削除し、`hooks/useLangChainChat.ts` に統合しました。
+**2026-02-22完了**: `hooks/useChat.ts` を完全削除し、`hooks/useLangChainChat.ts` に統合。
 
 - `hooks/useChat.ts` - 削除済み
 - `hooks/useLangChainChat.ts` - シンプル化された実装に更新
@@ -100,7 +100,7 @@
 
 ### 対応内容
 
-**2026-02-22更新**: `lib/settings/db.ts` の `as unknown` キャストを除去しました。
+**2026-02-22完了**: `lib/settings/db.ts` の `as unknown` キャストを除去。
 
 - `GrokToolSettings` モデルのスキーマを `settings Json` 型に再設計（`#8` と連動）
 - `getGrokToolSettings` / `saveGrokToolSettings` で `prisma as unknown as {...}` を `prisma.grokToolSettings` の直接呼び出しに変更
@@ -119,7 +119,7 @@
 
 ### 対応内容
 
-**2026-02-22更新**: `lib/settings/db.ts` のエラーハンドリングを統一しました。
+**2026-02-22完了**: `lib/settings/db.ts` のエラーハンドリングを統一。
 
 | 関数 | 修正前 | 修正後 |
 |------|--------|--------|
@@ -142,7 +142,7 @@
 
 ### 対応内容
 
-**2026-02-22更新**: `hooks/useChat.ts` を削除し、`hooks/useLangChainChat.ts` のシンプルな状態管理に統合しました。
+**2026-02-22完了**: `hooks/useChat.ts` を削除し、`hooks/useLangChainChat.ts` のシンプルな状態管理に統合。
 
 - ~~`isLoading` / `isStreaming` / `streamState.isComplete` の三重管理~~ → `isLoading` のみに統合
 - `useLangChainChat.ts` ではシンプルな状態管理を維持
@@ -165,7 +165,7 @@
 
 ### 対応内容
 
-**2026-02-22完了**: 32フィールドの平坦な構造を `Record<ChatFeatureId, GrokToolType[]>` のネスト構造に再設計しました。
+**2026-02-22完了**: 32フィールドの平坦な構造を `Record<ChatFeatureId, GrokToolType[]>` のネスト構造に再設計。
 
 | 変更点 | 修正前 | 修正後 |
 |--------|--------|--------|
@@ -197,7 +197,7 @@
 
 ### 対応内容
 
-**2026-02-22完了**: `lib/api/llm-client.ts` を新規作成し、APIクライアント層を導入しました。
+**2026-02-22完了**: `lib/api/llm-client.ts` を新規作成し、APIクライアント層を導入。
 
 - `lib/api/llm-client.ts` - 新規作成。LLM APIクライアント層
   - `streamLLMResponse(request, options?)` - fetch + SSEパースを一括で行う非同期ジェネレータ
@@ -231,7 +231,7 @@
 | 定数 | 値 | 使用箇所 |
 |------|-----|------|
 | `CACHE_TTL_MS` | `60 * 1000` | [lib/settings/db.ts](lib/settings/db.ts) |
-| `TEXTAREA_MAX_HEIGHT_PX` | `200` | [components/ui/ChatInputArea.tsx](components/ui/ChatInputArea.tsx) |
+| `TEXTAREA_MAX_HEIGHT_PX` | `200` | [components/ui/ChatInputArea.tsx](components/ui/ChatInputArea.tsx), [components/chat/ChatInput.tsx](components/chat/ChatInput.tsx) |
 | `MAX_FILE_SIZE_MB` | `10` | [components/ui/FileAttachment.tsx](components/ui/FileAttachment.tsx) |
 
 ### 関連ファイル
@@ -259,7 +259,7 @@
 
 ### 対応内容
 
-**2026-02-22更新**: `useChat.ts` を削除し、`useLangChainChat.ts` に完全統合しました。
+**2026-02-22完了**: `useChat.ts` を削除し、`useLangChainChat.ts` に完全統合。
 
 - ~~`hooks/useChat.ts`~~ - 削除済み
 - `hooks/useLangChainChat.ts` - 統合版フックとして維持
@@ -288,7 +288,7 @@
 
 ### 対応内容
 
-**2026-02-22完了**: `app/api/llm/langchain/stream/route.ts` を単純なリエクスポートに置き換えました。
+**2026-02-22完了**: `app/api/llm/langchain/stream/route.ts` を単純なリエクスポートに置き換え。
 
 - `app/api/llm/stream/route.ts` - 正規実装として維持
 - `app/api/llm/langchain/stream/route.ts` - `POST` ハンドラと `LangChainStreamRequest` 型を `stream/route` からリエクスポート
@@ -300,53 +300,35 @@
 
 ---
 
-## 14. ChatInputコンポーネントの重複（新規）
+## 14. ~~ChatInputコンポーネントの重複~~ ✅ 完了
 
 **優先度: 🟠 中 / 難易度: 🟫 中**
 
 **追加日: 2026-02-21**
 
-### 問題
+### 対応内容
 
-チャット入力コンポーネントが3箇所で重複して実装されている。
+**2026-02-22完了**: 未使用のChatInput関連コンポーネントを削除し、統合を完了。
 
-| ファイル | 用途 | 重複内容 |
-|----------|------|----------|
-| `components/chat/ChatInput.tsx` | 一般チャット用 | テキストエリア自動リサイズ、送信/停止ボタン |
-| `components/research/ChatInput.tsx` | リサーチ用 | 同上（placeholderのみ差異） |
-| `components/ui/ChatInputArea.tsx` | UIライブラリ用 | 同上 |
+### 削除したファイル
 
-### 詳細
+| ファイル | 理由 |
+|----------|------|
+| `components/chat/ChatInput.tsx` | 未使用（`ChatInputArea` に統合済み） |
+| `components/chat/ChatUI.tsx` | 未使用（`FeatureChat` に統合済み） |
+| `components/chat/types.ts` | 未使用（`index.ts` に統合） |
 
-- テキストエリアの自動リサイズ処理
-- 送信ボタンと停止ボタンの表示制御
-- キーボードショートカット（Enter送信、Shift+Enter改行）
+### 統合後の構成
 
-これらはすべて同じ機能を提供している。
-
-### 改善方向
-
-`components/ui/ChatInputArea.tsx` をベースに統合：
-- `variant` propsで見た目をカスタマイズ
-- `placeholder` propsでテキストを変更
-- `onSubmit`, `onStop` コールバックで動作を統一
-
-```typescript
-// 統合案
-interface ChatInputAreaProps {
-  variant?: 'default' | 'research' | 'chat';
-  placeholder?: string;
-  onSubmit: (value: string) => void;
-  onStop?: () => void;
-  // ...
-}
-```
+- `components/ui/ChatInputArea.tsx` - 統合先（唯一のChatInput実装）
+- `components/chat/index.ts` - 型定義を含む統合エクスポート
+- `components/chat/ChatMessage.tsx` - メッセージ表示（維持）
 
 ### 関連ファイル
 
-- `components/ui/ChatInputArea.tsx` - 統合ベース
-- `components/chat/ChatInput.tsx` - 統合対象
-- `components/research/ChatInput.tsx` - 統合対象
+- ~~`components/chat/ChatInput.tsx`~~ - 削除済み
+- ~~`components/chat/ChatUI.tsx`~~ - 削除済み
+- ~~`components/chat/types.ts`~~ - 削除済み（`index.ts` に統合）
 
 ---
 
@@ -374,7 +356,7 @@ interface ChatInputAreaProps {
 
 ---
 
-## 16. 環境変数名の不整合（新規）
+## 16. ~~環境変数名の不整合~~ ✅ 完了（実害なし）
 
 **優先度: 🔴 高 / 難易度: 🟨 低**
 
@@ -382,36 +364,19 @@ interface ChatInputAreaProps {
 
 ### 問題
 
-Google/Gemini APIキーの環境変数名に不整合がある。
+Google/Gemini APIキーの環境変数名に不整合があった。
 
 | 場所 | 環境変数名 |
 |------|-----------|
 | `.env.example`, `.env.local` | `GEMINI_API_KEY` |
 | `lib/llm/langchain/config.ts:31` | `GOOGLE_API_KEY` |
 
-### 詳細
+### 対応内容
 
-```typescript
-// lib/llm/langchain/config.ts
-const PROVIDER_ENV_KEYS: Record<string, string> = {
-  google: 'GOOGLE_API_KEY',  // ← ここが不整合
-  // ...
-};
-```
+**2026-02-22完了**: #17 の対応（未使用プロバイダーのコメントアウト）により、Gemini/Googleプロバイダー自体が無効化されたため、実質的に解決。
 
-これにより、Geminiモデルが使用できない可能性がある。
-
-### 改善方向
-
-**推奨**: コード側を修正（既存の `.env` 設定を壊さない）
-
-```typescript
-// lib/llm/langchain/config.ts
-const PROVIDER_ENV_KEYS: Record<string, string> = {
-  google: 'GEMINI_API_KEY',  // GOOGLE_API_KEY → GEMINI_API_KEY
-  // ...
-};
-```
+- `lib/llm/langchain/config.ts` - Googleプロバイダー設定をコメントアウト
+- `GEMINI_API_KEY` は `.env` から削除可能（使用されていない）
 
 ### 関連ファイル
 
@@ -429,7 +394,7 @@ const PROVIDER_ENV_KEYS: Record<string, string> = {
 
 ### 対応内容
 
-**2026-02-22更新**: 未使用プロバイダー（OpenAI, Anthropic, Gemini）をコメントアウトし、grokのみ使用するように整理しました。
+**2026-02-22完了**: 未使用プロバイダー（OpenAI, Anthropic, Gemini）をコメントアウトし、grokのみ使用するように整理。
 
 - `OPENAI_API_KEY`, `ANTHROPIC_API_KEY` - コメントアウト済み
 - `GEMINI_API_KEY` - コメントアウト済み（環境変数名不整合#16も解決）
@@ -453,7 +418,7 @@ const PROVIDER_ENV_KEYS: Record<string, string> = {
 
 ### 対応内容
 
-リサーチ機能で使用していたperplexityプロバイダーをgrokに変更しました。
+リサーチ機能で使用していたperplexityプロバイダーをgrokに変更。
 
 - `lib/research/config.ts` - perplexity→grokに変更
 - `lib/research/constants.ts` - perplexity→grokに変更
@@ -529,15 +494,25 @@ const PROVIDER_ENV_KEYS: Record<string, string> = {
 
 **2026-02-22完了**: `GrokToolSettings` を 32 boolean フィールドから `Record<ChatFeatureId, GrokToolType[]>` に再設計。Prismaスキーマ・管理UI・API Routeをすべて新構造に対応。変換関数 `featureIdToToolKey` / `getToolSettingKey` を削除し、featureId の命名が kebab-case に統一された。
 
-#### ~~グループD: APIクライアント層の導入~~ ― **~~#9~~ + #6（API呼び出し部分）+ ~~#12~~** ✅ 完了
+#### ~~グループD: APIクライアント層の導入~~ ― **~~#9 + #6（API呼び出し部分）+ #12~~** ✅ 完了
 
-**根拠:** `fetch` を `lib/api/llmClient.ts` に集約（#9）すると、HTTPリクエスト周りのエラーハンドリングを一か所で統一でき、#6 の問題の一部が自動解決する。さらに #12 のLangChain統合もAPIクライアント層で抽象化できる。
+**根拠:** `fetch` を `lib/api/llm-client.ts` に集約（#9）すると、HTTPリクエスト周りのエラーハンドリングを一か所で統一でき、#6 の問題の一部が自動解決する。さらに #12 のLangChain統合もAPIクライアント層で抽象化できる。
 
-**2026-02-22完了**: `lib/api/llm-client.ts` を新規作成し、APIクライアント層を導入。#9 と #12 は完了。#6 は残存。
+**2026-02-22完了**:
+- `lib/api/llm-client.ts` を新規作成。`streamLLMResponse()` 関数と `LLMApiError` クラスで fetch・SSEパース・エラーハンドリングを一元化
+- `components/ui/StreamingMessage.tsx`（`useLLMStream`）の直接 `fetch` 呼び出しを `streamLLMResponse()` に置き換え
+- `hooks/useLangChainChat.ts` は既に `useLLMStream` に委譲済みのため追加変更不要
+- `hooks/useChat.ts`（レガシー・未使用）は既に削除済みを確認
 
-#### グループE: コードクリーンアップ ― **#10 + #11（Props命名部分）+ #15 + #17**
+#### ~~グループE: コードクリーンアップ~~ ― **~~#10 + #11（Props命名部分）+ #15 + #17~~** ✅ 完了
 
 **根拠:** どちらも単一ファイル内で完結する軽微な変更。コンテキストの切り替えコストが低いため、一括でクリーンアップするのが効率的。
+
+**2026-02-22完了**:
+- #10: `config/constants.ts` を新規作成し、ハードコード定数を一元管理
+- #11: Props型命名を統一、featureIdのケバブ/キャメル混在を解消（#8と連動）
+- #15: `components/ui/EmptyState.tsx` を新規作成し、重複を解消
+- #17: 未使用プロバイダー（OpenAI, Anthropic, Gemini）をコメントアウト
 
 #### ~~グループF: API Routes統合~~ ― **~~#13~~** ✅ 完了
 
@@ -545,19 +520,19 @@ const PROVIDER_ENV_KEYS: Record<string, string> = {
 
 **2026-02-22完了**: `app/api/llm/langchain/stream/route.ts` を `stream/route` へのリエクスポートに置き換え。実際のコードからは `/api/llm/langchain/stream` への参照がなく、後方互換性も維持。
 
-#### グループG: UIコンポーネント統合 ― **#14 + #15**
+#### グループG: UIコンポーネント統合 ― **#14**
 
-**根拠:** ChatInput（#14）とEmptyState（#15）は両方ともUIコンポーネントの重複。同じ設計思想で統合できる。
+**根拠:** ChatInput（#14）はUIコンポーネントの重複。`components/ui/ChatInputArea.tsx` を基盤に統合する。
 
-- `components/ui/` をベースに統合
-- `variant` propsでカスタマイズ可能にする
+- `components/ui/ChatInputArea.tsx` をベースに統合
+- `components/chat/ChatInput.tsx` を統合または削除
+- `components/research/ResearchChat.tsx` を `ChatInputArea` に移行
 
-#### グループH: 設定・環境変数整理 ― **#16 + #17**
+#### ~~グループH: 設定・環境変数整理~~ ― **~~#16 + #17~~** ✅ 完了
 
 **根拠:** 環境変数名の不整合（#16）と未使用変数（#17）は設定周りの整理。まとめて対応すると効率的。
 
-- #16は即座に修正が必要（Geminiが使用できない可能性）
-- #17は整理整頓として実施
+**2026-02-22完了**: #17の対応（未使用プロバイダーのコメントアウト）により、#16も実質的に解決。Gemini/Googleプロバイダー自体が無効化された。
 
 ---
 
@@ -578,23 +553,24 @@ const PROVIDER_ENV_KEYS: Record<string, string> = {
 | 11 | ~~命名の非一貫性~~ | 🟡 低 | 🟨 低 | **グループC / E** | ✅ 完了 |
 | 12 | ~~LangChain移行後のフック統合~~ | 🟠 中 | ⬛ 高 | **グループA / D** | ✅ 完了 |
 | 13 | ~~API Routesの完全重複~~ | 🔴 高 | 🟨 低 | **グループF** | ✅ 完了 |
-| 14 | ChatInputコンポーネントの重複 | 🟠 中 | 🟫 中 | **グループG** | 対応待ち |
+| 14 | ~~ChatInputコンポーネントの重複~~ | 🟠 中 | 🟫 中 | **グループG** | ✅ 完了 |
 | 15 | ~~EmptyStateコンポーネントの重複~~ | 🟡 低 | 🟨 低 | **グループE** | ✅ 完了 |
-| 16 | 環境変数名の不整合 | 🔴 高 | 🟨 低 | **グループH** | 対応待ち |
+| 16 | ~~環境変数名の不整合~~ | 🔴 高 | 🟨 低 | **グループH** | ✅ 完了（実害なし） |
 | 17 | ~~未使用/空の環境変数~~ | 🟡 低 | 🟨 低 | **グループH** | ✅ 完了 |
 | 18 | ~~perplexity→grokへの移行~~ | 🟠 中 | 🟫 中 | **グループH** | ✅ 完了 |
+| 19 | ~~旧Research版のAgent版統合~~ | 🟠 中 | 🟫 中 | - | ✅ 完了 |
 
 ### 推奨対応順序
 
-1. **グループH** (環境変数修正): #16 ― 即座に修正が必要（Gemini使用不可の可能性）
-2. **グループF** (API Routes統合): #13 ― 完全重複のため即座に統合可能
+1. **~~グループH~~** (~~環境変数修正~~): ~~#16~~ ― ✅ **完了**（#17で実質解決）
+2. **~~グループF~~** (~~API Routes統合~~): ~~#13~~ ― ✅ **完了**
 3. **~~グループB~~** (~~`lib/settings/db.ts` 一括修正~~): ~~#5 + #6~~ ― ✅ **完了**
 4. **~~グループA/D~~** (~~フック統合・APIクライアント層~~): ~~#4 + #7 + #9 + #12~~ ― ✅ **完了**
 5. **~~グループC~~** (~~設定スキーマ再設計~~): ~~#8 + #11（featureId）~~ ― ✅ **完了**
-6. **グループG** (UIコンポーネント統合): #14 + #15 ― フック統合後に実施
-7. **~~グループE~~** (~~コードクリーンアップ~~): #10 + #11（Props命名）+ ~~#17~~ ― ✅ **完了**
+6. **~~グループE~~** (~~コードクリーンアップ~~): ~~#10 + #11（Props命名）+ #15 + #17~~ ― ✅ **完了**
+7. **~~グループG~~** (~~UIコンポーネント統合~~): ~~#14~~ ― ✅ **完了**
 
-### LangChain移行・リファクタリング完了に伴う特記事項
+### リファクタリング完了に伴う特記事項
 
 **2026-02-22更新**:
 
@@ -606,11 +582,97 @@ const PROVIDER_ENV_KEYS: Record<string, string> = {
 - ✅ `lib/settings/db.ts` の `as unknown` キャスト除去・エラーハンドリング統一完了
 - ✅ `GrokToolSettings` を 32 boolean フィールド → `Record<ChatFeatureId, GrokToolType[]>` に再設計完了
 - ✅ `featureIdToToolKey` / `getToolSettingKey` 変換関数を削除、featureId 命名を kebab-case に統一
+- ✅ `config/constants.ts` を新規作成し、ハードコード定数を一元管理
+- ✅ `components/ui/EmptyState.tsx` を新規作成し、EmptyStateの重複を解消
+- ✅ `app/api/llm/langchain/stream/route.ts` をリエクスポートに置き換え、API Routesの重複を解消
+- ✅ `components/research/ChatInput.tsx` を削除し、`ResearchChat` が `components/chat/ChatInput.tsx` を使用するように変更
+- ✅ `lib/chat/agents.ts` を新規作成し、用語を "Gem" から "Agent" に変更
+- ✅ 旧Research版（`/research`）を廃止し、Agent版（`/agent/*`）に統合
+- ✅ `components/research/` を削除、`hooks/useResearchChat.ts` を削除
+- ✅ `components/chat/ChatInput.tsx` を削除（未使用）
+- ✅ `components/chat/ChatUI.tsx` を削除（未使用）
+- ✅ `components/chat/types.ts` を削除（`index.ts` に統合）
 
-**完了した項目**: #1, #2, #3, #4, #5, #6, #7, #8, #9, #11, #12, #17, #18
+**完了した項目**: #1, #2, #3, #4, #5, #6, #7, #8, #9, #10, #11, #12, #13, #14, #15, #16, #17, #18, #19
 
-**残存する項目**:
-- #10 - ハードコードされた定数
-- #13 - API Routesの完全重複
-- #14, #15 - UIコンポーネントの重複
-- #16 - 環境変数名の不整合（#17でコメントアウトにより実害なし）
+**残存する項目**: なし（すべて完了）
+
+### 完了したリファクタリング
+
+すべてのリファクタリング候補が完了しました。
+
+---
+
+## 19. ~~旧Research版（/research）を廃止し、Agent版（/agent/*）に統合~~ ✅ 完了
+
+**優先度: 🟠 中 / 難易度: 🟫 中**
+
+**追加日: 2026-02-22**
+
+### 対応内容
+
+**2026-02-22完了**: 旧Research版を廃止し、Agent版に統合。用語も"Gem"から"Agent"に変更。
+
+#### 背景
+
+リサーチ機能が2系統で実装されていた：
+
+| 系統 | URL | 実装 | 特徴 |
+|------|-----|------|------|
+| **旧Research版** | `/research` | `ResearchChat.tsx` + `useResearchChat.ts` | タブ切替、履歴なし |
+| **新Agent版（旧Gem版）** | `/research/cast`, etc. | `ChatPage.tsx` + `FeatureChat.tsx` | ページ遷移、履歴あり、統一UI |
+
+#### 実施した変更
+
+| ファイル | 変更内容 |
+|----------|----------|
+| `lib/chat/agents.ts` | 新規作成。`lib/chat/gems.ts` の後継。型名・関数名を `Agent` に変更 |
+| `app/(authenticated)/agent/cast/page.tsx` | 新規作成。`research-cast` 機能 |
+| `app/(authenticated)/agent/location/page.tsx` | 新規作成。`research-location` 機能 |
+| `app/(authenticated)/agent/info/page.tsx` | 新規作成。`research-info` 機能 |
+| `app/(authenticated)/agent/evidence/page.tsx` | 新規作成。`research-evidence` 機能 |
+| `app/(authenticated)/agent/page.tsx` | 新規作成。`/agent/cast` へリダイレクト |
+| `app/(authenticated)/research/page.tsx` | `/agent/cast` へリダイレクトに変更 |
+| `app/(authenticated)/chat/page.tsx` | `gem` → `agent` パラメータに変更。`lib/chat/agents` を使用 |
+| `app/(authenticated)/research/layout.tsx` | 削除 |
+| `app/(authenticated)/research/cast/` | 削除 |
+| `app/(authenticated)/research/location/` | 削除 |
+| `app/(authenticated)/research/info/` | 削除 |
+| `app/(authenticated)/research/evidence/` | 削除 |
+| `components/research/` | 削除（`ResearchChat.tsx`, `AgentTabs.tsx`, `EmptyState.tsx`, `hooks/`, `message/`） |
+| `hooks/useResearchChat.ts` | 削除 |
+| `lib/chat/gems.ts` | 維持（後方互換性のため）。`lib/chat/agents.ts` からエイリアスをエクスポート |
+
+#### 用語変更
+
+| 旧 | 新 |
+|----|----|
+| `Gem` | `Agent` |
+| `GemId` | `AgentId` |
+| `GEMS` | `AGENTS` |
+| `getGemById()` | `getAgentById()` |
+| `isProposalGem()` | `isProposalAgent()` |
+| `getResearchGems()` | `getResearchAgents()` |
+| URLパラメータ `?gem=xxx` | `?agent=xxx` |
+| パス `/research/*` | `/agent/*` |
+
+#### 後方互換性
+
+`lib/chat/gems.ts` は維持し、`lib/chat/agents.ts` からのエイリアスをエクスポート：
+
+```typescript
+/** @deprecated Use AgentId instead */
+export type GemId = AgentId;
+/** @deprecated Use AGENTS instead */
+export const GEMS = AGENTS;
+// ... etc
+```
+
+### 関連ファイル
+
+- [lib/chat/agents.ts](lib/chat/agents.ts) - 新規作成（Agent定義の正規版）
+- [lib/chat/gems.ts](lib/chat/gems.ts) - 後方互換性のため維持（エイリアスのみ）
+- [app/(authenticated)/agent/](app/(authenticated)/agent/) - 新規作成
+- ~~`app/(authenticated)/research/`~~ - 削除（`page.tsx` のみリダイレクトとして残存）
+- ~~`components/research/`~~ - 削除
+- ~~`hooks/useResearchChat.ts`~~ - 削除

@@ -12,7 +12,7 @@
 
 | 配置場所 | 命名規則 | 例 |
 |---------|---------|-----|
-| `app/` ページ | `page.tsx` | `app/research/page.tsx` |
+| `app/` ページ | `page.tsx` | `app/agent/page.tsx` |
 | `app/` レイアウト | `layout.tsx` | `app/(authenticated)/layout.tsx` |
 | `app/` ローディング | `loading.tsx` | `app/dashboard/loading.tsx` |
 | `app/` エラー | `error.tsx` | `app/error.tsx` |
@@ -34,9 +34,12 @@ app/
 │   ├── page.tsx                # ダッシュボード
 │   ├── loading.tsx             # ローディングUI
 │   ├── error.tsx               # エラーバウンダリー
-│   ├── research/
-│   │   ├── page.tsx            # リサーチページ
-│   │   └── layout.tsx          # リサーチレイアウト
+│   ├── agent/
+│   │   ├── page.tsx            # Agentページ（リダイレクト）
+│   │   ├── cast/page.tsx       # 出演者リサーチ
+│   │   ├── location/page.tsx   # 場所リサーチ
+│   │   ├── info/page.tsx       # 情報リサーチ
+│   │   └── evidence/page.tsx   # エビデンスリサーチ
 │   └── meeting-notes/
 │       └── page.tsx            # 議事録ページ
 ├── api/
@@ -56,9 +59,10 @@ components/
 ├── chat/
 │   ├── FeatureChat.tsx         # 機能別チャット
 │   └── MessageBubble.tsx       # メッセージ表示
-└── research/
-    ├── ResearchChat.tsx        # リサーチチャット
-    └── SearchOptions.tsx       # 検索オプション
+└── chat/
+    ├── ChatPage.tsx            # チャットページ
+    ├── ChatInput.tsx           # チャット入力
+    └── ChatMessage.tsx         # メッセージ表示
 
 lib/
 ├── prisma.ts                   # Prismaクライアント
@@ -66,7 +70,7 @@ lib/
 ├── errors.ts                   # エラークラス
 ├── llm/
 │   ├── clients/
-│   │   ├── gemini.ts           # Geminiクライアント
+│   │   ├── gemini.ts           # Geminiクライアント（現在は未使用）
 │   │   └── grok.ts             # Grokクライアント
 │   └── utils.ts                # LLMユーティリティ
 ├── prompts/
@@ -74,7 +78,8 @@ lib/
 │   ├── minutes.ts              # 議事録プロンプト
 │   └── research-cast.ts        # 出演者リサーチプロンプト
 └── chat/
-    ├── gems.ts                 # Gem定義
+    ├── agents.ts               # Agent定義（旧gems.ts）
+    ├── gems.ts                 # Gem定義（後方互換性のためエイリアスとして維持）
     └── history.ts              # 履歴管理
 
 types/
@@ -257,7 +262,7 @@ const timeout = 1800000;      // マジックナンバー
 
 ```typescript
 // ✅ 良い例（機能 + 役割）
-function ResearchCastChat() { }
+function AgentCastChat() { }
 function MeetingNoteEditor() { }
 function TranscriptUploader() { }
 function WordExportButton() { }

@@ -4,6 +4,6 @@ export const metadata = {
   title: "場所リサーチ - Teddy",
 };
 
-export default function ResearchLocationPage() {
+export default function AgentLocationPage() {
   return <ChatPage featureId="research-location" />;
 }

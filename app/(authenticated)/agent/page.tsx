@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
 
-export default function ResearchPage() {
+export default function AgentPage() {
   redirect("/agent/cast");
 }

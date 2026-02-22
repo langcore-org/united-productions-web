@@ -4,6 +4,6 @@ export const metadata = {
   title: "エビデンスリサーチ - Teddy",
 };
 
-export default function ResearchEvidencePage() {
+export default function AgentEvidencePage() {
   return <ChatPage featureId="research-evidence" />;
 }

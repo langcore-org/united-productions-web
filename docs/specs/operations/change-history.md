@@ -11,10 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Sidebar Navigation Overhaul**
   - Implemented collapsible menu for Research section
-    - 出演者リサーチ (/research/cast)
-    - 場所リサーチ (/research/location)
-    - 情報リサーチ (/research/info)
-    - エビデンスリサーチ (/research/evidence)
+    - 出演者リサーチ (/agent/cast)
+    - 場所リサーチ (/agent/location)
+    - 情報リサーチ (/agent/info)
+    - エビデンスリサーチ (/agent/evidence)
   - Implemented collapsible menu for Transcript section
     - 文字起こしフォーマット変換 (/transcript)
     - NA原稿作成 (/transcript/na)
@@ -34,10 +34,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Support for both markdown and plaintext output
 
 - **Feature Pages**
-  - `/research/cast` - 出演者リサーチ (Cast Research)
-  - `/research/location` - 場所リサーチ (Location Research)
-  - `/research/info` - 情報リサーチ (Information Research)
-  - `/research/evidence` - エビデンスリサーチ (Evidence Research)
+  - `/agent/cast` - 出演者リサーチ (Cast Research)
+  - `/agent/location` - 場所リサーチ (Location Research)
+  - `/agent/info` - 情報リサーチ (Information Research)
+  - `/agent/evidence` - エビデンスリサーチ (Evidence Research)
   - `/minutes` - 議事録作成 (Meeting Minutes)
   - `/proposal` - 新企画立案 (New Proposal)
   - `/transcript` - 文字起こしフォーマット変換 (Transcript Formatting)
@@ -91,7 +91,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Page Structure**
   - Moved from flat navigation to hierarchical navigation
-  - Consolidated research features under `/research/*`
+  - Consolidated research features under `/agent/*`
   - Consolidated transcript features under `/transcript/*`
 
 ### Fixed

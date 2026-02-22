@@ -3,60 +3,60 @@
 import { useEffect, useState, Suspense, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { FeatureChat } from "@/components/ui/FeatureChat";
-import { getGemById, GEMS, isProposalGem, updateProposalSystemPrompt } from "@/lib/chat/gems";
+import { getAgentById, AGENTS, isProposalAgent, updateProposalSystemPrompt } from "@/lib/chat/agents";
 
 /**
  * 統合チャットページ
  *
- * クエリパラメータ ?gem=xxx で機能を指定
+ * クエリパラメータ ?agent=xxx で機能を指定
  * 指定がない場合は一般チャット
  */
 function ChatPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const gemId = searchParams.get("gem") || "general";
+  const agentId = searchParams.get("agent") || "general";
   // chatId指定なし = 新規チャット、指定あり = 既存チャットの続き
   const chatId = searchParams.get("chatId") ?? undefined;
 
-  const [gem, setGem] = useState(GEMS[0]);
+  const [agent, setAgent] = useState(AGENTS[0]);
   const [systemPrompt, setSystemPrompt] = useState<string>("");
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    async function loadGem() {
+    async function loadAgent() {
       setIsLoading(true);
 
       try {
-        const selectedGem = getGemById(gemId as Parameters<typeof getGemById>[0]);
-        setGem(selectedGem);
+        const selectedAgent = getAgentById(agentId as Parameters<typeof getAgentById>[0]);
+        setAgent(selectedAgent);
 
-        if (isProposalGem(selectedGem.id)) {
+        if (isProposalAgent(selectedAgent.id)) {
           const response = await fetch("/api/settings/program");
           if (response.ok) {
             const data = await response.json();
-            const updatedGem = updateProposalSystemPrompt(
-              selectedGem,
+            const updatedAgent = updateProposalSystemPrompt(
+              selectedAgent,
               data.programInfo || "",
               data.pastProposals || ""
             );
-            setSystemPrompt(updatedGem.systemPrompt);
+            setSystemPrompt(updatedAgent.systemPrompt);
           } else {
-            setSystemPrompt(selectedGem.systemPrompt);
+            setSystemPrompt(selectedAgent.systemPrompt);
           }
         } else {
-          setSystemPrompt(selectedGem.systemPrompt);
+          setSystemPrompt(selectedAgent.systemPrompt);
         }
       } catch (error) {
-        console.error("Failed to load gem:", error);
-        setGem(GEMS[0]);
-        setSystemPrompt(GEMS[0].systemPrompt);
+        console.error("Failed to load agent:", error);
+        setAgent(AGENTS[0]);
+        setSystemPrompt(AGENTS[0].systemPrompt);
       } finally {
         setIsLoading(false);
       }
     }
 
-    loadGem();
-  }, [gemId]);
+    loadAgent();
+  }, [agentId]);
 
   // 新規チャット作成時にURLを更新（ブラウザ履歴を汚さないようreplaceState）
   const handleChatCreated = useCallback(
@@ -78,16 +78,16 @@ function ChatPageContent() {
 
   return (
     <FeatureChat
-      key={`${gem.id}-${chatId ?? "new"}`}
-      featureId={gem.id}
+      key={`${agent.id}-${chatId ?? "new"}`}
+      featureId={agent.id}
       chatId={chatId}
       onChatCreated={handleChatCreated}
-      title={gem.name}
+      title={agent.name}
       systemPrompt={systemPrompt}
-      placeholder={gem.placeholder}
-      inputLabel={gem.inputLabel}
-      outputFormat={gem.outputFormat}
-      toolOptions={gem.toolOptions || { enableWebSearch: false }}
+      placeholder={agent.placeholder}
+      inputLabel={agent.inputLabel}
+      outputFormat={agent.outputFormat}
+      toolOptions={agent.toolOptions || { enableWebSearch: false }}
     />
   );
 }
