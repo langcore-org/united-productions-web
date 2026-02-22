@@ -247,10 +247,10 @@ export async function saveGrokToolSettings(
 
   await prisma.grokToolSettings.upsert({
     where: { userId },
-    update: { settings: data as unknown as Prisma.InputJsonValue },
+    update: { settings: data as Prisma.InputJsonValue },
     create: {
       userId,
-      settings: data as unknown as Prisma.InputJsonValue,
+      settings: data as Prisma.InputJsonValue,
     },
   });
 
@@ -300,8 +300,9 @@ export async function getSystemGrokToolSettings(): Promise<GrokToolSettings | nu
       return settings;
     }
   } catch (error) {
-    console.error('Failed to get system Grok tool settings:', error);
-    throw error;
+    const err = error instanceof Error ? error : new Error(String(error));
+    logger.error('Failed to get system Grok tool settings', { error: err.message, stack: err.stack });
+    throw err;
   }
 
   return null;

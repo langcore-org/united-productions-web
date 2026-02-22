@@ -443,6 +443,8 @@ sequenceDiagram
 
 ### 4.3 FeatureChatコンポーネントの内部構造
 
+#### 【変更前】複雑なテキストを含むバージョン
+
 ```mermaid
 graph TB
     subgraph "【FeatureChat.tsx】メインコンポーネント"
@@ -476,6 +478,56 @@ graph TB
 
     style FC fill:#e1f5ff,stroke:#333,stroke-width:2px
 ```
+
+#### 【変更後】シンプルなサブグラフ版
+
+```mermaid
+graph TB
+    subgraph "FeatureChat.tsx"
+        direction TB
+        
+        FC_TITLE["🧩 FeatureChat.tsx<br/>チャットUI全体管理"]
+        
+        subgraph "状態管理 useState"
+            ST_MSG["messages<br/>メッセージ一覧"]
+            ST_INPUT["input<br/>入力値"]
+            ST_FILES["attachedFiles<br/>添付ファイル"]
+        end
+        
+        subgraph "イベントハンドラ"
+            FN_SEND["handleSend()<br/>送信処理"]
+            FN_REGEN["handleRegenerate()<br/>再生成"]
+            FN_CLEAR["handleClear()<br/>クリア"]
+        end
+        
+        subgraph "レンダリング JSX"
+            UI_HEAD["ChatHeader<br/>ヘッダー"]
+            UI_MSG["MessageBubble<br/>メッセージ表示"]
+            UI_INPUT["ChatInputArea<br/>入力エリア"]
+        end
+    end
+    
+    FC_TITLE --> ST_MSG
+    FC_TITLE --> FN_SEND
+    FC_TITLE --> UI_HEAD
+```
+
+#### 【変更後】詳細は表形式で別記
+
+| カテゴリ | 名前 | 型/戻り値 | 説明 |
+|---------|------|----------|------|
+| **状態** | `messages` | `Message[]` | 全メッセージ一覧（user/assistant） |
+| **状態** | `input` | `string` | 入力欄の現在値 |
+| **状態** | `attachedFiles` | `AttachedFile[]` | 添付ファイル（name, type, content） |
+| **状態** | `isCopied` | `boolean` | コピー完了表示用 |
+| **関数** | `handleSend()` | `void` | 送信ボタンクリック時。ファイル連結→messages追加→startStream()呼出 |
+| **関数** | `handleRegenerate()` | `void` | 再生成ボタン。最後のAI応答削除→startStream()呼出 |
+| **関数** | `handleClear()` | `void` | クリアボタン。messages空に→DB削除API呼出 |
+| **関数** | `handleCopy()` | `void` | コピーボタン。クリップボードにコピー |
+| **UI** | `ChatHeader` | コンポーネント | タイトル表示、クリア/コピーボタン |
+| **UI** | `MessageBubble` | コンポーネント | 個別メッセージ表示 |
+| **UI** | `StreamingMessage` | コンポーネント | AIのリアルタイム応答表示 |
+| **UI** | `ChatInputArea` | コンポーネント | テキストエリア、ファイル添付、送信ボタン |
 
 ---
 

@@ -3,14 +3,11 @@
 import { useEffect, useState, Suspense, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { FeatureChat } from "@/components/ui/FeatureChat";
-import { getGemById, GEMS, isProposalGem } from "@/lib/chat/gems";
-import { updateProposalSystemPrompt } from "@/lib/chat/gems";
-import { GrokToolSettings } from "@/lib/settings/db";
-import type { ChatFeatureId, ToolOptions } from "@/lib/chat/chat-config";
+import { getGemById, GEMS, isProposalGem, updateProposalSystemPrompt } from "@/lib/chat/gems";
 
 /**
  * 統合チャットページ
- * 
+ *
  * クエリパラメータ ?gem=xxx で機能を指定
  * 指定がない場合は一般チャット
  */
@@ -24,14 +21,13 @@ function ChatPageContent() {
   const [gem, setGem] = useState(GEMS[0]);
   const [systemPrompt, setSystemPrompt] = useState<string>("");
   const [isLoading, setIsLoading] = useState(true);
-  const [grokToolSettings, setGrokToolSettings] = useState<GrokToolSettings | null>(null);
 
   useEffect(() => {
     async function loadGem() {
       setIsLoading(true);
-      
+
       try {
-        const selectedGem = getGemById(gemId as any);
+        const selectedGem = getGemById(gemId as Parameters<typeof getGemById>[0]);
         setGem(selectedGem);
 
         if (isProposalGem(selectedGem.id)) {
@@ -50,13 +46,6 @@ function ChatPageContent() {
         } else {
           setSystemPrompt(selectedGem.systemPrompt);
         }
-
-        // Grokツール設定を取得
-        const toolResponse = await fetch("/api/settings/grok-tools");
-        if (toolResponse.ok) {
-          const toolData = await toolResponse.json();
-          setGrokToolSettings(toolData);
-        }
       } catch (error) {
         console.error("Failed to load gem:", error);
         setGem(GEMS[0]);
@@ -69,22 +58,15 @@ function ChatPageContent() {
     loadGem();
   }, [gemId]);
 
-  // 機能別ツール設定を計算
-  const getToolOptions = (): ToolOptions => {
-    // デフォルトのツール設定
-    const defaultOptions: ToolOptions = gem.toolOptions || { enableWebSearch: false };
-    
-    // デフォルトのツール設定を返す
-    // 注: featureIdToToolKey関数は削除されたため、シンプル化
-    return defaultOptions;
-  };
-
   // 新規チャット作成時にURLを更新（ブラウザ履歴を汚さないようreplaceState）
-  const handleChatCreated = useCallback((newChatId: string) => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("chatId", newChatId);
-    router.replace(`/chat?${params.toString()}`);
-  }, [searchParams, router]);
+  const handleChatCreated = useCallback(
+    (newChatId: string) => {
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("chatId", newChatId);
+      router.replace(`/chat?${params.toString()}`);
+    },
+    [searchParams, router]
+  );
 
   if (isLoading) {
     return (
@@ -105,7 +87,7 @@ function ChatPageContent() {
       placeholder={gem.placeholder}
       inputLabel={gem.inputLabel}
       outputFormat={gem.outputFormat}
-      toolOptions={getToolOptions()}
+      toolOptions={gem.toolOptions || { enableWebSearch: false }}
     />
   );
 }

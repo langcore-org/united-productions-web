@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { FeatureChat } from "@/components/ui/FeatureChat";
-import { getChatConfig, ChatFeatureId, updateChatConfigSystemPrompt, ToolOptions } from "@/lib/chat/chat-config";
-import { GrokToolSettings } from "@/lib/settings/db";
+import { getChatConfig, ChatFeatureId, updateChatConfigSystemPrompt } from "@/lib/chat/chat-config";
 
 interface ChatPageProps {
   featureId: ChatFeatureId;
@@ -13,12 +12,11 @@ export function ChatPage({ featureId }: ChatPageProps) {
   const [config, setConfig] = useState(getChatConfig(featureId));
   const [systemPrompt, setSystemPrompt] = useState<string>("");
   const [isLoading, setIsLoading] = useState(true);
-  const [grokToolSettings, setGrokToolSettings] = useState<GrokToolSettings | null>(null);
 
   useEffect(() => {
     async function loadConfig() {
       setIsLoading(true);
-      
+
       try {
         const baseConfig = getChatConfig(featureId);
 
@@ -42,13 +40,6 @@ export function ChatPage({ featureId }: ChatPageProps) {
           setConfig(baseConfig);
           setSystemPrompt(baseConfig.systemPrompt);
         }
-
-        // Grokツール設定を取得
-        const toolResponse = await fetch("/api/settings/grok-tools");
-        if (toolResponse.ok) {
-          const toolData = await toolResponse.json();
-          setGrokToolSettings(toolData);
-        }
       } catch (error) {
         console.error("Failed to load config:", error);
         const fallbackConfig = getChatConfig(featureId);
@@ -61,13 +52,6 @@ export function ChatPage({ featureId }: ChatPageProps) {
 
     loadConfig();
   }, [featureId]);
-
-  // 機能別ツール設定を計算
-  const getToolOptions = (): ToolOptions => {
-    // デフォルトのツール設定を返す
-    // 注: featureIdToToolKey関数は削除されたため、シンプル化
-    return config.toolOptions;
-  };
 
   if (isLoading) {
     return (
@@ -85,7 +69,7 @@ export function ChatPage({ featureId }: ChatPageProps) {
       placeholder={config.placeholder}
       inputLabel={config.inputLabel}
       outputFormat={config.outputFormat}
-      toolOptions={getToolOptions()}
+      toolOptions={config.toolOptions}
       promptSuggestions={config.promptSuggestions}
     />
   );
