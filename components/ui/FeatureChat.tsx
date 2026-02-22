@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { cn } from "@/lib/utils";
-import { Loader2, MessageSquare, RotateCcw, Bot, CheckCircle2, BrainCircuit, Sparkles } from "lucide-react";
+import { Loader2, MessageSquare, RotateCcw, Bot, CheckCircle2, BrainCircuit, Sparkles, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MessageBubble } from "./MessageBubble";
 import { AttachedFile } from "./FileAttachment";
@@ -10,7 +10,7 @@ import { ChatHeader } from "./ChatHeader";
 import { ChatInputArea } from "./ChatInputArea";
 import { DEFAULT_PROVIDER } from "@/lib/llm/config";
 import type { LLMProvider } from "@/lib/llm/types";
-import { useLLMStream, ToolCallInfo, ReasoningStepInfo } from "@/components/ui/StreamingMessage";
+import { useLLMStream, ToolCallInfo, ReasoningStepInfo, ThinkingStepInfo } from "@/components/ui/StreamingMessage";
 import type { ToolOptions } from "@/lib/chat/chat-config";
 import { PromptSuggestions, PromptSuggestion } from "@/components/chat/PromptSuggestions";
 import { useConversationSave } from "@/hooks/useConversationSave";
@@ -84,6 +84,8 @@ export function FeatureChat({
     toolCalls,
     toolUsage,
     reasoningSteps,
+    thinkingSteps,
+    isAccepted,
     startStream,
     resetStream,
   } = useLLMStream();
@@ -321,6 +323,8 @@ export function FeatureChat({
                 thinking={thinking}
                 toolCalls={toolCalls}
                 reasoningSteps={reasoningSteps}
+                thinkingSteps={thinkingSteps}
+                isAccepted={isAccepted}
                 toolUsage={toolUsage}
                 usage={usage}
                 provider={provider}
@@ -388,6 +392,8 @@ interface StreamingStepsProps {
   thinking: string;
   toolCalls: ToolCallInfo[];
   reasoningSteps: ReasoningStepInfo[];
+  thinkingSteps: ThinkingStepInfo[];
+  isAccepted: boolean;
   toolUsage: { web_search_calls?: number; x_search_calls?: number; code_interpreter_calls?: number; file_search_calls?: number; mcp_calls?: number; document_search_calls?: number } | null;
   usage: { inputTokens: number; outputTokens: number; cost: number } | null;
   provider: LLMProvider | string;
@@ -399,6 +405,8 @@ function StreamingSteps({
   thinking,
   toolCalls,
   reasoningSteps,
+  thinkingSteps,
+  isAccepted,
   toolUsage,
   usage,
   provider,
@@ -415,10 +423,15 @@ function StreamingSteps({
   const runningToolCalls = uniqueToolCalls.filter((call) => call.status === "running");
 
   // 何もない場合は「考え中...」を表示
-  const hasAnyActivity = reasoningSteps.length > 0 || toolCalls.length > 0 || content || thinking;
+  const hasAnyActivity = thinkingSteps.length > 0 || reasoningSteps.length > 0 || toolCalls.length > 0 || content || thinking;
 
   return (
     <div className="space-y-3">
+      {/* リクエスト受理直後の「考え中...」表示 */}
+      {!isAccepted && !isComplete && (
+        <ThinkingPlaceholderMessage provider={provider} />
+      )}
+
       {/* 完了したツール呼び出し - 各ツールを個別のメッセージとして表示 */}
       {completedToolCalls.map((toolCall) => (
         <ToolCallMessage key={toolCall.id} toolCall={toolCall} status="completed" provider={provider} />
@@ -429,13 +442,27 @@ function StreamingSteps({
         <ToolCallMessage key={toolCall.id} toolCall={toolCall} status="running" provider={provider} />
       ))}
 
-      {/* 思考ステップ - 各ステップを個別のメッセージとして表示（完了・進行中問わず） */}
+      {/* 新しい思考ステップ - 各ステップを個別のメッセージとして表示 */}
+      {thinkingSteps.map((step, index) => {
+        const isLastStep = index === thinkingSteps.length - 1;
+        const isActive = isLastStep && !isComplete;
+        return (
+          <NewThinkingStepMessage 
+            key={step.id} 
+            step={step} 
+            provider={provider} 
+            isActive={isActive}
+          />
+        );
+      })}
+
+      {/* レガシー思考ステップ（後方互換） */}
       {reasoningSteps.map((step, index) => {
         const isLastStep = index === reasoningSteps.length - 1;
         const isActive = isLastStep && !isComplete;
         return (
           <ThinkingStepMessage 
-            key={`${step.step}-${index}`} 
+            key={`legacy-${step.step}-${index}`} 
             step={step} 
             provider={provider} 
             isActive={isActive}
@@ -445,12 +472,12 @@ function StreamingSteps({
       })}
 
       {/* レガシー思考表示 */}
-      {thinking && reasoningSteps.length === 0 && (
+      {thinking && reasoningSteps.length === 0 && thinkingSteps.length === 0 && (
         <LegacyThinkingMessage thinking={thinking} provider={provider} isComplete={isComplete} />
       )}
 
       {/* 何もない場合は「考え中...」を表示 */}
-      {!hasAnyActivity && !isComplete && (
+      {!hasAnyActivity && !isComplete && isAccepted && (
         <ThinkingPlaceholderMessage provider={provider} />
       )}
 
@@ -464,6 +491,80 @@ function StreamingSteps({
           usage={usage}
         />
       )}
+    </div>
+  );
+}
+
+// 新しいThinkingStepMessage（thinkingSteps対応）
+interface NewThinkingStepMessageProps {
+  step: ThinkingStepInfo;
+  provider: LLMProvider | string;
+  isActive?: boolean;
+}
+
+function NewThinkingStepMessage({ step, provider, isActive }: NewThinkingStepMessageProps) {
+  const typeColors = {
+    thinking: 'bg-purple-50 text-purple-900 border-purple-200',
+    search: 'bg-blue-50 text-blue-900 border-blue-200',
+    analysis: 'bg-amber-50 text-amber-900 border-amber-200',
+    synthesis: 'bg-green-50 text-green-900 border-green-200',
+    complete: 'bg-gray-50 text-gray-900 border-gray-200',
+  };
+
+  const typeIcons = {
+    thinking: BrainCircuit,
+    search: Search,
+    analysis: Sparkles,
+    synthesis: CheckCircle2,
+    complete: Bot,
+  };
+
+  const Icon = typeIcons[step.type];
+
+  return (
+    <div className="flex gap-4 px-4 py-2">
+      <div className={`flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center shadow-lg ${
+        isActive ? 'bg-gradient-to-br from-purple-500 to-purple-700' : 'bg-gradient-to-br from-gray-600 to-gray-800'
+      }`}>
+        {isActive ? (
+          <Sparkles className="w-4 h-4 text-white animate-pulse" />
+        ) : (
+          <Icon className="w-4 h-4 text-white" />
+        )}
+      </div>
+      <div className="flex-1 max-w-[85%] items-start">
+        <div className="flex items-center gap-2 mb-1.5">
+          <span className="text-sm font-medium text-gray-600">AI Assistant</span>
+          <span className="text-[10px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 border border-gray-200">
+            {provider}
+          </span>
+          {isActive && (
+            <span className="flex items-center gap-1.5 text-xs text-gray-600">
+              <span className="w-1.5 h-1.5 bg-purple-500 rounded-full animate-pulse" />
+              思考中...
+            </span>
+          )}
+        </div>
+        <div className={`relative px-4 py-3 text-sm leading-relaxed rounded-2xl border rounded-tl-sm ${typeColors[step.type]}`}>
+          <div className="flex items-start gap-2">
+            <span className="flex-shrink-0 w-5 h-5 rounded-full bg-white/50 flex items-center justify-center text-xs font-medium">
+              {step.step}
+            </span>
+            <div className="flex-1">
+              <p className="font-medium mb-1">{step.title}</p>
+              {step.content && (
+                <p className="whitespace-pre-wrap text-sm opacity-80">{step.content}</p>
+              )}
+              {isActive && !step.content && (
+                <div className="flex items-center gap-2 text-xs opacity-60">
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                  <span>処理中...</span>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -516,9 +617,10 @@ interface ThinkingStepMessageProps {
   step: ReasoningStepInfo;
   provider: LLMProvider | string;
   isActive?: boolean;
+  stepNumber?: number;
 }
 
-function ThinkingStepMessage({ step, provider, isActive }: ThinkingStepMessageProps) {
+function ThinkingStepMessage({ step, provider, isActive, stepNumber }: ThinkingStepMessageProps) {
   // サーバー側で既に分割送信されているため、シンプルに表示
   return (
     <div className="flex gap-4 px-4 py-2">
@@ -652,6 +754,39 @@ function ContentMessage({ content, provider, isComplete, toolUsage, usage }: Con
             {" "}• ${usage.cost.toFixed(6)}
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+// 思考プレースホルダーメッセージ
+interface ThinkingPlaceholderMessageProps {
+  provider: LLMProvider | string;
+}
+
+function ThinkingPlaceholderMessage({ provider }: ThinkingPlaceholderMessageProps) {
+  return (
+    <div className="flex gap-4 px-4 py-2">
+      <div className="flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center bg-gradient-to-br from-purple-500 to-purple-700 shadow-lg">
+        <Sparkles className="w-4 h-4 text-white animate-pulse" />
+      </div>
+      <div className="flex-1 max-w-[85%] items-start">
+        <div className="flex items-center gap-2 mb-1.5">
+          <span className="text-sm font-medium text-gray-600">AI Assistant</span>
+          <span className="text-[10px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 border border-gray-200">
+            {provider}
+          </span>
+          <span className="flex items-center gap-1.5 text-xs text-gray-600">
+            <span className="w-1.5 h-1.5 bg-purple-500 rounded-full animate-pulse" />
+            考え中...
+          </span>
+        </div>
+        <div className="relative px-4 py-3 text-sm leading-relaxed rounded-2xl bg-purple-50 text-purple-900 border border-purple-200 rounded-tl-sm">
+          <div className="flex items-center gap-2">
+            <Loader2 className="w-4 h-4 animate-spin" />
+            <span className="text-purple-700">回答を準備しています</span>
+          </div>
+        </div>
       </div>
     </div>
   );

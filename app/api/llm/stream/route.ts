@@ -4,6 +4,8 @@
  * POST /api/llm/stream
  * Server-Sent Events形式でストリーミングレスポンスを返すエンドポイント
  * LangChainを使用して実装
+ * 
+ * @updated 2026-02-22 11:40
  */
 
 import { NextRequest } from 'next/server';
@@ -31,6 +33,10 @@ const streamRequestSchema = z.object({
   provider: z.string().optional(),
   temperature: z.number().min(0).max(2).optional(),
   maxTokens: z.number().positive().optional(),
+  /** ツールオプション */
+  toolOptions: z.object({
+    enableWebSearch: z.boolean().optional(),
+  }).optional(),
 });
 
 export type StreamRequest = z.infer<typeof streamRequestSchema>;
@@ -42,12 +48,17 @@ export type StreamRequest = z.infer<typeof streamRequestSchema>;
  * {
  *   "messages": [{"role": "user", "content": "..."}],
  *   "provider": "grok-4-1-fast-reasoning",
- *   "temperature": 0.7
+ *   "temperature": 0.7,
+ *   "toolOptions": { "enableWebSearch": true }
  * }
  * 
  * Response: Server-Sent Events
- * data: {"content": "Hello"}
- * data: {"content": " world"}
+ * data: {"accepted": true}
+ * data: {"stepStart": {"step": 1, "id": "step-1-xxx", "title": "分析と計画", ...}}
+ * data: {"toolCallEvent": {"id": "tool-1", "type": "web_search", "status": "running", ...}}
+ * data: {"stepUpdate": {"id": "step-1-xxx", "content": "..."}}
+ * data: {"toolCallEvent": {"id": "tool-1", "type": "web_search", "status": "completed", ...}}
+ * data: {"content": "回答の一部..."}
  * data: {"done": true, "usage": {...}}
  */
 export async function POST(request: NextRequest): Promise<Response> {
@@ -67,6 +78,7 @@ export async function POST(request: NextRequest): Promise<Response> {
     logger.info(`[${requestId}] Request received`, {
       messageCount: body.messages?.length,
       provider: body.provider,
+      toolOptions: body.toolOptions,
     });
 
     // バリデーション
@@ -83,7 +95,7 @@ export async function POST(request: NextRequest): Promise<Response> {
       );
     }
 
-    const { messages, provider: requestedProvider, temperature, maxTokens } = validationResult.data;
+    const { messages, provider: requestedProvider, temperature, maxTokens, toolOptions } = validationResult.data;
 
     // プロバイダーの決定
     let provider: LLMProvider;
@@ -102,7 +114,7 @@ export async function POST(request: NextRequest): Promise<Response> {
       provider = DEFAULT_PROVIDER;
     }
 
-    logger.info(`[${requestId}] Using provider`, { provider });
+    logger.info(`[${requestId}] Using provider`, { provider, toolOptions });
 
     // LangChainモデルの作成（ストリーミング有効）
     const model = createLangChainModel(provider, {

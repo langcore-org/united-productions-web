@@ -20,6 +20,40 @@ export interface SSEToolUsage {
 }
 
 /**
+ * 思考ステップイベント
+ */
+export interface SSEStepEvent {
+  /** ステップ番号 */
+  step: number;
+  /** ステップID */
+  id: string;
+  /** ステップタイトル */
+  title: string;
+  /** ステップ内容 */
+  content?: string;
+  /** ステップ状態 */
+  status: 'pending' | 'running' | 'completed' | 'error';
+  /** ステップタイプ */
+  type: 'thinking' | 'search' | 'analysis' | 'synthesis' | 'complete';
+}
+
+/**
+ * ツール呼び出しイベント
+ */
+export interface SSEToolCallEvent {
+  /** ツールID */
+  id: string;
+  /** ツールタイプ */
+  type: string;
+  /** ツール名 */
+  name?: string;
+  /** 入力パラメータ */
+  input?: string;
+  /** ステータス */
+  status: 'pending' | 'running' | 'completed' | 'failed';
+}
+
+/**
  * SSEイベントの型
  * `/api/llm/stream` から送信される全イベントを網羅する
  */
@@ -32,6 +66,18 @@ export interface SSEEvent {
   done?: boolean;
   usage?: LLMUsage;
   error?: string;
+  /** リクエスト受理イベント（即座に送信） */
+  accepted?: boolean;
+  /** 思考ステップ開始イベント */
+  stepStart?: SSEStepEvent;
+  /** 思考ステップ更新イベント */
+  stepUpdate?: {
+    id: string;
+    content?: string;
+    status?: 'pending' | 'running' | 'completed' | 'error';
+  };
+  /** ツール呼び出しイベント */
+  toolCallEvent?: SSEToolCallEvent;
 }
 
 /**

@@ -107,6 +107,40 @@ export interface ReasoningStep {
 }
 
 /**
+ * 思考ステップの型
+ */
+export interface ThinkingStep {
+  /** ステップ番号 */
+  step: number;
+  /** ステップID（一意） */
+  id: string;
+  /** ステップのタイトル */
+  title: string;
+  /** ステップの説明/内容 */
+  content?: string;
+  /** ステップの状態 */
+  status: 'pending' | 'running' | 'completed' | 'error';
+  /** ステップタイプ */
+  type: 'thinking' | 'search' | 'analysis' | 'synthesis' | 'complete';
+}
+
+/**
+ * ツール呼び出しイベント
+ */
+export interface ToolCallEvent {
+  /** ツールID */
+  id: string;
+  /** ツールタイプ */
+  type: string;
+  /** ツール名 */
+  name?: string;
+  /** 入力パラメータ */
+  input?: string;
+  /** ステータス */
+  status: 'pending' | 'running' | 'completed' | 'failed';
+}
+
+/**
  * LLMストリーミングチャンク
  */
 export interface LLMStreamChunk {
@@ -118,7 +152,7 @@ export interface LLMStreamChunk {
   isDone?: boolean;
   /** ツール呼び出し情報 */
   toolCall?: ToolCallInfo;
-  /** 思考ステップ */
+  /** 思考ステップ（レガシー） */
   reasoningStep?: ReasoningStep;
   /** ツール使用状況の更新 */
   toolUsage?: {
@@ -129,6 +163,16 @@ export interface LLMStreamChunk {
     mcp_calls?: number;
     document_search_calls?: number;
   };
+  /** 新しい思考ステップイベント */
+  stepStart?: ThinkingStep;
+  /** ステップ更新イベント */
+  stepUpdate?: {
+    id: string;
+    content?: string;
+    status?: 'pending' | 'running' | 'completed' | 'error';
+  };
+  /** ツール呼び出しイベント */
+  toolCallEvent?: ToolCallEvent;
 }
 
 /**

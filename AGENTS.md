@@ -6,6 +6,27 @@
 
 ---
 
+## 🛠 技術スタック
+
+### LLMフレームワーク（重要）
+
+**このプロジェクトでは LangChain を使用しています。**
+
+| パッケージ | 用途 |
+|-----------|------|
+| `langchain` | コアフレームワーク |
+| `@langchain/core` | 型定義・基本機能 |
+| `@langchain/openai` | OpenAI連携 |
+| `@langchain/anthropic` | Anthropic連携 |
+| `@langchain/community` | コミュニティ統合 |
+| `@langchain/textsplitters` | テキスト分割 |
+
+**実装場所**: `lib/llm/langchain/`
+
+**参照**: [llm-integration-overview.md](./docs/specs/api-integration/llm-integration-overview.md)
+
+---
+
 ## 📚 ドキュメント参照ガイド
 
 ### 必ず確認するドキュメント
@@ -15,6 +36,7 @@
 | タスク着手前 | `docs/README.md` | ドキュメント構成と更新ルール |
 | システム理解時 | `docs/specs/system-architecture.md` | 全体構成と設計パターン |
 | API実装時 | `docs/specs/api-specification.md` | API仕様と型定義 |
+| **LLM実装時** | **`docs/specs/api-integration/llm-integration-overview.md`** | **LangChain使用方針** |
 | DB変更時 | `docs/specs/database-schema.md` | スキーマ設計とインデックス |
 | エラー処理時 | `docs/specs/error-handling.md` | エラーコードとレスポンス形式 |
 | デプロイ時 | `docs/specs/deployment-guide.md` | 環境変数と手順 |
@@ -22,6 +44,10 @@
 ### ドキュメント更新ルール（必須）
 
 1. **更新日時を必ず記載** - `YYYY-MM-DD HH:MM` 形式
+   ```bash
+   # 現在日時を取得
+   date +"%Y-%m-%d %H:%M"
+   ```
 2. **1ファイル200行以内** - 超える場合は分割
 3. **内容の重複禁止** - 詳細は1箇所に集約、他は参照リンク
 4. **参照リンクを充実** - 関連ファイルへのリンクを必ず記載
@@ -58,35 +84,6 @@ cat node_modules/<package>/package.json | grep '"version"'
 
 # 型定義の実際のエクスポートを確認する
 grep -n "export" node_modules/<package>/index.d.ts
-```
-
----
-
-## 📐 変更スコープのルール
-
-### 許可される変更
-- ✅ タスクで明示的に指定されたファイル
-- ✅ 変更対象ファイルが直接 import しているファイルの型修正
-- ✅ AGENTS.md, .cursor/rules などの設定ファイル（明示的に依頼された場合）
-
-### 禁止される変更
-- ❌ lint/build 実行時に発見した**既存の**無関係なエラーの修正（別タスクで対応）
-- ❌ タスクスコープ外のリファクタリング
-- ❌ 動作している設定・コードの「改善」
-- ❌ `as any` の追加（削除は許可）
-
-### 既存エラーを発見した場合の処理
-既存の問題を発見した場合、以下の手順で対応する：
-
-1. **報告する**: ユーザーに「〜という既存エラーを発見した」と報告
-2. **記録する**: ファイルに TODO コメントを残す
-3. **作業を進める**: 現タスクはそのまま完了させる
-
-```typescript
-// ファイル冒頭または該当箇所に記録する
-// TODO(agent): [既存問題] ZodError.errors → issues の修正が必要
-// 関連ファイル: lib/api/handler.ts:89
-// 現タスクスコープ外のため未修正
 ```
 
 ---
