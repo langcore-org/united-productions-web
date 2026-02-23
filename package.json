@@ -70,8 +70,6 @@
     "@types/react-syntax-highlighter": "^15.5.13",
     "@types/uuid": "^10.0.0",
     "@vitejs/plugin-react": "^5.1.4",
-    "eslint": "^9",
-    "eslint-config-next": "^16.0.10",
     "knip": "^5.85.0",
     "lefthook": "^2.1.1",
     "shadcn": "^3.8.4",
