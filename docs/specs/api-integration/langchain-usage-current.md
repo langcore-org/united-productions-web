@@ -314,6 +314,145 @@ LangChainを使用せず、自前で実装している機能:
 
 ---
 
+## 未使用コードの検討（agents, memory）
+
+### 概要
+
+以下のファイルは現状未使用のため、**削除済み**です：
+
+| ファイル | 行数 | 主要機能 | 状態 |
+|---------|------|---------|------|
+| `lib/llm/langchain/agents/index.ts` | 75行 | `executeWithTools`, `executeWithDefaultTools` | **削除済み** (2026-02-23) |
+| `lib/llm/langchain/memory/index.ts` | 112行 | `SimpleChatMemory`, `executeWithMemory` | **削除済み** (2026-02-23) |
+
+**削除理由:**
+- 現状の実装（Prisma永続化 + Grokツール）で要件を満たしている
+- 未使用コードは技術的負債となり、将来の開発者を混乱させる
+- 必要になった場合はLangChain標準機能（`BufferMemory`, `createReactAgent`等）を使用すべき
+
+**巻き戻し方法:**
+```bash
+# Git履歴から復元
+git show HEAD~1:lib/llm/langchain/agents/index.ts > lib/llm/langchain/agents/index.ts
+git show HEAD~1:lib/llm/langchain/memory/index.ts > lib/llm/langchain/memory/index.ts
+```
+
+### 削除前の検討内容（参考）
+
+#### 1. Memory（`lib/llm/langchain/memory/index.ts`）
+
+**活用シナリオ: インメモリキャッシュ層**
+
+```typescript
+// 例: APIルートで会話履歴のキャッシュに使用
+import { SimpleChatMemory } from '@/lib/llm/langchain/memory';
+
+// セッションごとのインメモリキャッシュ（Redis導入前の暫定策）
+const sessionMemoryCache = new Map<string, SimpleChatMemory>();
+
+export async function POST(request: NextRequest) {
+  const sessionId = getSessionId(request);
+  
+  // キャッシュから取得 or 新規作成
+  let memory = sessionMemoryCache.get(sessionId);
+  if (!memory) {
+    memory = createChatMemory({ maxMessages: 20 });
+    sessionMemoryCache.set(sessionId, memory);
+  }
+  
+  // 直近N件のみを使用してLLM呼び出し
+  const recentMessages = await memory.getMessages();
+  const response = await llm.chat(recentMessages);
+}
+```
+
+**メリット:**
+- DBアクセスを減らし、レスポンス時間を短縮（キャッシュヒット時）
+- サーバー再起動までの間、同じセッション内での連続リクエストを最適化
+- Redis導入前の軽量な暫定策として機能
+
+**デメリット:**
+- サーバー再起動でキャッシュが消失（永続性なし）
+- 複数サーバー構成ではキャッシュを共有できない
+- メモリ使用量が増加（セッション数に比例）
+- 現状のPrisma永続化 + 全履歴送信で要件を満たしているため、追加価値が限定的
+
+#### 2. Agents（`lib/llm/langchain/agents/index.ts`）
+
+**活用シナリオ: カスタムツール連携**
+
+```typescript
+// 例: Grokツールではなく、自前のツール実行チェーンを使用
+import { executeWithTools } from '@/lib/llm/langchain/agents';
+import { calculatorTool, currentTimeTool } from '@/lib/llm/langchain/tools';
+
+// 特定のツールのみを強制実行
+const customTools = [calculatorTool, currentTimeTool];
+const response = await executeWithTools(
+  model,
+  customTools,
+  "100円の商品を3つ買ったら？"
+);
+```
+
+**メリット:**
+- Grokツールではなく、自前のツールロジックを使用可能
+- ツールの組み合わせを細かく制御可能
+- 特定のツールのみを強制実行したい場合に有効
+
+**デメリット:**
+- 現状のGrokツール連携（`web_search`, `x_search`等）と機能が重複
+- 複数回のLLM呼び出しが必要（ツール選択 → 実行 → 最終回答生成）
+- レイテンシが増大（最低2回のLLM呼び出し）
+- Grokのネイティブツール機能の方が高速・安定
+
+### 削除の判断基準
+
+| 基準 | 評価 |
+|-----|------|
+| **YAGNI原則** | 現状では使用しておらず、明確な使用予定もない |
+| **重複機能** | 現状の実装（Prisma永続化 + Grokツール）で要件を満たしている |
+| **技術的負債** | 未使用コードは将来の開発者を混乱させる可能性 |
+| **再実装の容易さ** | 必要になった時にLangChain標準機能を使用すべき |
+
+### 削除により得られる効果
+
+| 項目 | 効果 |
+|-----|------|
+| **コード量** | -187行削減 |
+| **複雑性** | 単一の実装パターンに統一 |
+| **可読性** | 実際に使用されているコードのみが残る |
+| **テスト負担** | 不要なテストを削除可能 |
+
+### 巻き戻し方法（削除後に必要になった場合）
+
+```bash
+# Git履歴から復元
+git show HEAD~1:lib/llm/langchain/agents/index.ts > lib/llm/langchain/agents/index.ts
+git show HEAD~1:lib/llm/langchain/memory/index.ts > lib/llm/langchain/memory/index.ts
+```
+
+または、LangChain標準機能を使用して再実装（推奨）:
+
+```typescript
+// Memoryが必要になった場合
+import { BufferMemory } from 'langchain/memory';
+import { UpstashRedisChatMessageHistory } from '@langchain/community/stores/message/upstash_redis';
+
+const memory = new BufferMemory({
+  chatHistory: new UpstashRedisChatMessageHistory({
+    sessionId,
+    config: { url: process.env.UPSTASH_REDIS_REST_URL, token: ... }
+  })
+});
+
+// Agentが必要になった場合
+import { createReactAgent } from '@langchain/langgraph/prebuilt';
+const agent = createReactAgent({ llm: model, tools });
+```
+
+---
+
 ## 今後の検討事項
 
 | 機能 | 優先度 | 検討内容 |
