@@ -16,7 +16,8 @@
     "lint:fix": "biome check --write .",
     "format": "biome format --write .",
     "knip": "knip",
-    "knip:check": "knip --no-exit-code"
+    "knip:check": "knip --no-exit-code",
+    "analyze": "ANALYZE=true npm run build"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.1",
@@ -56,6 +57,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "2.4.4",
+    "@next/bundle-analyzer": "^16.1.6",
     "@playwright/test": "^1.58.2",
     "@tailwindcss/postcss": "^4",
     "@testing-library/jest-dom": "^6.9.1",
