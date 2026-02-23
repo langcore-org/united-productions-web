@@ -247,6 +247,73 @@ LangChainを使用せず、自前で実装している機能:
 
 ---
 
+## 網羅的な機能リスト
+
+### lib/llm/ 以下の全ファイルとLangChain使用状況
+
+| ファイル | LangChain使用 | 自前実装 | 説明 |
+|---------|--------------|---------|------|
+| `types.ts` | ❌ | ✅ 型定義 | `VALID_PROVIDERS`, `LLMMessage`, `LLMResponse`等 |
+| `config.ts` | ❌ | ✅ 設定定数 | `PROVIDER_CONFIG`, `RATE_LIMITS`, `DEFAULT_PROVIDER` |
+| `constants.ts` | ❌ | ✅ 定数 | `PROVIDER_LABELS`, `PROVIDER_COLORS` |
+| `factory.ts` | ❌ | ✅ ファクトリー | `createLLMClient`（LangChain版をラップ） |
+| `utils.ts` | ❌ | ✅ ユーティリティ | `resolveProvider`, `isGrokProvider` |
+| `cache.ts` | ❌ | ✅ キャッシュ | RedisベースLLMレスポンスキャッシュ |
+| `errors.ts` | ❌ | ✅ エラークラス | `LLMError`, `handleLLMError` |
+| `sse-parser.ts` | ❌ | ✅ SSEパーサー | `parseSSEStream`（サーバーサイドSSEパース） |
+| `index.ts` | ❌ | ✅ エクスポート | 公開APIのエクスポート |
+| `langchain/types.ts` | ✅ 型のみ | ✅ メッセージ変換 | `toLangChainMessages`, `fromLangChainMessages` |
+| `langchain/config.ts` | ❌ | ✅ 設定 | `PROVIDER_MODEL_MAP`, `getProviderConfig` |
+| `langchain/factory.ts` | ✅ `ChatOpenAI`, `ChatAnthropic` | ✅ ファクトリー | `createLangChainModel`, `createStreamingModel` |
+| `langchain/adapter.ts` | ✅ `BaseChatModel`（型） | ✅ アダプター | `LangChainClientAdapter` |
+| `langchain/chains/base.ts` | ✅ `RunnableSequence`, `StringOutputParser` | ✅ Chainラッパー | `createChatChain`, `executeChat` |
+| `langchain/chains/streaming.ts` | ✅ `BaseChatModel`（型）, `model.stream()` | ✅ ストリーミング実装 | `executeStreamingChat`, `createSSEStream` |
+| `langchain/callbacks/streaming.ts` | ✅ `BaseCallbackHandler` | ✅ コールバック実装 | `StreamingCallbackHandler` |
+| `langchain/prompts/templates.ts` | ✅ `ChatPromptTemplate`, `SystemMessagePromptTemplate`, `HumanMessagePromptTemplate` | ✅ テンプレート定義 | `basicChatPrompt`, `meetingSummaryPrompt`等 |
+| `langchain/tools/index.ts` | ✅ `DynamicTool` | ✅ ツール定義 | `calculatorTool`, `currentTimeTool`等 |
+| `langchain/agents/index.ts` | ✅ `BaseChatModel`, `DynamicTool`（型） | ✅ 簡易Agent実装 | `executeWithTools`, `executeWithDefaultTools` |
+| `langchain/memory/index.ts` | ❌ | ✅ メモリ実装 | `SimpleChatMemory`, `createChatMemory`等 |
+
+### 使用しているLangChainパッケージの機能一覧
+
+#### `@langchain/core`
+| 機能 | 使用ファイル | 用途 |
+|-----|------------|------|
+| `BaseChatModel` (型) | `factory.ts`, `chains/*.ts`, `agents/index.ts` | モデルの型定義 |
+| `BaseMessage` (型) | `types.ts` | メッセージの型定義 |
+| `RunnableSequence` | `chains/base.ts` | Chainの構成 |
+| `StringOutputParser` | `chains/base.ts` | 出力パース |
+| `ChatPromptTemplate` | `prompts/templates.ts` | プロンプトテンプレート |
+| `SystemMessagePromptTemplate` | `prompts/templates.ts` | システムメッセージテンプレート |
+| `HumanMessagePromptTemplate` | `prompts/templates.ts` | ユーザーメッセージテンプレート |
+| `DynamicTool` | `tools/index.ts`, `agents/index.ts` | ツール定義 |
+| `BaseCallbackHandler` | `callbacks/streaming.ts` | ストリーミングコールバック |
+| `HumanMessage`, `AIMessage`, `SystemMessage` | `types.ts` | メッセージ変換 |
+
+#### `@langchain/openai`
+| 機能 | 使用ファイル | 用途 |
+|-----|------------|------|
+| `ChatOpenAI` | `factory.ts` | OpenAI互換API（xAI, Perplexity含む） |
+
+#### `@langchain/anthropic`
+| 機能 | 使用ファイル | 用途 |
+|-----|------------|------|
+| `ChatAnthropic` | `factory.ts` | Claude API |
+
+### 自前実装の詳細一覧
+
+| 機能 | ファイル | 実装内容 | LangChain未使用の理由 |
+|-----|---------|---------|---------------------|
+| **SSEパーサー** | `sse-parser.ts` | `parseSSEStream` - ReadableStreamをSSEイベントにパース | LangChainはクライアント側SSEパースを提供しない |
+| **キャッシュ** | `cache.ts` | RedisベースのLLMレスポンスキャッシュ | アプリケーション固有の要件（TTL、プロバイダー別等） |
+| **エラーハンドリング** | `errors.ts` | `LLMError`クラス、プロバイダー別エラー変換 | 統一されたエラー形式が必要 |
+| **メモリ管理** | `memory/index.ts` | `SimpleChatMemory`クラス | 要件がシンプル（インメモリのみ） |
+| **Agent実行** | `agents/index.ts` | `executeWithTools` - 簡易ツール呼び出し | `createReactAgent`は過剰機能のため |
+| **ストリーミング** | `chains/streaming.ts` | `executeStreamingChat`, `createSSEStream` | SSE形式の細かい制御が必要 |
+| **プロバイダー管理** | `factory.ts`, `config.ts`, `utils.ts` | プロバイダー設定、検証、選択ロジック | アプリケーション固有のマッピングが必要 |
+
+---
+
 ## 今後の検討事項
 
 | 機能 | 優先度 | 検討内容 |
