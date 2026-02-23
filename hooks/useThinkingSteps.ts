@@ -11,7 +11,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import type { ThinkingStep, ThinkingEvent } from '@/types/agent-thinking';
-import type { ToolCallInfo, ReasoningStepInfo } from '@/components/ui/StreamingMessage';
+import type { ToolCallInfo, ReasoningStepInfo } from '@/hooks/useLLMStream/types';
 
 interface UseThinkingStepsOptions {
   toolCalls: ToolCallInfo[];
