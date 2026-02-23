@@ -2,8 +2,10 @@ pre-commit:
   parallel: true
   commands:
     lint:
+      glob: "*.{js,ts,jsx,tsx}"
       run: npx biome check --write {staged_files}
     format:
+      glob: "*.{js,ts,jsx,tsx}"
       run: npx biome format --write {staged_files}
     update-index:
       run: git update-index --again
