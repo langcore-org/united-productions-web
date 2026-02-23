@@ -3,7 +3,7 @@
 > **AI Hub プロジェクトにおける新規フレームワーク・ツールの導入検討**
 >
 > **作成日**: 2026-02-23 17:15
-> **更新日**: 2026-02-23 20:00
+> **更新日**: 2026-02-23 23:05
 > **対象**: 開発効率向上・品質改善・運用強化に寄与するツール類
 >
 > **【重要】全フェーズ完了 - 2026-02-23**
@@ -351,6 +351,8 @@ npm run build         # 本番ビルド
 ## 9. コミット履歴
 
 ```
+dfcad3e chore: LefthookでMarkdownファイルをBiomeの対象外に設定
+d6251b7 refactor: 未使用のLangChainコードを削除（553行削減）
 6ea5443 docs: Phase 2完了 - 全ツール導入完了
 8d283ae feat: Phase 2-3 Bundle Analyzer導入
 e61fd29 feat: Phase 2-2 Renovate設定追加
@@ -362,6 +364,86 @@ dda5a70 feat: Phase 1-2 Lefthook導入
 
 ---
 
-**最終更新**: 2026-02-23 20:00
+---
 
-**ステータス**: ✅ **全フェーズ完了**
+## 10. コードベース整理（2026-02-23 追加）
+
+### 10.1 LangChain未使用コードの削除
+
+**背景**:
+- LangChainのRAG、Agent、Memory機能が実装されていたが、実際には使用されていなかった
+- Grokの2Mコンテキストとネイティブツール機能で代替可能
+
+**削除対象**:
+
+| ファイル | 行数 | 内容 | 削除理由 |
+|---------|------|------|---------|
+| `lib/llm/langchain/rag/index.ts` | 108行 | RAG実装（OpenAIEmbeddings + コサイン類似度） | 未使用API、Grokツールで代替 |
+| `lib/llm/langchain/rag/simple.ts` | 108行 | RAG簡易実装（重複） | `index.ts`と重複 |
+| `app/api/llm/rag/route.ts` | 150行 | RAG APIエンドポイント | フロントエンドから呼び出しなし |
+| `lib/llm/langchain/agents/index.ts` | 75行 | `executeWithTools`, `executeWithDefaultTools` | 未使用、Grokツールで代替 |
+| `lib/llm/langchain/memory/index.ts` | 112行 | `SimpleChatMemory`, `executeWithMemory` | 未使用、Prisma永続化で代替 |
+
+**合計削減行数**: 553行
+
+**削除コミット**:
+```
+d6251b7 refactor: 未使用のLangChainコードを削除
+```
+
+**巻き戻し方法**:
+```bash
+# Git履歴から復元
+git show d6251b7^:lib/llm/langchain/agents/index.ts > lib/llm/langchain/agents/index.ts
+git show d6251b7^:lib/llm/langchain/memory/index.ts > lib/llm/langchain/memory/index.ts
+```
+
+**再実装時の推奨**:
+必要になった場合は、自前実装ではなくLangChain標準機能を使用：
+
+```typescript
+// Memoryが必要になった場合
+import { BufferMemory } from 'langchain/memory';
+import { UpstashRedisChatMessageHistory } from '@langchain/community/stores/message/upstash_redis';
+
+const memory = new BufferMemory({
+  chatHistory: new UpstashRedisChatMessageHistory({
+    sessionId,
+    config: { url: process.env.UPSTASH_REDIS_REST_URL, token: ... }
+  })
+});
+
+// Agentが必要になった場合
+import { createReactAgent } from '@langchain/langgraph/prebuilt';
+const agent = createReactAgent({ llm: model, tools });
+```
+
+### 10.2 Lefthook設定改善
+
+**問題**:
+- Markdownファイルのみの変更時にBiomeがエラーを返していた
+- BiomeはMarkdownファイルを処理できない
+
+**解決**:
+```yaml
+# lefthook.yml
+pre-commit:
+  commands:
+    lint:
+      glob: "*.{js,ts,jsx,tsx}"  # JS/TSのみ対象
+      run: npx biome check --write {staged_files}
+    format:
+      glob: "*.{js,ts,jsx,tsx}"  # JS/TSのみ対象
+      run: npx biome format --write {staged_files}
+```
+
+**コミット**:
+```
+dfcad3e chore: LefthookでMarkdownファイルをBiomeの対象外に設定
+```
+
+---
+
+**最終更新**: 2026-02-23 23:05
+
+**ステータス**: ✅ **全フェーズ完了 + コードベース整理完了**
