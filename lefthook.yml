@@ -1,0 +1,9 @@
+pre-commit:
+  parallel: true
+  commands:
+    lint:
+      run: npx biome check --write {staged_files}
+    format:
+      run: npx biome format --write {staged_files}
+    update-index:
+      run: git update-index --again
