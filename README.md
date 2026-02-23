@@ -8,17 +8,29 @@ AI Hubは、テレビ制作現場の様々な業務をAIで支援する統合プ
 
 ## 技術スタック
 
+### コア
+
 | カテゴリ | 技術 |
 |---------|------|
 | フレームワーク | Next.js 16 (App Router) |
-| 言語 | TypeScript |
+| 言語 | TypeScript 5.9 |
 | スタイリング | Tailwind CSS 4 |
 | UIコンポーネント | shadcn/ui |
 | 認証 | NextAuth.js v4 + Google OAuth |
-| データベース | PostgreSQL (Neon) + Prisma |
+| データベース | PostgreSQL (Neon) + Prisma 5 |
 | キャッシュ | Upstash Redis |
-| LLM統合 | Google Gemini, xAI Grok, Perplexity, OpenAI, Anthropic |
+| LLM統合 | LangChain + xAI Grok |
 | デプロイ | Vercel |
+
+### 開発ツール（2026-02-23導入）
+
+| カテゴリ | ツール | 用途 |
+|---------|--------|------|
+| **Lint/Format** | [Biome](https://biomejs.dev/) | 35倍高速なLint+Format統合 |
+| **Git Hooks** | [Lefthook](https://github.com/evilmartians/lefthook) | 並列実行で高速なpre-commit |
+| **未使用コード検出** | [Knip](https://knip.dev/) | デッドコード検出・削除 |
+| **依存関係管理** | [Renovate](https://docs.renovatebot.com/) | 自動依存更新・セキュリティパッチ |
+| **バンドル分析** | [@next/bundle-analyzer](https://www.npmjs.com/package/@next/bundle-analyzer) | バンドルサイズ可視化 |
 
 ## 開発状況
 
@@ -230,8 +242,21 @@ npm run build
 # 本番サーバー起動
 npm run start
 
-# Lint実行
-npm run lint
+# Lint/Format（Biome）
+npm run lint             # Lintチェック
+npm run lint:fix         # Lint自動修正
+npm run format           # フォーマット
+
+# 未使用コード検出（Knip）
+npm run knip             # 未使用コード検出
+npm run knip:check       # CI用（エラーで終了しない）
+
+# バンドル分析
+npm run analyze          # バンドルサイズ分析
+
+# テスト
+npm run test             # 単体テスト（Vitest）
+npm run test:e2e         # E2Eテスト（Playwright）
 
 # Prisma関連
 npx prisma generate      # Client生成
@@ -241,12 +266,19 @@ npx prisma studio        # DB GUI
 
 ## ドキュメント
 
+### 概要・設計
+
 - [ドキュメントガイド](./docs/README.md)
 - [アーキテクチャ設計](./docs/specs/architecture/system-architecture.md)
 - [API仕様書](./docs/specs/api-integration/api-specification.md)
 - [データベーススキーマ](./docs/specs/api-integration/database-schema.md)
-- [デプロイ手順](./docs/specs/operations/deployment-guide.md)
+
+### 開発・運用
+
 - [開発ガイド](./docs/guides/development/workflow-standards.md)
+- [デプロイ手順](./docs/specs/operations/deployment-guide.md)
+- [テスト戦略](./docs/specs/operations/testing-strategy.md)
+- [**フレームワーク・ツール導入検討書**](./docs/plans/current/framework-tool-evaluation.md) ⭐ 新規
 
 ## ライセンス
 
