@@ -8,6 +8,7 @@ logs/
 .env.local
 .env.production
 *.env
+.env.bypass
 
 # Node modules
 node_modules/
