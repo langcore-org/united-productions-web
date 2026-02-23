@@ -17,7 +17,8 @@
     "format": "biome format --write .",
     "knip": "knip",
     "knip:check": "knip --no-exit-code",
-    "analyze": "ANALYZE=true npm run build"
+    "analyze": "ANALYZE=true npm run build",
+    "analyze:exp": "next experimental-analyze"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.1",
