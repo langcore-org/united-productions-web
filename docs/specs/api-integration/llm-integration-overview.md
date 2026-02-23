@@ -2,7 +2,7 @@
 
 > **複数LLMプロバイダーを統一インターフェースで利用するための概要**
 >
-> **最終更新**: 2026-02-22 11:16
+> **最終更新**: 2026-02-23 18:30
 
 ---
 
@@ -134,6 +134,27 @@ XAI_API_KEY=            # xAI（$25無料クレジット）
 - [llm-framework-comparison.md](./llm-framework-comparison.md) - フレームワーク選定経緯
 - `lib/llm/` - LLMクライアント実装
 - `lib/llm/langchain/` - LangChain統合
-- `hooks/use-llm.ts` - LLM通信フック
+- `hooks/use-llm.ts` - LLM通信フック（独自実装）
+- `hooks/useLLMStream/` - ストリーミングフック（独自実装）
 - `hooks/useLangChainChat.ts` - LangChainフック
 - [external-services.md](./external-services.md) - 外部サービス連携
+
+## 注意事項
+
+### フレームワーク選定の経緯
+
+当初はVercel AI SDKの導入を検討し、パッケージ（`ai`, `@ai-sdk/react`）をインストールしていましたが、以下の理由から**使用せずアンインストール**しました：
+
+1. **実装の統一性**: LangChain単独で全ての機能を実装可能
+2. **ストリーミング処理**: 自作のSSEパーサー（`lib/llm/sse-parser.ts`）で十分
+3. **状態管理**: ReactのuseState/useCallbackで独自実装（`useLLM`, `useLLMStream`）
+
+**現在の構成**:
+- LLM統合: **LangChainのみ**
+- ストリーミング: **独自実装（SSEパーサー）**
+- UIフック: **自作フック（`useLLM`, `useLLMStream`, `useLangChainChat`）**
+
+**アンインストール済みパッケージ**:
+```bash
+npm uninstall ai @ai-sdk/react
+```
