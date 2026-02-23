@@ -701,8 +701,8 @@ EOF
 |-------|--------|------|------|
 | Phase 0 | Vercel AI SDK削除 | ✅ 完了 | 2026-02-23 |
 | Phase 1 | Biome | ✅ 完了 | 2026-02-23 |
-| Phase 1 | Lefthook | 🔄 進行中 | 2026-02-23 |
-| Phase 1 | Vercel CI | ⏳ 待機中 | - |
+| Phase 1 | Lefthook | ✅ 完了 | 2026-02-23 |
+| Phase 1 | Vercel CI | ✅ 完了 | 既存設定あり |
 | Phase 2 | Knip | ⏳ 待機中 | - |
 | Phase 2 | Renovate | ⏳ 待機中 | - |
 | Phase 2 | Bundle Analyzer | ⏳ 待機中 | - |
