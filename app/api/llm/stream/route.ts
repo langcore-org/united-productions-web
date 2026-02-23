@@ -76,7 +76,7 @@ export async function POST(request: NextRequest): Promise<Response> {
     console.log(`[DEBUG ${requestId}] === STREAM REQUEST STARTED ===`);
 
     // 認証チェック（開発環境ではスキップ）
-    let authResult;
+    let authResult: { user: { id: string }; userId: string } | Response | null = null;
     if (isDev) {
       console.log(`[DEBUG ${requestId}] Skipping auth in dev mode`);
       authResult = { user: { id: "dev-user" }, userId: "dev-user" };
@@ -105,12 +105,7 @@ export async function POST(request: NextRequest): Promise<Response> {
       return new Response(
         JSON.stringify({
           error: "Invalid request",
-          message: errorIssues
-            .map(
-              (e: { path: (string | number)[]; message: string }) =>
-                `${e.path.join(".")}: ${e.message}`,
-            )
-            .join(", "),
+          message: errorIssues.map(e => `${e.path.join('.')}: ${e.message}`).join(', '),
           details: validationResult.error.format(),
           requestId,
         }),
