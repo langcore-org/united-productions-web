@@ -105,7 +105,7 @@ export async function POST(request: NextRequest): Promise<Response> {
       return new Response(
         JSON.stringify({
           error: "Invalid request",
-          message: errorIssues.map(e => `${e.path.join('.')}: ${e.message}`).join(', '),
+          message: errorIssues.map((e) => `${e.path.join(".")}: ${e.message}`).join(", "),
           details: validationResult.error.format(),
           requestId,
         }),
