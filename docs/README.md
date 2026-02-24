@@ -96,9 +96,7 @@ docs/
 │   │   ├── testing-strategy.md        # テスト戦略
 │   │   └── change-history.md          # 変更履歴
 │   ├── api-changelog.md               # API変更ログ
-│   ├── change-history.md              # 変更履歴（移行予定）
-│   ├── performance.md                 # パフォーマンス仕様（移行予定）
-│   └── security.md                    # セキュリティ仕様（移行予定）
+│   └── change-history.md              # 変更履歴（システム全体）
 │
 ├── user-docs/                         # 【ユーザードキュメント】非技術者向け
 │   ├── README.md                      # ユーザードキュメント案内
