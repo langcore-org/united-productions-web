@@ -7,15 +7,15 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireAdmin } from "@/lib/api/auth";
+import { requireAuth } from "@/lib/api/auth";
 
 /**
  * GET /api/admin/users
  * ユーザー一覧を取得
  */
 export async function GET(request: NextRequest) {
-  // 管理者権限チェック
-  const authResult = await requireAdmin(request);
+  // 認証チェック（ログイン済みユーザー）
+  const authResult = await requireAuth(request);
   if (authResult instanceof NextResponse) {
     return authResult;
   }

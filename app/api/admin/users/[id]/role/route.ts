@@ -6,7 +6,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireAdmin } from "@/lib/api/auth";
+import { requireAuth } from "@/lib/api/auth";
 import { z } from "zod";
 
 const updateRoleSchema = z.object({
@@ -21,22 +21,14 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  // 管理者権限チェック
-  const authResult = await requireAdmin(request);
+  // 認証チェック（ログイン済みユーザー）
+  const authResult = await requireAuth(request);
   if (authResult instanceof NextResponse) {
     return authResult;
   }
 
   try {
     const { id } = await params;
-
-    // 自分自身の権限は変更できない
-    if (id === authResult.user.id) {
-      return NextResponse.json(
-        { success: false, error: "自分自身の権限は変更できません" },
-        { status: 400 }
-      );
-    }
 
     // リクエストボディをパース
     const body = await request.json();
