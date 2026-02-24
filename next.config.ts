@@ -6,11 +6,6 @@ const nextConfig: NextConfig = {
     // CIで型チェックを実行するため、ビルド時はスキップ
     ignoreBuildErrors: true,
   },
-  
-  eslint: {
-    // Biomeを使用しているため、ビルド時のESLintを無効化
-    ignoreDuringBuilds: true,
-  },
 
   images: {
     unoptimized: false, // 画像最適化を有効化（Vercelで推奨）
