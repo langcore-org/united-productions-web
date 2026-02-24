@@ -1,32 +1,28 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { AdminLayout } from "@/components/layout/AdminLayout";
-import { 
-  PROVIDER_CONFIG, 
-  DEFAULT_PROVIDER, 
-  PROJECT_DEFAULT_PROVIDERS 
-} from "@/lib/llm/config";
-import type { LLMProvider } from "@/lib/llm/types";
-import { 
-  Cpu, 
-  Settings, 
-  FileText, 
-  Mic, 
-  Users, 
+import {
+  Activity,
+  CheckCircle,
+  ChevronRight,
+  Cpu,
+  DollarSign,
+  FileText,
+  Mic,
+  ScrollText,
+  Settings,
   Shield,
   Sparkles,
-  CheckCircle,
+  Users,
   XCircle,
-  DollarSign,
-  ChevronRight,
-  Activity,
-  ScrollText,
 } from "lucide-react";
 import Link from "next/link";
-import { STYLES, getProviderBadgeStyle } from "@/lib/admin-styles";
+import { useEffect, useState } from "react";
+import { AdminLayout } from "@/components/layout/AdminLayout";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import { getProviderBadgeStyle, STYLES } from "@/lib/admin-styles";
+import { DEFAULT_PROVIDER, PROJECT_DEFAULT_PROVIDERS, PROVIDER_CONFIG } from "@/lib/llm/config";
+import type { LLMProvider } from "@/lib/llm/types";
 
 // 機能の定義
 const FEATURES = [
@@ -62,10 +58,34 @@ const FEATURES = [
 
 // 管理メニュー定義
 const ADMIN_MENU = [
-  { href: "/admin/users", icon: Users, label: "ユーザー一覧", description: "登録ユーザーの管理", borderColor: "gray" },
-  { href: "/admin/prompts", icon: FileText, label: "プロンプト管理", description: "AIプロンプトの編集", borderColor: "gray" },
-  { href: "/admin/usage", icon: Activity, label: "使用量・コスト", description: "API使用状況の監視", borderColor: "gray" },
-  { href: "/admin/logs", icon: ScrollText, label: "アプリケーションログ", description: "システムログの閲覧", borderColor: "gray" },
+  {
+    href: "/admin/users",
+    icon: Users,
+    label: "ユーザー一覧",
+    description: "登録ユーザーの管理",
+    borderColor: "gray",
+  },
+  {
+    href: "/admin/prompts",
+    icon: FileText,
+    label: "プロンプト管理",
+    description: "AIプロンプトの編集",
+    borderColor: "gray",
+  },
+  {
+    href: "/admin/usage",
+    icon: Activity,
+    label: "使用量・コスト",
+    description: "API使用状況の監視",
+    borderColor: "gray",
+  },
+  {
+    href: "/admin/logs",
+    icon: ScrollText,
+    label: "アプリケーションログ",
+    description: "システムログの閲覧",
+    borderColor: "gray",
+  },
 ];
 
 // プロバイダー情報を取得
@@ -146,8 +166,6 @@ export default function AdminPage() {
                 </div>
               </CardContent>
             </Card>
-
-
           </div>
 
           {/* 機能別モデル設定 */}
@@ -175,11 +193,11 @@ export default function AdminPage() {
                             <span className="text-xs text-gray-400 font-mono">{feature.id}</span>
                           </div>
                           <p className="text-sm text-gray-500 mb-3">{feature.description}</p>
-                          
+
                           {providerInfo ? (
                             <div className="flex items-center gap-2">
                               <span className="text-sm text-gray-600">使用モデル:</span>
-                              <Badge 
+                              <Badge
                                 variant="outline"
                                 className={getProviderBadgeStyle(providerId)}
                               >
@@ -212,9 +230,7 @@ export default function AdminPage() {
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-4">
-                        <div 
-                          className="w-3 h-3 rounded-full bg-gray-400"
-                        />
+                        <div className="w-3 h-3 rounded-full bg-gray-400" />
                         <div>
                           <div className="flex items-center gap-2">
                             <h3 className="font-semibold text-gray-900">{provider.name}</h3>
@@ -233,7 +249,7 @@ export default function AdminPage() {
                           <p className="text-sm text-gray-500">{provider.description}</p>
                         </div>
                       </div>
-                      
+
                       <div className="flex items-center gap-6 text-sm">
                         <div className="text-right">
                           <div className="flex items-center gap-1 text-gray-500">
@@ -251,7 +267,9 @@ export default function AdminPage() {
                         </div>
                         <div className="text-right">
                           <div className="text-gray-500">コンテキスト</div>
-                          <div className="font-medium">{(provider.contextLength / 1000).toFixed(0)}k</div>
+                          <div className="font-medium">
+                            {(provider.contextLength / 1000).toFixed(0)}k
+                          </div>
                         </div>
                       </div>
                     </div>

@@ -1,20 +1,20 @@
 "use client";
 
-import { cn } from "@/lib/utils";
 import {
-  LayoutDashboard,
-  Users,
-  FileText,
   BarChart3,
-  Shield,
   ChevronRight,
-  PanelLeft,
+  FileText,
+  LayoutDashboard,
   LogOut,
+  PanelLeft,
+  Shield,
+  Users,
 } from "lucide-react";
 // import { TeddyIcon } from "@/components/icons/TeddyIcon"; // ロゴは非表示（将来使用予定）
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+import { cn } from "@/lib/utils";
 
 interface AdminSidebarProps {
   className?: string;
@@ -48,7 +48,6 @@ const adminNavItems = [
     label: "ログ閲覧",
     href: "/admin/logs",
   },
-
 ];
 
 export function AdminSidebar({ className, onCollapseChange }: AdminSidebarProps) {
@@ -59,7 +58,7 @@ export function AdminSidebar({ className, onCollapseChange }: AdminSidebarProps)
   // マウント時にlocalStorageから状態を読み込む
   useEffect(() => {
     setIsMounted(true);
-    
+
     try {
       const savedCollapsed = localStorage.getItem("admin-sidebar-collapsed");
       if (savedCollapsed) {
@@ -100,7 +99,7 @@ export function AdminSidebar({ className, onCollapseChange }: AdminSidebarProps)
           "fixed top-0 left-0 z-50 h-screen w-[240px]",
           "flex flex-col",
           "bg-white border-r border-gray-200",
-          className
+          className,
         )}
       />
     );
@@ -114,7 +113,7 @@ export function AdminSidebar({ className, onCollapseChange }: AdminSidebarProps)
         "bg-white border-r border-gray-200",
         "transition-all duration-300 ease-in-out",
         isCollapsed ? "w-[64px]" : "w-[240px]",
-        className
+        className,
       )}
     >
       {/* Header - ロゴ非表示（将来使用予定）
@@ -135,38 +134,35 @@ export function AdminSidebar({ className, onCollapseChange }: AdminSidebarProps)
       */}
 
       {/* Back to User View Link */}
-      <div className={cn(
-        "bg-gray-50 border-b border-gray-200",
-        isCollapsed ? "px-2 py-2" : "px-3 py-2"
-      )}>
+      <div
+        className={cn(
+          "bg-gray-50 border-b border-gray-200",
+          isCollapsed ? "px-2 py-2" : "px-3 py-2",
+        )}
+      >
         <Link
           href="/chat"
           className={cn(
             "flex items-center rounded-lg transition-all duration-200 ease-out group",
-            isCollapsed 
-              ? "w-10 h-10 justify-center p-0" 
-              : "w-full gap-2 px-3 py-2",
-            "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+            isCollapsed ? "w-10 h-10 justify-center p-0" : "w-full gap-2 px-3 py-2",
+            "text-gray-600 hover:text-gray-900 hover:bg-gray-100",
           )}
           title={isCollapsed ? "ユーザー画面へ" : undefined}
         >
-          <ChevronRight className={cn(
-            "w-4 h-4 transition-transform duration-200",
-            isCollapsed ? "rotate-180" : ""
-          )} />
-          {!isCollapsed && (
-            <span className="text-sm">ユーザー画面へ</span>
-          )}
+          <ChevronRight
+            className={cn(
+              "w-4 h-4 transition-transform duration-200",
+              isCollapsed ? "rotate-180" : "",
+            )}
+          />
+          {!isCollapsed && <span className="text-sm">ユーザー画面へ</span>}
         </Link>
       </div>
 
       {/* Navigation */}
       <nav className="flex-1 overflow-hidden flex flex-col min-h-0 bg-white">
         {/* Main Nav Items */}
-        <div className={cn(
-          "py-2 space-y-0.5 flex-shrink-0",
-          isCollapsed ? "px-1.5" : "px-2"
-        )}>
+        <div className={cn("py-2 space-y-0.5 flex-shrink-0", isCollapsed ? "px-1.5" : "px-2")}>
           {adminNavItems.map((item) => {
             const isItemActive = isActive(item.href);
 
@@ -180,7 +176,7 @@ export function AdminSidebar({ className, onCollapseChange }: AdminSidebarProps)
                   isCollapsed ? "w-10 h-10 justify-center p-0 mx-auto" : "gap-3 px-3 py-2",
                   isItemActive
                     ? "bg-amber-50 text-amber-700 border border-amber-200"
-                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-900",
                 )}
                 title={isCollapsed ? item.label : undefined}
               >
@@ -190,16 +186,16 @@ export function AdminSidebar({ className, onCollapseChange }: AdminSidebarProps)
                 {isItemActive && isCollapsed && (
                   <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-4 bg-amber-600 rounded-r-full" />
                 )}
-                <span className={cn(
-                  "flex-shrink-0 transition-transform duration-200",
-                  isItemActive ? "text-amber-700" : "group-hover:scale-110"
-                )}>
+                <span
+                  className={cn(
+                    "flex-shrink-0 transition-transform duration-200",
+                    isItemActive ? "text-amber-700" : "group-hover:scale-110",
+                  )}
+                >
                   {item.icon}
                 </span>
                 {!isCollapsed && (
-                  <span className="text-sm font-medium flex-1 truncate">
-                    {item.label}
-                  </span>
+                  <span className="text-sm font-medium flex-1 truncate">{item.label}</span>
                 )}
               </Link>
             );
@@ -208,25 +204,25 @@ export function AdminSidebar({ className, onCollapseChange }: AdminSidebarProps)
       </nav>
 
       {/* Bottom Items */}
-      <div className={cn(
-        "py-2 space-y-0.5 border-t border-gray-200 flex-shrink-0 bg-white",
-        isCollapsed ? "px-1.5" : "px-2"
-      )}>
+      <div
+        className={cn(
+          "py-2 space-y-0.5 border-t border-gray-200 flex-shrink-0 bg-white",
+          isCollapsed ? "px-1.5" : "px-2",
+        )}
+      >
         <Link
           href="/logout"
           className={cn(
             "flex items-center rounded-xl transition-all duration-200 ease-out group",
             isCollapsed ? "w-10 h-10 justify-center p-0 mx-auto" : "gap-3 px-3 py-2",
-            "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+            "text-gray-600 hover:bg-gray-50 hover:text-gray-900",
           )}
           title={isCollapsed ? "ログアウト" : undefined}
         >
           <span className="flex-shrink-0 transition-transform duration-200 group-hover:scale-110">
             <LogOut className="w-[18px] h-[18px]" />
           </span>
-          {!isCollapsed && (
-            <span className="text-sm font-medium">ログアウト</span>
-          )}
+          {!isCollapsed && <span className="text-sm font-medium">ログアウト</span>}
         </Link>
 
         {/* 展開/縮小ボタン */}
@@ -235,19 +231,19 @@ export function AdminSidebar({ className, onCollapseChange }: AdminSidebarProps)
           className={cn(
             "flex items-center rounded-xl transition-all duration-200 ease-out group",
             isCollapsed ? "w-10 h-10 justify-center p-0 mx-auto" : "gap-3 px-3 py-2",
-            "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+            "text-gray-600 hover:bg-gray-50 hover:text-gray-900",
           )}
           title={isCollapsed ? "サイドバーを展開" : "サイドバーを縮小"}
         >
           <span className="flex-shrink-0 transition-transform duration-200 group-hover:scale-110">
-            <PanelLeft className={cn(
-              "w-[18px] h-[18px] transition-transform duration-200",
-              isCollapsed ? "" : "rotate-180"
-            )} />
+            <PanelLeft
+              className={cn(
+                "w-[18px] h-[18px] transition-transform duration-200",
+                isCollapsed ? "" : "rotate-180",
+              )}
+            />
           </span>
-          {!isCollapsed && (
-            <span className="text-sm font-medium">サイドバーを縮小</span>
-          )}
+          {!isCollapsed && <span className="text-sm font-medium">サイドバーを縮小</span>}
         </button>
       </div>
     </aside>

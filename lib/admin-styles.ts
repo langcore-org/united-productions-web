@@ -1,6 +1,6 @@
 /**
  * 管理画面共通スタイル定数
- * 
+ *
  * アプリ画面と同様のモノトーンカラーパレットを使用
  * 保守性を高めるため、すべての色定義をここに集約
  */
@@ -58,23 +58,23 @@ export const COLORS = {
 export const STYLES = {
   // ヘッダーアイコン
   headerIcon: "w-12 h-12 rounded-xl bg-gray-900 flex items-center justify-center text-white",
-  
+
   // カード
   card: "bg-white border border-gray-200 rounded-xl",
   cardHover: "hover:shadow-md transition-shadow",
-  
+
   // 管理メニューカード
-  menuCard: (borderColor: string = "gray") => 
+  menuCard: (borderColor: string = "gray") =>
     `hover:shadow-md transition-shadow cursor-pointer border-l-4 border-l-${borderColor}-500`,
   menuIcon: "w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center text-gray-600",
-  
+
   // バッジ
   badge: {
     default: "bg-gray-100 text-gray-800",
     outline: "border border-gray-200",
     active: "bg-gray-900 text-white",
   },
-  
+
   // ボタン
   button: {
     primary: "bg-gray-900 text-white hover:bg-gray-800",
@@ -82,24 +82,24 @@ export const STYLES = {
     outline: "border border-gray-200 hover:bg-gray-50",
     danger: "bg-gray-100 text-gray-700 hover:text-red-600 hover:bg-red-50",
   },
-  
+
   // テーブル
   table: {
     header: "border-b border-gray-200 text-sm font-medium text-gray-700",
     row: "border-b border-gray-100 hover:bg-gray-50",
     cell: "py-3 px-4",
   },
-  
+
   // フォーム
   input: "bg-white border border-gray-200 rounded-lg focus:border-gray-400",
-  
+
   // トグル
   toggle: {
     on: "bg-gray-900",
     off: "bg-gray-200",
     thumb: "bg-white",
   },
-  
+
   // アラート
   alert: {
     info: "bg-gray-50 border border-gray-200 text-gray-700",
@@ -107,13 +107,13 @@ export const STYLES = {
     error: "bg-red-50 border border-red-200 text-red-800",
     success: "bg-green-50 border border-green-200 text-green-800",
   },
-  
+
   // ローディング
   spinner: "text-gray-400",
-  
+
   // リンク
   link: "text-gray-600 hover:text-gray-900 hover:underline",
-  
+
   // 区切り線
   divider: "border-gray-200",
 } as const;

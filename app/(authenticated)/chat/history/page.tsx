@@ -1,28 +1,28 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { AppLayout } from "@/components/layout/AppLayout";
 import {
-  Search,
-  Loader2,
-  MessageSquare,
-  Users,
-  Shield,
-  FileText,
-  Lightbulb,
-  Mic,
-  Trash2,
+  ArrowUpDown,
+  Calendar,
   ChevronLeft,
   ChevronRight,
-  Calendar,
-  ArrowUpDown,
+  FileText,
   History,
+  Lightbulb,
+  Loader2,
+  MessageSquare,
+  Mic,
+  Search,
+  Shield,
+  Trash2,
+  Users,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
+import { AppLayout } from "@/components/layout/AppLayout";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 
 interface ChatHistory {
   id: string;
@@ -54,13 +54,13 @@ const FEATURE_FILTERS = [
 
 // 機能名を取得
 function getFeatureLabel(featureId: string): string {
-  const feature = FEATURE_FILTERS.find(f => f.id === featureId);
+  const feature = FEATURE_FILTERS.find((f) => f.id === featureId);
   return feature?.label || featureId;
 }
 
 // 機能アイコンを取得
 function getFeatureIcon(featureId: string) {
-  const feature = FEATURE_FILTERS.find(f => f.id === featureId);
+  const feature = FEATURE_FILTERS.find((f) => f.id === featureId);
   return feature?.icon || MessageSquare;
 }
 
@@ -69,7 +69,7 @@ function getRelativeTime(dateStr: string): string {
   const date = new Date(dateStr);
   const now = new Date();
   const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-  
+
   if (diffInSeconds < 60) return "今";
   if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}分前`;
   if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}時間前`;
@@ -100,23 +100,23 @@ export default function ChatHistoryPage() {
         limit: pagination.limit.toString(),
         offset: pagination.offset.toString(),
       });
-      
+
       const response = await fetch(`/api/chat/history?${params}`);
       if (!response.ok) {
         throw new Error("履歴の取得に失敗しました");
       }
-      
+
       const data = await response.json();
       setHistory(data.history || []);
-      
+
       // ページネーション情報を計算
       const total = data.history?.length || 0;
-      setPagination(prev => ({
+      setPagination((prev) => ({
         ...prev,
         total,
         hasMore: total >= prev.limit,
       }));
-    } catch (err) {
+    } catch (_err) {
       console.error("Failed to fetch history:", err);
       setMessage({ type: "error", text: "履歴の取得に失敗しました" });
     } finally {
@@ -139,18 +139,18 @@ export default function ChatHistoryPage() {
   // 履歴を削除
   const handleDelete = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    
+
     if (!confirm("このチャット履歴を削除しますか？")) return;
-    
+
     try {
       const response = await fetch(`/api/chat/history?id=${id}`, {
         method: "DELETE",
       });
-      
+
       if (!response.ok) {
         throw new Error("削除に失敗しました");
       }
-      
+
       // 削除後にリストを更新
       setHistory((prev) => prev.filter((h) => h.id !== id));
       setMessage({ type: "success", text: "履歴を削除しました" });
@@ -175,8 +175,7 @@ export default function ChatHistoryPage() {
       if (searchQuery) {
         const query = searchQuery.toLowerCase();
         return (
-          item.title.toLowerCase().includes(query) ||
-          item.agentType.toLowerCase().includes(query)
+          item.title.toLowerCase().includes(query) || item.agentType.toLowerCase().includes(query)
         );
       }
       return true;
@@ -205,9 +204,7 @@ export default function ChatHistoryPage() {
               </div>
               <div>
                 <h1 className="text-3xl font-bold text-gray-900">チャット履歴</h1>
-                <p className="text-gray-500">
-                  {filteredHistory.length}件の履歴
-                </p>
+                <p className="text-gray-500">{filteredHistory.length}件の履歴</p>
               </div>
             </div>
           </div>
@@ -215,9 +212,7 @@ export default function ChatHistoryPage() {
           {message && (
             <div
               className={`p-4 rounded-lg ${
-                message.type === "success"
-                  ? "bg-green-50 text-green-800"
-                  : "bg-red-50 text-red-800"
+                message.type === "success" ? "bg-green-50 text-green-800" : "bg-red-50 text-red-800"
               }`}
             >
               {message.text}
@@ -231,9 +226,10 @@ export default function ChatHistoryPage() {
               {FEATURE_FILTERS.map((feature) => {
                 const Icon = feature.icon;
                 const isActive = selectedFeature === feature.id;
-                
+
                 return (
                   <button
+                    type="button"
                     key={feature.id}
                     onClick={() => setSelectedFeature(feature.id)}
                     className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
@@ -280,15 +276,13 @@ export default function ChatHistoryPage() {
             <div className="text-center py-12 text-gray-500">
               <History className="w-12 h-12 mx-auto mb-4 text-gray-300" />
               <p>履歴が見つかりません</p>
-              {searchQuery && (
-                <p className="text-sm mt-2">検索条件を変更してお試しください</p>
-              )}
+              {searchQuery && <p className="text-sm mt-2">検索条件を変更してお試しください</p>}
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-4">
               {filteredHistory.map((item) => {
                 const FeatureIcon = getFeatureIcon(item.featureId);
-                
+
                 return (
                   <Card
                     key={item.id}
@@ -302,13 +296,11 @@ export default function ChatHistoryPage() {
                           <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
                             <FeatureIcon className="w-5 h-5 text-gray-600" />
                           </div>
-                          
+
                           {/* 内容 */}
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-1">
-                              <h3 className="font-semibold text-gray-900 truncate">
-                                {item.title}
-                              </h3>
+                              <h3 className="font-semibold text-gray-900 truncate">{item.title}</h3>
                               <Badge variant="outline" className="text-xs">
                                 {getFeatureLabel(item.featureId)}
                               </Badge>
@@ -322,7 +314,7 @@ export default function ChatHistoryPage() {
                             </div>
                           </div>
                         </div>
-                        
+
                         {/* アクション */}
                         <Button
                           variant="ghost"
