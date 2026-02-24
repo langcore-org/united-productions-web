@@ -220,6 +220,31 @@ export function useChat() {
 
 ---
 
+## 代替案との比較
+
+### Vercel AI SDK vs LangChain
+
+| 項目 | Vercel AI SDK | LangChain ChatXAIResponses |
+|------|---------------|---------------------------|
+| **パッケージ** | `@ai-sdk/xai` | `@langchain/xai` |
+| **バージョン** | 3.0.57 | 1.3.5 |
+| **API** | Responses API | Responses API |
+| **ツール実行** | クライアントサイド（制御可能） | サーバーサイド（自動） |
+| **tool_calls** | ✅ 取得可能 | ❌ 取得不可 |
+| **ツール入力表示** | ✅ `tool-input-delta` | ❌ 不可 |
+| **実行中インジケーター** | ✅ 可能 | ❌ 困難 |
+| **x_search等** | ✅ 使用可能 | ✅ 自動使用 |
+
+### 推奨選択
+
+| 要件 | 推奨 |
+|------|------|
+| ツール実行状況をリアルタイム表示 | **Vercel AI SDK** |
+| シンプルな実装でツール表示不要 | **ChatXAIResponses** |
+| LangChain統合を維持したい | **ChatXAIResponses** |
+
+---
+
 ## 推奨事項
 
 ### ✅ Vercel AI SDKへの移行を推奨
@@ -229,10 +254,23 @@ export function useChat() {
 2. 実装がシンプルで工数が少ない
 3. 公式サポート・メンテナンスが期待できる
 4. 他プロバイダー（Gemini等）追加が容易
+5. **ツール実行状況のリアルタイム表示が可能**
 
 **注意点**:
 - ツール入力内容は `tool-input-delta` で取得
 - API Keyエラーは事前バリデーションで対応
+
+### LangChain ChatXAIResponses も選択肢に
+
+**使うべき場合**:
+- 既存のLangChainコードベースを維持したい
+- ツール実行状況の表示が不要
+- シンプルな実装で十分
+
+**制限**:
+- ツール実行はサーバーサイドで完結（フロントエンドには tool_calls が返らない）
+- ツール入力内容の取得ができない
+- ツール実行中のインジケーター表示が困難
 
 ---
 
@@ -295,9 +333,19 @@ export function useChat() {
 
 ---
 
+## 関連ドキュメント
+
+- [Vercel AI SDK PoC コードスニペット](./vercel-ai-sdk-poc-snippets.md)
+- [LangChain xAI 統合ロードマップ](./langchain-xai-integration-roadmap.md)
+- [LangChain xAI 検証結果](./langchain-xai-verification-result.md)
+- [LangChain ChatXAIResponses 検証](./langchain-xai-chatxai-responses.md)
+
+---
+
 ## 履歴
 
 | 日付 | 内容 |
 |------|------|
 | 2026-02-24 | 初版作成 |
 | 2026-02-24 | バグ修正履歴を追加 |
+| 2026-02-24 | LangChain比較・代替案を追加 |
