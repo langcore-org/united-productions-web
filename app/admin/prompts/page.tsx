@@ -160,6 +160,24 @@ export default function AdminPromptsPage() {
                         </div>
                       </div>
 
+                      {/* プロンプト内容 */}
+                      <div>
+                        <h3 className="font-semibold mb-2">プロンプト内容</h3>
+                        {loadingContent ? (
+                          <div className="flex items-center justify-center py-8">
+                            <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+                          </div>
+                        ) : promptContent ? (
+                          <div className="bg-gray-50 border rounded-lg p-4">
+                            <pre className="text-sm font-mono whitespace-pre-wrap break-words max-h-[300px] overflow-y-auto">
+                              {promptContent.content}
+                            </pre>
+                          </div>
+                        ) : (
+                          <p className="text-gray-500 text-sm">内容を読み込めませんでした</p>
+                        )}
+                      </div>
+
                       <div>
                         <h3 className="font-semibold mb-2">バージョン履歴</h3>
                         {loadingVersions ? (
