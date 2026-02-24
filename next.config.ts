@@ -3,8 +3,13 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   typescript: {
-    // CI環境以外では型エラーをチェック（本番デプロイ時は必ず検証）
-    ignoreBuildErrors: process.env.SKIP_TYPE_CHECK === "true",
+    // CIで型チェックを実行するため、ビルド時はスキップ
+    ignoreBuildErrors: true,
+  },
+  
+  eslint: {
+    // Biomeを使用しているため、ビルド時のESLintを無効化
+    ignoreDuringBuilds: true,
   },
 
   images: {
