@@ -6,6 +6,7 @@
 
 import { Bot, Loader2 } from "lucide-react";
 import type { ContentMessageProps } from "../types";
+import { ToolUsageSummary } from "./ToolUsageSummary";
 
 export function ContentMessage({ content, provider, isComplete, toolUsage, usage }: ContentMessageProps) {
   return (
@@ -50,11 +51,16 @@ export function ContentMessage({ content, provider, isComplete, toolUsage, usage
           )}
         </div>
         
-        {/* Usage Info */}
-        {isComplete && usage && (
-          <div className="mt-2 text-xs text-gray-400">
-            {usage.inputTokens.toLocaleString()} 入力 / {usage.outputTokens.toLocaleString()} 出力
-            {" "}• ${usage.cost.toFixed(6)}
+        {/* Usage Info & Tool Usage Summary */}
+        {isComplete && (usage || toolUsage) && (
+          <div className="mt-2 space-y-1">
+            {usage && (
+              <div className="text-xs text-gray-400">
+                {usage.inputTokens.toLocaleString()} 入力 / {usage.outputTokens.toLocaleString()} 出力
+                {" "}• ${usage.cost.toFixed(6)}
+              </div>
+            )}
+            <ToolUsageSummary toolUsage={toolUsage} />
           </div>
         )}
       </div>

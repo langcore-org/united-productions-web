@@ -12,6 +12,7 @@ import {
   LegacyThinkingMessage,
   ContentMessage,
   ThinkingPlaceholderMessage,
+  ErrorMessage,
 } from "./messages";
 
 export function StreamingSteps({
@@ -25,6 +26,7 @@ export function StreamingSteps({
   usage,
   provider,
   isComplete,
+  error,
 }: StreamingStepsProps) {
   // 重複を除去したツール呼び出し
   const uniqueToolCalls = toolCalls.filter((call, index, self) => 
@@ -95,11 +97,14 @@ export function StreamingSteps({
         <ThinkingPlaceholderMessage provider={provider} />
       )}
 
+      {/* エラーメッセージ */}
+      {error && <ErrorMessage error={error} />}
+
       {/* メインコンテンツ */}
       {(content || (isComplete && !content)) && (
-        <ContentMessage 
-          content={content} 
-          provider={provider} 
+        <ContentMessage
+          content={content}
+          provider={provider}
           isComplete={isComplete}
           toolUsage={toolUsage}
           usage={usage}

@@ -14,21 +14,22 @@ export interface StreamingStepsProps {
   reasoningSteps: ReasoningStepInfo[];
   thinkingSteps: ThinkingStepInfo[];
   isAccepted: boolean;
-  toolUsage: { 
-    web_search_calls?: number; 
-    x_search_calls?: number; 
-    code_interpreter_calls?: number; 
-    file_search_calls?: number; 
-    mcp_calls?: number; 
-    document_search_calls?: number 
+  toolUsage: {
+    web_search_calls?: number;
+    x_search_calls?: number;
+    code_interpreter_calls?: number;
+    file_search_calls?: number;
+    mcp_calls?: number;
+    document_search_calls?: number;
   } | null;
-  usage: { 
-    inputTokens: number; 
-    outputTokens: number; 
-    cost: number 
+  usage: {
+    inputTokens: number;
+    outputTokens: number;
+    cost: number;
   } | null;
   provider: LLMProvider | string;
   isComplete: boolean;
+  error?: string | null;
 }
 
 export interface ToolCallMessageProps {
@@ -60,19 +61,23 @@ export interface ContentMessageProps {
   content: string;
   provider: LLMProvider | string;
   isComplete: boolean;
-  toolUsage: { 
-    web_search_calls?: number; 
-    x_search_calls?: number; 
-    code_interpreter_calls?: number; 
-    file_search_calls?: number; 
-    mcp_calls?: number; 
-    document_search_calls?: number 
+  toolUsage: {
+    web_search_calls?: number;
+    x_search_calls?: number;
+    code_interpreter_calls?: number;
+    file_search_calls?: number;
+    mcp_calls?: number;
+    document_search_calls?: number;
   } | null;
-  usage: { 
-    inputTokens: number; 
-    outputTokens: number; 
-    cost: number 
+  usage: {
+    inputTokens: number;
+    outputTokens: number;
+    cost: number;
   } | null;
+}
+
+export interface ErrorMessageProps {
+  error: string;
 }
 
 export interface ThinkingPlaceholderMessageProps {
