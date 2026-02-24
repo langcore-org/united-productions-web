@@ -117,11 +117,12 @@ export function FeatureChat({
   }, []);
 
   // メッセージ追加時に自動スクロール（ユーザーが手動スクロール中でない場合のみ）
+  // biome-ignore lint/correctness/useExhaustiveDependencies: messages.lengthは意図的な依存（メッセージ追加時にスクロール）
   useEffect(() => {
     if (!isUserScrolling) {
       messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }
-  }, [messages, isUserScrolling]);
+  }, [messages.length, isUserScrolling]);
 
   // ストリーミング完了時にメッセージを保存
   useEffect(() => {
@@ -133,21 +134,26 @@ export function FeatureChat({
         timestamp: new Date(),
         llmProvider: provider,
       };
-      setMessages((prev) => [...prev, assistantMessage]);
+      setMessages((prev) => {
+        const newMessages = [...prev, assistantMessage];
+        saveConversation(newMessages, currentChatId);
+        return newMessages;
+      });
       resetStream();
-      saveConversation([...messages, assistantMessage], currentChatId);
     }
-    // biome-ignore lint/correctness/useExhaustiveDependencies: 意図的に依存配列を制限
-  }, [isComplete, content]);
+  }, [isComplete, content, currentChatId, provider, resetStream, saveConversation]);
 
-  const buildStreamMessages = (userContent: string, history: Message[]) => {
-    const conversationHistory = history.map((m) => ({ role: m.role, content: m.content }));
-    return [
-      { role: "system" as const, content: systemPrompt },
-      ...conversationHistory,
-      { role: "user" as const, content: userContent },
-    ];
-  };
+  const buildStreamMessages = useCallback(
+    (userContent: string, history: Message[]) => {
+      const conversationHistory = history.map((m) => ({ role: m.role, content: m.content }));
+      return [
+        { role: "system" as const, content: systemPrompt },
+        ...conversationHistory,
+        { role: "user" as const, content: userContent },
+      ];
+    },
+    [systemPrompt],
+  );
 
   const handleSend = async () => {
     if (!input.trim() && attachedFiles.length === 0) return;
@@ -227,12 +233,14 @@ export function FeatureChat({
         content: suggestionText.trim(),
         timestamp: new Date(),
       };
-      setMessages((prev) => [...prev, userMessage]);
-      const streamMessages = buildStreamMessages(userMessage.content, messages);
-      await startStream(streamMessages, provider);
+      setMessages((prev) => {
+        const newMessages = [...prev, userMessage];
+        const streamMessages = buildStreamMessages(userMessage.content, newMessages.slice(0, -1));
+        startStream(streamMessages, provider);
+        return newMessages;
+      });
     },
-    // biome-ignore lint/correctness/useExhaustiveDependencies: 意図的に依存配列を制限
-    [isStreaming, messages, provider, startStream],
+    [isStreaming, provider, startStream, buildStreamMessages],
   );
 
   return (
