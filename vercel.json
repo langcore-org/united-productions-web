@@ -2,6 +2,5 @@
   "buildCommand": "next build",
   "installCommand": "npm ci",
   "framework": "nextjs",
-  "regions": ["hnd1"],
-  "ignoreCommand": "git diff --quiet HEAD^ HEAD -- . '!*.md' '!docs/' '!tests/' '!playwright-report/' '!test-results/'"
+  "regions": ["hnd1"]
 }
