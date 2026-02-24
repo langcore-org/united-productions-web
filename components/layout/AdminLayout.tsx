@@ -31,7 +31,7 @@ export function AdminLayout({
       {/* Main Content - サイドバー幅に応じてマージンを調整 */}
       <main
         className={cn(
-          "h-screen overflow-hidden transition-all duration-300 ease-in-out",
+          "min-h-screen transition-all duration-300 ease-in-out",
           isSidebarCollapsed ? "ml-[64px]" : "ml-[240px]"
         )}
       >
