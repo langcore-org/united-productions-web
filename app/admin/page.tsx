@@ -24,7 +24,6 @@ import {
   ChevronRight,
   Activity,
   ScrollText,
-  Bot,
 } from "lucide-react";
 import Link from "next/link";
 import { STYLES, getProviderBadgeStyle } from "@/lib/admin-styles";
@@ -148,25 +147,7 @@ export default function AdminPage() {
               </CardContent>
             </Card>
 
-            {/* Grokツール設定リンク */}
-            <Link href="/admin/grok-tools">
-              <Card className={`${STYLES.cardHover} border-l-4 border-l-gray-500`}>
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className={STYLES.menuIcon}>
-                        <Bot className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-gray-900">Grokツール設定</h3>
-                        <p className="text-sm text-gray-500">Agent Tools APIの設定</p>
-                      </div>
-                    </div>
-                    <ChevronRight className="w-5 h-5 text-gray-400" />
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
+
           </div>
 
           {/* 機能別モデル設定 */}

@@ -127,7 +127,6 @@ export const ADMIN_MENU_ITEMS = [
   { id: "prompts", label: "プロンプト管理", icon: "FileText", borderColor: "gray" },
   { id: "usage", label: "使用量・コスト", icon: "Activity", borderColor: "gray" },
   { id: "logs", label: "アプリケーションログ", icon: "ScrollText", borderColor: "gray" },
-  { id: "grok-tools", label: "Grokツール設定", icon: "Bot", borderColor: "gray" },
 ] as const;
 
 // ============================================
