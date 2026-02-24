@@ -1,8 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { AdminSidebar } from "./AdminSidebar";
-import { useState } from "react";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -14,17 +14,11 @@ interface AdminLayoutProps {
  * - AdminSidebar（展開/縮小可能）
  * - 白背景（ライトモード）
  */
-export function AdminLayout({ 
-  children, 
-  className,
-}: AdminLayoutProps) {
+export function AdminLayout({ children, className }: AdminLayoutProps) {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   return (
-    <div className={cn(
-      "h-screen overflow-hidden bg-white text-gray-900",
-      className
-    )}>
+    <div className={cn("h-screen overflow-hidden bg-white text-gray-900", className)}>
       {/* Sidebar (fixed positioning) */}
       <AdminSidebar onCollapseChange={setIsSidebarCollapsed} />
 
@@ -32,7 +26,7 @@ export function AdminLayout({
       <main
         className={cn(
           "min-h-screen transition-all duration-300 ease-in-out",
-          isSidebarCollapsed ? "ml-[64px]" : "ml-[240px]"
+          isSidebarCollapsed ? "ml-[64px]" : "ml-[240px]",
         )}
       >
         {children}

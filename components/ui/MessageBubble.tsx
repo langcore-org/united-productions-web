@@ -1,10 +1,10 @@
 "use client";
 
+import { Bot, Check, ChevronDown, ChevronUp, Copy, User } from "lucide-react";
 import { memo, useState } from "react";
-import { cn } from "@/lib/utils";
-import { Bot, User, ChevronDown, ChevronUp, Copy, Check } from "lucide-react";
 import { PROVIDER_LABELS } from "@/lib/llm/constants";
 import type { LLMProvider } from "@/lib/llm/types";
+import { cn } from "@/lib/utils";
 import { MarkdownRenderer } from "./MarkdownRenderer";
 
 interface MessageBubbleProps {
@@ -41,16 +41,14 @@ export const MessageBubble = memo(function MessageBubble({
       className={cn(
         "flex gap-3 py-4 px-4 group",
         isUser ? "flex-row-reverse" : "flex-row",
-        className
+        className,
       )}
     >
       {/* Avatar */}
       <div
         className={cn(
           "flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center shadow-lg",
-          isUser 
-            ? "bg-gray-800" 
-            : "bg-gray-100 border border-gray-200"
+          isUser ? "bg-gray-800" : "bg-gray-100 border border-gray-200",
         )}
       >
         {isUser ? (
@@ -63,13 +61,10 @@ export const MessageBubble = memo(function MessageBubble({
       {/* Content */}
       <div className={cn("flex flex-col max-w-[80%]", isUser ? "items-end" : "items-start")}>
         {/* Header - ユーザー名/AI名 */}
-        <div className={cn(
-          "flex items-center gap-2 mb-1.5",
-          isUser ? "flex-row-reverse" : "flex-row"
-        )}>
-          <span className="text-sm font-medium text-gray-700">
-            {isUser ? "あなた" : "Teddy"}
-          </span>
+        <div
+          className={cn("flex items-center gap-2 mb-1.5", isUser ? "flex-row-reverse" : "flex-row")}
+        >
+          <span className="text-sm font-medium text-gray-700">{isUser ? "あなた" : "Teddy"}</span>
           {llmProvider && !isUser && (
             <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 border border-gray-200">
               {PROVIDER_LABELS[llmProvider]}
@@ -83,7 +78,7 @@ export const MessageBubble = memo(function MessageBubble({
             "relative rounded-2xl px-5 py-3.5 shadow-lg",
             isUser
               ? "bg-gray-800 text-white rounded-tr-sm"
-              : "bg-white border border-gray-200 text-gray-800 rounded-tl-sm hover:border-gray-300 transition-colors shadow-sm"
+              : "bg-white border border-gray-200 text-gray-800 rounded-tl-sm hover:border-gray-300 transition-colors shadow-sm",
           )}
         >
           {/* Copy Button (Assistant only) */}
@@ -106,9 +101,7 @@ export const MessageBubble = memo(function MessageBubble({
           {/* Content */}
           {isUser ? (
             // ユーザーメッセージはプレーンテキスト
-            <div className="text-sm leading-relaxed whitespace-pre-wrap">
-              {content}
-            </div>
+            <div className="text-sm leading-relaxed whitespace-pre-wrap">{content}</div>
           ) : (
             // AIメッセージはマークダウン
             <div className="text-sm leading-relaxed pr-6">
@@ -119,10 +112,7 @@ export const MessageBubble = memo(function MessageBubble({
 
         {/* Meta Info - Timestamp */}
         <div
-          className={cn(
-            "flex items-center gap-2 mt-1.5",
-            isUser ? "justify-end" : "justify-start"
-          )}
+          className={cn("flex items-center gap-2 mt-1.5", isUser ? "justify-end" : "justify-start")}
         >
           <span className="text-xs text-gray-500">
             {timestamp.toLocaleTimeString("ja-JP", {

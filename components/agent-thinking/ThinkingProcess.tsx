@@ -1,27 +1,19 @@
 /**
  * ThinkingProcess コンポーネント
- * 
+ *
  * エージェント思考プロセス全体のコンテナ
- * 
+ *
  * @updated 2026-02-20 23:55
  */
 
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
-import { cn } from "@/lib/utils";
 import { Bot, Sparkles } from "lucide-react";
-import type {
-  ThinkingStep,
-  ThinkingEvent,
-  SearchResultItem,
-} from "@/types/agent-thinking";
+import { useCallback, useEffect, useState } from "react";
+import { cn } from "@/lib/utils";
+import type { SearchResultItem, ThinkingEvent, ThinkingStep } from "@/types/agent-thinking";
+import { ComputerPanel, ComputerPanelOverlay, ComputerPanelToggle } from "./ComputerPanel";
 import { ThinkingStepList } from "./ThinkingStep";
-import {
-  ComputerPanel,
-  ComputerPanelToggle,
-  ComputerPanelOverlay,
-} from "./ComputerPanel";
 
 export interface ThinkingProcessProps {
   /** ステップ一覧 */
@@ -38,7 +30,7 @@ export interface ThinkingProcessProps {
 
 /**
  * 思考プロセスコンテナ
- * 
+ *
  * ステップリストとComputerパネルを統合管理
  */
 export function ThinkingProcess({
@@ -50,16 +42,12 @@ export function ThinkingProcess({
 }: ThinkingProcessProps) {
   // ステップ状態
   const [steps, setSteps] = useState<ThinkingStep[]>(initialSteps);
-  const [activeStepId, setActiveStepId] = useState<string | undefined>(
-    initialActiveStepId
-  );
+  const [activeStepId, setActiveStepId] = useState<string | undefined>(initialActiveStepId);
   const [activeSubStepId, setActiveSubStepId] = useState<string | undefined>();
 
   // Computerパネル状態
   const [isComputerOpen, setIsComputerOpen] = useState(false);
-  const [computerSearchResults, setComputerSearchResults] = useState<
-    SearchResultItem[]
-  >([]);
+  const [computerSearchResults, setComputerSearchResults] = useState<SearchResultItem[]>([]);
   const [computerSearchQuery, setComputerSearchQuery] = useState<string>("");
 
   // 初期ステップの同期
@@ -82,10 +70,8 @@ export function ThinkingProcess({
       case "step_update":
         setSteps((prev) =>
           prev.map((step) =>
-            step.id === latestEvent.stepId
-              ? { ...step, ...latestEvent.updates }
-              : step
-          )
+            step.id === latestEvent.stepId ? { ...step, ...latestEvent.updates } : step,
+          ),
         );
         break;
 
@@ -94,8 +80,8 @@ export function ThinkingProcess({
           prev.map((step) =>
             step.id === latestEvent.stepId
               ? { ...step, status: "completed", completedAt: latestEvent.completedAt }
-              : step
-          )
+              : step,
+          ),
         );
         break;
 
@@ -104,8 +90,8 @@ export function ThinkingProcess({
           prev.map((step) =>
             step.id === latestEvent.stepId
               ? { ...step, subSteps: [...step.subSteps, latestEvent.subStep] }
-              : step
-          )
+              : step,
+          ),
         );
         break;
 
@@ -118,21 +104,19 @@ export function ThinkingProcess({
                   subSteps: step.subSteps.map((subStep) =>
                     subStep.id === latestEvent.subStepId
                       ? { ...subStep, ...latestEvent.updates }
-                      : subStep
+                      : subStep,
                   ),
                 }
-              : step
-          )
+              : step,
+          ),
         );
         break;
 
       case "search_results":
         setSteps((prev) =>
           prev.map((step) =>
-            step.id === latestEvent.stepId
-              ? { ...step, searchResults: latestEvent.results }
-              : step
-          )
+            step.id === latestEvent.stepId ? { ...step, searchResults: latestEvent.results } : step,
+          ),
         );
         // Computerパネルにも反映
         setComputerSearchResults(latestEvent.results);
@@ -143,8 +127,8 @@ export function ThinkingProcess({
           prev.map((step) =>
             step.id === latestEvent.stepId
               ? { ...step, content: (step.content || "") + latestEvent.content }
-              : step
-          )
+              : step,
+          ),
         );
         break;
     }
@@ -152,9 +136,7 @@ export function ThinkingProcess({
 
   // アクティブなサブステップを取得
   const activeSubStep = activeStepId
-    ? steps
-        .find((s) => s.id === activeStepId)
-        ?.subSteps.find((ss) => ss.id === activeSubStepId)
+    ? steps.find((s) => s.id === activeStepId)?.subSteps.find((ss) => ss.id === activeSubStepId)
     : undefined;
 
   // サブステップクリック時の処理
@@ -163,23 +145,19 @@ export function ThinkingProcess({
       setActiveSubStepId(subStepId);
 
       // 検索タイプのサブステップの場合、Computerパネルを開く
-      const subStep = steps
-        .flatMap((s) => s.subSteps)
-        .find((ss) => ss.id === subStepId);
+      const subStep = steps.flatMap((s) => s.subSteps).find((ss) => ss.id === subStepId);
 
       if (subStep?.type === "search" && subStep.searchQuery) {
         setComputerSearchQuery(subStep.searchQuery);
         // 関連する検索結果を探す
-        const parentStep = steps.find((s) =>
-          s.subSteps.some((ss) => ss.id === subStepId)
-        );
+        const parentStep = steps.find((s) => s.subSteps.some((ss) => ss.id === subStepId));
         if (parentStep?.searchResults) {
           setComputerSearchResults(parentStep.searchResults);
         }
         setIsComputerOpen(true);
       }
     },
-    [steps]
+    [steps],
   );
 
   // 進行中のステップがあれば自動的にアクティブにする
@@ -212,12 +190,8 @@ export function ThinkingProcess({
 
         {/* タイトル */}
         <div>
-          <h3 className="text-sm font-semibold text-gray-900">
-            Teddy
-          </h3>
-          {isRunning && (
-            <p className="text-xs text-gray-500">思考中...</p>
-          )}
+          <h3 className="text-sm font-semibold text-gray-900">Teddy</h3>
+          {isRunning && <p className="text-xs text-gray-500">思考中...</p>}
           {!isRunning && completedSteps > 0 && (
             <p className="text-xs text-gray-500">
               {completedSteps}/{totalSteps} ステップ完了
@@ -245,10 +219,7 @@ export function ThinkingProcess({
       />
 
       {/* Computerパネル（モバイル - オーバーレイ） */}
-      <ComputerPanelOverlay
-        isOpen={isComputerOpen}
-        onClose={() => setIsComputerOpen(false)}
-      />
+      <ComputerPanelOverlay isOpen={isComputerOpen} onClose={() => setIsComputerOpen(false)} />
 
       {/* Computerパネル（モバイル - 全画面） */}
       <div className="sm:hidden">

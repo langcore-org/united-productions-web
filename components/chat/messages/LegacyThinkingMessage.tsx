@@ -1,13 +1,17 @@
 /**
  * レガシー思考メッセージコンポーネント
- * 
+ *
  * @created 2026-02-22 11:50
  */
 
 import { BrainCircuit, Sparkles } from "lucide-react";
 import type { LegacyThinkingMessageProps } from "../types";
 
-export function LegacyThinkingMessage({ thinking, provider, isComplete }: LegacyThinkingMessageProps) {
+export function LegacyThinkingMessage({
+  thinking,
+  provider,
+  isComplete,
+}: LegacyThinkingMessageProps) {
   return (
     <div className="flex gap-4 px-4 py-2">
       <div className="flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center bg-gradient-to-br from-amber-500 to-amber-700 shadow-lg">

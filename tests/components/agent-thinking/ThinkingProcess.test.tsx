@@ -1,12 +1,15 @@
 /**
  * ThinkingProcess コンポーネントのテスト
- * 
+ *
  * @updated 2026-02-20 23:58
  */
 
-import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { ThinkingProcess, SimpleThinkingProcess } from "@/components/agent-thinking/ThinkingProcess";
+import { describe, expect, it, vi } from "vitest";
+import {
+  SimpleThinkingProcess,
+  ThinkingProcess,
+} from "@/components/agent-thinking/ThinkingProcess";
 import type { ThinkingStep } from "@/types/agent-thinking";
 
 const mockSteps: ThinkingStep[] = [

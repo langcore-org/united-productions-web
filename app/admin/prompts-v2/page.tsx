@@ -5,12 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   Table,
   TableBody,
@@ -143,9 +138,7 @@ export default function AdminPromptsV2Page() {
                     onClick={() => handleRowClick(prompt)}
                   >
                     <TableCell className="font-medium">{prompt.name}</TableCell>
-                    <TableCell className="font-mono text-sm text-gray-500">
-                      {prompt.key}
-                    </TableCell>
+                    <TableCell className="font-mono text-sm text-gray-500">{prompt.key}</TableCell>
                     <TableCell>
                       <Badge variant="secondary">{prompt.category}</Badge>
                     </TableCell>
@@ -162,9 +155,7 @@ export default function AdminPromptsV2Page() {
           <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
             <DialogContent className="max-w-5xl w-[95vw] max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle className="text-2xl">
-                  {selectedPrompt?.name}
-                </DialogTitle>
+                <DialogTitle className="text-2xl">{selectedPrompt?.name}</DialogTitle>
               </DialogHeader>
 
               {selectedPrompt && (
@@ -229,9 +220,7 @@ export default function AdminPromptsV2Page() {
                               <tr
                                 key={v.version}
                                 className={
-                                  v.version === selectedPrompt.currentVersion
-                                    ? "bg-blue-50"
-                                    : ""
+                                  v.version === selectedPrompt.currentVersion ? "bg-blue-50" : ""
                                 }
                               >
                                 <td className="px-4 py-2">

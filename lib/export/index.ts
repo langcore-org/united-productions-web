@@ -4,7 +4,7 @@
  */
 
 export interface ExportOptions {
-  format: 'markdown' | 'csv';
+  format: "markdown" | "csv";
   filename?: string;
   data: string;
 }
@@ -20,10 +20,10 @@ export interface ExportResult {
 function formatDateForFilename(): string {
   const now = new Date();
   const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, '0');
-  const day = String(now.getDate()).padStart(2, '0');
-  const hours = String(now.getHours()).padStart(2, '0');
-  const minutes = String(now.getMinutes()).padStart(2, '0');
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  const hours = String(now.getHours()).padStart(2, "0");
+  const minutes = String(now.getMinutes()).padStart(2, "0");
   return `${year}${month}${day}_${hours}${minutes}`;
 }
 
@@ -33,7 +33,7 @@ function formatDateForFilename(): string {
 function downloadFile(content: string, filename: string, mimeType: string): void {
   const blob = new Blob([content], { type: mimeType });
   const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
+  const link = document.createElement("a");
   link.href = url;
   link.download = filename;
   document.body.appendChild(link);
@@ -49,21 +49,21 @@ function exportToMarkdown(data: string, filename?: string): ExportResult {
   try {
     const defaultFilename = `export_${formatDateForFilename()}.md`;
     const finalFilename = filename || defaultFilename;
-    
+
     // すでにMarkdown形式の場合はそのまま、そうでない場合は整形
     let markdownContent = data;
-    
+
     // データがプレーンテキストの場合、Markdownとして整形
-    if (!data.startsWith('#') && !data.startsWith('-') && !data.startsWith('|')) {
+    if (!data.startsWith("#") && !data.startsWith("-") && !data.startsWith("|")) {
       markdownContent = `# エクスポートデータ\n\n${data}`;
     }
-    
-    downloadFile(markdownContent, finalFilename, 'text/markdown');
+
+    downloadFile(markdownContent, finalFilename, "text/markdown");
     return { success: true };
   } catch (error) {
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Markdownエクスポートに失敗しました' 
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Markdownエクスポートに失敗しました",
     };
   }
 }
@@ -75,50 +75,62 @@ function exportToCSV(data: string, filename?: string): ExportResult {
   try {
     const defaultFilename = `export_${formatDateForFilename()}.csv`;
     const finalFilename = filename || defaultFilename;
-    
+
     let csvContent = data;
-    
+
     // データがJSON配列の場合、CSVに変換
     try {
       const parsed = JSON.parse(data);
       if (Array.isArray(parsed) && parsed.length > 0) {
         const headers = Object.keys(parsed[0]);
-        const rows = parsed.map((row: Record<string, unknown>) => 
-          headers.map(header => {
-            const value = row[header];
-            // カンマや改行を含む場合はダブルクォートで囲む
-            const stringValue = String(value ?? '');
-            if (stringValue.includes(',') || stringValue.includes('\n') || stringValue.includes('"')) {
-              return `"${stringValue.replace(/"/g, '""')}"`;
-            }
-            return stringValue;
-          }).join(',')
+        const rows = parsed.map((row: Record<string, unknown>) =>
+          headers
+            .map((header) => {
+              const value = row[header];
+              // カンマや改行を含む場合はダブルクォートで囲む
+              const stringValue = String(value ?? "");
+              if (
+                stringValue.includes(",") ||
+                stringValue.includes("\n") ||
+                stringValue.includes('"')
+              ) {
+                return `"${stringValue.replace(/"/g, '""')}"`;
+              }
+              return stringValue;
+            })
+            .join(","),
         );
-        csvContent = [headers.join(','), ...rows].join('\n');
+        csvContent = [headers.join(","), ...rows].join("\n");
       }
     } catch {
       // JSONでない場合はそのまま使用
       // タブ区切りやスペース区切りのデータをCSV形式に変換を試みる
-      if (data.includes('\t')) {
-        csvContent = data.split('\n').map(line => 
-          line.split('\t').map(cell => {
-            if (cell.includes(',') || cell.includes('\n') || cell.includes('"')) {
-              return `"${cell.replace(/"/g, '""')}"`;
-            }
-            return cell;
-          }).join(',')
-        ).join('\n');
+      if (data.includes("\t")) {
+        csvContent = data
+          .split("\n")
+          .map((line) =>
+            line
+              .split("\t")
+              .map((cell) => {
+                if (cell.includes(",") || cell.includes("\n") || cell.includes('"')) {
+                  return `"${cell.replace(/"/g, '""')}"`;
+                }
+                return cell;
+              })
+              .join(","),
+          )
+          .join("\n");
       }
     }
-    
+
     // BOMを追加してExcelでの文字化けを防ぐ
-    const bom = '\uFEFF';
-    downloadFile(bom + csvContent, finalFilename, 'text/csv;charset=utf-8');
+    const bom = "\uFEFF";
+    downloadFile(bom + csvContent, finalFilename, "text/csv;charset=utf-8");
     return { success: true };
   } catch (error) {
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'CSVエクスポートに失敗しました' 
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "CSVエクスポートに失敗しました",
     };
   }
 }
@@ -128,18 +140,18 @@ function exportToCSV(data: string, filename?: string): ExportResult {
  */
 export function exportData(options: ExportOptions): ExportResult {
   const { format, filename, data } = options;
-  
+
   if (!data) {
-    return { success: false, error: 'エクスポートするデータが空です' };
+    return { success: false, error: "エクスポートするデータが空です" };
   }
-  
+
   switch (format) {
-    case 'markdown':
+    case "markdown":
       return exportToMarkdown(data, filename);
-    case 'csv':
+    case "csv":
       return exportToCSV(data, filename);
     default:
-      return { success: false, error: 'サポートされていないフォーマットです' };
+      return { success: false, error: "サポートされていないフォーマットです" };
   }
 }
 
@@ -147,53 +159,51 @@ export function exportData(options: ExportOptions): ExportResult {
  * 会話データをMarkdown形式に変換
  */
 export function convertConversationToMarkdown(
-  messages: Array<{ role: 'user' | 'assistant'; content: string; timestamp?: Date }>,
-  title?: string
+  messages: Array<{ role: "user" | "assistant"; content: string; timestamp?: Date }>,
+  title?: string,
 ): string {
   const lines: string[] = [];
-  
+
   if (title) {
     lines.push(`# ${title}`);
-    lines.push('');
+    lines.push("");
   }
-  
+
   messages.forEach((message, index) => {
-    const role = message.role === 'user' ? '👤 ユーザー' : '🤖 Teddy';
-    const timestamp = message.timestamp 
-      ? ` (${message.timestamp.toLocaleString('ja-JP')})` 
-      : '';
-    
+    const role = message.role === "user" ? "👤 ユーザー" : "🤖 Teddy";
+    const timestamp = message.timestamp ? ` (${message.timestamp.toLocaleString("ja-JP")})` : "";
+
     lines.push(`## ${role}${timestamp}`);
-    lines.push('');
+    lines.push("");
     lines.push(message.content);
-    lines.push('');
-    
+    lines.push("");
+
     if (index < messages.length - 1) {
-      lines.push('---');
-      lines.push('');
+      lines.push("---");
+      lines.push("");
     }
   });
-  
-  return lines.join('\n');
+
+  return lines.join("\n");
 }
 
 /**
  * 会話データをCSV形式に変換
  */
 export function convertConversationToCSV(
-  messages: Array<{ role: 'user' | 'assistant'; content: string; timestamp?: Date }>
+  messages: Array<{ role: "user" | "assistant"; content: string; timestamp?: Date }>,
 ): string {
-  const headers = ['role', 'content', 'timestamp'];
-  const rows = messages.map(message => {
-    const timestamp = message.timestamp 
-      ? message.timestamp.toISOString() 
+  const headers = ["role", "content", "timestamp"];
+  const rows = messages.map((message) => {
+    const timestamp = message.timestamp
+      ? message.timestamp.toISOString()
       : new Date().toISOString();
     // 改行をエスケープ
-    const content = message.content.replace(/\n/g, '\\n').replace(/"/g, '""');
+    const content = message.content.replace(/\n/g, "\\n").replace(/"/g, '""');
     return `"${message.role}","${content}","${timestamp}"`;
   });
-  
-  return [headers.join(','), ...rows].join('\n');
+
+  return [headers.join(","), ...rows].join("\n");
 }
 
 export default exportData;

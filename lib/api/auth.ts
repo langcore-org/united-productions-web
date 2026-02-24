@@ -1,12 +1,12 @@
 /**
  * API認証ユーティリティ
- * 
+ *
  * API Routesでの認証チェックを共通化します。
  */
 
-import { getServerSession } from "next-auth/next";
+import { type NextRequest, NextResponse } from "next/server";
 import type { Session } from "next-auth";
-import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth-options";
 
 export interface AuthenticatedUser {
@@ -26,17 +26,15 @@ export interface AuthResult {
  * @param req - NextRequestオブジェクト
  * @returns AuthResultまたはNextResponse（エラー時）
  */
-export async function requireAuth(
-  req: NextRequest
-): Promise<AuthResult | NextResponse> {
+export async function requireAuth(req: NextRequest): Promise<AuthResult | NextResponse> {
   try {
     const session = await getServerSession(authOptions);
-    
+
     const typedSession = session as Session | null;
     if (!typedSession?.user?.id) {
       return NextResponse.json(
         { error: "認証が必要です。ログインしてください。" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -46,10 +44,7 @@ export async function requireAuth(
     };
   } catch (error) {
     console.error("認証チェックエラー:", error);
-    return NextResponse.json(
-      { error: "認証処理中にエラーが発生しました" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "認証処理中にエラーが発生しました" }, { status: 500 });
   }
 }
 
@@ -58,12 +53,10 @@ export async function requireAuth(
  * @param req - NextRequestオブジェクト
  * @returns AuthResultまたはnull（未ログイン時）
  */
-export async function optionalAuth(
-  req: NextRequest
-): Promise<AuthResult | null> {
+export async function optionalAuth(req: NextRequest): Promise<AuthResult | null> {
   try {
     const session = await getServerSession(authOptions);
-    
+
     const typedSession = session as Session | null;
     if (!typedSession?.user?.id) {
       return null;
@@ -87,10 +80,10 @@ export async function optionalAuth(
  */
 export async function requireRole(
   req: NextRequest,
-  allowedRoles: string[]
+  allowedRoles: string[],
 ): Promise<AuthResult | NextResponse> {
   const authResult = await requireAuth(req);
-  
+
   if (authResult instanceof NextResponse) {
     return authResult;
   }
@@ -112,21 +105,19 @@ export async function requireRole(
  * @param req - NextRequestオブジェクト
  * @returns AuthResultまたはNextResponse（エラー時）
  */
-export async function requireAdmin(
-  req: NextRequest
-): Promise<AuthResult | NextResponse> {
+export async function requireAdmin(req: NextRequest): Promise<AuthResult | NextResponse> {
   const authResult = await requireAuth(req);
-  
+
   if (authResult instanceof NextResponse) {
     return authResult;
   }
 
   // 管理者チェック（roleがADMINのユーザーのみ許可）
-  const typedSession = await getServerSession(authOptions) as Session | null;
+  const typedSession = (await getServerSession(authOptions)) as Session | null;
   if (typedSession?.user?.role !== "ADMIN") {
     return NextResponse.json(
       { error: "この操作を行う権限がありません。管理者のみアクセス可能です。" },
-      { status: 403 }
+      { status: 403 },
     );
   }
 

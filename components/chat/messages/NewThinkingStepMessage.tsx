@@ -1,18 +1,18 @@
 /**
  * 新しい思考ステップメッセージコンポーネント
- * 
+ *
  * @created 2026-02-22 11:50
  */
 
-import { Loader2, BrainCircuit, Sparkles, Search, CheckCircle2, Bot } from "lucide-react";
+import { Bot, BrainCircuit, CheckCircle2, Loader2, Search, Sparkles } from "lucide-react";
 import type { NewThinkingStepMessageProps } from "../types";
 
 const typeColors: Record<string, string> = {
-  thinking: 'bg-purple-50 text-purple-900 border-purple-200',
-  search: 'bg-blue-50 text-blue-900 border-blue-200',
-  analysis: 'bg-amber-50 text-amber-900 border-amber-200',
-  synthesis: 'bg-green-50 text-green-900 border-green-200',
-  complete: 'bg-gray-50 text-gray-900 border-gray-200',
+  thinking: "bg-purple-50 text-purple-900 border-purple-200",
+  search: "bg-blue-50 text-blue-900 border-blue-200",
+  analysis: "bg-amber-50 text-amber-900 border-amber-200",
+  synthesis: "bg-green-50 text-green-900 border-green-200",
+  complete: "bg-gray-50 text-gray-900 border-gray-200",
 };
 
 const typeIcons: Record<string, React.ElementType> = {
@@ -28,9 +28,13 @@ export function NewThinkingStepMessage({ step, provider, isActive }: NewThinking
 
   return (
     <div className="flex gap-4 px-4 py-2">
-      <div className={`flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center shadow-lg ${
-        isActive ? 'bg-gradient-to-br from-purple-500 to-purple-700' : 'bg-gradient-to-br from-gray-600 to-gray-800'
-      }`}>
+      <div
+        className={`flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center shadow-lg ${
+          isActive
+            ? "bg-gradient-to-br from-purple-500 to-purple-700"
+            : "bg-gradient-to-br from-gray-600 to-gray-800"
+        }`}
+      >
         {isActive ? (
           <Sparkles className="w-4 h-4 text-white animate-pulse" />
         ) : (
@@ -50,7 +54,9 @@ export function NewThinkingStepMessage({ step, provider, isActive }: NewThinking
             </span>
           )}
         </div>
-        <div className={`relative px-4 py-3 text-sm leading-relaxed rounded-2xl border rounded-tl-sm ${typeColors[step.type] || typeColors.thinking}`}>
+        <div
+          className={`relative px-4 py-3 text-sm leading-relaxed rounded-2xl border rounded-tl-sm ${typeColors[step.type] || typeColors.thinking}`}
+        >
           <div className="flex items-start gap-2">
             <span className="flex-shrink-0 w-5 h-5 rounded-full bg-white/50 flex items-center justify-center text-xs font-medium">
               {step.step}

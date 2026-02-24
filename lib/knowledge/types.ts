@@ -92,7 +92,7 @@ export interface ProgramInfo {
   timeSlot?: string;
   /** 公式HP URL */
   officialUrl?: string;
-  
+
   /** MC/メイン出演者 */
   cast: string;
   /** レギュラー出演者（詳細） */
@@ -101,7 +101,7 @@ export interface ProgramInfo {
   narrator?: string;
   /** 進行アナウンサー */
   announcer?: string;
-  
+
   /** スタッフ */
   staff?: StaffInfo[];
   /** 総合演出 */
@@ -110,7 +110,7 @@ export interface ProgramInfo {
   producers?: string[];
   /** ディレクター */
   directors?: string[];
-  
+
   /** 番組内容（概要） */
   description: string;
   /** 番組コンセプト */
@@ -121,7 +121,7 @@ export interface ProgramInfo {
   corners?: CornerInfo[];
   /** 特徴的なルール・形式 */
   format?: string;
-  
+
   /** 開始年月日 */
   startDate?: string;
   /** 開始時期（テキスト） */
@@ -132,14 +132,14 @@ export interface ProgramInfo {
   totalEpisodes?: string;
   /** 放送歴 */
   broadcastHistory?: string;
-  
+
   /** 視聴率情報 */
   ratings?: RatingInfo[];
   /** 受賞歴 */
   awards?: AwardInfo[];
   /** 実績・記録 */
   achievements?: string[];
-  
+
   /** SNS・Web情報 */
   social?: SocialInfo[];
   /** YouTubeチャンネル */
@@ -150,12 +150,12 @@ export interface ProgramInfo {
   instagram?: string;
   /** TikTok */
   tiktok?: string;
-  
+
   /** 提供・スポンサー */
   sponsors?: SponsorInfo[];
   /** 制作協力 */
   productionCooperation?: string[];
-  
+
   /** 特記事項 */
   notes?: string;
   /** 関連番組 */
@@ -164,7 +164,7 @@ export interface ProgramInfo {
   spinoffs?: string[];
   /** 過去のSP */
   pastSpecials?: string[];
-  
+
   /** キーワード・タグ */
   tags?: string[];
   /** ジャンル */

@@ -1,13 +1,13 @@
 /**
  * Admin Users API
- * 
+ *
  * GET /api/admin/users - ユーザー一覧取得
  * PATCH /api/admin/users/:id/role - ユーザー権限更新
  */
 
-import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { type NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/api/auth";
+import { prisma } from "@/lib/prisma";
 
 /**
  * GET /api/admin/users
@@ -72,10 +72,7 @@ export async function GET(request: NextRequest) {
             meetingNotes: user._count.meetingNotes,
             transcripts: user._count.transcripts,
             researchChats: user._count.researchChats,
-            total:
-              user._count.meetingNotes +
-              user._count.transcripts +
-              user._count.researchChats,
+            total: user._count.meetingNotes + user._count.transcripts + user._count.researchChats,
           },
         })),
         pagination: {
@@ -88,9 +85,6 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error("Failed to fetch users:", error);
-    return NextResponse.json(
-      { success: false, error: "Failed to fetch users" },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, error: "Failed to fetch users" }, { status: 500 });
   }
 }

@@ -1,13 +1,18 @@
 /**
  * 思考ステップメッセージコンポーネント（レガシー）
- * 
+ *
  * @created 2026-02-22 11:50
  */
 
 import { BrainCircuit, Sparkles } from "lucide-react";
 import type { ThinkingStepMessageProps } from "../types";
 
-export function ThinkingStepMessage({ step, provider, isActive, stepNumber }: ThinkingStepMessageProps) {
+export function ThinkingStepMessage({
+  step,
+  provider,
+  isActive,
+  stepNumber,
+}: ThinkingStepMessageProps) {
   return (
     <div className="flex gap-4 px-4 py-2">
       <div className="flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center bg-gradient-to-br from-purple-500 to-purple-700 shadow-lg">

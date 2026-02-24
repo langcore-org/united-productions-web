@@ -9,6 +9,7 @@ import {
   PanelLeft,
   Shield,
   Users,
+  Tv,
 } from "lucide-react";
 // import { TeddyIcon } from "@/components/icons/TeddyIcon"; // ロゴは非表示（将来使用予定）
 import Link from "next/link";
@@ -32,6 +33,11 @@ const adminNavItems = [
     icon: <Users className="w-[18px] h-[18px]" />,
     label: "ユーザー管理",
     href: "/admin/users",
+  },
+  {
+    icon: <Tv className="w-[18px] h-[18px]" />,
+    label: "番組情報管理",
+    href: "/admin/programs",
   },
   {
     icon: <FileText className="w-[18px] h-[18px]" />,

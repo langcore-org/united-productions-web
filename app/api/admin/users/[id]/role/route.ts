@@ -1,13 +1,13 @@
 /**
  * Admin User Role API
- * 
+ *
  * PATCH /api/admin/users/:id/role - ユーザー権限更新
  */
 
-import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { requireAuth } from "@/lib/api/auth";
+import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { requireAuth } from "@/lib/api/auth";
+import { prisma } from "@/lib/prisma";
 
 const updateRoleSchema = z.object({
   role: z.enum(["ADMIN", "USER"]),
@@ -17,10 +17,7 @@ const updateRoleSchema = z.object({
  * PATCH /api/admin/users/:id/role
  * ユーザーの権限を更新
  */
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   // 認証チェック（ログイン済みユーザー）
   const authResult = await requireAuth(request);
   if (authResult instanceof NextResponse) {
@@ -35,10 +32,7 @@ export async function PATCH(
     const validationResult = updateRoleSchema.safeParse(body);
 
     if (!validationResult.success) {
-      return NextResponse.json(
-        { success: false, error: "Invalid request body" },
-        { status: 400 }
-      );
+      return NextResponse.json({ success: false, error: "Invalid request body" }, { status: 400 });
     }
 
     const { role } = validationResult.data;
@@ -52,7 +46,7 @@ export async function PATCH(
     if (!user) {
       return NextResponse.json(
         { success: false, error: "ユーザーが見つかりません" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -76,7 +70,7 @@ export async function PATCH(
     console.error("Failed to update user role:", error);
     return NextResponse.json(
       { success: false, error: "Failed to update user role" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
