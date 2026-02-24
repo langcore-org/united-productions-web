@@ -121,9 +121,9 @@ export async function requireAdmin(
     return authResult;
   }
 
-  // 管理者チェック（roleがadminのユーザーのみ許可）
+  // 管理者チェック（roleがADMINのユーザーのみ許可）
   const typedSession = await getServerSession(authOptions) as Session | null;
-  if (typedSession?.user?.role !== "admin") {
+  if (typedSession?.user?.role !== "ADMIN") {
     return NextResponse.json(
       { error: "この操作を行う権限がありません。管理者のみアクセス可能です。" },
       { status: 403 }
