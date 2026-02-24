@@ -2,7 +2,7 @@
 
 > **LLMストリーミング時のイベント定義とデータフロー**
 > 
-> **最終更新**: 2026-02-22 11:25
+> **最終更新**: 2026-02-23 22:00
 
 ---
 
@@ -179,5 +179,6 @@ class StreamingCallbackHandler extends BaseCallbackHandler {
 - `lib/llm/langchain/agents/streaming.ts` - ストリーミングAgent実装
 - `lib/llm/langchain/callbacks/streaming.ts` - カスタムコールバック
 - `app/api/llm/stream/route.ts` - APIエンドポイント
-- `components/ui/StreamingMessage.tsx` - フック実装
-- `components/ui/FeatureChat.tsx` - UI表示
+- `hooks/useLLMStream/` - ストリーミングフック
+- `components/chat/StreamingSteps.tsx` - ストリーミングUI
+- `components/chat/FeatureChat.tsx` - チャットUI

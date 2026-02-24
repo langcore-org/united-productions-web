@@ -2,7 +2,7 @@
 
 > **現在のコードベースにおけるLangChainの使用状況**
 >
-> **最終更新**: 2026-02-23 23:05
+> **最終更新**: 2026-02-23 22:00
 
 ---
 
@@ -216,11 +216,19 @@ LangChainを使用せず、自前で実装している機能:
 | `lib/llm/langchain/rag/index.ts` | 未使用（フロントエンドから呼び出しなし） |
 | `lib/llm/langchain/rag/simple.ts` | 上記と重複 |
 | `app/api/llm/rag/route.ts` | 未使用APIエンドポイント |
+| `components/chat/AgenticResponse.tsx` | `StreamingSteps.tsx`で代替 |
+| `components/chat/ProcessingFlow.tsx` | `StreamingSteps.tsx`で代替 |
+| `components/chat/ReasoningSteps.tsx` | `StreamingSteps.tsx`で代替 |
+| `components/chat/ToolCallIndicator.tsx` | `StreamingSteps.tsx`で代替 |
+| `components/chat/ChatMessage.tsx` | 未使用 |
+| `components/chat/EmptyState.tsx` | `components/ui/EmptyState.tsx`を直接使用 |
+| `components/ui/StreamingMessage.tsx` | `StreamingSteps.tsx`で代替 |
 
 **削除背景**:
 - RAG機能は実装されていたが、フロントエンドから呼び出されていなかった
 - Grokの2Mコンテキストとツール機能（collections_search）で代替可能
 - 自前のTextSplitter、VectorStore（コサイン類似度実装）も未使用のため削除
+- チャットコンポーネントは`StreamingSteps.tsx`に統合
 
 ---
 
@@ -453,6 +461,44 @@ const agent = createReactAgent({ llm: model, tools });
 
 ---
 
+## コンポーネント統合（2026-02-23）
+
+### 削除したコンポーネント
+
+| コンポーネント | 機能 | 統合先 |
+|-------------|------|--------|
+| `AgenticResponse.tsx` | エージェント応答表示 | `StreamingSteps.tsx` |
+| `ProcessingFlow.tsx` | 処理フロー表示 | `StreamingSteps.tsx` |
+| `ReasoningSteps.tsx` | 思考ステップ表示 | `StreamingSteps.tsx` |
+| `ToolCallIndicator.tsx` | ツール呼び出し表示 | `StreamingSteps.tsx` |
+| `ChatMessage.tsx` | チャットメッセージ | 未使用のため削除 |
+| `EmptyState.tsx` | 空状態表示 | `components/ui/EmptyState.tsx`を直接使用 |
+| `StreamingMessage.tsx` | ストリーミングメッセージ | `StreamingSteps.tsx` |
+
+### 新規作成したコンポーネント
+
+| コンポーネント | 機能 | 元の実装 |
+|-------------|------|---------|
+| `ToolUsageSummary.tsx` | ツール使用回数サマリー | `AgenticResponse.tsx`から移植 |
+| `ErrorMessage.tsx` | エラーメッセージ表示 | `AgenticResponse.tsx`から移植 |
+
+### 統合後のアーキテクチャ
+
+```
+FeatureChat.tsx
+└── StreamingSteps.tsx
+    ├── ThinkingPlaceholderMessage
+    ├── ToolCallMessage
+    ├── NewThinkingStepMessage
+    ├── ThinkingStepMessage（レガシー）
+    ├── LegacyThinkingMessage
+    ├── ErrorMessage（新規）
+    └── ContentMessage
+        └── ToolUsageSummary（新規）
+```
+
+---
+
 ## 今後の検討事項
 
 | 機能 | 優先度 | 検討内容 |
@@ -468,5 +514,6 @@ const agent = createReactAgent({ llm: model, tools });
 
 - [llm-integration-overview.md](./llm-integration-overview.md) - LLM統合概要
 - [llm-integration-patterns.md](./llm-integration-patterns.md) - 詳細実装パターン
+- [streaming-events.md](./streaming-events.md) - ストリーミングイベント仕様
 - `lib/llm/` - LLMクライアント実装
 - `hooks/use-llm.ts` - LLM通信フック
