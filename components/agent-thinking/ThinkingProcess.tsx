@@ -213,7 +213,7 @@ export function ThinkingProcess({
         {/* タイトル */}
         <div>
           <h3 className="text-sm font-semibold text-gray-900">
-            AI Assistant
+            Teddy
           </h3>
           {isRunning && (
             <p className="text-xs text-gray-500">思考中...</p>

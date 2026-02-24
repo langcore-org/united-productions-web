@@ -68,7 +68,7 @@ export const MessageBubble = memo(function MessageBubble({
           isUser ? "flex-row-reverse" : "flex-row"
         )}>
           <span className="text-sm font-medium text-gray-700">
-            {isUser ? "あなた" : "AI Assistant"}
+            {isUser ? "あなた" : "Teddy"}
           </span>
           {llmProvider && !isUser && (
             <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 border border-gray-200">

@@ -49,10 +49,10 @@ describe("ThinkingProcess", () => {
     expect(screen.getByText("分析中...")).toBeInTheDocument();
   });
 
-  it("should show AI Assistant header", () => {
+  it("should show Teddy header", () => {
     render(<ThinkingProcess steps={mockSteps} />);
 
-    expect(screen.getByText("AI Assistant")).toBeInTheDocument();
+    expect(screen.getByText("Teddy")).toBeInTheDocument();
   });
 
   it("should show running status", () => {
@@ -71,7 +71,7 @@ describe("ThinkingProcess", () => {
   it("should render with empty steps", () => {
     render(<ThinkingProcess steps={[]} />);
 
-    expect(screen.getByText("AI Assistant")).toBeInTheDocument();
+    expect(screen.getByText("Teddy")).toBeInTheDocument();
   });
 
   it("should auto-activate running step", () => {

@@ -19,7 +19,7 @@ export function ContentMessage({ content, provider, isComplete, usage }: Content
       </div>
       <div className="flex-1 max-w-[85%] items-start">
         <div className="flex items-center gap-2 mb-1.5">
-          <span className="text-sm font-medium text-gray-600">AI Assistant</span>
+          <span className="text-sm font-medium text-gray-600">Teddy</span>
           <span className="text-[10px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 border border-gray-200">
             {provider}
           </span>

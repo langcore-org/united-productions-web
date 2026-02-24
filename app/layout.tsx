@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Teddy - AI Assistant",
+  title: "Teddy - Teddy",
   description: "Teddy - あなたのAIアシスタント",
 };
 

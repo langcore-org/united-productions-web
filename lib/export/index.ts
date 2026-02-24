@@ -158,7 +158,7 @@ export function convertConversationToMarkdown(
   }
   
   messages.forEach((message, index) => {
-    const role = message.role === 'user' ? '👤 ユーザー' : '🤖 AI Assistant';
+    const role = message.role === 'user' ? '👤 ユーザー' : '🤖 Teddy';
     const timestamp = message.timestamp 
       ? ` (${message.timestamp.toLocaleString('ja-JP')})` 
       : '';
