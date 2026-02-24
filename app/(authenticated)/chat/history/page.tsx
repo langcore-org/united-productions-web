@@ -160,8 +160,8 @@ export default function ChatHistoryPage() {
   };
 
   // チャットを開く
-  const handleOpenChat = (featureId: string) => {
-    router.push(`/chat?agent=${featureId}`);
+  const handleOpenChat = (featureId: string, chatId: string) => {
+    router.push(`/chat?agent=${featureId}&chatId=${chatId}`);
   };
 
   // フィルタリングとソート
@@ -287,7 +287,7 @@ export default function ChatHistoryPage() {
                   <Card
                     key={item.id}
                     className="cursor-pointer hover:shadow-md transition-shadow"
-                    onClick={() => handleOpenChat(item.featureId)}
+                    onClick={() => handleOpenChat(item.featureId, item.id)}
                   >
                     <CardContent className="p-4">
                       <div className="flex items-start justify-between">
