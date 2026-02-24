@@ -2,7 +2,7 @@
  * United Productions レギュラー番組データ（詳細版・データ部分）
  */
 
-import type { ProgramInfo, CompanyInfo } from "./types";
+import type { CompanyInfo, ProgramInfo } from "./types";
 
 export const companyInfoDetailed: CompanyInfo = {
   name: "株式会社UNITED PRODUCTIONS（ユナイテッドプロダクションズ）",
@@ -48,12 +48,21 @@ export const programMatsuko: ProgramInfo = {
     { role: "総合演出", name: "不明", affiliation: "TBS" },
     { role: "プロデューサー", name: "不明", affiliation: "TBS" },
   ],
-  description: "ゲスト自ら得意ジャンルやハマっているものを企画として持ち込み、マツコ・デラックスとサシトークで繰り広げるバラエティ番組",
+  description:
+    "ゲスト自ら得意ジャンルやハマっているものを企画として持ち込み、マツコ・デラックスとサシトークで繰り広げるバラエティ番組",
   concept: "「マニアックな世界」をマツコが体験・学ぶ",
   targetAudience: "20代〜50代、バラエティ好き、マニアックな趣味を持つ層",
   corners: [
-    { name: "マツコの知らない世界", description: "ゲストがマツコに自慢の趣味や知識をプレゼン", popularity: "high" },
-    { name: "マツコ、初体験", description: "実際に現場に出向き体験するロケコーナー", popularity: "high" },
+    {
+      name: "マツコの知らない世界",
+      description: "ゲストがマツコに自慢の趣味や知識をプレゼン",
+      popularity: "high",
+    },
+    {
+      name: "マツコ、初体験",
+      description: "実際に現場に出向き体験するロケコーナー",
+      popularity: "high",
+    },
     { name: "マツコの疑問", description: "視聴者からの質問にマツコが答える", popularity: "medium" },
   ],
   format: "スタジオ収録（マツコとゲストの2ショット）+ ロケVTR",
@@ -82,7 +91,8 @@ export const programMatsuko: ProgramInfo = {
   twitter: "@tbsmatsukosekai",
   sponsors: [{ name: "複数社提供", slot: "60秒提供" }],
   productionCooperation: ["TBSテレビ", "UNITED PRODUCTIONS"],
-  notes: "TBSの看板バラエティ番組。様々なジャンルのマニアが登場し、マツコにプレゼンする形式。マツコの鋭いツッコミと独特な感性が人気。",
+  notes:
+    "TBSの看板バラエティ番組。様々なジャンルのマニアが登場し、マツコにプレゼンする形式。マツコの鋭いツッコミと独特な感性が人気。",
   relatedPrograms: ["マツコ会議", "マツコと有吉の怒り新党（過去）"],
   spinoffs: [
     "『マツコの知らない世界』書籍シリーズ（幻冬舎）",
@@ -111,11 +121,16 @@ export const programShikujiri: ProgramInfo = {
     { role: "総合演出", name: "不明", affiliation: "テレビ朝日" },
     { role: "プロデューサー", name: "不明", affiliation: "テレビ朝日" },
   ],
-  description: "有名人が自身の失敗談・後悔を「授業」として披露し、視聴者に教訓を伝えるバラエティ番組",
+  description:
+    "有名人が自身の失敗談・後悔を「授業」として披露し、視聴者に教訓を伝えるバラエティ番組",
   concept: "「失敗から学ぶ」人生の授業",
   targetAudience: "10代〜30代、若年層",
   corners: [
-    { name: "しくじり授業", description: "ゲストが自分の失敗談を授業形式で披露", popularity: "high" },
+    {
+      name: "しくじり授業",
+      description: "ゲストが自分の失敗談を授業形式で披露",
+      popularity: "high",
+    },
     { name: "黒板コメント", description: "生徒役の芸人がツッコミを入れる", popularity: "medium" },
     { name: "テスト", description: "視聴者参加型のクイズコーナー", popularity: "medium" },
   ],
@@ -138,7 +153,8 @@ export const programShikujiri: ProgramInfo = {
   ],
   sponsors: [{ name: "複数社提供", slot: "30秒提供" }],
   productionCooperation: ["テレビ朝日", "UNITED PRODUCTIONS"],
-  notes: "「しくじり」という言葉を定着させた人気番組。ABEMAでも毎月1〜3週金曜21:30〜配信。失敗談を笑いに変えるポジティブな番組。",
+  notes:
+    "「しくじり」という言葉を定着させた人気番組。ABEMAでも毎月1〜3週金曜21:30〜配信。失敗談を笑いに変えるポジティブな番組。",
   relatedPrograms: ["失敗学", "失敗の本質"],
   spinoffs: ["『しくじり先生』書籍シリーズ", "『しくじり先生』DVD"],
   pastSpecials: ["年末SP", "新春SP"],
@@ -174,7 +190,8 @@ export const programKaneo: ProgramInfo = {
   ],
   chiefDirector: "林博史（UNITED PRODUCTIONS所属）",
   producers: ["大橋豪（UNITED PRODUCTIONS）", "高木大輔（UNITED PRODUCTIONS）"],
-  description: "身近なものの「お金の秘密」を徹底調査。商品の値段の仕組みや裏側を、有吉弘行とカネオくんが楽しく解説する経済バラエティ",
+  description:
+    "身近なものの「お金の秘密」を徹底調査。商品の値段の仕組みや裏側を、有吉弘行とカネオくんが楽しく解説する経済バラエティ",
   concept: "「お金の流れ」を可視化し、経済を身近に感じる",
   targetAudience: "ファミリー層、経済に興味がある層",
   corners: [
@@ -201,7 +218,8 @@ export const programKaneo: ProgramInfo = {
   ],
   sponsors: [{ name: "NHK受信料", slot: "公共放送" }],
   productionCooperation: ["NHK", "UNITED PRODUCTIONS"],
-  notes: "NHKで珍しいバラエティ色の強い番組。カネオくん人形が人気で、グッズも販売されている。UNITED PRODUCTIONSの林博史が総合演出を務める。",
+  notes:
+    "NHKで珍しいバラエティ色の強い番組。カネオくん人形が人気で、グッズも販売されている。UNITED PRODUCTIONSの林博史が総合演出を務める。",
   relatedPrograms: ["有吉弘行のダレトク!?", "有吉の壁"],
   spinoffs: ["カネオくんぬいぐるみ", "『カネオくんのお金の教室』書籍"],
   pastSpecials: ["年末年始SP", "春の新生活SP", "お盆SP"],
@@ -226,7 +244,8 @@ export const programAchikochi: ProgramInfo = {
     { role: "総合演出", name: "不明", affiliation: "テレビ東京" },
     { role: "プロデューサー", name: "不明", affiliation: "テレビ東京" },
   ],
-  description: "飲食店を模したスタジオで、オードリーがゲストとトークを展開。大将（春日）と常連（若林）という設定で繰り広げられる深夜トークバラエティ",
+  description:
+    "飲食店を模したスタジオで、オードリーがゲストとトークを展開。大将（春日）と常連（若林）という設定で繰り広げられる深夜トークバラエティ",
   concept: "「気軽な飲み屋」のような空間で本音トーク",
   targetAudience: "20代〜40代、お笑い好き",
   corners: [
@@ -254,7 +273,8 @@ export const programAchikochi: ProgramInfo = {
   twitter: "@achikochi_tv",
   sponsors: [{ name: "複数社提供", slot: "30秒提供" }],
   productionCooperation: ["テレビ東京", "UNITED PRODUCTIONS"],
-  notes: "オードリーの冠番組。330回以上放送中の長寿番組。若林不在で春日が進行を務める回もあり、330回目で初めて春日が「大将席」に座った。",
+  notes:
+    "オードリーの冠番組。330回以上放送中の長寿番組。若林不在で春日が進行を務める回もあり、330回目で初めて春日が「大将席」に座った。",
   relatedPrograms: ["オードリーのNFLクラブ", "オードリーさん、ぜひ会ってほしい人がいるんです"],
   spinoffs: [],
   pastSpecials: ["年末SP", "春のSP"],
@@ -279,7 +299,8 @@ export const programKamaigachi: ProgramInfo = {
     { role: "総合演出", name: "不明", affiliation: "テレビ朝日" },
     { role: "プロデューサー", name: "不明", affiliation: "テレビ朝日" },
   ],
-  description: "かまいたちが「ガチ」で様々なことに挑戦するバラエティ。演技・ロケ・ゲームなど多岐にわたる企画で、二人の本気を見せる",
+  description:
+    "かまいたちが「ガチ」で様々なことに挑戦するバラエティ。演技・ロケ・ゲームなど多岐にわたる企画で、二人の本気を見せる",
   concept: "「ガチ」で挑戦する姿を見せる",
   targetAudience: "10代〜30代、お笑い好き",
   corners: [
@@ -295,17 +316,15 @@ export const programKamaigachi: ProgramInfo = {
   broadcastHistory: "2022年4月開始→現在も継続中",
   ratings: [{ period: "2024年", average: "2-3%", note: "深夜帯で好調" }],
   awards: [],
-  achievements: [
-    "かまいたちの関東初冠レギュラー番組",
-    "「ガチ」シリーズの先駆け",
-  ],
+  achievements: ["かまいたちの関東初冠レギュラー番組", "「ガチ」シリーズの先駆け"],
   social: [
     { platform: "TVer", url: "見逃し配信", followers: "" },
     { platform: "ABEMA", url: "配信", followers: "" },
   ],
   sponsors: [{ name: "複数社提供", slot: "30秒提供" }],
   productionCooperation: ["テレビ朝日", "UNITED PRODUCTIONS"],
-  notes: "かまいたちの関東初冠レギュラー番組。濱家の「タブー」扱いや、山内の演技力が話題になることが多い。",
+  notes:
+    "かまいたちの関東初冠レギュラー番組。濱家の「タブー」扱いや、山内の演技力が話題になることが多い。",
   relatedPrograms: ["千鳥の鬼レンチャン（かまいたちも出演）"],
   spinoffs: [],
   pastSpecials: ["年末SP"],
@@ -320,7 +339,9 @@ export const programOnirenchan: ProgramInfo = {
   name: "千鳥の鬼レンチャン",
   station: "フジテレビ系列",
   schedule: "毎週日曜 19:00〜20:54（2025年4月から2時間番組に拡大）",
-  scheduleDetail: [{ day: "日曜", startTime: "19:00", endTime: "20:54", note: "2025年4月から2時間拡大" }],
+  scheduleDetail: [
+    { day: "日曜", startTime: "19:00", endTime: "20:54", note: "2025年4月から2時間拡大" },
+  ],
   timeSlot: "日曜プライム",
   officialUrl: "https://www.fujitv.co.jp/oniren/",
   cast: "千鳥（大悟・ノブ）",
@@ -334,7 +355,8 @@ export const programOnirenchan: ProgramInfo = {
     { role: "総合演出", name: "不明", affiliation: "フジテレビ" },
     { role: "プロデューサー", name: "不明", affiliation: "フジテレビ" },
   ],
-  description: "「サビだけカラオケ」などの人気企画で芸能人が挑戦。1音も外さずに10曲歌えるかなど、過酷なゲームに挑むバラエティ",
+  description:
+    "「サビだけカラオケ」などの人気企画で芸能人が挑戦。1音も外さずに10曲歌えるかなど、過酷なゲームに挑むバラエティ",
   concept: "「鬼のように厳しい」チャレンジ企画",
   targetAudience: "ファミリー層、幅広い年齢層",
   corners: [
@@ -368,7 +390,8 @@ export const programOnirenchan: ProgramInfo = {
   twitter: "@oni_renchan",
   sponsors: [{ name: "複数社提供", slot: "60秒提供" }],
   productionCooperation: ["フジテレビ", "UNITED PRODUCTIONS"],
-  notes: "2025年4月から放送時間拡大（1時間→2時間）。フジテレビの看板バラエティ。千鳥とかまいたちの掛け合いが人気。",
+  notes:
+    "2025年4月から放送時間拡大（1時間→2時間）。フジテレビの看板バラエティ。千鳥とかまいたちの掛け合いが人気。",
   relatedPrograms: ["千鳥のクセスゴ!", "千鳥の大吾・ノブ 単独ライブ"],
   spinoffs: ["『鬼レンチャン』関連グッズ", "『サビだけカラオケ』アプリ"],
   pastSpecials: [
@@ -402,7 +425,8 @@ export const programManiasan: ProgramInfo = {
     { role: "プロデューサー", name: "不明", affiliation: "TBS" },
   ],
   chiefDirector: "林博史（UNITED PRODUCTIONS所属）",
-  description: "様々なジャンルの熱狂的なマニアを発掘し、行き過ぎた愛を語ってもらうドキュメントバラエティ",
+  description:
+    "様々なジャンルの熱狂的なマニアを発掘し、行き過ぎた愛を語ってもらうドキュメントバラエティ",
   concept: "「マニアックな愛」を深掘りする",
   targetAudience: "20代〜50代、マニアックな趣味を持つ層",
   corners: [
@@ -428,7 +452,8 @@ export const programManiasan: ProgramInfo = {
   ],
   sponsors: [{ name: "複数社提供", slot: "60秒提供" }],
   productionCooperation: ["TBS", "UNITED PRODUCTIONS"],
-  notes: "旧タイトル：「〜通販マニアさん」。ニトリマニア、家事マニアなど、身近なジャンルのマニアが登場。林博史が総合演出。",
+  notes:
+    "旧タイトル：「〜通販マニアさん」。ニトリマニア、家事マニアなど、身近なジャンルのマニアが登場。林博史が総合演出。",
   relatedPrograms: ["マツコの知らない世界（マニア系）"],
   spinoffs: [],
   pastSpecials: ["2時間SP（不定期）", "3時間SP（大型連休時）"],

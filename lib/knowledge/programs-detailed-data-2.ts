@@ -21,7 +21,8 @@ export const programHayashiosamu: ProgramInfo = {
     { role: "総合演出", name: "不明", affiliation: "テレビ朝日" },
     { role: "プロデューサー", name: "不明", affiliation: "テレビ朝日" },
   ],
-  description: "普段は教える立場の林修先生が生徒に変身。各分野の講師が林修に知らない世界をレクチャーする教養バラエティ",
+  description:
+    "普段は教える立場の林修先生が生徒に変身。各分野の講師が林修に知らない世界をレクチャーする教養バラエティ",
   concept: "「今でしょ！」の林修が学ぶ側に回る",
   targetAudience: "20代〜50代、教養番組好き",
   corners: [
@@ -47,7 +48,8 @@ export const programHayashiosamu: ProgramInfo = {
   ],
   sponsors: [{ name: "複数社提供", slot: "60秒提供" }],
   productionCooperation: ["テレビ朝日", "UNITED PRODUCTIONS"],
-  notes: "テレビ朝日が選ぶ「青少年に見てもらいたい番組」。林修の名言「今でしょ！」が番組名に採用されている。",
+  notes:
+    "テレビ朝日が選ぶ「青少年に見てもらいたい番組」。林修の名言「今でしょ！」が番組名に採用されている。",
   relatedPrograms: ["林修の今でしょ!講座", "林修のレッスン"],
   spinoffs: ["『林修の今、知りたいでしょ！』書籍"],
   pastSpecials: ["2時間SP（不定期）"],
@@ -82,12 +84,17 @@ export const programKamichallenge: ProgramInfo = {
   ],
   chiefDirector: "林博史（UNITED PRODUCTIONS所属）",
   producers: ["大橋豪（UNITED PRODUCTIONS）", "高木大輔（UNITED PRODUCTIONS）"],
-  description: "神業クレーンゲーム、画面隠し太鼓の達人など、達人の技をクリアするゲームバラエティ。芸能人が本気で挑戦する",
+  description:
+    "神業クレーンゲーム、画面隠し太鼓の達人など、達人の技をクリアするゲームバラエティ。芸能人が本気で挑戦する",
   concept: "「神業」をクリアすることを目指す",
   targetAudience: "ファミリー層、ゲーム好き",
   corners: [
     { name: "神業クレーンゲーム", description: "達人のクレーンゲーム技を再現", popularity: "high" },
-    { name: "画面隠し太鼓の達人", description: "画面を隠して太鼓の達人をプレイ", popularity: "high" },
+    {
+      name: "画面隠し太鼓の達人",
+      description: "画面を隠して太鼓の達人をプレイ",
+      popularity: "high",
+    },
     { name: "神業チャレンジ", description: "様々なジャンルの達人技に挑戦", popularity: "high" },
   ],
   format: "スタジオでのゲーム対決（MC+ゲスト挑戦者）",
@@ -112,7 +119,8 @@ export const programKamichallenge: ProgramInfo = {
   ],
   sponsors: [{ name: "複数社提供", slot: "60秒提供" }],
   productionCooperation: ["TBS", "UNITED PRODUCTIONS"],
-  notes: "達人の技を芸能人が挑戦する形式。スペシャル版も定期的に放送。林博史が総合演出、UNITED PRODUCTIONSのプロデューサーが担当。",
+  notes:
+    "達人の技を芸能人が挑戦する形式。スペシャル版も定期的に放送。林博史が総合演出、UNITED PRODUCTIONSのプロデューサーが担当。",
   relatedPrograms: ["神業チャレンジ（過去の特番）"],
   spinoffs: [],
   pastSpecials: [
@@ -131,21 +139,20 @@ export const programNikagame: ProgramInfo = {
   name: "ニカゲーム",
   station: "テレビ朝日",
   schedule: "毎週水曜 25:58〜26:17（深夜）",
-  scheduleDetail: [{ day: "水曜", startTime: "25:58", endTime: "26:17", note: "レギュラー（19分）" }],
+  scheduleDetail: [
+    { day: "水曜", startTime: "25:58", endTime: "26:17", note: "レギュラー（19分）" },
+  ],
   timeSlot: "水曜深夜",
   officialUrl: "",
   cast: "二階堂高嗣、松井ケムリ、猪俣周杜",
-  regularCast: [
-    "二階堂高嗣（Kis-My-Ft2）",
-    "松井ケムリ（令和ロマン）",
-    "猪俣周杜（timelesz）",
-  ],
+  regularCast: ["二階堂高嗣（Kis-My-Ft2）", "松井ケムリ（令和ロマン）", "猪俣周杜（timelesz）"],
   narrator: "不明",
   staff: [
     { role: "総合演出", name: "不明", affiliation: "テレビ朝日" },
     { role: "プロデューサー", name: "不明", affiliation: "テレビ朝日" },
   ],
-  description: "「二階堂＋カム（Come）＝ニカゲーム」。ちょっと奇妙な教育番組の世界で、ひらめきゲームに挑戦する新感覚バラエティ",
+  description:
+    "「二階堂＋カム（Come）＝ニカゲーム」。ちょっと奇妙な教育番組の世界で、ひらめきゲームに挑戦する新感覚バラエティ",
   concept: "「教育番組」×「ゲームバラエティ」",
   targetAudience: "10代〜20代、若年層",
   corners: [
@@ -157,7 +164,8 @@ export const programNikagame: ProgramInfo = {
   startDateText: "2025年10月1日（レギュラー化）",
   regularStartDate: "2025年10月1日",
   totalEpisodes: "20回以上（2026年2月時点）",
-  broadcastHistory: "2025年4月『バラバラマンスリー』→6月全国放送特番→8月リアルイベント→10月レギュラー化",
+  broadcastHistory:
+    "2025年4月『バラバラマンスリー』→6月全国放送特番→8月リアルイベント→10月レギュラー化",
   ratings: [{ period: "2025年", average: "1-2%", note: "深夜帯" }],
   awards: [],
   achievements: [
@@ -171,7 +179,8 @@ export const programNikagame: ProgramInfo = {
   ],
   sponsors: [{ name: "複数社提供", slot: "30秒提供" }],
   productionCooperation: ["テレビ朝日", "UNITED PRODUCTIONS"],
-  notes: "2025年4月『バラバラマンスリー』→6月全国放送特番→8月リアルイベントを経てレギュラー化。異なるジャンルの3人のMC（アイドル・お笑い・アイドル）の組み合わせが新鮮。",
+  notes:
+    "2025年4月『バラバラマンスリー』→6月全国放送特番→8月リアルイベントを経てレギュラー化。異なるジャンルの3人のMC（アイドル・お笑い・アイドル）の組み合わせが新鮮。",
   relatedPrograms: ["バラバラマンスリー"],
   spinoffs: [],
   pastSpecials: ["全国放送特番（2025年6月）"],
@@ -196,7 +205,8 @@ export const programYakai: ProgramInfo = {
     { role: "総合演出", name: "不明", affiliation: "TBS" },
     { role: "プロデューサー", name: "不明", affiliation: "TBS" },
   ],
-  description: "櫻井翔と有吉弘行がゲストを招いてトークを展開。プライベートな話題や、ゲストの意外な一面を掘り下げる深夜トークバラエティ",
+  description:
+    "櫻井翔と有吉弘行がゲストを招いてトークを展開。プライベートな話題や、ゲストの意外な一面を掘り下げる深夜トークバラエティ",
   concept: "「夜の会」で本音トーク",
   targetAudience: "20代〜40代、女性層中心",
   corners: [
@@ -212,10 +222,7 @@ export const programYakai: ProgramInfo = {
   broadcastHistory: "2021年4月開始→現在も継続中",
   ratings: [{ period: "2024年", average: "6-8%", note: "TBS木曜22時で好調" }],
   awards: [],
-  achievements: [
-    "元嵐の櫻井翔と有吉弘行のコンビネーションが人気",
-    "女性視聴者層が厚い",
-  ],
+  achievements: ["元嵐の櫻井翔と有吉弘行のコンビネーションが人気", "女性視聴者層が厚い"],
   social: [
     { platform: "TVer", url: "見逃し配信", followers: "" },
     { platform: "Paravi", url: "配信", followers: "" },
@@ -248,7 +255,8 @@ export const programSorega: ProgramInfo = {
     { role: "プロデューサー", name: "不明", affiliation: "テレビ東京" },
   ],
   chiefDirector: "林博史（UNITED PRODUCTIONS所属）",
-  description: "隠れた名店や知られざるスポットを探索するドキュメントバラエティ。マニアックな情報を掘り下げる",
+  description:
+    "隠れた名店や知られざるスポットを探索するドキュメントバラエティ。マニアックな情報を掘り下げる",
   concept: "「隠れた名品」「知られざる名店」を発掘",
   targetAudience: "20代〜50代、グルメ・ショッピング好き",
   corners: [
@@ -267,7 +275,8 @@ export const programSorega: ProgramInfo = {
   social: [{ platform: "TVer", url: "見逃し配信", followers: "" }],
   sponsors: [{ name: "複数社提供", slot: "30秒提供" }],
   productionCooperation: ["テレビ東京", "UNITED PRODUCTIONS"],
-  notes: "レギュラー放送に加え、スペシャル版も多数制作。林博史が総合演出。隠れた名店や知られざるスポットを探索する。",
+  notes:
+    "レギュラー放送に加え、スペシャル版も多数制作。林博史が総合演出。隠れた名店や知られざるスポットを探索する。",
   relatedPrograms: ["熱狂マニアさん！", "マツコの知らない世界"],
   spinoffs: [],
   pastSpecials: ["スペシャル版（2023年9月2日、12月28日、2024年3月13日）"],
@@ -292,7 +301,8 @@ export const programTalksurvivor: ProgramInfo = {
     { role: "総合演出", name: "不明", affiliation: "UNITED PRODUCTIONS" },
     { role: "プロデューサー", name: "不明", affiliation: "UNITED PRODUCTIONS" },
   ],
-  description: "トークバラエティ。Netflixオリジナル番組として配信されるUNITED PRODUCTIONS制作のコンテンツ",
+  description:
+    "トークバラエティ。Netflixオリジナル番組として配信されるUNITED PRODUCTIONS制作のコンテンツ",
   concept: "「トーク」で生き残るサバイバル",
   targetAudience: "10代〜40代、Netflixユーザー",
   corners: [
@@ -314,7 +324,8 @@ export const programTalksurvivor: ProgramInfo = {
   social: [{ platform: "Netflix", url: "配信", followers: "" }],
   sponsors: [{ name: "Netflix", slot: "配信プラットフォーム" }],
   productionCooperation: ["UNITED PRODUCTIONS", "Netflix"],
-  notes: "UNITED PRODUCTIONSが手がける配信プラットフォーム向けコンテンツの代表例。Netflixオリジナルとして配信。",
+  notes:
+    "UNITED PRODUCTIONSが手がける配信プラットフォーム向けコンテンツの代表例。Netflixオリジナルとして配信。",
   relatedPrograms: ["Netflixオリジナル日本番組"],
   spinoffs: [],
   pastSpecials: [],

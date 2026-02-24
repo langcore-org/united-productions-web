@@ -1,6 +1,6 @@
 /**
  * United Productions レギュラー番組データ（詳細版）
- * 
+ *
  * 網羅的な番組情報をTypeScriptとして管理
  */
 
@@ -91,11 +91,7 @@ export function programToPromptText(program: ProgramInfo): string {
     lines.push(`- 公式HP: ${program.officialUrl}`);
   }
 
-  lines.push(
-    "",
-    `### 出演者`,
-    `- MC/メイン: ${program.cast || "記載なし"}`,
-  );
+  lines.push("", `### 出演者`, `- MC/メイン: ${program.cast || "記載なし"}`);
 
   if (program.regularCast && program.regularCast.length > 0) {
     lines.push(`- レギュラー出演者:`);
@@ -113,21 +109,14 @@ export function programToPromptText(program: ProgramInfo): string {
   }
 
   if (program.staff && program.staff.length > 0) {
-    lines.push(
-      "",
-      `### スタッフ`,
-    );
+    lines.push("", `### スタッフ`);
     for (const staff of program.staff) {
       const affiliation = staff.affiliation ? `（${staff.affiliation}）` : "";
       lines.push(`- ${staff.role}: ${staff.name}${affiliation}`);
     }
   }
 
-  lines.push(
-    "",
-    `### 番組内容`,
-    `- 概要: ${program.description}`,
-  );
+  lines.push("", `### 番組内容`, `- 概要: ${program.description}`);
 
   if (program.concept) {
     lines.push(`- コンセプト: ${program.concept}`);
@@ -142,20 +131,14 @@ export function programToPromptText(program: ProgramInfo): string {
   }
 
   if (program.corners && program.corners.length > 0) {
-    lines.push(
-      "",
-      `### 主要コーナー`,
-    );
+    lines.push("", `### 主要コーナー`);
     for (const corner of program.corners) {
       const popularity = corner.popularity === "high" ? "【人気】" : "";
       lines.push(`- ${corner.name}${popularity}: ${corner.description}`);
     }
   }
 
-  lines.push(
-    "",
-    `### 放送歴`,
-  );
+  lines.push("", `### 放送歴`);
 
   if (program.startDateText) {
     lines.push(`- 開始: ${program.startDateText}`);
@@ -170,10 +153,7 @@ export function programToPromptText(program: ProgramInfo): string {
   }
 
   if (program.ratings && program.ratings.length > 0) {
-    lines.push(
-      "",
-      `### 視聴率`,
-    );
+    lines.push("", `### 視聴率`);
     for (const rating of program.ratings) {
       const avg = rating.average ? `平均${rating.average}` : "";
       const highest = rating.highest ? `/最高${rating.highest}` : "";
@@ -183,10 +163,7 @@ export function programToPromptText(program: ProgramInfo): string {
   }
 
   if (program.awards && program.awards.length > 0) {
-    lines.push(
-      "",
-      `### 受賞歴`,
-    );
+    lines.push("", `### 受賞歴`);
     for (const award of program.awards) {
       const note = award.note ? ` - ${award.note}` : "";
       lines.push(`- ${award.year}年: ${award.name}${note}`);
@@ -194,20 +171,14 @@ export function programToPromptText(program: ProgramInfo): string {
   }
 
   if (program.achievements && program.achievements.length > 0) {
-    lines.push(
-      "",
-      `### 主な実績`,
-    );
+    lines.push("", `### 主な実績`);
     for (const achievement of program.achievements) {
       lines.push(`- ${achievement}`);
     }
   }
 
   if (program.social && program.social.length > 0) {
-    lines.push(
-      "",
-      `### SNS・配信`,
-    );
+    lines.push("", `### SNS・配信`);
     for (const social of program.social) {
       const followers = social.followers ? `（${social.followers}）` : "";
       lines.push(`- ${social.platform}: ${social.url}${followers}`);
@@ -215,10 +186,7 @@ export function programToPromptText(program: ProgramInfo): string {
   }
 
   if (program.sponsors && program.sponsors.length > 0) {
-    lines.push(
-      "",
-      `### 提供・スポンサー`,
-    );
+    lines.push("", `### 提供・スポンサー`);
     for (const sponsor of program.sponsors) {
       const slot = sponsor.slot ? ` - ${sponsor.slot}` : "";
       lines.push(`- ${sponsor.name}${slot}`);
@@ -226,49 +194,32 @@ export function programToPromptText(program: ProgramInfo): string {
   }
 
   if (program.productionCooperation && program.productionCooperation.length > 0) {
-    lines.push(
-      "",
-      `### 制作`,
-    );
+    lines.push("", `### 制作`);
     for (const coop of program.productionCooperation) {
       lines.push(`- ${coop}`);
     }
   }
 
   if (program.notes) {
-    lines.push(
-      "",
-      `### 備考`,
-      program.notes,
-    );
+    lines.push("", `### 備考`, program.notes);
   }
 
   if (program.relatedPrograms && program.relatedPrograms.length > 0) {
-    lines.push(
-      "",
-      `### 関連番組`,
-    );
+    lines.push("", `### 関連番組`);
     for (const related of program.relatedPrograms) {
       lines.push(`- ${related}`);
     }
   }
 
   if (program.spinoffs && program.spinoffs.length > 0) {
-    lines.push(
-      "",
-      `### 派生コンテンツ`,
-    );
+    lines.push("", `### 派生コンテンツ`);
     for (const spinoff of program.spinoffs) {
       lines.push(`- ${spinoff}`);
     }
   }
 
   if (program.tags && program.tags.length > 0) {
-    lines.push(
-      "",
-      `### タグ`,
-      program.tags.join("、"),
-    );
+    lines.push("", `### タグ`, program.tags.join("、"));
   }
 
   return lines.join("\n");
@@ -276,12 +227,7 @@ export function programToPromptText(program: ProgramInfo): string {
 
 /** 会社概要をプロンプト用テキストに変換（詳細版） */
 export function companyToPromptText(company: CompanyInfo): string {
-  const lines = [
-    "# United Productions 会社概要",
-    "",
-    `## 基本情報`,
-    `- 社名: ${company.name}`,
-  ];
+  const lines = ["# United Productions 会社概要", "", `## 基本情報`, `- 社名: ${company.name}`];
 
   if (company.nameEn) {
     lines.push(`- 社名（英語）: ${company.nameEn}`);
@@ -299,9 +245,7 @@ export function companyToPromptText(company: CompanyInfo): string {
     lines.push(`- 売上高: ${company.revenue}`);
   }
 
-  lines.push(
-    `- ミッション: ${company.mission}`,
-  );
+  lines.push(`- ミッション: ${company.mission}`);
 
   if (company.vision) {
     lines.push(`- ビジョン: ${company.vision}`);
@@ -316,20 +260,14 @@ export function companyToPromptText(company: CompanyInfo): string {
   }
 
   if (company.businessActivities && company.businessActivities.length > 0) {
-    lines.push(
-      "",
-      `## 事業内容`,
-    );
+    lines.push("", `## 事業内容`);
     for (const activity of company.businessActivities) {
       lines.push(`- ${activity}`);
     }
   }
 
   if (company.website) {
-    lines.push(
-      "",
-      `- 公式HP: ${company.website}`,
-    );
+    lines.push("", `- 公式HP: ${company.website}`);
   }
 
   return lines.join("\n");

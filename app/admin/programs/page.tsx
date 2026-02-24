@@ -1,11 +1,19 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { ChevronRight, ExternalLink, Filter, Search, Tv } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { Tv, ExternalLink, ChevronRight, Search, Filter } from "lucide-react";
+import { useEffect, useState } from "react";
+import { AdminLayout } from "@/components/layout/AdminLayout";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -14,14 +22,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { AdminLayout } from "@/components/layout/AdminLayout";
 
 interface Program {
   id: string;
@@ -80,7 +80,7 @@ export default function ProgramsAdminPage() {
         (p) =>
           p.name.toLowerCase().includes(query) ||
           p.station.toLowerCase().includes(query) ||
-          p.cast.toLowerCase().includes(query)
+          p.cast.toLowerCase().includes(query),
       );
     }
 
@@ -112,9 +112,7 @@ export default function ProgramsAdminPage() {
   };
 
   // 放送局一覧を取得
-  const stations = Array.from(
-    new Set(programs.map((p) => p.station.split("（")[0].trim()))
-  ).sort();
+  const stations = Array.from(new Set(programs.map((p) => p.station.split("（")[0].trim()))).sort();
 
   return (
     <AdminLayout>
@@ -229,9 +227,7 @@ export default function ProgramsAdminPage() {
                           {program.station}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-sm text-gray-600">
-                        {program.schedule}
-                      </TableCell>
+                      <TableCell className="text-sm text-gray-600">{program.schedule}</TableCell>
                       <TableCell className="text-sm text-gray-600">
                         {program.timeSlot || "-"}
                       </TableCell>
@@ -240,9 +236,7 @@ export default function ProgramsAdminPage() {
                       </TableCell>
                       <TableCell>
                         {program.genre && (
-                          <Badge className={getGenreColor(program.genre)}>
-                            {program.genre}
-                          </Badge>
+                          <Badge className={getGenreColor(program.genre)}>{program.genre}</Badge>
                         )}
                       </TableCell>
                       <TableCell className="text-sm text-gray-600">

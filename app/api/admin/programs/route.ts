@@ -1,13 +1,13 @@
 /**
  * 番組情報管理API
- * 
+ *
  * GET /api/admin/programs - 番組一覧取得
  * GET /api/admin/programs?id={id} - 特定番組取得
  */
 
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/api/auth";
-import { programs, getProgramById } from "@/lib/knowledge/programs";
+import { getProgramById, programs } from "@/lib/knowledge/programs";
 import type { ProgramInfo } from "@/lib/knowledge/types";
 
 /**
@@ -63,7 +63,7 @@ function serializeProgram(program: ProgramInfo): Record<string, unknown> {
 
 /**
  * GET /api/admin/programs
- * 
+ *
  * クエリパラメータ:
  * - id: 特定の番組ID（省略時は全番組）
  */
@@ -82,10 +82,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       // 特定番組の取得
       const program = getProgramById(id);
       if (!program) {
-        return NextResponse.json(
-          { error: "番組が見つかりません", id },
-          { status: 404 }
-        );
+        return NextResponse.json({ error: "番組が見つかりません", id }, { status: 404 });
       }
 
       return NextResponse.json({
@@ -102,9 +99,6 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     });
   } catch (error) {
     console.error("Programs API error:", error);
-    return NextResponse.json(
-      { error: "内部サーバーエラー" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "内部サーバーエラー" }, { status: 500 });
   }
 }

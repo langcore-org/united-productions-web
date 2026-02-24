@@ -1,27 +1,27 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter, useParams } from "next/navigation";
 import {
-  Tv,
-  ChevronLeft,
-  ExternalLink,
-  Calendar,
-  Clock,
-  Users,
   Award,
-  TrendingUp,
-  Tag,
+  Calendar,
+  ChevronLeft,
+  Clock,
+  ExternalLink,
   FileText,
-  Share2,
   Gift,
   History,
+  Share2,
+  Tag,
+  TrendingUp,
+  Tv,
+  Users,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { AdminLayout } from "@/components/layout/AdminLayout";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AdminLayout } from "@/components/layout/AdminLayout";
 
 interface ProgramDetail {
   id: string;
@@ -171,10 +171,7 @@ export default function ProgramDetailPage() {
         <div className="flex items-center gap-2 text-sm text-gray-500 mb-4">
           <span>管理画面</span>
           <ChevronLeft className="w-4 h-4 rotate-180" />
-          <button
-            onClick={() => router.push("/admin/programs")}
-            className="hover:text-gray-900"
-          >
+          <button onClick={() => router.push("/admin/programs")} className="hover:text-gray-900">
             番組情報管理
           </button>
           <ChevronLeft className="w-4 h-4 rotate-180" />
@@ -196,15 +193,9 @@ export default function ProgramDetailPage() {
                   )}
                 </div>
                 <div className="flex items-center gap-2 flex-wrap">
-                  <Badge className={getStationColor(program.station)}>
-                    {program.station}
-                  </Badge>
-                  {program.timeSlot && (
-                    <Badge variant="outline">{program.timeSlot}</Badge>
-                  )}
-                  {program.genre && (
-                    <Badge variant="secondary">{program.genre}</Badge>
-                  )}
+                  <Badge className={getStationColor(program.station)}>{program.station}</Badge>
+                  {program.timeSlot && <Badge variant="outline">{program.timeSlot}</Badge>}
+                  {program.genre && <Badge variant="secondary">{program.genre}</Badge>}
                   {program.tags?.map((tag) => (
                     <Badge key={tag} variant="outline" className="text-xs">
                       {tag}
@@ -333,7 +324,9 @@ export default function ProgramDetailPage() {
                       <label className="text-sm text-gray-500">レギュラー出演者</label>
                       <ul className="mt-2 space-y-1">
                         {program.regularCast.map((cast, i) => (
-                          <li key={i} className="text-sm">• {cast}</li>
+                          <li key={i} className="text-sm">
+                            • {cast}
+                          </li>
                         ))}
                       </ul>
                     </div>
@@ -372,7 +365,9 @@ export default function ProgramDetailPage() {
                       <label className="text-sm text-gray-500">プロデューサー</label>
                       <ul className="mt-2 space-y-1">
                         {program.producers.map((producer, i) => (
-                          <li key={i} className="text-sm">• {producer}</li>
+                          <li key={i} className="text-sm">
+                            • {producer}
+                          </li>
                         ))}
                       </ul>
                     </div>
@@ -384,7 +379,9 @@ export default function ProgramDetailPage() {
                         {program.staff.map((s, i) => (
                           <li key={i} className="text-sm">
                             • {s.role}: {s.name}
-                            {s.affiliation && <span className="text-gray-500">（{s.affiliation}）</span>}
+                            {s.affiliation && (
+                              <span className="text-gray-500">（{s.affiliation}）</span>
+                            )}
                           </li>
                         ))}
                       </ul>
@@ -546,12 +543,13 @@ export default function ProgramDetailPage() {
                   <CardContent>
                     <div className="space-y-2">
                       {program.social.map((s, i) => (
-                        <div key={i} className="flex items-center justify-between bg-gray-50 p-3 rounded">
+                        <div
+                          key={i}
+                          className="flex items-center justify-between bg-gray-50 p-3 rounded"
+                        >
                           <span className="font-medium">{s.platform}</span>
                           <span className="text-sm text-gray-600">{s.url}</span>
-                          {s.followers && (
-                            <Badge variant="outline">{s.followers}</Badge>
-                          )}
+                          {s.followers && <Badge variant="outline">{s.followers}</Badge>}
                         </div>
                       ))}
                     </div>
