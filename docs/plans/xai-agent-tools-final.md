@@ -1,8 +1,121 @@
 # xAI Agent Tools 実装計画書（最終版）
 
 > **作成日**: 2026-02-24 14:10
-> **ステータス**: 実装待ち
+> **レビュー日**: 2026-02-24
+> **ステータス**: 要確認事項あり（実装前に解決が必要）
 > **方針**: 全機能共通ツール、選択肢多め、機能性最優先
+
+---
+
+## コードベースレビュー結果
+
+> **レビュー日**: 2026-02-24
+> 既存コードベース（`lib/llm/`, `lib/chat/`, `app/api/llm/stream/route.ts` 等）と照合した結果。
+
+### 問題点（実装前に解決が必要）
+
+#### 1. SSEイベント形式の不整合 ⚠️ 優先度: 高
+
+現在の `app/api/llm/stream/route.ts` が出力するSSEイベント形式:
+```json
+{"accepted": true}
+{"stepStart": {"step": 1, "id": "...", "type": "thinking", "status": "running"}}
+{"toolCallEvent": {"id": "...", "type": "web_search", "status": "running"}}
+{"content": "..."}
+{"stepUpdate": {"id": "...", "status": "completed"}}
+{"done": true, "usage": {...}}
+```
+
+計画の `XAIClient.stream()` が出力する形式:
+```json
+{"content": "..."}
+{"toolCall": {...}}    ← toolCallEvent ではなく toolCall
+{"usage": {...}}
+{"done": true}
+```
+
+フロントエンドが `toolCallEvent` / `stepStart` / `stepUpdate` を期待している場合、表示が壊れる。
+**→ フロントエンドのSSEイベント受信コード（`components/` 配下）を確認の上、出力形式を合わせること。**
+
+---
+
+#### 2. LangChain バイパス方針と修正ファイルリストの矛盾 ⚠️ 優先度: 中
+
+アーキテクチャ図ではxAIはLangChainを**バイパス**して直接Responses APIを叩く設計になっているが、
+「実装ファイル - 修正」の一覧に `lib/llm/langchain/chains/streaming.ts` が含まれている。
+
+- xAIはLangChainを使わないのであれば、`langchain/chains/streaming.ts` の修正は不要なはず
+- 既存のLangChainパスはGrok以外のプロバイダー（将来追加予定のGemini等）向けに残すのか、xAIも通すのかを明確にすること
+
+**→ どちらのアーキテクチャを採用するか決定してから修正ファイルリストを整理すること。**
+
+---
+
+#### 3. `x_search` のSSEイベント型が未確認 ⚠️ 優先度: 中
+
+ストリームパーサーの以下の実装は推測に基づいている:
+
+```typescript
+// X検索（custom_tool_callで返ってくる）
+else if (itemType === 'custom_tool_call') {
+  const name = item.name as string;
+  if (name?.includes('x_')) { ... }
+}
+```
+
+xAI Responses APIが `x_search` ツール使用時に実際にどのイベント型（`itemType`）を返すかはAPIドキュメントまたは実際のリクエストで確認が取れていない。
+
+**→ xAI APIドキュメントを確認するか、テストリクエストで実際のイベント型を確認してからパーサーを実装すること。**
+
+---
+
+#### 4. `collections_search` ツールの扱いが不明 ⚠️ 優先度: 低
+
+現在の `lib/settings/db.ts` で定義されている `GrokToolType` には以下4つが含まれている:
+```typescript
+type GrokToolType = 'web_search' | 'x_search' | 'code_execution' | 'collections_search'
+```
+
+計画の `XAIToolType` は `web_search` / `x_search` / `code_execution` の3つのみで、`collections_search` が含まれていない。
+
+**→ `collections_search`（ファイル検索）を意図的に削除する場合は、管理画面UI（`app/admin/grok-tools/page.tsx`）の修正範囲にも明示的に含めること。**
+
+---
+
+#### 5. 非ストリーミング `chat()` メソッドがエラーをスロー ⚠️ 優先度: 中
+
+計画の `XAIClient` は以下のように非ストリーミングを未実装:
+
+```typescript
+async chat(messages: LLMMessage[]): Promise<LLMResponse> {
+  throw new Error('Non-streaming not implemented for xAI');
+}
+```
+
+既存コードベースでこのメソッドが呼ばれている箇所がある場合、実装後にランタイムエラーになる。
+
+**→ `lib/llm/` 全体でストリーミング以外の `chat()` 呼び出し箇所をgrepして確認すること。**
+
+---
+
+### 問題なし（実装してOK）
+
+| 項目 | 理由 |
+|------|------|
+| 全ツール常時有効の方針 | `lib/settings/db.ts` が2026-02-20更新で既にその方針に変更済み |
+| `lib/llm/xai/` 配下の新規ファイル群 | 既存ファイルと衝突しない |
+| `toolOptions` の削除 | `route.ts` の `toolOptions: { enableWebSearch?: boolean }` を削除する方針は整合している |
+| ツール表示名・アイコン定義 | 問題なし |
+
+---
+
+### 実装前チェックリスト
+
+- [ ] フロントエンドのSSEイベント受信コードを確認し、出力形式を確定する
+- [ ] LangChainをバイパスするか通すかのアーキテクチャを決定し、修正ファイルリストを更新する
+- [ ] xAI APIでの `x_search` イベント型を確認する
+- [ ] `collections_search` の削除可否を決定し、計画に反映する
+- [ ] 非ストリーミング `chat()` の使用箇所をコードベース全体でgrepする
 
 ---
 

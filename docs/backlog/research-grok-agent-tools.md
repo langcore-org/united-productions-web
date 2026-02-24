@@ -1,6 +1,9 @@
 # Grok Agent Tools API 仕様
 
+> **優先度**: 🔴 高
+> **状態**: 実装待ち
 > **最終更新**: 2026-02-24 13:45
+> **関連**: plans/xai-agent-tools-final.md
 
 ---
 
