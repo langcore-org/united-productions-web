@@ -16,6 +16,8 @@
 | **調査段階** | 技術調査が必要な項目 | 新ライブラリの評価 |
 | **将来対応** | 優先度低いが対応したい項目 | リファクタリング候補 |
 | **参考資料** | 将来の判断材料になる情報 | 競合分析、技術記事 |
+| **実装中の保留タスク** | 実装中に出てきた後回しタスク | TODOコメントから抽出した課題 |
+| **実装中のイシュー** | 実装中に発見した問題 | 技術的負債、バグの温床 |
 
 ---
 
@@ -25,11 +27,16 @@
 アイデア発生 → backlog/ に配置 → 検討・調査 → 実装決定 → plans/ に移動
                                     ↓
                               優先度低下 → archive/ に移動 or 削除
+
+実装中に発見 ─→ backlog/ に配置 ─→ 対応時期決定 → plans/ or 即座に対応
+    ↑___________________________________________|
+         （対応後は完了として削除 or archive/）
 ```
 
 | ステータス | 場所 | 次のアクション |
 |-----------|------|--------------|
 | 検討・調査中 | `backlog/` | 継続検討 or `plans/` へ移動 |
+| 実装中の保留 | `backlog/` | 対応時期決定 or 即座に対応 |
 | 実装決定 | `plans/` | 実装開始 |
 | 優先度低下 | `archive/` | 参照のみ |
 
@@ -47,6 +54,8 @@
 | `research-` | 技術調査 | `research-vector-database.md` |
 | `refactor-` | リファクタリング候補 | `refactor-chat-component.md` |
 | `improve-` | 改善案 | `improve-performance-caching.md` |
+| `todo-` | 実装中の保留タスク | `todo-error-handling-cleanup.md` |
+| `issue-` | 実装中に発見した問題 | `issue-memory-leak-in-streaming.md` |
 
 ---
 
@@ -65,6 +74,7 @@
 | 🔴 高 | 近いうちに対応すべき | 1-2週間以内に検討 |
 | 🟡 中 | 余裕がある時に対応 | 1ヶ月以内に検討 |
 | 🟢 低 | いつか対応したい | 随時 |
+| ⏸️ 保留 | 実装中に後回しにした | 次のスプリント or 随時 |
 
 ---
 
@@ -75,6 +85,7 @@
 grep -l "🔴 高" docs/backlog/*.md
 grep -l "🟡 中" docs/backlog/*.md
 grep -l "🟢 低" docs/backlog/*.md
+grep -l "⏸️ 保留" docs/backlog/*.md
 
 # 長期間更新されていないファイルを確認
 find docs/backlog/ -name "*.md" -mtime +30
@@ -84,6 +95,9 @@ mv docs/backlog/idea-xxx.md docs/plans/xxx.md
 
 # archive/ へ移動（優先度低下時）
 mv docs/backlog/idea-xxx.md "docs/archive/$(date +%Y-%m-%d)-idea-xxx.md"
+
+# 実装中に保留タスクを作成
+echo "# TODO: エラーハンドリングの改善\n\n> **優先度**: ⏸️ 保留\n> **発見日": $(date +"%Y-%m-%d")\n> **関連ファイル": app/api/xxx/route.ts\n\n## 内容\n\n..." > "docs/backlog/todo-error-handling.md"
 ```
 
 ---
@@ -94,3 +108,61 @@ mv docs/backlog/idea-xxx.md "docs/archive/$(date +%Y-%m-%d)-idea-xxx.md"
 |---------|------|-------|------|------|
 | [idea-sns-research-agent.md](./idea-sns-research-agent.md) | 新機能 | 🟡 中 | 検討中 | SNS人物探索エージェント（LangGraphワークフロー） |
 | [idea-sns-research-agent-ui.md](./idea-sns-research-agent-ui.md) | 新機能 | 🟢 低 | 検討中 | Gen Spark風カードベース進捗表示UI |
+
+---
+
+## 📝 実装中の保留タスク・イシューの記録方法
+
+実装中に「後で対応したい」タスクや問題を発見したら：
+
+### 1. 即座にファイルを作成
+
+```bash
+# 保留タスクの場合
+cat > "docs/backlog/todo-$(date +%s)-brief-description.md" << 'EOF'
+> **優先度**: ⏸️ 保留
+> **発見日**: YYYY-MM-DD
+> **発見者**: @username
+> **関連ファイル**: app/path/to/file.ts
+> **関連PR**: #123（あれば）
+
+# TODO: タイトル
+
+## 内容
+
+実装中に後回しにしたタスクの詳細
+
+## 対応時期
+
+- [ ] 次のスプリント
+- [ ] リリース後
+- [ ] 随時
+
+## 関連コード
+
+```typescript
+// TODO: [優先度] 説明
+// 現在の一時的な実装
+```
+EOF
+```
+
+### 2. コードに TODO コメントを残す
+
+```typescript
+// TODO: [高] エラーハンドリングの改善
+// backlog/todo-error-handling-cleanup.md を参照
+// 現在は簡易的な実装
+```
+
+### 3. 定期的な見直し
+
+毎週またはスプリント終了時に `backlog/` を確認：
+
+```bash
+# 保留タスク一覧
+grep -l "⏸️ 保留" docs/backlog/*.md
+
+# 古い保留タスクを確認
+find docs/backlog/ -name "todo-*.md" -mtime +14
+```
