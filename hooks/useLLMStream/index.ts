@@ -38,9 +38,10 @@ export function useLLMStream() {
   /**
    * ストリームを開始
    * toolOptions は廃止 - 全ツール常時有効
+   * @param programId - 番組ID（"all"または特定の番組ID）
    */
   const startStream = useCallback(
-    async (messages: LLMMessage[], provider: LLMProvider) => {
+    async (messages: LLMMessage[], provider: LLMProvider, programId?: string): Promise<void> => {
       cleanup();
 
       setContent("");
@@ -60,7 +61,7 @@ export function useLLMStream() {
           const response = await fetch("/api/llm/follow-up", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ messages, provider }),
+            body: JSON.stringify({ messages, provider, programId }),
           });
 
           if (!response.ok) {
@@ -86,7 +87,7 @@ export function useLLMStream() {
 
       try {
         for await (const event of streamLLMResponse(
-          { messages, provider },
+          { messages, provider, programId },
           { signal: abortControllerRef.current.signal },
         )) {
           switch (event.type) {

@@ -1,26 +1,26 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
-import { cn } from "@/lib/utils";
-import { DEFAULT_PROVIDER } from "@/lib/llm/config";
-import type { LLMProvider } from "@/lib/llm/types";
+import {
+  AlertCircle,
+  AlignLeft,
+  Check,
+  Copy,
+  FileText,
+  Loader2,
+  Mic,
+  RotateCcw,
+  Scissors,
+  Sparkles,
+  Square,
+  Users,
+  Zap,
+} from "lucide-react";
+import { useCallback, useRef, useState } from "react";
 import { FeatureCard } from "@/components/ui/FeatureCard";
 import { FileUpload } from "@/components/ui/FileUpload";
-import {
-  Mic,
-  Sparkles,
-  Copy,
-  RotateCcw,
-  Check,
-  FileText,
-  Users,
-  Scissors,
-  AlignLeft,
-  Square,
-  Loader2,
-  Zap,
-  AlertCircle,
-} from "lucide-react";
+import { DEFAULT_PROVIDER } from "@/lib/llm/config";
+import type { LLMProvider } from "@/lib/llm/types";
+import { cn } from "@/lib/utils";
 
 type ProcessingStatus = "idle" | "streaming" | "completed" | "error";
 
@@ -28,31 +28,31 @@ type ProcessingStatus = "idle" | "streaming" | "completed" | "error";
 
 // 話者カラーマッピング
 const SPEAKER_COLORS: Record<string, { bg: string; text: string; border: string; glow: string }> = {
-  "櫻井": {
+  櫻井: {
     bg: "bg-gray-500/15",
     text: "text-gray-600",
     border: "border-gray-500/30",
     glow: "shadow-gray-500/20",
   },
-  "末澤": {
+  末澤: {
     bg: "bg-gray-500/15",
     text: "text-gray-600",
     border: "border-gray-500/30",
     glow: "shadow-gray-500/20",
   },
-  "N": {
+  N: {
     bg: "bg-gray-400/15",
     text: "text-gray-500",
     border: "border-gray-400/30",
     glow: "shadow-gray-400/20",
   },
-  "ナレーション": {
+  ナレーション: {
     bg: "bg-gray-400/15",
     text: "text-gray-500",
     border: "border-gray-400/30",
     glow: "shadow-gray-400/20",
   },
-  "その他": {
+  その他: {
     bg: "bg-gray-500/15",
     text: "text-gray-500",
     border: "border-gray-500/30",
@@ -61,12 +61,14 @@ const SPEAKER_COLORS: Record<string, { bg: string; text: string; border: string;
 };
 
 const getSpeakerColor = (speaker: string) => {
-  return SPEAKER_COLORS[speaker] || {
-    bg: "bg-gray-500/15",
-    text: "text-gray-600",
-    border: "border-gray-500/30",
-    glow: "shadow-gray-500/20",
-  };
+  return (
+    SPEAKER_COLORS[speaker] || {
+      bg: "bg-gray-500/15",
+      text: "text-gray-600",
+      border: "border-gray-500/30",
+      glow: "shadow-gray-500/20",
+    }
+  );
 };
 
 export default function TranscriptsPage() {
@@ -190,9 +192,7 @@ Premiere Proの書き起こしテキストを、放送用のNA原稿形式に整
               fullContent += parsed.content;
               setResult(fullContent);
             }
-          } catch {
-            continue;
-          }
+          } catch {}
         }
       }
 
@@ -216,7 +216,7 @@ Premiere Proの書き起こしテキストを、放送用のNA原稿形式に整
       }
 
       setStatus("completed");
-      
+
       // 結果エリアにスクロール
       setTimeout(() => {
         resultRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -263,12 +263,30 @@ Premiere Proの書き起こしテキストを、放送用のNA原稿形式に整
   // 結果をHTMLに変換（話者ラベルをバッジ風に）
   const formatResult = (text: string) => {
     return text
-      .replace(/\*\*櫻井\*\*:/g, '<span class="inline-flex items-center px-2.5 py-1 rounded-lg bg-gray-500/15 text-gray-600 text-sm font-semibold border border-gray-500/30 shadow-sm shadow-gray-500/10 mr-2">櫻井</span>')
-      .replace(/\*\*末澤\*\*:/g, '<span class="inline-flex items-center px-2.5 py-1 rounded-lg bg-gray-500/15 text-gray-600 text-sm font-semibold border border-gray-500/30 shadow-sm shadow-gray-500/10 mr-2">末澤</span>')
-      .replace(/\*\*N\*\*:/g, '<span class="inline-flex items-center px-2.5 py-1 rounded-lg bg-gray-400/15 text-gray-500 text-sm font-semibold border border-gray-400/30 shadow-sm shadow-gray-400/10 mr-2">N</span>')
-      .replace(/\*\*ナレーション\*\*:/g, '<span class="inline-flex items-center px-2.5 py-1 rounded-lg bg-gray-400/15 text-gray-500 text-sm font-semibold border border-gray-400/30 shadow-sm shadow-gray-400/10 mr-2">ナレーション</span>')
-      .replace(/\*\*その他\*\*:/g, '<span class="inline-flex items-center px-2.5 py-1 rounded-lg bg-gray-500/15 text-gray-600 text-sm font-semibold border border-gray-500/30 shadow-sm shadow-gray-500/10 mr-2">その他</span>')
-      .replace(/\*\*(.+?)\*\*:/g, '<span class="inline-flex items-center px-2.5 py-1 rounded-lg bg-gray-500/15 text-gray-600 text-sm font-semibold border border-gray-500/30 shadow-sm shadow-gray-500/10 mr-2">$1</span>')
+      .replace(
+        /\*\*櫻井\*\*:/g,
+        '<span class="inline-flex items-center px-2.5 py-1 rounded-lg bg-gray-500/15 text-gray-600 text-sm font-semibold border border-gray-500/30 shadow-sm shadow-gray-500/10 mr-2">櫻井</span>',
+      )
+      .replace(
+        /\*\*末澤\*\*:/g,
+        '<span class="inline-flex items-center px-2.5 py-1 rounded-lg bg-gray-500/15 text-gray-600 text-sm font-semibold border border-gray-500/30 shadow-sm shadow-gray-500/10 mr-2">末澤</span>',
+      )
+      .replace(
+        /\*\*N\*\*:/g,
+        '<span class="inline-flex items-center px-2.5 py-1 rounded-lg bg-gray-400/15 text-gray-500 text-sm font-semibold border border-gray-400/30 shadow-sm shadow-gray-400/10 mr-2">N</span>',
+      )
+      .replace(
+        /\*\*ナレーション\*\*:/g,
+        '<span class="inline-flex items-center px-2.5 py-1 rounded-lg bg-gray-400/15 text-gray-500 text-sm font-semibold border border-gray-400/30 shadow-sm shadow-gray-400/10 mr-2">ナレーション</span>',
+      )
+      .replace(
+        /\*\*その他\*\*:/g,
+        '<span class="inline-flex items-center px-2.5 py-1 rounded-lg bg-gray-500/15 text-gray-600 text-sm font-semibold border border-gray-500/30 shadow-sm shadow-gray-500/10 mr-2">その他</span>',
+      )
+      .replace(
+        /\*\*(.+?)\*\*:/g,
+        '<span class="inline-flex items-center px-2.5 py-1 rounded-lg bg-gray-500/15 text-gray-600 text-sm font-semibold border border-gray-500/30 shadow-sm shadow-gray-500/10 mr-2">$1</span>',
+      )
       .replace(/### (.*)/g, '<h3 class="text-lg font-semibold text-white mt-6 mb-3">$1</h3>')
       .replace(/## (.*)/g, '<h2 class="text-xl font-semibold text-white mt-8 mb-4">$1</h2>')
       .replace(/# (.*)/g, '<h1 class="text-2xl font-bold text-white mt-8 mb-4">$1</h1>')
@@ -278,7 +296,7 @@ Premiere Proの書き起こしテキストを、放送用のNA原稿形式に整
   };
 
   return (
-    <div >
+    <div>
       {/* Sticky Header */}
       <header className="sticky top-0 z-50 border-b border-gray-200 bg-white/80 backdrop-blur-xl">
         <div className="max-w-6xl mx-auto px-6 py-4">
@@ -292,7 +310,6 @@ Premiere Proの書き起こしテキストを、放送用のNA原稿形式に整
                 <p className="text-sm text-gray-500">Premiere Pro書き起こしをAIで整形</p>
               </div>
             </div>
-
           </div>
         </div>
       </header>
@@ -314,13 +331,15 @@ Premiere Proの書き起こしテキストを、放送用のNA原稿形式に整
                 key={speaker.label}
                 className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-white border border-gray-200 hover:border-gray-300 transition-colors"
               >
-                <span className={cn(
-                  "text-xs px-2.5 py-1 rounded-lg font-semibold border shadow-sm",
-                  speaker.color.bg,
-                  speaker.color.text,
-                  speaker.color.border,
-                  speaker.color.glow
-                )}>
+                <span
+                  className={cn(
+                    "text-xs px-2.5 py-1 rounded-lg font-semibold border shadow-sm",
+                    speaker.color.bg,
+                    speaker.color.text,
+                    speaker.color.border,
+                    speaker.color.glow,
+                  )}
+                >
                   {speaker.label}
                 </span>
                 <span className="text-sm text-gray-500">{speaker.desc}</span>
@@ -352,7 +371,9 @@ Premiere Proの書き起こしテキストを、放送用のNA原稿形式に整
               accept={{
                 "text/plain": [".txt"],
                 "text/vtt": [".vtt"],
-                "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [".docx"],
+                "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [
+                  ".docx",
+                ],
               }}
             />
           </div>
@@ -390,7 +411,7 @@ Premiere Proの書き起こしテキストを、放送用のNA原稿形式に整
                 "text-gray-800 placeholder-gray-400",
                 "focus:outline-none focus:border-gray-400 focus:ring-4 focus:ring-gray-200",
                 "transition-all duration-300 ease-out",
-                "text-sm leading-relaxed"
+                "text-sm leading-relaxed",
               )}
             />
             {/* フォーカス時のグロー効果 */}
@@ -408,7 +429,7 @@ Premiere Proの書き起こしテキストを、放送用のNA原稿形式に整
               onClick={handleCancel}
               className={cn(
                 "flex items-center gap-3 px-8 py-4 rounded-xl font-medium transition-all duration-200",
-                "bg-gray-700 text-white hover:bg-gray-800 shadow-lg shadow-gray-500/20"
+                "bg-gray-700 text-white hover:bg-gray-800 shadow-lg shadow-gray-500/20",
               )}
             >
               <Square className="w-5 h-5" />
@@ -422,7 +443,7 @@ Premiere Proの書き起こしテキストを、放送用のNA原稿形式に整
                 "flex items-center gap-3 px-8 py-4 rounded-xl font-medium transition-all duration-200",
                 !transcript.trim()
                   ? "bg-gray-100 text-gray-500 cursor-not-allowed"
-                  : "bg-gray-800 text-white hover:bg-gray-700 shadow-lg shadow-gray-500/20 hover:shadow-xl hover:shadow-gray-500/30 hover:scale-[1.02] active:scale-[0.98]"
+                  : "bg-gray-800 text-white hover:bg-gray-700 shadow-lg shadow-gray-500/20 hover:shadow-xl hover:shadow-gray-500/30 hover:scale-[1.02] active:scale-[0.98]",
               )}
             >
               <Sparkles className="w-5 h-5" />
@@ -446,7 +467,10 @@ Premiere Proの書き起こしテキストを、放送用のNA原稿形式に整
 
         {/* Result Section - 話者ラベルの色分け強化 */}
         {(result || status === "streaming") && (
-          <section ref={resultRef} className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <section
+            ref={resultRef}
+            className="animate-in fade-in slide-in-from-bottom-4 duration-500"
+          >
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
                 <h2 className="text-sm font-medium text-gray-600 uppercase tracking-wider">
@@ -470,7 +494,7 @@ Premiere Proの書き起こしテキストを、放送用のNA原稿形式に整
                     "flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-all duration-200",
                     copied
                       ? "bg-gray-200 text-gray-700 border border-gray-300"
-                      : "bg-gray-100 text-gray-600 hover:text-gray-800 hover:bg-gray-200 border border-transparent"
+                      : "bg-gray-100 text-gray-600 hover:text-gray-800 hover:bg-gray-200 border border-transparent",
                   )}
                 >
                   {copied ? (
@@ -522,24 +546,26 @@ Premiere Proの書き起こしテキストを、放送用のNA原稿形式に整
                     <Zap className="w-8 h-8 text-white animate-pulse" />
                   </div>
                 </div>
-                
+
                 {/* テキスト */}
                 <div className="text-center">
                   <p className="text-lg font-medium text-gray-900 mb-2">AIが原稿を整形しています</p>
                   <p className="text-sm text-gray-500">話者判定、ノイズ除去、文整形を実行中...</p>
                 </div>
-                
+
                 {/* プログレスインジケーター */}
                 <div className="w-full max-w-xs">
                   <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                    <div className="h-full bg-gradient-to-r from-gray-600 to-gray-400 rounded-full animate-[shimmer_2s_infinite]" 
-                         style={{
-                           backgroundSize: '200% 100%',
-                           animation: 'shimmer 2s linear infinite',
-                         }} />
+                    <div
+                      className="h-full bg-gradient-to-r from-gray-600 to-gray-400 rounded-full animate-[shimmer_2s_infinite]"
+                      style={{
+                        backgroundSize: "200% 100%",
+                        animation: "shimmer 2s linear infinite",
+                      }}
+                    />
                   </div>
                 </div>
-                
+
                 {/* 処理ステップ */}
                 <div className="flex items-center gap-4 text-xs text-gray-500">
                   <span className="flex items-center gap-1.5">
@@ -591,7 +617,7 @@ Premiere Proの書き起こしテキストを、放送用のNA原稿形式に整
           </section>
         )}
       </div>
-      
+
       {/* グローバルスタイル */}
       <style jsx global>{`
         @keyframes shimmer {

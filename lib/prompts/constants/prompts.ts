@@ -1,10 +1,10 @@
 /**
  * 初期プロンプトデータ（Single Source of Truth）
  * DBが空の場合やフォールバック時に使用
- * 
+ *
  * @created 2026-02-22 12:10
  * @updated 2026-02-22 12:30
- * 
+ *
  * 注: 完全なプロンプト内容はDBで管理。ここでは最小限のフォールバックのみ定義。
  */
 
@@ -16,7 +16,9 @@ export const DEFAULT_PROMPTS = [
     key: "GENERAL_CHAT",
     name: "チャット",
     description: "汎用チャット用システムプロンプト（エージェント対応）",
-    content: AGENTIC_BASE_PROMPT + `
+    content:
+      AGENTIC_BASE_PROMPT +
+      `
 
 ## 専門領域
 テレビ制作業務を支援するAIアシスタントとして、以下に対応します：

@@ -30,6 +30,8 @@ export interface Agent {
   color?: string; // アクセントカラー
   promptKey: string; // DBプロンプトキー
   suggestions: string[]; // 新規チャット時のサジェスト例
+  /** 番組選択機能を有効化 */
+  enableProgramSelector?: boolean;
 }
 
 // デフォルトプロンプトをキーで検索するヘルパー
@@ -72,6 +74,7 @@ export const AGENTS: Agent[] = [
       "企画書の書き方のアドバイスをください",
       "この文章を校正してください",
     ],
+    enableProgramSelector: true,
   },
   {
     id: "research-cast",

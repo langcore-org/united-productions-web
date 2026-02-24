@@ -1,36 +1,39 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
-import { cn } from "@/lib/utils";
-import { DEFAULT_PROVIDER } from "@/lib/llm/config";
-import type { LLMProvider } from "@/lib/llm/types";
-import { FeatureCard } from "@/components/ui/FeatureCard";
-import { sanitizeAndFormatMarkdown } from "@/lib/xss-sanitizer";
 import {
-  FileText,
-  Users,
-  Sparkles,
+  AlertCircle,
+  Brain,
+  Briefcase,
+  Calendar,
+  Check,
+  CheckSquare,
   Copy,
   Download,
-  RotateCcw,
-  Check,
-  Mic,
-  Calendar,
-  CheckSquare,
-  User,
-  Briefcase,
-  MessageSquare,
-  ThumbsUp,
-  Square,
-  Loader2,
-  Brain,
-  Terminal,
+  FileText,
   FolderOpen,
-  AlertCircle,
+  Loader2,
+  MessageSquare,
+  Mic,
+  RotateCcw,
+  Sparkles,
+  Square,
+  Terminal,
+  ThumbsUp,
+  User,
+  Users,
 } from "lucide-react";
-import { DriveUploadButton, DriveFileSelectButton } from "@/components/meeting-notes/GoogleDriveButtons";
+import { useCallback, useRef, useState } from "react";
+import {
+  DriveFileSelectButton,
+  DriveUploadButton,
+} from "@/components/meeting-notes/GoogleDriveButtons";
+import { FeatureCard } from "@/components/ui/FeatureCard";
 import { FileUpload } from "@/components/ui/FileUpload";
 import { Label } from "@/components/ui/label";
+import { DEFAULT_PROVIDER } from "@/lib/llm/config";
+import type { LLMProvider } from "@/lib/llm/types";
+import { cn } from "@/lib/utils";
+import { sanitizeAndFormatMarkdown } from "@/lib/xss-sanitizer";
 
 type MeetingTemplate = "meeting" | "interview";
 type ProcessingStatus = "idle" | "streaming" | "completed" | "error";
@@ -151,9 +154,7 @@ export default function MeetingNotesPage() {
               fullContent += parsed.content;
               setResult(fullContent);
             }
-          } catch {
-            continue;
-          }
+          } catch {}
         }
       }
 
@@ -177,7 +178,7 @@ export default function MeetingNotesPage() {
       }
 
       setStatus("completed");
-      
+
       // 結果エリアにスクロール
       setTimeout(() => {
         resultRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -237,7 +238,7 @@ export default function MeetingNotesPage() {
   const currentTemplate = templates.find((t) => t.id === selectedTemplate)!;
 
   return (
-    <div >
+    <div>
       {/* Header - Sticky */}
       <header className="sticky top-0 z-50 border-b border-gray-200 bg-white/80 backdrop-blur-xl">
         <div className="max-w-6xl mx-auto px-6 py-4">
@@ -251,7 +252,6 @@ export default function MeetingNotesPage() {
                 <p className="text-sm text-gray-500">Zoom文字起こしをAIで整形</p>
               </div>
             </div>
-
           </div>
         </div>
       </header>
@@ -272,7 +272,7 @@ export default function MeetingNotesPage() {
                   "hover:scale-[1.02] hover:shadow-lg hover:shadow-black/20",
                   selectedTemplate === template.id
                     ? "border-black bg-gray-50 shadow-lg"
-                    : "border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50"
+                    : "border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50",
                 )}
               >
                 {selectedTemplate === template.id && (
@@ -286,7 +286,7 @@ export default function MeetingNotesPage() {
                       "w-10 h-10 rounded-lg flex items-center justify-center transition-all duration-300",
                       selectedTemplate === template.id
                         ? "bg-black text-white"
-                        : "bg-gray-100 text-gray-600"
+                        : "bg-gray-100 text-gray-600",
                     )}
                   >
                     {template.icon}
@@ -304,7 +304,7 @@ export default function MeetingNotesPage() {
                         "text-xs px-2.5 py-1 rounded-full transition-colors duration-300",
                         selectedTemplate === template.id
                           ? "bg-black text-white border border-black"
-                          : "bg-gray-100 text-gray-500"
+                          : "bg-gray-100 text-gray-500",
                       )}
                     >
                       {feature}
@@ -354,11 +354,7 @@ export default function MeetingNotesPage() {
                       "会議の決定事項を抽出して",
                       "TODOリストを作成して",
                     ]
-                  : [
-                      "面談の内容を整理して",
-                      "出演意向をまとめて",
-                      "フォローアップ事項を抽出して",
-                    ]
+                  : ["面談の内容を整理して", "出演意向をまとめて", "フォローアップ事項を抽出して"]
                 ).map((suggestion, index) => (
                   <button
                     key={index}
@@ -376,9 +372,10 @@ export default function MeetingNotesPage() {
             <textarea
               value={transcript}
               onChange={(e) => setTranscript(e.target.value)}
-              placeholder={`ここにZoomの文字起こしテキストを貼り付けてください...\n\n${currentTemplate.id === "meeting" 
-                ? "【会議用】議題、発言者、決定事項、TODOなどが含まれるテキストを入力してください。"
-                : "【面談用】面談相手の発言、経歴、出演に関する話題などが含まれるテキストを入力してください。"
+              placeholder={`ここにZoomの文字起こしテキストを貼り付けてください...\n\n${
+                currentTemplate.id === "meeting"
+                  ? "【会議用】議題、発言者、決定事項、TODOなどが含まれるテキストを入力してください。"
+                  : "【面談用】面談相手の発言、経歴、出演に関する話題などが含まれるテキストを入力してください。"
               }`}
               className={cn(
                 "w-full h-[300px] p-5 rounded-2xl resize-none",
@@ -386,7 +383,7 @@ export default function MeetingNotesPage() {
                 "text-gray-800 placeholder-gray-400",
                 "focus:outline-none focus:border-black focus:ring-2 focus:ring-black/5",
                 "transition-all duration-300",
-                "text-sm leading-relaxed"
+                "text-sm leading-relaxed",
               )}
             />
             <div className="absolute bottom-4 right-4 text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-md">
@@ -402,7 +399,7 @@ export default function MeetingNotesPage() {
               onClick={handleCancel}
               className={cn(
                 "flex items-center gap-3 px-8 py-4 rounded-xl font-medium transition-all duration-200",
-                "bg-gray-700 text-white hover:bg-gray-800 shadow-lg shadow-gray-500/20 hover:shadow-gray-500/30"
+                "bg-gray-700 text-white hover:bg-gray-800 shadow-lg shadow-gray-500/20 hover:shadow-gray-500/30",
               )}
             >
               <Square className="w-5 h-5 fill-current" />
@@ -416,7 +413,7 @@ export default function MeetingNotesPage() {
                 "flex items-center gap-3 px-8 py-4 rounded-xl font-medium transition-all duration-300",
                 !transcript.trim()
                   ? "bg-gray-100 text-gray-500 cursor-not-allowed"
-                  : "bg-black text-white hover:bg-gray-800 shadow-lg hover:shadow-xl hover:scale-[1.02]"
+                  : "bg-black text-white hover:bg-gray-800 shadow-lg hover:shadow-xl hover:scale-[1.02]",
               )}
             >
               <Sparkles className="w-5 h-5" />
@@ -440,7 +437,10 @@ export default function MeetingNotesPage() {
 
         {/* Result Section */}
         {(result || status === "streaming") && (
-          <section ref={resultRef} className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <section
+            ref={resultRef}
+            className="animate-in fade-in slide-in-from-bottom-4 duration-500"
+          >
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
                 <h2 className="text-sm font-medium text-gray-600 uppercase tracking-wider">
@@ -461,7 +461,7 @@ export default function MeetingNotesPage() {
                     "flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-all duration-200",
                     copied
                       ? "bg-gray-100 text-gray-700 border border-gray-200"
-                      : "bg-gray-100 text-gray-600 hover:text-black hover:bg-gray-200 border border-transparent"
+                      : "bg-gray-100 text-gray-600 hover:text-black hover:bg-gray-200 border border-transparent",
                   )}
                 >
                   {copied ? (
@@ -497,7 +497,7 @@ export default function MeetingNotesPage() {
                 </button>
               </div>
             </div>
-            
+
             {/* Result */}
             <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-lg">
               {/* Header */}
@@ -512,7 +512,7 @@ export default function MeetingNotesPage() {
                   <div className="w-3 h-3 rounded-full bg-gray-300" />
                 </div>
               </div>
-              
+
               {/* Content */}
               <div className="p-6">
                 <div

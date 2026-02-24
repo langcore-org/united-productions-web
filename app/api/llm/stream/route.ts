@@ -16,6 +16,7 @@
 import type { NextRequest } from "next/server";
 import { z } from "zod";
 import { requireAuth } from "@/lib/api/auth";
+import { createSystemPrompt } from "@/lib/knowledge/programs";
 import { GrokClient } from "@/lib/llm/clients/grok";
 import { DEFAULT_PROVIDER } from "@/lib/llm/config";
 import { isValidProvider } from "@/lib/llm/factory";
@@ -36,6 +37,8 @@ const streamRequestSchema = z.object({
   provider: z.string().optional(),
   temperature: z.number().min(0).max(2).optional(),
   maxTokens: z.number().positive().optional(),
+  /** 番組ID（"all"または特定の番組ID） */
+  programId: z.string().optional(),
 });
 
 export type StreamRequest = z.infer<typeof streamRequestSchema>;
@@ -76,7 +79,7 @@ export async function POST(request: NextRequest): Promise<Response> {
       );
     }
 
-    const { messages, provider: requestedProvider } = validationResult.data;
+    const { messages, provider: requestedProvider, programId } = validationResult.data;
 
     // プロバイダーの決定
     let provider: LLMProvider;
@@ -104,13 +107,22 @@ export async function POST(request: NextRequest): Promise<Response> {
       );
     }
 
+    // システムプロンプトを生成（番組選択対応）
+    const systemPrompt = createSystemPrompt(programId ?? "all");
+
+    // メッセージにシステムプロンプトを追加
+    const messagesWithSystem: LLMMessage[] = [
+      { role: "system", content: systemPrompt },
+      ...messages.filter((m) => m.role !== "system"),
+    ];
+
     const client = new GrokClient(provider);
     const encoder = new TextEncoder();
 
     const readable = new ReadableStream({
       async start(controller) {
         try {
-          for await (const event of client.streamWithUsage(messages as LLMMessage[])) {
+          for await (const event of client.streamWithUsage(messagesWithSystem)) {
             controller.enqueue(encoder.encode(`data: ${JSON.stringify(event)}\n\n`));
             // done または error イベントの後はストリームを閉じる
             if (event.type === "done" || event.type === "error") {

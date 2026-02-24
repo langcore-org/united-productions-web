@@ -5,10 +5,10 @@
  * ユーザーの全チャット履歴を取得（サイドバー用）
  */
 
-import { NextRequest } from "next/server";
-import { prisma } from "@/lib/prisma";
+import type { NextRequest } from "next/server";
 import { requireAuth } from "@/lib/api/auth";
 import { logger } from "@/lib/logger";
+import { prisma } from "@/lib/prisma";
 
 export interface ChatHistoryItem {
   id: string;
@@ -29,8 +29,8 @@ function getAgentTypeLabel(agentType: string): string {
     "RESEARCH-LOCATION": "場所リサーチ",
     "RESEARCH-INFO": "情報リサーチ",
     "RESEARCH-EVIDENCE": "エビデンスリサーチ",
-    "MINUTES": "議事録作成",
-    "PROPOSAL": "新企画立案",
+    MINUTES: "議事録作成",
+    PROPOSAL: "新企画立案",
     "NA-SCRIPT": "NA原稿作成",
     "GENERAL-CHAT": "チャット",
   };
@@ -70,7 +70,7 @@ export async function GET(request: NextRequest): Promise<Response> {
       const lastMessage = chat.messages[0];
       // 最初のユーザーメッセージをタイトルとして使用
       const title = lastMessage?.content.slice(0, 30) || getAgentTypeLabel(chat.agentType);
-      
+
       return {
         id: chat.id,
         featureId: chat.agentType.toLowerCase().replace(/_/g, "-"),
@@ -86,15 +86,14 @@ export async function GET(request: NextRequest): Promise<Response> {
       headers: { "Content-Type": "application/json" },
     });
   } catch (error) {
-    const errorMessage =
-      error instanceof Error ? error.message : "Unknown error";
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
     logger.error(`[${requestId}] Failed to get chat history`, {
       error: errorMessage,
     });
-    return new Response(
-      JSON.stringify({ error: "Failed to get chat history", requestId }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
-    );
+    return new Response(JSON.stringify({ error: "Failed to get chat history", requestId }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
   }
 }
 
@@ -116,10 +115,10 @@ export async function DELETE(request: NextRequest): Promise<Response> {
     const chatId = searchParams.get("id");
 
     if (!chatId) {
-      return new Response(
-        JSON.stringify({ error: "id is required" }),
-        { status: 400, headers: { "Content-Type": "application/json" } }
-      );
+      return new Response(JSON.stringify({ error: "id is required" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
     }
 
     // チャットがユーザーのものか確認して削除
@@ -131,10 +130,10 @@ export async function DELETE(request: NextRequest): Promise<Response> {
     });
 
     if (!chat) {
-      return new Response(
-        JSON.stringify({ error: "Chat not found" }),
-        { status: 404, headers: { "Content-Type": "application/json" } }
-      );
+      return new Response(JSON.stringify({ error: "Chat not found" }), {
+        status: 404,
+        headers: { "Content-Type": "application/json" },
+      });
     }
 
     await prisma.researchChat.delete({
@@ -145,14 +144,13 @@ export async function DELETE(request: NextRequest): Promise<Response> {
       headers: { "Content-Type": "application/json" },
     });
   } catch (error) {
-    const errorMessage =
-      error instanceof Error ? error.message : "Unknown error";
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
     logger.error(`[${requestId}] Failed to delete chat`, {
       error: errorMessage,
     });
-    return new Response(
-      JSON.stringify({ error: "Failed to delete chat", requestId }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
-    );
+    return new Response(JSON.stringify({ error: "Failed to delete chat", requestId }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
   }
 }

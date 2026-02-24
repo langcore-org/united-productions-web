@@ -105,8 +105,10 @@ export async function POST(request: NextRequest): Promise<Response> {
     // フォローアップ生成には安価なモデルを使用
     const provider: LLMProvider = FOLLOW_UP_PROVIDER;
     const providerInfo = getProviderInfo(provider);
-    
-    logger.info(`[${requestId}] Using provider: ${provider} (${providerInfo.inputPrice}/${providerInfo.outputPrice} $/M tokens)`);
+
+    logger.info(
+      `[${requestId}] Using provider: ${provider} (${providerInfo.inputPrice}/${providerInfo.outputPrice} $/M tokens)`,
+    );
 
     // フォローアップ生成用のメッセージを構築
     const followUpMessages: LLMMessage[] = [

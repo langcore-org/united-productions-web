@@ -106,6 +106,7 @@ function ChatPageContent() {
       inputLabel={agent.inputLabel}
       outputFormat={agent.outputFormat}
       suggestions={agent.suggestions}
+      enableProgramSelector={agent.enableProgramSelector}
     />
   );
 }
