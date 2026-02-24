@@ -2,7 +2,7 @@
 
 > **AI Hub 開発エージェントの行動指針**
 > 
-> **最終更新**: 2026-02-24 13:20
+> **最終更新**: 2026-02-24 16:45
 
 ---
 
@@ -353,6 +353,53 @@ function isAuthenticatedSession(session: Session | null): session is Session & {
 - **2026-02-19**: コードベースから `as any` を完全除去（17箇所 → 0箇所）
 - **手法**: モジュール拡張 + 明示的インターフェース
 - **結果**: ビルド成功、型安全性向上
+
+---
+
+## 🚀 Vercelデプロイ監視
+
+Gitプッシュ後のVercelデプロイを自動監視するスクリプトを活用する。
+
+### 使用方法
+
+```bash
+# Gitプッシュ後にデプロイを監視
+npm run deploy:monitor
+
+# または直接実行
+./scripts/vercel-monitor.sh
+
+# 別のプロジェクトを監視
+./scripts/vercel-monitor.sh my-app
+
+# デプロイメント一覧を確認
+npm run deploy:status
+```
+
+### 機能
+
+| 機能 | 説明 |
+|------|------|
+| **新規デプロイ検出** | Gitプッシュ後の新しいデプロイメントを自動検出（最大5分待機） |
+| **状態監視** | Ready/Error状態になるまで自動ポーリング |
+| **ログ表示** | 成功時はサマリー、失敗時はエラーログを自動表示 |
+| **カスタマイズ** | 環境変数 `MAX_WAIT` と `INTERVAL` で待機時間調整可能 |
+
+### 環境変数
+
+```bash
+# 待機時間を10分に延長
+MAX_WAIT=600 npm run deploy:monitor
+
+# チェック間隔を5秒に短縮
+INTERVAL=5 npm run deploy:monitor
+```
+
+### デプロイエラー対応フロー
+
+1. **エラーログの自動取得**: スクリプトが失敗時に自動的にログを表示
+2. **根本原因の特定**: エラーメッセージを分析
+3. **修正と再デプロイ**: 修正後、再度 `git push` と `npm run deploy:monitor`
 
 ---
 
