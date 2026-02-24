@@ -117,7 +117,7 @@ export default function ChatHistoryPage() {
         hasMore: total >= prev.limit,
       }));
     } catch (_err) {
-      console.error("Failed to fetch history:", err);
+      console.error("Failed to fetch history:", _err);
       setMessage({ type: "error", text: "履歴の取得に失敗しました" });
     } finally {
       setLoading(false);

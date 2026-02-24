@@ -18,7 +18,7 @@ const USAGE_MAP: Record<string, { used: boolean; location: string }> = {
   MEETING_FORMAT_MEETING: { used: true, location: "api/meeting-notes/route.ts" },
   MEETING_FORMAT_INTERVIEW: { used: true, location: "api/meeting-notes/route.ts" },
   TRANSCRIPT_FORMAT: { used: true, location: "api/transcripts/route.ts" },
-  
+
   // 未使用の可能性
   SCHEDULE_SYSTEM: { used: false, location: "未使用？" },
   SCHEDULE_ACTOR: { used: false, location: "未使用？" },
@@ -28,12 +28,12 @@ const USAGE_MAP: Record<string, { used: boolean; location: string }> = {
 
 async function main() {
   console.log("=== プロンプト使用状況調査 ===\n");
-  
+
   const dbPrompts = await prisma.systemPrompt.findMany({
     select: { key: true, name: true },
     orderBy: { key: "asc" },
   });
-  
+
   console.log("【使用中】\n");
   for (const p of dbPrompts) {
     const usage = USAGE_MAP[p.key];
@@ -43,7 +43,7 @@ async function main() {
       console.log(`     → ${usage.location}\n`);
     }
   }
-  
+
   console.log("【未使用の可能性】\n");
   for (const p of dbPrompts) {
     const usage = USAGE_MAP[p.key];
@@ -52,7 +52,7 @@ async function main() {
       console.log(`     ${p.name}\n`);
     }
   }
-  
+
   await prisma.$disconnect();
 }
 

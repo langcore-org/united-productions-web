@@ -2,8 +2,8 @@
  * 思考プロセス削除を新しいバージョンとして適用
  */
 
-import { createPromptVersion } from "@/lib/prompts/db/versions";
 import { AGENTIC_BASE_PROMPT } from "@/lib/prompts/constants/base";
+import { createPromptVersion } from "@/lib/prompts/db/versions";
 
 async function main() {
   console.log("Applying prompt change...\n");
