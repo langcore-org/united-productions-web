@@ -2,7 +2,7 @@
 
 > **本ディレクトリは「UPエージェント」（AI Hub）開発用のドキュメント群です。**
 > 
-> **最終更新**: 2026-02-24 13:10
+> **最終更新**: 2026-02-24 15:30
 
 ---
 
@@ -60,6 +60,11 @@ cat docs/guides/development/workflow-standards.md
 ```
 docs/
 ├── README.md                    # 本ファイル（入り口）
+│
+├── lessons/                     # 【学びの蓄積】過去の教訓と推奨事項
+│   ├── README.md                # 学びの一覧と運用方法
+│   ├── template.md              # 新規作成用テンプレート
+│   └── YYYY-MM-DD-*.md          # 個別の学びドキュメント
 │
 ├── specs/                       # 【技術仕様】信頼できる唯一の情報源
 │   ├── architecture/            # アーキテクチャ設計
@@ -136,6 +141,7 @@ docs/
 | ディレクトリ | 役割 | 対象者 | 更新頻度 | 信頼度 |
 |-------------|------|--------|---------|-------|
 | `specs/` | 技術仕様 | 開発者 | 随時 | ⭐⭐⭐ 最優先 |
+| `lessons/` | **過去の教訓・推奨事項** | **開発者（技術選定時）** | **学びが発生した時** | ⭐⭐⭐ **重要** |
 | `user-docs/` | ユーザードキュメント | 制作スタッフ | 機能変更時 | ⭐⭐ |
 | `plans/` | **実装前の計画・実装中の進捗** | 開発者 | **実装中のみ** | ⭐⭐ |
 | `backlog/` | 検討・調査・保留タスク | 開発者 | 随時 | ⭐ |
@@ -281,9 +287,10 @@ echo -e "$(date +"%Y-%m-%d %H:%M")\n\n$(cat file.md)" > file.md
 ### 技術者
 1. **必ず読む**: `specs/architecture/system-architecture.md`
 2. **API確認**: `specs/api-integration/api-specification.md`
-3. **現在のタスク**: `plans/`
-4. **トラブル時**: `guides/troubleshooting.md`
-5. **命名規則**: `guides/development/naming-conventions.md`
+3. **技術選定時**: `lessons/INDEX.md` ← **過去の教訓を確認**
+4. **現在のタスク**: `plans/`
+5. **トラブル時**: `guides/troubleshooting.md`
+6. **命名規則**: `guides/development/naming-conventions.md`
 
 ### 制作スタッフ
 1. **必ず読む**: `user-docs/getting-started.md`

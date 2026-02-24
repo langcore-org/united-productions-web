@@ -10,18 +10,32 @@
 
 ### LLMフレームワーク（重要）
 
-**このプロジェクトでは LangChain を使用しています。**
+| 項目 | 内容 |
+|------|------|
+| **現在のプロバイダー** | **xAI (Grok) のみ** |
+| **実装方式** | **xAI直接API呼び出し**（LangChain不使用） |
+| **LangChain** | 将来のGemini追加に備え保持（現在使用せず） |
 
-| パッケージ | 用途 |
-|-----------|------|
-| `langchain` | コアフレームワーク |
-| `@langchain/core` | 型定義・基本機能 |
-| `@langchain/openai` | OpenAI連携 |
-| `@langchain/anthropic` | Anthropic連携 |
-| `@langchain/community` | コミュニティ統合 |
-| `@langchain/textsplitters` | テキスト分割 |
+#### なぜLangChainを保持するのか
 
-**実装場所**: `lib/llm/langchain/`
+- **将来の拡張性**: Google Gemini追加時にLangChain経由で統合可能に
+- **過去の投資**: 実装済みのLangChainコードを完全削除せず、再利用可能に
+- **切り替え容易性**: 必要時に `lib/llm/factory.ts` でプロバイダー分岐を追加
+
+#### パッケージ
+
+| パッケージ | 用途 | 状態 |
+|-----------|------|------|
+| `langchain` | コアフレームワーク | 📦 保持（将来用） |
+| `@langchain/core` | 型定義・基本機能 | 📦 保持（将来用） |
+| `@langchain/openai` | OpenAI連携 | 📦 保持（将来用） |
+| `@langchain/anthropic` | Anthropic連携 | 📦 保持（将来用） |
+| `@langchain/community` | コミュニティ統合 | 📦 保持（将来用） |
+
+#### 実装場所
+
+- **xAI直接実装**: `lib/llm/clients/grok.ts`（復元予定）
+- **LangChain実装**: `lib/llm/langchain/`（将来のGemini追加用に保持）
 
 **参照**: [llm-integration-overview.md](./docs/specs/api-integration/llm-integration-overview.md)
 
@@ -34,6 +48,7 @@
 | タイミング | 参照先 | 目的 |
 |-----------|--------|------|
 | タスク着手前 | `docs/README.md` | ドキュメント構成と更新ルール |
+| **技術選定時** | **`docs/lessons/README.md`** | **過去の技術選定の教訓と失敗** |
 | システム理解時 | `docs/specs/system-architecture.md` | 全体構成と設計パターン |
 | API実装時 | `docs/specs/api-specification.md` | API仕様と型定義 |
 | **LLM実装時** | **`docs/specs/api-integration/llm-integration-overview.md`** | **LangChain使用方針** |
@@ -78,6 +93,20 @@ EOF
 ```
 
 詳細: [docs/backlog/README.md](./docs/backlog/README.md)
+
+### 学びの記録（重要）
+
+実装中に以下のような状況が発生したら、`docs/lessons/` に記録を検討する：
+
+| シグナル | 対応 |
+|---------|------|
+| 同じファイルに3回以上修正を加えた | 記録検討 |
+| 「あれ、思ってたんと違う」と思った | 記録検討 |
+| 「もっと早く気づけばよかった」と思った | 記録検討 |
+| 見積もりの2倍以上の時間がかかった | 記録検討 |
+| 技術選定を見直した（導入→削除等） | **必ず記録** |
+
+詳細: [docs/lessons/README.md](./docs/lessons/README.md)
 
 ---
 

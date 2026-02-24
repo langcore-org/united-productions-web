@@ -2,13 +2,41 @@
 
 > **複数LLMプロバイダーを統一インターフェースで利用するための概要**
 >
-> **最終更新**: 2026-02-24
+> **最終更新**: 2026-02-24 15:15
+
+---
+
+## ⚠️ 重要: 現在のプロバイダー方針
+
+### 現状（2026-02-24）
+
+| 項目 | 状態 |
+|------|------|
+| **現在のプロバイダー** | **xAI (Grok) のみ** |
+| **実装方式** | **xAI直接API呼び出し**（LangChain不使用） |
+| **理由** | xAI Agent Tools（web_search, x_search, code_execution）がResponses API専用のため |
+
+### 将来方針
+
+| タイミング | 予定 |
+|------------|------|
+| **当面** | xAI (Grok) のみ使用 |
+| **将来（未定）** | Google Gemini 追加検討 |
+| **その他** | OpenAI, Anthropic, Perplexity は現時点で予定なし |
+
+### 技術的留意事項
+
+- **LangChainは残存**: 将来のGemini追加に備え、`lib/llm/langchain/` は削除せず保持
+- **Factoryパターン**: プロバイダー追加時は `lib/llm/factory.ts` で分岐処理を追加
+- **xAI直接実装**: `lib/llm/clients/grok.ts`（復元予定）でxAIのみ直接呼び出し
 
 ---
 
 ## 概要
 
-AI Hubは複数のLLMプロバイダーを統一インターフェースで利用可能。**LangChain**を使用してAgentic AI機能を実装しています。
+AI Hubは現在 **xAI (Grok) のみ** を使用。LangChainは将来のGemini追加に備えて保持しているが、現時点では直接使用していない。
+
+xAI Agent Tools（web_search, x_search, code_execution）を使用するため、xAI Responses API（`/v1/responses`）を直接呼び出している。
 
 ### 使用フレームワーク
 
