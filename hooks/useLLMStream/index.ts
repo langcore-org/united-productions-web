@@ -84,8 +84,10 @@ export function useLLMStream(options: UseLLMStreamOptions = {}) {
       const memory = getOrCreateMemory();
       memory.clear(); // 新しい会話のためにクリア
 
-      // GrokClientを作成（要約用）
-      const grokClient = provider.startsWith("grok-") ? new GrokClient(provider) : undefined;
+      // GrokClientを作成（要約用）- サーバーサイドのみでインスタンス化
+      // クライアントサイドでは環境変数にアクセスできないため、要約は行わない
+      const isServer = typeof window === 'undefined';
+      const grokClient = isServer && provider.startsWith("grok-") ? new GrokClient(provider) : undefined;
 
       // メッセージをMemoryに追加（要約が必要な場合は自動実行）
       await memory.addMessages(messages, grokClient);
