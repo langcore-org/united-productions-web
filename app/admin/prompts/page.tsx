@@ -16,6 +16,12 @@ interface Prompt {
   updatedAt: string;
 }
 
+interface PromptContent {
+  key: string;
+  content: string;
+  version: number;
+}
+
 interface Version {
   version: number;
   changeNote: string | null;
@@ -27,6 +33,8 @@ export default function AdminPromptsPage() {
   const [prompts, setPrompts] = useState<Prompt[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedPrompt, setSelectedPrompt] = useState<Prompt | null>(null);
+  const [promptContent, setPromptContent] = useState<PromptContent | null>(null);
+  const [loadingContent, setLoadingContent] = useState(false);
   const [versions, setVersions] = useState<Version[]>([]);
   const [loadingVersions, setLoadingVersions] = useState(false);
 
@@ -50,17 +58,30 @@ export default function AdminPromptsPage() {
   async function showDetails(prompt: Prompt) {
     setSelectedPrompt(prompt);
     setLoadingVersions(true);
+    setLoadingContent(true);
     setVersions([]);
+    setPromptContent(null);
 
     try {
-      const res = await fetch(`/api/prompts/${prompt.key}/versions`);
-      if (!res.ok) throw new Error("Failed to fetch versions");
-      const data = await res.json();
-      setVersions(data.versions || []);
+      const [versionsRes, contentRes] = await Promise.all([
+        fetch(`/api/prompts/${prompt.key}/versions`),
+        fetch(`/api/prompts/${prompt.key}`),
+      ]);
+
+      if (versionsRes.ok) {
+        const versionsData = await versionsRes.json();
+        setVersions(versionsData.versions || []);
+      }
+
+      if (contentRes.ok) {
+        const contentData = await contentRes.json();
+        setPromptContent(contentData);
+      }
     } catch (e) {
       console.error(e);
     } finally {
       setLoadingVersions(false);
+      setLoadingContent(false);
     }
   }
 
@@ -187,7 +208,7 @@ export default function AdminPromptsPage() {
 
                       <div className="flex gap-2 pt-4">
                         <a
-                          href={`/prompts/${selectedPrompt.key}`}
+                          href={`/admin/prompts/${selectedPrompt.key}`}
                           className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
                         >
                           編集
