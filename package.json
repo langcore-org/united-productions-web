@@ -18,7 +18,9 @@
     "knip": "knip",
     "knip:check": "knip --no-exit-code",
     "analyze": "ANALYZE=true npm run build",
-    "analyze:exp": "next experimental-analyze"
+    "analyze:exp": "next experimental-analyze",
+    "deploy:monitor": "./scripts/vercel-monitor.sh",
+    "deploy:status": "vercel list agent1"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.1",
