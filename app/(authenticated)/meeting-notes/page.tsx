@@ -343,6 +343,35 @@ export default function MeetingNotesPage() {
             />
           </div>
 
+          {/* サジェスト例 */}
+          {!transcript && (
+            <div className="mb-4">
+              <p className="text-xs text-gray-400 mb-2">例:</p>
+              <div className="flex flex-wrap gap-2">
+                {(currentTemplate.id === "meeting"
+                  ? [
+                      "Zoom文字起こしを議事録に整形して",
+                      "会議の決定事項を抽出して",
+                      "TODOリストを作成して",
+                    ]
+                  : [
+                      "面談の内容を整理して",
+                      "出演意向をまとめて",
+                      "フォローアップ事項を抽出して",
+                    ]
+                ).map((suggestion, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setTranscript(suggestion)}
+                    className="px-3 py-1.5 text-xs text-gray-600 bg-gray-50 hover:bg-gray-100 border border-gray-200 hover:border-gray-300 rounded-full transition-all duration-200"
+                  >
+                    {suggestion}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="relative group">
             <textarea
               value={transcript}

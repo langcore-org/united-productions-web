@@ -8,9 +8,9 @@
 import { useCallback, useRef, useState } from "react";
 import { LLMApiError, streamLLMResponse } from "@/lib/api/llm-client";
 import type { LLMMessage, LLMProvider } from "@/lib/llm/types";
-import type { ToolCallInfo, UsageInfo } from "./types";
+import type { FollowUpInfo, ToolCallInfo, UsageInfo } from "./types";
 
-export type { UsageInfo, ToolCallInfo };
+export type { FollowUpInfo, UsageInfo, ToolCallInfo };
 
 /**
  * useLLMStream Hook
@@ -21,6 +21,11 @@ export function useLLMStream() {
   const [error, setError] = useState<string | null>(null);
   const [usage, setUsage] = useState<UsageInfo | null>(null);
   const [toolCalls, setToolCalls] = useState<ToolCallInfo[]>([]);
+  const [followUp, setFollowUp] = useState<FollowUpInfo>({
+    questions: [],
+    isLoading: false,
+    error: null,
+  });
   const abortControllerRef = useRef<AbortController | null>(null);
 
   const cleanup = useCallback(() => {
@@ -43,8 +48,41 @@ export function useLLMStream() {
       setError(null);
       setUsage(null);
       setToolCalls([]);
+      setFollowUp({ questions: [], isLoading: false, error: null });
 
       abortControllerRef.current = new AbortController();
+
+      // フォローアップ質問を生成
+      const generateFollowUp = async () => {
+        setFollowUp({ questions: [], isLoading: true, error: null });
+
+        try {
+          const response = await fetch("/api/llm/follow-up", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ messages, provider }),
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error || `HTTP error: ${response.status}`);
+          }
+
+          const data = (await response.json()) as { questions: string[] };
+          setFollowUp({
+            questions: data.questions || [],
+            isLoading: false,
+            error: null,
+          });
+        } catch (err) {
+          const errorMessage = err instanceof Error ? err.message : "Failed to generate follow-up";
+          setFollowUp({
+            questions: [],
+            isLoading: false,
+            error: errorMessage,
+          });
+        }
+      };
 
       try {
         for await (const event of streamLLMResponse(
@@ -82,6 +120,8 @@ export function useLLMStream() {
             case "done":
               setUsage(event.usage);
               setIsComplete(true);
+              // ストリーミング完了後、フォローアップ質問を生成
+              generateFollowUp();
               break;
 
             case "error":
@@ -119,6 +159,7 @@ export function useLLMStream() {
     setError(null);
     setUsage(null);
     setToolCalls([]);
+    setFollowUp({ questions: [], isLoading: false, error: null });
   }, [cleanup]);
 
   return {
@@ -127,6 +168,7 @@ export function useLLMStream() {
     error,
     usage,
     toolCalls,
+    followUp,
     startStream,
     cancelStream,
     resetStream,

@@ -14,7 +14,7 @@ export const DEFAULT_PROMPTS = [
   {
     id: "prompt_general_chat",
     key: "GENERAL_CHAT",
-    name: "一般チャット",
+    name: "チャット",
     description: "汎用チャット用システムプロンプト（エージェント対応）",
     content: AGENTIC_BASE_PROMPT + `
 

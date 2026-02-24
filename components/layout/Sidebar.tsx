@@ -31,7 +31,7 @@ interface SidebarProps {
 const NEW_CHAT_BUTTONS = [
   {
     icon: <MessageSquare className="w-[18px] h-[18px]" />,
-    label: "一般チャット",
+    label: "チャット",
     href: "/chat?new=1",
     description: "新しいチャットを開始",
   },

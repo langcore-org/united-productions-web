@@ -357,6 +357,28 @@ Premiere Proの書き起こしテキストを、放送用のNA原稿形式に整
             />
           </div>
 
+          {/* サジェスト例 */}
+          {!transcript && (
+            <div className="mb-4">
+              <p className="text-xs text-gray-400 mb-2">例:</p>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  "Premiere Pro書き起こしをNA原稿にして",
+                  "話者を判定して整形して",
+                  "フィラーを除去して原稿にして",
+                ].map((suggestion, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setTranscript(suggestion)}
+                    className="px-3 py-1.5 text-xs text-gray-600 bg-gray-50 hover:bg-gray-100 border border-gray-200 hover:border-gray-300 rounded-full transition-all duration-200"
+                  >
+                    {suggestion}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="relative group">
             <textarea
               value={transcript}

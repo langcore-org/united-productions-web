@@ -3,6 +3,7 @@
 import { Loader2, MessageSquare, RotateCcw } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { StreamingSteps } from "@/components/chat";
+import { FollowUpSuggestions } from "@/components/chat/FollowUpSuggestions";
 import { type PromptSuggestion, PromptSuggestions } from "@/components/chat/PromptSuggestions";
 import { Button } from "@/components/ui/button";
 import { useConversationSave } from "@/hooks/useConversationSave";
@@ -43,6 +44,8 @@ export interface FeatureChatProps {
   enableFileAttachment?: boolean;
   /** プロンプトサジェスト（AIレスポンス後に表示） */
   promptSuggestions?: PromptSuggestion[];
+  /** 新規チャット時のサジェスト例 */
+  suggestions?: string[];
 }
 
 export function FeatureChat({
@@ -59,6 +62,7 @@ export function FeatureChat({
   emptyDescription,
   enableFileAttachment = true,
   promptSuggestions = [],
+  suggestions = [],
 }: FeatureChatProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -71,7 +75,8 @@ export function FeatureChat({
   const [isUserScrolling, setIsUserScrolling] = useState(false);
   const userScrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const { content, isComplete, error, usage, toolCalls, startStream, resetStream } = useLLMStream();
+  const { content, isComplete, error, usage, toolCalls, followUp, startStream, resetStream } =
+    useLLMStream();
 
   const { currentChatId, setCurrentChatId, isLoadingHistory, loadConversation, saveConversation } =
     useConversationSave({ featureId, initialChatId, onChatCreated });
@@ -274,7 +279,26 @@ export function FeatureChat({
             <p className="text-sm text-gray-500 max-w-md">
               {emptyDescription || "メッセージを送信して、AIと対話を始めましょう。"}
             </p>
-            <div className="mt-6 flex items-center gap-2 text-xs text-gray-500">
+
+            {/* サジェストボタン */}
+            {suggestions.length > 0 && (
+              <div className="mt-8 w-full max-w-lg">
+                <p className="text-xs text-gray-400 mb-3">例:</p>
+                <div className="flex flex-wrap justify-center gap-2">
+                  {suggestions.map((suggestion, index) => (
+                    <button
+                      key={index}
+                      onClick={() => handleSuggestionClick(suggestion)}
+                      className="px-4 py-2 text-sm text-gray-600 bg-gray-50 hover:bg-gray-100 border border-gray-200 hover:border-gray-300 rounded-full transition-all duration-200"
+                    >
+                      {suggestion}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="mt-8 flex items-center gap-2 text-xs text-gray-500">
               <span className="px-2 py-1 rounded bg-gray-100 border border-gray-200">
                 Ctrl + Enter
               </span>
@@ -303,10 +327,24 @@ export function FeatureChat({
               />
             )}
 
+            {/* フォローアップサジェスト（動的生成） */}
+            {!isStreaming && hasMessages && lastAssistantMessage && (
+              <div className="px-4 py-4 max-w-3xl mx-auto">
+                <FollowUpSuggestions
+                  suggestions={followUp.questions.map((q, i) => ({ id: String(i), text: q }))}
+                  onSuggestionClick={handleSuggestionClick}
+                  isLoading={followUp.isLoading}
+                />
+              </div>
+            )}
+
+            {/* 固定プロンプトサジェスト（設定されている場合） */}
             {!isStreaming &&
               hasMessages &&
               lastAssistantMessage &&
-              promptSuggestions.length > 0 && (
+              promptSuggestions.length > 0 &&
+              followUp.questions.length === 0 &&
+              !followUp.isLoading && (
                 <div className="px-4 py-4 max-w-3xl mx-auto">
                   <PromptSuggestions
                     suggestions={promptSuggestions}

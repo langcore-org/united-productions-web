@@ -32,7 +32,7 @@ function getAgentTypeLabel(agentType: string): string {
     "MINUTES": "議事録作成",
     "PROPOSAL": "新企画立案",
     "NA-SCRIPT": "NA原稿作成",
-    "GENERAL-CHAT": "一般チャット",
+    "GENERAL-CHAT": "チャット",
   };
   return labels[agentType.toUpperCase()] || "チャット";
 }

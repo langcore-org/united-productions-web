@@ -105,6 +105,7 @@ function ChatPageContent() {
       placeholder={agent.placeholder}
       inputLabel={agent.inputLabel}
       outputFormat={agent.outputFormat}
+      suggestions={agent.suggestions}
     />
   );
 }

@@ -44,7 +44,7 @@ interface Pagination {
 // 機能別フィルター
 const FEATURE_FILTERS = [
   { id: "all", label: "すべて", icon: MessageSquare },
-  { id: "general-chat", label: "一般チャット", icon: MessageSquare },
+  { id: "general-chat", label: "チャット", icon: MessageSquare },
   { id: "research-cast", label: "出演者リサーチ", icon: Users },
   { id: "research-evidence", label: "エビデンスリサーチ", icon: Shield },
   { id: "minutes", label: "議事録作成", icon: FileText },

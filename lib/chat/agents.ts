@@ -29,6 +29,7 @@ export interface Agent {
   category: "research" | "document" | "general";
   color?: string; // アクセントカラー
   promptKey: string; // DBプロンプトキー
+  suggestions: string[]; // 新規チャット時のサジェスト例
 }
 
 // デフォルトプロンプトをキーで検索するヘルパー
@@ -57,7 +58,7 @@ ${pastProposals || "（未設定）"}`;
 export const AGENTS: Agent[] = [
   {
     id: "general",
-    name: "一般チャット",
+    name: "チャット",
     description: "何でも相談できる汎用チャット",
     icon: "Sparkles",
     systemPrompt: getDefaultPromptContent(PROMPT_KEYS.GENERAL_CHAT),
@@ -66,6 +67,11 @@ export const AGENTS: Agent[] = [
     category: "general",
     color: "#6366f1",
     promptKey: PROMPT_KEYS.GENERAL_CHAT,
+    suggestions: [
+      "今週の放送業界のトピックを教えて",
+      "企画書の書き方のアドバイスをください",
+      "この文章を校正してください",
+    ],
   },
   {
     id: "research-cast",
@@ -78,6 +84,11 @@ export const AGENTS: Agent[] = [
     category: "research",
     color: "#ec4899",
     promptKey: PROMPT_KEYS.RESEARCH_CAST,
+    suggestions: [
+      "バラエティ企画に合う若手俳優を探して",
+      "料理の企画に詳しい出演者を教えて",
+      "過去の出演履歴から候補を絞って",
+    ],
   },
   {
     id: "research-evidence",
@@ -90,6 +101,11 @@ export const AGENTS: Agent[] = [
     category: "research",
     color: "#f59e0b",
     promptKey: PROMPT_KEYS.RESEARCH_EVIDENCE,
+    suggestions: [
+      "この統計データの出典を確認して",
+      "この噂は本当か調べて",
+      "SNSで話題の情報をファクトチェックして",
+    ],
   },
   {
     id: "minutes",
@@ -103,6 +119,11 @@ export const AGENTS: Agent[] = [
     category: "document",
     color: "#8b5cf6",
     promptKey: PROMPT_KEYS.MINUTES,
+    suggestions: [
+      "Zoom文字起こしを議事録に整形して",
+      "会議の決定事項を抽出して",
+      "TODOリストを作成して",
+    ],
   },
   {
     id: "proposal",
@@ -115,6 +136,11 @@ export const AGENTS: Agent[] = [
     category: "document",
     color: "#f97316",
     promptKey: PROMPT_KEYS.PROPOSAL,
+    suggestions: [
+      "若年層向けの新しい企画を考えて",
+      "過去の企画をアレンジした新案を出して",
+      "季節に合った特番企画を提案して",
+    ],
   },
   {
     id: "na-script",
@@ -128,6 +154,11 @@ export const AGENTS: Agent[] = [
     category: "document",
     color: "#14b8a6",
     promptKey: PROMPT_KEYS.TRANSCRIPT,
+    suggestions: [
+      "Premiere Pro書き起こしをNA原稿にして",
+      "話者を判定して整形して",
+      "フィラーを除去して原稿にして",
+    ],
   },
 ];
 

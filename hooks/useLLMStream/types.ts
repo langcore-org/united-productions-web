@@ -23,3 +23,12 @@ export interface ToolCallInfo {
   status: "running" | "completed";
   input?: string;
 }
+
+/**
+ * フォローアップ質問情報
+ */
+export interface FollowUpInfo {
+  questions: string[];
+  isLoading: boolean;
+  error: string | null;
+}
