@@ -1,11 +1,11 @@
 "use client";
 
-import { Loader2, MessageSquare, RotateCcw } from "lucide-react";
+import { Loader2, MessageSquare } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { StreamingSteps } from "@/components/chat";
 import { FollowUpSuggestions } from "@/components/chat/FollowUpSuggestions";
 import { type PromptSuggestion, PromptSuggestions } from "@/components/chat/PromptSuggestions";
-import { Button } from "@/components/ui/button";
+
 import { useConversationSave } from "@/hooks/useConversationSave";
 import { useLLMStream } from "@/hooks/useLLMStream";
 import { DEFAULT_PROVIDER } from "@/lib/llm/config";
@@ -46,6 +46,8 @@ export interface FeatureChatProps {
   promptSuggestions?: PromptSuggestion[];
   /** 新規チャット時のサジェスト例 */
   suggestions?: string[];
+  /** 番組選択機能を有効化 */
+  enableProgramSelector?: boolean;
 }
 
 export function FeatureChat({
@@ -63,11 +65,13 @@ export function FeatureChat({
   enableFileAttachment = true,
   promptSuggestions = [],
   suggestions = [],
+  enableProgramSelector = false,
 }: FeatureChatProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isCopied, setIsCopied] = useState(false);
   const [attachedFiles, setAttachedFiles] = useState<AttachedFile[]>([]);
+  const [selectedProgramId, setSelectedProgramId] = useState<string>("all");
 
   const provider: LLMProvider = initialProvider;
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -148,17 +152,10 @@ export function FeatureChat({
     }
   }, [isComplete, content, currentChatId, provider, resetStream, saveConversation]);
 
-  const buildStreamMessages = useCallback(
-    (userContent: string, history: Message[]) => {
-      const conversationHistory = history.map((m) => ({ role: m.role, content: m.content }));
-      return [
-        { role: "system" as const, content: systemPrompt },
-        ...conversationHistory,
-        { role: "user" as const, content: userContent },
-      ];
-    },
-    [systemPrompt],
-  );
+  const buildStreamMessages = useCallback((userContent: string, history: Message[]) => {
+    const conversationHistory = history.map((m) => ({ role: m.role, content: m.content }));
+    return [...conversationHistory, { role: "user" as const, content: userContent }];
+  }, []);
 
   const handleSend = async () => {
     if (!input.trim() && attachedFiles.length === 0) return;
@@ -187,20 +184,7 @@ export function FeatureChat({
     setAttachedFiles([]);
 
     const streamMessages = buildStreamMessages(userMessage.content, messages);
-    await startStream(streamMessages, provider);
-  };
-
-  const handleRegenerate = async () => {
-    const lastUserIndex = [...messages].reverse().findIndex((m) => m.role === "user");
-    if (lastUserIndex === -1) return;
-
-    const actualIndex = messages.length - 1 - lastUserIndex;
-    const lastUserMessage = messages[actualIndex];
-    const newMessages = messages.slice(0, actualIndex);
-    setMessages(newMessages);
-
-    const streamMessages = buildStreamMessages(lastUserMessage.content, newMessages);
-    await startStream(streamMessages, provider);
+    await startStream(streamMessages, provider, selectedProgramId);
   };
 
   const handleCopy = async () => {
@@ -241,7 +225,7 @@ export function FeatureChat({
       setMessages((prev) => {
         const newMessages = [...prev, userMessage];
         const streamMessages = buildStreamMessages(userMessage.content, newMessages.slice(0, -1));
-        startStream(streamMessages, provider);
+        startStream(streamMessages, provider, selectedProgramId);
         return newMessages;
       });
     },
@@ -259,6 +243,10 @@ export function FeatureChat({
         isCopied={isCopied}
         onClear={handleClear}
         onCopy={handleCopy}
+        enableProgramSelector={enableProgramSelector}
+        selectedProgramId={selectedProgramId}
+        onProgramChange={setSelectedProgramId}
+        isProgramSelectorDisabled={!isComplete}
       />
 
       {/* Messages */}
@@ -352,21 +340,6 @@ export function FeatureChat({
                   />
                 </div>
               )}
-
-            {!isStreaming && hasMessages && messages.some((m) => m.role === "assistant") && (
-              <div className="flex justify-center py-4">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleRegenerate}
-                  disabled={!!isStreaming}
-                  className="gap-2 border-gray-200 bg-gray-50 text-gray-600 hover:bg-gray-100 hover:text-gray-900"
-                >
-                  <RotateCcw className="w-4 h-4" />
-                  再生成
-                </Button>
-              </div>
-            )}
 
             {error && (
               <div className="mx-4 my-4 p-4 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
