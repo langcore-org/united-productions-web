@@ -3,19 +3,31 @@
  *
  * LLMストリーミングAPIとの連携を行うカスタムフック
  * 新SSEイベント形式（discriminated union）に対応
+ * Rolling Summary Memory統合版
  */
 
 import { useCallback, useRef, useState } from "react";
 import { LLMApiError, streamLLMResponse } from "@/lib/api/llm-client";
+import { GrokClient } from "@/lib/llm/clients/grok";
+import { ThresholdRollingSummaryMemory } from "@/lib/llm/memory/threshold-rolling-summary";
 import type { LLMMessage, LLMProvider } from "@/lib/llm/types";
 import type { FollowUpInfo, ToolCallInfo, UsageInfo } from "./types";
 
 export type { FollowUpInfo, UsageInfo, ToolCallInfo };
 
+export interface UseLLMStreamOptions {
+  /** 要約開始閾値（トークン数）。デフォルト: 100000 */
+  tokenThreshold?: number;
+  /** 直近保持するターン数。デフォルト: 10 */
+  maxRecentTurns?: number;
+}
+
 /**
  * useLLMStream Hook
  */
-export function useLLMStream() {
+export function useLLMStream(options: UseLLMStreamOptions = {}) {
+  const { tokenThreshold = 100_000, maxRecentTurns = 10 } = options;
+
   const [content, setContent] = useState("");
   const [isComplete, setIsComplete] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -26,7 +38,9 @@ export function useLLMStream() {
     isLoading: false,
     error: null,
   });
+
   const abortControllerRef = useRef<AbortController | null>(null);
+  const memoryRef = useRef<ThresholdRollingSummaryMemory | null>(null);
 
   const cleanup = useCallback(() => {
     if (abortControllerRef.current) {
@@ -34,6 +48,19 @@ export function useLLMStream() {
       abortControllerRef.current = null;
     }
   }, []);
+
+  /**
+   * Memoryを初期化または取得
+   */
+  const getOrCreateMemory = useCallback(() => {
+    if (!memoryRef.current) {
+      memoryRef.current = new ThresholdRollingSummaryMemory({
+        tokenThreshold,
+        maxRecentTurns,
+      });
+    }
+    return memoryRef.current;
+  }, [tokenThreshold, maxRecentTurns]);
 
   /**
    * ストリームを開始
@@ -53,6 +80,19 @@ export function useLLMStream() {
 
       abortControllerRef.current = new AbortController();
 
+      // Memoryを初期化し、メッセージをロード
+      const memory = getOrCreateMemory();
+      memory.clear(); // 新しい会話のためにクリア
+
+      // GrokClientを作成（要約用）
+      const grokClient = provider.startsWith("grok-") ? new GrokClient(provider) : undefined;
+
+      // メッセージをMemoryに追加（要約が必要な場合は自動実行）
+      await memory.addMessages(messages, grokClient);
+
+      // 適切なコンテキストを取得（要約済み or 全履歴）
+      const context = memory.getContext();
+
       // フォローアップ質問を生成
       const generateFollowUp = async () => {
         setFollowUp({ questions: [], isLoading: true, error: null });
@@ -61,7 +101,7 @@ export function useLLMStream() {
           const response = await fetch("/api/llm/follow-up", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ messages, provider, programId }),
+            body: JSON.stringify({ messages: context.messages, provider, programId }),
           });
 
           if (!response.ok) {
@@ -87,7 +127,7 @@ export function useLLMStream() {
 
       try {
         for await (const event of streamLLMResponse(
-          { messages, provider, programId },
+          { messages: context.messages, provider, programId },
           { signal: abortControllerRef.current.signal },
         )) {
           switch (event.type) {
@@ -145,7 +185,7 @@ export function useLLMStream() {
         }
       }
     },
-    [cleanup],
+    [cleanup, getOrCreateMemory],
   );
 
   const cancelStream = useCallback(() => {
@@ -161,7 +201,17 @@ export function useLLMStream() {
     setUsage(null);
     setToolCalls([]);
     setFollowUp({ questions: [], isLoading: false, error: null });
+    // Memoryもクリア
+    memoryRef.current?.clear();
+    memoryRef.current = null;
   }, [cleanup]);
+
+  /**
+   * Memoryの状態を取得（デバッグ用）
+   */
+  const getMemoryStatus = useCallback(() => {
+    return memoryRef.current?.getStatus();
+  }, []);
 
   return {
     content,
@@ -173,6 +223,7 @@ export function useLLMStream() {
     startStream,
     cancelStream,
     resetStream,
+    getMemoryStatus,
   };
 }
 
