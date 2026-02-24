@@ -93,6 +93,13 @@ docs/
 │   ├── tasks-detailed.md        # タスク一覧（詳細）
 │   └── status-dashboard.md      # 実装状況
 │
+├── backlog/                     # 【検討・調査】いつか対応したいもの
+│   ├── README.md
+│   ├── idea-*.md                # 新機能アイデア
+│   ├── research-*.md            # 技術調査
+│   ├── refactor-*.md            # リファクタリング候補
+│   └── improve-*.md             # 改善案
+│
 ├── guides/                      # 【手順書】開発者向け
 │   ├── setup/                   # 環境構築
 │   │   ├── database-cache.md
@@ -130,19 +137,24 @@ docs/
 | `specs/` | 技術仕様 | 開発者 | 随時 | ⭐⭐⭐ 最優先 |
 | `user-docs/` | ユーザードキュメント | 制作スタッフ | 機能変更時 | ⭐⭐ |
 | `plans/` | 進行中の計画 | 開発者 | 進行中のみ | ⭐⭐ |
+| `backlog/` | 検討・調査・将来対応 | 開発者 | 随時 | ⭐ |
 | `guides/` | 手順書 | 開発者 | 環境変化時 | ⭐⭐ |
 | `archive/` | 過去資料 | 全員 | なし（参照のみ） | ⭐ |
 
 ### 計画書のライフサイクル
 
 ```
-計画作成 → plans/ に配置 → 実装 → 完了 → archive/YYYY-MM-DD-*.md に移動
+アイデア発生 → backlog/ に配置 → 検討・調査 → 実装決定 → plans/ に配置 → 実装 → 完了 → archive/YYYY-MM-DD-*.md
+                                    ↓
+                              優先度低下 → archive/YYYY-MM-DD-*.md
 ```
 
 | ステータス | 場所 | 操作 |
 |-----------|------|------|
+| 検討・調査中 | `backlog/` | 継続検討 or `plans/` へ移動 |
 | 進行中 | `plans/` | 随時更新 |
 | 完了 | `archive/YYYY-MM-DD-*.md` | 参照のみ、更新禁止 |
+| 優先度低下 | `archive/YYYY-MM-DD-*.md` | 参照のみ |
 
 ### 情報の信頼順位
 
@@ -188,7 +200,9 @@ find docs/plans/ -name "*.md" -mtime +7
 ## ❓ よくある質問（FAQ）
 
 ### Q: 新しい機能の仕様書はどこに書く？
-**A:** `specs/` の適切なサブディレクトリに。迷ったら `specs/architecture/` に。
+**A:** 
+- **実装決定済み**: `specs/` の適切なサブディレクトリに。迷ったら `specs/architecture/` に。
+- **検討・調査段階**: `backlog/` に `idea-{機能名}.md` として作成。
 
 ### Q: 過去の決定事項を調べたい
 **A:** `archive/` ディレクトリを検索。日付付きで整理されている。
@@ -200,7 +214,9 @@ grep -r "決定事項" docs/archive/ --include="*.md"
 **A:** `specs/` を正とする。実装を修正するか、ドキュメントを更新する必要がある。
 
 ### Q: 計画書はいつアーカイブする？
-**A:** 実装が完了し、検収された時点で `archive/YYYY-MM-DD-元のファイル名.md` に移動。
+**A:** 
+- **実装完了時**: `plans/` → `archive/YYYY-MM-DD-元のファイル名.md`
+- **優先度低下時**: `backlog/` → `archive/YYYY-MM-DD-元のファイル名.md`
 
 ### Q: ファイル名の規則は？
 **A:** [naming-conventions.md](guides/development/naming-conventions.md) を参照。基本はケバブケース。
