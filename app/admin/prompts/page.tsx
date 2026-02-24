@@ -97,7 +97,7 @@ export default function AdminPromptsPage() {
 
   return (
     <AdminLayout>
-      <div className="h-full overflow-y-auto p-8">
+      <div className="p-8">
         <div className="max-w-6xl mx-auto">
           <h1 className="text-3xl font-bold mb-6">プロンプト管理</h1>
 
@@ -169,7 +169,7 @@ export default function AdminPromptsPage() {
                           </div>
                         ) : promptContent ? (
                           <div className="bg-gray-50 border rounded-lg p-4">
-                            <pre className="text-sm font-mono whitespace-pre-wrap break-words max-h-[300px] overflow-y-auto">
+                            <pre className="text-sm font-mono whitespace-pre-wrap break-words">
                               {promptContent.content}
                             </pre>
                           </div>
