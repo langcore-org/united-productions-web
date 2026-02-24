@@ -1,94 +1,82 @@
 # Grok Agent Tools API 仕様
 
-> **最終更新**: 2026-02-20 20:00
+> **最終更新**: 2026-02-24 13:45
 
 ---
 
 ## 概要
 
-xAIのAgent Tools APIは、Grokモデルにサーバーサイドで実行されるツールを提供します。これにより、AIは自律的にツールを使いこなし、Web検索、X検索、コード実行、ドキュメント検索などを行うことができます。
+xAIのAgent Tools APIは、Grokモデルにサーバーサイドで実行されるツールを提供します。これにより、AIは自律的にツールを使いこなし、Web検索、X検索、コード実行などを行うことができます。
+
+> ⚠️ **重要**: 現在のLangChain実装では、Agent Toolsは**統合されていません**。`toolOptions`パラメータは受け取りますが、実際のAPIリクエストには含まれていません。
 
 ### ツールの種類
 
 | 種類 | 説明 | 例 |
 |------|------|-----|
-| **組み込みツール (Built-in Tools)** | xAIのサーバーで自動実行されるサーバーサイドツール | Web Search, X Search, Code Execution, Collections Search |
+| **組み込みツール (Built-in Tools)** | xAIのサーバーで自動実行されるサーバーサイドツール | Web Search, X Search, Code Execution |
 | **関数呼び出し (Function Calling)** | 開発者が定義したカスタム関数 | データベースクエリ、API呼び出し、独自ビジネスロジック |
 
 ---
 
-## 重要な変更履歴
+## 実装状況
 
-### 2026-02-20: Responses APIへの移行
+### 現在の状態: ⚠️ 未統合
 
-**問題**: xAI APIで `x_search` ツールを使用すると以下のエラーが発生
+| 機能 | 状態 | 備考 |
+|------|------|------|
+| Web Search (`web_search`) | ❌ 未実装 | APIリクエストに含まれていない |
+| X Search (`x_search`) | ❌ 未実装 | APIリクエストに含まれていない |
+| Code Execution (`code_execution`) | ❌ 未実装 | APIリクエストに含まれていない |
+| Collections Search | ❌ 未対応 | `vector_store_ids` が必要 |
 
-```
-xAI API error: 422 Failed to deserialize the JSON body into the target type: 
-tools[0].type: unknown variant `x_search`, expected `function` or `live_search` 
-at line 1 column 5457
-```
+### 技術的制約
 
-**原因**: 
-- `chat/completions` エンドポイントでは組み込みツール（`x_search`, `web_search`等）がサポートされていない
-- 組み込みツールを使用するには **Responses API** (`/v1/responses`) を使用する必要がある
+LangChainの `ChatOpenAI` クライアントでは、xAIの組み込みツール（`web_search`, `x_search`等）を直接使用することができません。これらのツールを使用するには以下のアプローチが必要です：
 
-**対応**: 以下の変更を実施
-
-| ファイル | 変更内容 |
-|---------|---------|
-| `lib/llm/clients/grok.ts` | エンドポイントを `/chat/completions` から `/responses` に変更 |
-| `lib/settings/db.ts` | 型定義を更新（`live_search` → `x_search` に戻す） |
-| `app/admin/grok-tools/page.tsx` | ツール名表示を `x_search` に変更 |
-
-**修正前（chat/completions）**:
-```typescript
-const response = await fetch(`${this.baseUrl}/chat/completions`, {
-  method: 'POST',
-  headers: { ... },
-  body: JSON.stringify({
-    model: this.model,
-    messages: [...],
-    tools: [{ type: 'x_search' }]  // エラー: unknown variant
-  }),
-});
-```
-
-**修正後（Responses API）**:
-```typescript
-const response = await fetch(`${this.baseUrl}/responses`, {
-  method: 'POST',
-  headers: { ... },
-  body: JSON.stringify({
-    model: this.model,
-    input: [...],  // messages → input
-    tools: [{ type: 'x_search' }]  // 正常動作
-  }),
-});
-```
-
-### 2025-12-15: Live Search APIの廃止
-
-**旧API**: Live Search API（`search_parameters` パラメータを使用）
-
-**新API**: Agent Tools API（`tools` パラメータを使用）
-
-**移行理由**:
-- Live Search APIは2025年12月15日に廃止
-- Agent Tools APIはより高度なエージェント機能を提供
-- ツールの組み合わせが可能（Web Search + X Search + Code Execution）
-
-参照: [xAI Release Notes - October 2025](https://docs.x.ai/developers/release-notes)
-
-### 2025-11-07: 新ツールの追加
-
-- **Collections Search Tool**: アップロードしたナレッジベースの検索
-- **Remote MCP Tools**: リモートMCPサーバーからのツール使用
-- **クライアント/サーバーサイドツールの混在**: 同じ会話で両方のツールタイプを使用可能
+1. **xAI Responses APIを直接呼び出す**（`fetch`等で生のHTTPリクエスト）
+2. **LangChainのカスタムクライアントを実装する**
+3. **Vercel AI SDK等、xAIツールをサポートするSDKを使用する**
 
 ---
 
-## ツール一覧
+## アーキテクチャ
+
+### 現在の実装（LangChainベース）
+
+```
+┌─────────────────┐     ┌──────────────────┐     ┌─────────────────┐
+│   Client (UI)   │────▶│  /api/llm/stream │────▶│ LangChain Chain │
+└─────────────────┘     └──────────────────┘     └────────┬────────┘
+        │                                                 │
+        │  toolOptions（未使用）                            │
+        │                                                 ▼
+        │                                    ┌──────────────────┐
+        │                                    │ xAI API          │
+        │                                    │ (/chat/completions│
+        │                                    │  ツールなし)      │
+        │                                    └──────────────────┘
+        │
+        ▼
+┌─────────────────┐
+│ 理想: Responses │
+│  API + tools    │
+│  (未実装)       │
+└─────────────────┘
+```
+
+### 実装ファイル構成
+
+| ファイル | 説明 | ツール関連の実装 |
+|---------|------|----------------|
+| `lib/llm/langchain/factory.ts` | LangChainモデル生成 | ❌ なし（単純なChatOpenAI） |
+| `lib/llm/langchain/chains/streaming.ts` | ストリーミングChain | ❌ なし |
+| `lib/llm/langchain/callbacks/streaming.ts` | コールバックハンドラー | ❌ ツールイベントは検出されない |
+| `app/api/llm/stream/route.ts` | APIエンドポイント | ⚠️ `toolOptions`受け取るが無視 |
+
+---
+
+## ツール一覧（仕様）
 
 ### 1. Web Search (`web_search`)
 
@@ -97,8 +85,8 @@ const response = await fetch(`${this.baseUrl}/responses`, {
 | **名前** | Web検索 |
 | **API名** | `web_search` |
 | **説明** | インターネットからリアルタイムで最新情報を検索・閲覧 |
-| **状態** | **常時有効** |
-| **利用可能モデル** | Grok 4.1 Fast, Grok 4.1 Fast Reasoning, Grok 4 |
+| **実装状態** | ❌ **未実装** |
+| **利用可能モデル** | Grok 4.1 Fast, Grok 4 |
 
 #### パラメータ
 
@@ -106,38 +94,33 @@ const response = await fetch(`${this.baseUrl}/responses`, {
 |-----------|-----|------|------|
 | `allowed_domains` | `string[]` | 任意 | 検索対象ドメインを限定（最大5つ）。`excluded_domains` と同時使用不可 |
 | `excluded_domains` | `string[]` | 任意 | 除外ドメインを指定（最大5つ）。`allowed_domains` と同時使用不可 |
-| `enable_image_understanding` | `boolean` | 任意 | 検索結果の画像解析を有効化。有効化すると `view_image` ツールも使用可能に |
 
-#### 使用例
+#### 使用例（理想）
 
 ```typescript
-// 基本的な使用
-const tools = [{ type: 'web_search' }];
-
-// 特定ドメインのみ検索
-const tools = [{
-  type: 'web_search',
-  allowed_domains: ['github.com', 'stackoverflow.com']
-}];
-
-// 画像解析付き
-const tools = [{
-  type: 'web_search',
-  enable_image_understanding: true
-}];
+// xAI Responses API での使用例（現在は未実装）
+const response = await fetch('https://api.x.ai/v1/responses', {
+  method: 'POST',
+  headers: { 'Authorization': `Bearer ${apiKey}` },
+  body: JSON.stringify({
+    model: 'grok-4-1-fast-reasoning',
+    input: [{ role: 'user', content: '最新のAIニュースを教えて' }],
+    tools: [{ type: 'web_search' }]  // ← 現在は送信されていない
+  }),
+});
 ```
 
 ---
 
-### 2. X Search (`live_search`)
+### 2. X Search (`x_search`)
 
 | 項目 | 内容 |
 |------|------|
 | **名前** | X検索 |
 | **API名** | `x_search` |
 | **説明** | X（Twitter）からリアルタイム投稿、ユーザー、スレッドを検索 |
-| **状態** | **常時有効** |
-| **利用可能モデル** | Grok 4.1 Fast, Grok 4.1 Fast Reasoning, Grok 4 |
+| **実装状態** | ❌ **未実装** |
+| **利用可能モデル** | Grok 4.1 Fast, Grok 4 |
 
 #### パラメータ
 
@@ -147,33 +130,6 @@ const tools = [{
 | `excluded_x_handles` | `string[]` | 任意 | 特定アカウントを除外（最大10つ） |
 | `from_date` | `string` | 任意 | 検索開始日（ISO8601形式: `YYYY-MM-DD`） |
 | `to_date` | `string` | 任意 | 検索終了日（ISO8601形式: `YYYY-MM-DD`） |
-| `enable_image_understanding` | `boolean` | 任意 | X投稿内の画像解析を有効化 |
-| `enable_video_understanding` | `boolean` | 任意 | X投稿内の動画解析を有効化 |
-
-#### 使用例
-
-```typescript
-// 基本的な使用
-const tools = [{ type: 'live_search' }];
-
-// 特定アカウントのみ検索
-const tools = [{
-  type: 'live_search',
-  allowed_x_handles: ['techcrunch', 'verge']
-}];
-
-// 日付範囲指定
-const tools = [{
-  type: 'live_search',
-  from_date: '2025-02-01',
-  to_date: '2025-02-20'
-}];
-```
-
-#### 注意事項
-
-- `web_search` で `enable_image_understanding: true` を設定すると、同時に `live_search` も画像解析が有効化される
-- X Searchはリアルタイムデータにアクセスするため、最新のトレンド情報を取得可能
 
 ---
 
@@ -184,8 +140,8 @@ const tools = [{
 | **名前** | コード実行 |
 | **API名** | `code_execution` |
 | **説明** | Pythonコードを安全なサンドボックス環境で実行 |
-| **状態** | **常時有効** |
-| **利用可能モデル** | Grok 4.1 Fast, Grok 4.1 Fast Reasoning, Grok 4 |
+| **実装状態** | ❌ **未実装** |
+| **利用可能モデル** | Grok 4.1 Fast, Grok 4 |
 
 #### 機能
 
@@ -194,12 +150,6 @@ const tools = [{
 - 統計処理
 - シミュレーション実行
 - ファイル入出力（一時的な作業領域）
-
-#### 使用例
-
-```typescript
-const tools = [{ type: 'code_execution' }];
-```
 
 ---
 
@@ -210,727 +160,214 @@ const tools = [{ type: 'code_execution' }];
 | **名前** | コレクション検索 / ファイル検索 |
 | **API名** | `collections_search` |
 | **説明** | アップロードしたドキュメント・ナレッジベースを検索 |
-| **状態** | **常時有効** |
-| **利用可能モデル** | Grok 4.1 Fast, Grok 4.1 Fast Reasoning, Grok 4 |
+| **実装状態** | ❌ **未対応** |
+| **利用可能モデル** | Grok 4.1 Fast, Grok 4 |
 
-#### 機能
+#### 制限事項
 
-- セマンティック検索（意味ベースの検索）
-- PDF、テキスト、CSV、Markdownなど複数形式対応
-- RAG（Retrieval-Augmented Generation）ワークフロー
-- 社内文書・規約の参照
-
-#### 使用例
-
-```typescript
-const tools = [{
-  type: 'collections_search',
-  collection_id: 'col_xxxxxxxx'  // 事前にアップロードしたコレクションID
-}];
-```
+- `vector_store_ids` パラメータが必要
+- ファイルアップロード機能が必要
 
 ---
 
-## ツールの組み合わせ
+## ツール設定（フロントエンドのみ）
 
-複数のツールを同時に指定可能：
+### 機能別ツール設定
 
-```typescript
-const tools = [
-  { type: 'web_search' },
-  { type: 'live_search' },
-  { type: 'code_execution' }
-];
-```
-
-AIはクエリに応じて最適なツールを自動選択、または複数のツールを組み合わせて使用します。
-
----
-
-## SDK/API別のツール指定方法
-
-### xAI SDK (Python)
-
-```python
-from xai_sdk import Client
-from xai_sdk.tools import web_search, x_search, code_execution
-
-client = Client(api_key=os.getenv("XAI_API_KEY"))
-chat = client.chat.create(
-    model="grok-4-1-fast-reasoning",
-    tools=[
-        web_search(),
-        x_search(),           # SDKではまだ x_search の関数名
-        code_execution(),
-    ],
-)
-```
-
-### OpenAI互換API (REST)
-
-```bash
-curl -X POST https://api.x.ai/v1/chat/completions \
-  -H "Authorization: Bearer $XAI_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "model": "grok-4-1-fast-reasoning",
-    "messages": [
-      {"role": "user", "content": "最新のAIニュースを教えて"}
-    ],
-    "tools": [
-      {"type": "web_search"},
-      {"type": "live_search"}
-    ]
-  }'
-```
-
-### Vercel AI SDK
+`lib/chat/chat-config.ts` で機能別のデフォルトツール設定を定義していますが、**実際のAPIリクエストには反映されていません**：
 
 ```typescript
-import { xai } from '@ai-sdk/xai';
-import { generateText } from 'ai';
+export const featureToolDefaults: Record<ChatFeatureId, ToolOptions> = {
+  "general-chat": { enableWebSearch: true },
+  "research-cast": { enableWebSearch: true, enableXSearch: true },
+  "research-location": { enableWebSearch: true },
+  "research-info": { enableWebSearch: true, enableXSearch: true },
+  "research-evidence": { enableWebSearch: true },
+  "minutes": { enableWebSearch: false },
+  "proposal": { enableWebSearch: true, enableXSearch: true },
+  "na-script": { enableWebSearch: false },
+};
+```
 
-const result = await generateText({
-  model: xai('grok-4-1-fast-reasoning'),
-  tools: {
-    web_search: xai.tools.webSearch(),
-    x_search: xai.tools.xSearch(),  // Vercel SDKでは xSearch の関数名
-  },
-  prompt: '最新のAIニュースを教えて',
+### APIリクエストの流れ
+
+```typescript
+// app/api/llm/stream/route.ts
+const {
+  messages,
+  toolOptions,  // ← 受け取るが...
+} = validationResult.data;
+
+// LangChainモデルの作成（toolOptionsは無視される）
+const model = createLangChainModel(provider, {
+  temperature,
+  maxTokens,
+  streaming: true,
+  // toolOptions はここに含まれていない
 });
 ```
 
 ---
 
-## レスポンスと引用
+## APIエンドポイント
 
-### ツール使用状況の確認
+### ストリーミングチャット
+
+```
+POST /api/llm/stream
+```
+
+#### リクエスト
 
 ```typescript
-// レスポンスの usage フィールド
 {
-  "usage": {
-    "prompt_tokens": 6397,
-    "completion_tokens": 834,
-    "total_tokens": 7231,
-    "num_sources_used": 0,
-    "num_server_side_tools_used": 1,
-    "server_side_tool_usage_details": {
-      "web_search_calls": 1,
-      "x_search_calls": 0,
-      "code_interpreter_calls": 0,
-      "file_search_calls": 0,
-      "mcp_calls": 0,
-      "document_search_calls": 0
-    }
+  "messages": [{"role": "user", "content": "..."}],
+  "provider": "grok-4-1-fast-reasoning",  // オプション
+  "temperature": 0.7,                      // オプション
+  "maxTokens": 2000,                       // オプション
+  "toolOptions": {                         // ⚠️ 受け取るが無視される
+    "enableWebSearch": true
   }
 }
 ```
 
-### 引用 (Citations)
+> **注意**: `toolOptions` はスキーマで定義され受け取りますが、実際のAPIリクエストには含まれていません。
 
-検索ツール使用時、レスポンスに情報源のURLが含まれます：
+#### レスポンス（SSE）
+
+```
+data: {"accepted": true}
+data: {"stepStart": {"step": 1, "id": "step-1-xxx", "title": "分析と計画", ...}}
+data: {"content": "回答の一部..."}
+data: {"usage": {"inputTokens": 100, "outputTokens": 50, "cost": 0}}
+```
+
+> **注意**: `toolCallEvent` は送信されません（ツールが実行されていないため）。
+
+---
+
+## LangChain統合
+
+### 現在の実装
 
 ```typescript
-// response.citations に引用情報
-{
-  "citations": [
-    {"url": "https://example.com/article1"},
-    {"url": "https://example.com/article2"}
-  ]
+// lib/llm/langchain/factory.ts
+export function createLangChainModel(provider: LLMProvider, options: LangChainOptions = {}) {
+  const config = getProviderConfig(provider);
+  
+  // ChatOpenAI を生成（ツールなし）
+  return new ChatOpenAI({
+    modelName: config.model,
+    temperature: options.temperature ?? 0.7,
+    maxTokens: options.maxTokens,
+    streaming: options.streaming ?? false,
+    apiKey: config.apiKey,
+    configuration: { baseURL: config.baseUrl },
+  });
 }
+```
+
+### 必要な修正
+
+ツールを統合するには、以下のいずれかのアプローチが必要です：
+
+#### オプション1: xAI Responses APIを直接呼び出す
+
+```typescript
+// 新しいクライアントを実装
+export async function* streamWithTools(
+  messages: LLMMessage[],
+  tools: GrokToolType[]
+): AsyncIterable<StreamChunk> {
+  const response = await fetch('https://api.x.ai/v1/responses', {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${apiKey}` },
+    body: JSON.stringify({
+      model: 'grok-4-1-fast-reasoning',
+      input: messages,
+      tools: tools.map(t => ({ type: t })),
+      stream: true,
+    }),
+  });
+  
+  // SSEパース処理...
+}
+```
+
+#### オプション2: LangChainでカスタムツールを定義
+
+```typescript
+// クライアントサイドツールとして定義（サーバーサイド実行ではない）
+const tools = [
+  new DynamicStructuredTool({
+    name: 'web_search',
+    description: 'Search the web',
+    func: async ({ query }) => {
+      // 実装...
+    },
+  }),
+];
+
+const modelWithTools = model.bindTools(tools);
 ```
 
 ---
 
-## 価格
+## 重要な変更履歴
 
-ツールリクエストの価格は以下の2要素で構成されます：
+### 2026-02-24: LangChain移行完了（ツール未統合）
 
-1. **トークン使用量**: 通常の入力/出力トークン料金
-2. **ツール呼び出し**: ツール実行ごとの料金（1000回あたり最大$5）
+**変更内容**:
+- 独自GrokClientを削除し、LangChainベースの実装に完全移行
+- `@langchain/openai` の `ChatOpenAI` を使用（xAIはOpenAI互換API）
+- **⚠️ Agent Toolsは未統合** - `toolOptions`は受け取るが無視される
 
-詳細: [xAI Pricing](https://x.ai/pricing)
+**影響ファイル**:
+- `lib/llm/factory.ts` - LangChainアダプターを使用
+- `lib/llm/langchain/adapter.ts` - LLMClientインターフェース実装
+- `lib/llm/langchain/factory.ts` - ChatOpenAI生成（ツールなし）
+- `lib/llm/langchain/chains/streaming.ts` - ストリーミングChain
+- `lib/llm/langchain/callbacks/streaming.ts` - イベントコールバック（ツールイベント検出不可）
+
+**既知の問題**:
+- `toolOptions` はAPIスキーマで定義されているが、実際のリクエストには含まれていない
+- フロントエンドでツール有効化UIが表示されるが、実際にはツールが実行されない
+
+### 2026-02-20: Responses APIへの移行（過去の実装）
+
+**問題**: xAI APIで `x_search` ツールを使用すると以下のエラーが発生
+
+```
+xAI API error: 422 Failed to deserialize the JSON body into the target type: 
+tools[0].type: unknown variant `x_search`, expected `function` or `live_search` 
+at line 1 column 5457
+```
+
+**原因**: 
+- `chat/completions` エンドポイントでは組み込みツールがサポートされていない
+- 組み込みツールを使用するには **Responses API** (`/v1/responses`) を使用する必要がある
 
 ---
 
-## 実装詳細
+## 今後の対応
 
-### GrokClient の実装
+### 優先度: 高
 
-```typescript
-// lib/llm/clients/grok.ts
-private getTools(): unknown[] | undefined {
-  const tools: unknown[] = [];
-  
-  if (this.toolOptions.enableWebSearch) {
-    tools.push({ type: 'web_search' });
-  }
-  
-  if (this.toolOptions.enableXSearch) {
-    tools.push({ type: 'x_search' });
-  }
-  
-  if (this.toolOptions.enableCodeExecution) {
-    tools.push({ type: 'code_execution' });
-  }
-  
-  if (this.toolOptions.enableFileSearch) {
-    tools.push({ type: 'collections_search' });
-  }
-  
-  return tools.length > 0 ? tools : undefined;
-}
-```
+1. **xAI Responses APIへの対応**
+   - LangChainを使わず、生のHTTPリクエストで実装
+   - または、LangChainのカスタムクライアントを実装
 
-### 型定義
+2. **ツール使用状況のUI表示**
+   - 現状はツールイベントが送信されないため、UIにも表示されない
+   - ツール統合後に `ToolCallIndicator` コンポーネントが機能するようになる
 
-```typescript
-// lib/settings/db.ts
-export type GrokToolType = 
-  | 'web_search' 
-  | 'x_search'
-  | 'code_execution' 
-  | 'collections_search';
-```
+### 検討事項
 
----
-
-## トラブルシューティング
-
-### エラー: `unknown variant 'x_search'`
-
-**症状**:
-```
-422 Failed to deserialize the JSON body: 
-tools[0].type: unknown variant `x_search`, expected `function` or `live_search`
-```
-
-**原因**: chat/completions エンドポイントでは組み込みツールがサポートされていない
-
-**解決策**: Responses API (`/v1/responses`) を使用
-
-### エラー: `Live search is deprecated`
-
-**症状**:
-```
-{'error': 'Live search is deprecated. Please switch to the Agent Tools API'}
-```
-
-**原因**: 旧Live Search API（`search_parameters`）を使用している
-
-**解決策**: `tools` パラメータを使用するAgent Tools APIに移行
-
-### エラー: `allowed_domains` と `excluded_domains` の同時使用
-
-**症状**:
-```
-Cannot set both allowed_domains and excluded_domains
-```
-
-**解決策**: どちらか一方のみを指定
-
----
-
-## 調査・テスト記録
-
-### 2026-02-20 実施したテスト
-
-#### テスト環境
-- **APIエンドポイント**: `https://api.x.ai/v1`
-- **モデル**: `grok-4-1-fast-reasoning`
-- **テストツール**: `curl`
-
-#### テスト結果一覧
-
-| # | エンドポイント | ツールタイプ | 結果 | エラーメッセージ |
-|---|--------------|-------------|------|----------------|
-| 1 | `/chat/completions` | `x_search` | ❌ 失敗 | `unknown variant 'x_search', expected 'function' or 'live_search'` |
-| 2 | `/chat/completions` | `live_search` | ❌ 失敗 | `Live search is deprecated. Please switch to the Agent Tools API` |
-| 3 | `/chat/completions` | `live_search` + `sources` | ❌ 失敗 | `Live search is deprecated` |
-| 4 | `/responses` | `x_search` | ✅ 成功 | ツール呼び出し成功、レスポンス取得 |
-| 5 | `/responses` | `web_search` | ✅ 成功 | ツール呼び出し成功、レスポンス取得 |
-| 6 | `/responses` | `function` (カスタム) | ⚠️ 未検証 | クレジット不足でテスト不可 |
-
-#### テスト詳細
-
-**テスト1: chat/completions + x_search**
-```bash
-curl -X POST https://api.x.ai/v1/chat/completions \
-  -H "Authorization: Bearer $XAI_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "model": "grok-4-1-fast-reasoning",
-    "messages": [{"role": "user", "content": "テスト"}],
-    "tools": [{"type": "x_search"}]
-  }'
-```
-**結果**: `unknown variant 'x_search'`
-
-**テスト2: chat/completions + live_search**
-```bash
-curl -X POST https://api.x.ai/v1/chat/completions \
-  -H "Authorization: Bearer $XAI_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "model": "grok-4-1-fast-reasoning",
-    "messages": [{"role": "user", "content": "テスト"}],
-    "tools": [{"type": "live_search", "sources": [{"type": "x"}]}]
-  }'
-```
-**結果**: `Live search is deprecated`
-
-**テスト4: Responses API + x_search（成功）**
-```bash
-curl -X POST https://api.x.ai/v1/responses \
-  -H "Authorization: Bearer $XAI_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "model": "grok-4-1-fast-reasoning",
-    "input": [{"role": "user", "content": "Xで話題のAIニュースを1つ教えて"}],
-    "tools": [{"type": "x_search"}]
-  }'
-```
-**結果**: ✅ 成功
-```json
-{
-  "output": [
-    {"type": "custom_tool_call", "name": "x_keyword_search", ...},
-    {"type": "custom_tool_call", "name": "x_semantic_search", ...},
-    {"type": "message", "content": [{"type": "output_text", "text": "..."}]}
-  ],
-  "usage": {
-    "input_tokens": 9596,
-    "output_tokens": 1177,
-    "num_server_side_tools_used": 3,
-    "server_side_tool_usage_details": {"x_search_calls": 3}
-  }
-}
-```
-
-**テスト5: Responses API + web_search（成功）**
-```bash
-curl -X POST https://api.x.ai/v1/responses \
-  -H "Authorization: Bearer $XAI_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "model": "grok-4-1-fast-reasoning",
-    "input": [{"role": "user", "content": "今日の天気を教えて"}],
-    "tools": [{"type": "web_search"}]
-  }'
-```
-**結果**: ✅ 成功
-```json
-{
-  "output": [
-    {"type": "web_search_call", "action": {"type": "search", "query": "今日の東京の天気"}},
-    {"type": "message", "content": [{"type": "output_text", "text": "..."}]}
-  ],
-  "usage": {
-    "input_tokens": 4319,
-    "output_tokens": 234,
-    "num_server_side_tools_used": 3,
-    "server_side_tool_usage_details": {"web_search_calls": 3}
-  }
-}
-```
-
-#### 調査から分かったこと
-
-1. **chat/completions エンドポイントの制限**
-   - 組み込みツール（`x_search`, `web_search`等）はサポートされていない
-   - `function` タイプ（クライアントサイドツール呼び出し）のみ使用可能
-   - `live_search` は廃止済み
-
-2. **Responses API の仕様**
-   - 組み込みツールが完全にサポートされている
-   - リクエスト形式: `input` フィールド（`messages` ではない）
-   - レスポンス形式: `output` 配列（`choices` ではない）
-   - ツール呼び出し詳細: `server_side_tool_usage_details` で確認可能
-
-3. **レスポンス構造の違い**
-
-   **chat/completions**:
-   ```json
-   {
-     "choices": [{"message": {"role": "assistant", "content": "..."}}],
-     "usage": {"prompt_tokens": 100, "completion_tokens": 50}
-   }
-   ```
-
-   **Responses API**:
-   ```json
-   {
-     "output": [
-       {"type": "web_search_call", ...},
-       {"type": "message", "content": [{"type": "output_text", "text": "..."}]}
-     ],
-     "usage": {
-       "input_tokens": 100,
-       "output_tokens": 50,
-       "server_side_tool_usage_details": {"web_search_calls": 1}
-     }
-   }
-   ```
-
-4. **コスト計算**
-   - Responses API は `cost_in_usd_ticks` を返す（USDの10億分の1）
-   - 従来の計算方法: `(input_tokens / 1M) * inputPrice + (output_tokens / 1M) * outputPrice`
-
-#### 実装に反映した変更
-
-| 項目 | 変更前 | 変更後 |
-|------|--------|--------|
-| エンドポイント | `/chat/completions` | `/responses` |
-| リクエストフィールド | `messages` | `input` |
-| レスポンス抽出 | `choices[0].message.content` | `output.find(item => item.type === 'message').content` |
-| ツール名 | `live_search`（誤り） | `x_search`（正しい） |
-| コスト計算 | トークンから計算 | `cost_in_usd_ticks` を優先使用 |
-
----
-
-## 包括的テスト結果（2026-02-20）
-
-### テスト概要
-- **テスト日時**: 2026-02-20
-- **テスト対象**: xAI Responses API (`/v1/responses`)
-- **テストモデル**: `grok-4-1-fast-reasoning`, `grok-4-0709`
-- **テスト実施者**: AI Agent
-
-### テスト結果一覧
-
-| # | テスト項目 | エンドポイント | ツール/パラメータ | 結果 | 備考 |
-|---|-----------|--------------|-----------------|------|------|
-| 1 | x_search基本動作 | `/responses` | `{"type": "x_search"}` | ✅ 成功 | 複数の検索クエリを自動実行 |
-| 2 | web_search基本動作 | `/responses` | `{"type": "web_search"}` | ✅ 成功 | 検索+ページ閲覧を実行 |
-| 3 | code_execution基本動作 | `/responses` | `{"type": "code_execution"}` | ✅ 成功 | コード実行、結果返却 |
-| 4 | collections_search基本動作 | `/responses` | `{"type": "collections_search"}` | ❌ 失敗 | `vector_store_ids` が必要 |
-| 5 | ツール組み合わせ | `/responses` | `web_search` + `x_search` | ✅ 成功 | 両方のツールが並列実行 |
-| 6 | web_search制限付き | `/responses` | `allowed_domains` 指定 | ✅ 成功 | ドメイン制限が機能 |
-| 7 | ストリーミング | `/responses` | `stream: true` | ✅ 成功 | SSE形式で正常動作 |
-| 8 | 無効ツールタイプ | `/responses` | `{"type": "invalid_tool"}` | ❌ 失敗 | 適切なエラーメッセージ |
-| 9 | 別モデルでの動作 | `/responses` | `grok-4-0709` + `web_search` | ✅ 成功 | 両モデルでツール動作 |
-| 10 | ツールなし | `/responses` | ツールなし | ✅ 成功 | 通常チャットとして動作 |
-| 11 | file_searchエイリアス | `/responses` | `{"type": "file_search"}` | ❌ 失敗 | `vector_store_ids` が必要 |
-| 12 | code_interpreterエイリアス | `/responses` | `{"type": "code_interpreter"}` | ✅ 成功 | `code_execution` と同等 |
-
-### 有効なツールタイプ（API確認済み）
-
-エラーメッセージから確認できた有効なツールタイプ：
-
-```
-expected one of:
-  - function          # カスタム関数呼び出し
-  - web_search        # Web検索
-  - x_search          # X検索
-  - collections_search # コレクション検索（vector_store_ids必要）
-  - file_search       # ファイル検索（collections_searchのエイリアス）
-  - code_execution    # コード実行
-  - code_interpreter  # コードインタープリター（code_executionのエイリアス）
-  - mcp               # Model Context Protocol
-```
-
-### 各ツールの詳細仕様
-
-#### ✅ x_search（利用可能）
-
-**動作**: X（Twitter）の投稿を検索
-**自動実行される検索タイプ**:
-- `x_keyword_search`: キーワード検索
-- `x_semantic_search`: セマンティック検索
-
-**レスポンス例**:
-```json
-{
-  "output": [
-    {"type": "custom_tool_call", "name": "x_keyword_search", ...},
-    {"type": "custom_tool_call", "name": "x_semantic_search", ...},
-    {"type": "message", "content": [{"type": "output_text", "text": "..."}]}
-  ],
-  "usage": {
-    "server_side_tool_usage_details": {"x_search_calls": 2}
-  }
-}
-```
-
-#### ✅ web_search（利用可能）
-
-**動作**: Web検索とページ閲覧
-**自動実行されるアクション**:
-- `search`: 検索クエリ実行
-- `open_page`: 特定ページの閲覧
-
-**レスポンス例**:
-```json
-{
-  "output": [
-    {"type": "web_search_call", "action": {"type": "search", "query": "..."}},
-    {"type": "web_search_call", "action": {"type": "open_page", "url": "..."}},
-    {"type": "message", "content": [{"type": "output_text", "text": "..."}]}
-  ],
-  "usage": {
-    "server_side_tool_usage_details": {"web_search_calls": 3}
-  }
-}
-```
-
-#### ✅ code_execution / code_interpreter（利用可能）
-
-**動作**: Pythonコードをサンドボックスで実行
-**注意**: リクエストは `code_execution` だが、レスポンスでは `code_interpreter` として記録される
-
-**レスポンス例**:
-```json
-{
-  "output": [
-    {"type": "code_interpreter_call", "code": "print(sum(range(1, 11)))", ...},
-    {"type": "message", "content": [{"type": "output_text", "text": "..."}]}
-  ],
-  "usage": {
-    "server_side_tool_usage_details": {"code_interpreter_calls": 1}
-  }
-}
-```
-
-#### ❌ collections_search / file_search（現状未対応）
-
-**動作**: ベクトルストア（アップロード済みドキュメント）の検索
-**制限**: `vector_store_ids` パラメータが必要
-
-**エラーメッセージ**:
-```
-Failed to deserialize the JSON body into the target type: 
-tools[0]: missing field `vector_store_ids` at line 4 column 45
-```
-
-**使用例（vector_store_ids指定時）**:
-```json
-{
-  "tools": [{
-    "type": "collections_search",
-    "vector_store_ids": ["vs_xxxxxxxxxxxxxxxx"]
-  }]
-}
-```
-
-**実装方針**: 現状は未対応（ファイルアップロード機能が必要）
-
-### ストリーミング仕様
-
-**リクエスト**:
-```json
-{
-  "model": "grok-4-1-fast-reasoning",
-  "input": [...],
-  "tools": [{"type": "x_search"}],
-  "stream": true
-}
-```
-
-**レスポンス形式**: SSE（Server-Sent Events）
-
-```
-event: response.created
-data: {"type": "response.created", ...}
-
-event: response.in_progress
-data: {"type": "response.in_progress", ...}
-
-event: response.output_item.added
-data: {"type": "response.output_item.added", ...}
-
-event: response.output_text.delta
-data: {"type": "response.output_text.delta", "delta": "こんに", ...}
-
-event: response.output_text.delta
-data: {"type": ".response.output_text.delta", "delta": "ちは", ...}
-```
-
-### ツール使用状況の追跡
-
-**レスポンスの usage フィールド**:
-```json
-{
-  "usage": {
-    "input_tokens": 9596,
-    "output_tokens": 1177,
-    "total_tokens": 10773,
-    "num_sources_used": 0,
-    "num_server_side_tools_used": 3,
-    "cost_in_usd_ticks": 171580500,
-    "server_side_tool_usage_details": {
-      "web_search_calls": 0,
-      "x_search_calls": 3,
-      "code_interpreter_calls": 0,
-      "file_search_calls": 0,
-      "mcp_calls": 0,
-      "document_search_calls": 0
-    }
-  }
-}
-```
-
-**コスト計算**:
-- `cost_in_usd_ticks`: USDの10億分の1（例: `171580500` = $0.17158）
-
-### 実装の最終状態
-
-**有効なツール**（デフォルトで有効）:
-- ✅ `web_search`
-- ✅ `x_search`
-- ✅ `code_execution`
-
-**無効なツール**:
-- ❌ `collections_search` / `file_search`（`vector_store_ids` が必要）
-
----
-
-## UI実装（ツール使用状況・思考ステップ表示）
-
-### 2026-02-20: GenSpark/Manus/Kimi Code風UIの実装
-
-**実装内容**:
-ツール使用状況と思考プロセスをリアルタイムに表示するUIコンポーネントを追加
-
-### コンポーネント構成
-
-| コンポーネント | ファイル | 機能 |
-|--------------|---------|------|
-| `ToolCallIndicator` | `components/chat/ToolCallIndicator.tsx` | ツール呼び出しのリアルタイム表示 |
-| `ReasoningSteps` | `components/chat/ReasoningSteps.tsx` | 思考プロセスの折りたたみ表示 |
-| `StreamingMessage` | `components/ui/StreamingMessage.tsx` | 統合ストリーミング表示（ツール・思考対応） |
-
-### 表示される情報
-
-#### 1. ツール呼び出しインジケーター
-
-**表示タイミング**: ツール実行開始時〜完了時
-
-**表示内容**:
-- ツールアイコン（Web検索、X検索、コード実行等）
-- ツール名ラベル
-- 実行ステータス（実行中/完了/失敗）
-- 複数ツールの並列表示
-
-**UI例**:
-```
-🔍 Web検索 [実行中...]
-🐦 X検索   [完了 ✓]
-💻 コード実行 [実行中...]
-```
-
-#### 2. 思考ステップ表示
-
-**表示タイミング**: 推論モデル使用時
-
-**表示内容**:
-- 思考プロセスの折りたたみパネル
-- ステップ番号付き思考内容
-- 推論トークン数
-
-**UI例**:
-```
-🧠 思考プロセス (1,234 トークン) [展開]
-├─ ステップ1: 問題を分析中...
-├─ ステップ2: 検索クエリを生成中...
-└─ ステップ3: 結果を統合中...
-```
-
-#### 3. ツール使用サマリー
-
-**表示タイミング**: レスポンス完了後
-
-**表示内容**:
-- 各ツールの使用回数
-- 総トークン数/コスト
-
-**UI例**:
-```
-Web検索: 3回 • X検索: 2回 • コード実行: 1回
-1,234 入力 / 567 出力 • $0.001234
-```
-
-### 技術実装詳細
-
-#### ストリーミングイベントの処理
-
-```typescript
-// lib/llm/clients/grok.ts
-async *streamWithUsage(messages: LLMMessage[]) {
-  // ...
-  for await (const event of stream) {
-    // ツール呼び出しイベント
-    if (event.type === 'response.output_item.added' && event.item) {
-      const item = event.item;
-      if (item.type === 'web_search_call') {
-        yield { toolCall: { id: item.id, type: 'web_search', status: 'running' } };
-      }
-      // ...
-    }
-    
-    // 思考ステップイベント
-    if (event.type === 'response.reasoning' && event.response?.reasoning) {
-      yield { reasoning: { step: 1, content: event.response.reasoning.summary } };
-    }
-    
-    // ツール使用状況
-    if (event.type === 'response.completed') {
-      yield { toolUsage: event.response.usage?.server_side_tool_usage_details };
-    }
-  }
-}
-```
-
-#### APIでのイベント転送
-
-```typescript
-// app/api/llm/stream/route.ts
-for await (const { chunk, toolCall, reasoning, toolUsage } of iterator) {
-  if (chunk) {
-    controller.enqueue(encoder.encode(`data: ${JSON.stringify({ content: chunk })}\n\n`));
-  }
-  
-  if (toolCall) {
-    controller.enqueue(encoder.encode(`data: ${JSON.stringify({ toolCall })}\n\n`));
-  }
-  
-  if (reasoning) {
-    controller.enqueue(encoder.encode(`data: ${JSON.stringify({ reasoning })}\n\n`));
-  }
-  
-  if (toolUsage) {
-    controller.enqueue(encoder.encode(`data: ${JSON.stringify({ toolUsage })}\n\n`));
-  }
-}
-```
-
-#### フロントエンドでの表示
-
-```typescript
-// components/ui/StreamingMessage.tsx
-const [toolCalls, setToolCalls] = useState<ToolCallInfo[]>([]);
-const [reasoningSteps, setReasoningSteps] = useState<ReasoningStepInfo[]>([]);
-
-// ストリームからのデータ処理
-if (data.toolCall) {
-  setToolCalls(prev => updateToolCall(prev, data.toolCall));
-}
-
-if (data.reasoning) {
-  setReasoningSteps(prev => [...prev, data.reasoning]);
-}
-```
-
-### 対応ツールタイプ
-
-| ツールタイプ | アイコン | ラベル | ステータス表示 |
-|------------|---------|--------|--------------|
-| `web_search` | 🔍 | Web検索 | 実行中/完了/失敗 |
-| `x_search` | 🐦 | X検索 | 実行中/完了/失敗 |
-| `x_keyword_search` | 🐦 | Xキーワード検索 | 実行中/完了/失敗 |
-| `x_semantic_search` | 🐦 | X意味検索 | 実行中/完了/失敗 |
-| `code_execution` | 💻 | コード実行 | 実行中/完了/失敗 |
-| `code_interpreter` | 💻 | コード実行 | 実行中/完了/失敗 |
+| アプローチ | メリット | デメリット |
+|-----------|---------|-----------|
+| 生のHTTPリクエスト | xAIの全機能を直接使用可能 | LangChainの利便性が失われる |
+| LangChainカスタムクライアント | LangChainのエコシステムを維持 | 実装コストが高い |
+| Vercel AI SDK | xAIツールをネイティブサポート | 別フレームワークの導入 |
 
 ---
 
@@ -940,7 +377,5 @@ if (data.reasoning) {
 - [Web Search Tool](https://docs.x.ai/developers/tools/web-search)
 - [X Search Tool](https://docs.x.ai/developers/tools/x-search)
 - [Code Execution Tool](https://docs.x.ai/developers/tools/code-execution)
-- [Collections Search Tool](https://docs.x.ai/developers/tools/collections-search)
 - [xAI Release Notes](https://docs.x.ai/developers/release-notes)
-- [Vercel AI SDK - xAI Provider](https://ai-sdk.dev/providers/ai-sdk-providers/xai)
-- [LangChain xAI Integration Issue](https://github.com/langchain-ai/langchain/issues/33961)
+- [LangChain Documentation](https://js.langchain.com/)
