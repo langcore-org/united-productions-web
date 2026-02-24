@@ -2,9 +2,5 @@
   "buildCommand": "next build",
   "installCommand": "npm ci",
   "framework": "nextjs",
-  "regions": ["hnd1"],
-  "cacheDirectories": [
-    "node_modules",
-    ".next/cache"
-  ]
+  "regions": ["hnd1"]
 }
