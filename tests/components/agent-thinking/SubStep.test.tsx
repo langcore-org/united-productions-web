@@ -1,11 +1,11 @@
 /**
  * SubStep コンポーネントのテスト
- * 
+ *
  * @updated 2026-02-20 23:35
  */
 
-import { describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
 import { SubStep, SubStepList } from "@/components/agent-thinking/SubStep";
 import type { SubStep as SubStepType } from "@/types/agent-thinking";
 
@@ -80,10 +80,7 @@ describe("SubStep", () => {
 });
 
 describe("SubStepList", () => {
-  const mockSubSteps: SubStepType[] = [
-    mockSubStep,
-    mockSubStepNoDetail,
-  ];
+  const mockSubSteps: SubStepType[] = [mockSubStep, mockSubStepNoDetail];
 
   it("should render list of sub steps", () => {
     render(<SubStepList subSteps={mockSubSteps} />);

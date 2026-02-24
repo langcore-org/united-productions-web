@@ -1,17 +1,17 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
 import { NextRequest } from "next/server";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // 認証モック
 vi.mock("@/lib/api/auth", () => ({
   requireAuth: vi.fn(),
 }));
 
-import { requireAuth } from "@/lib/api/auth";
-import { GET as getPromptsList } from "@/app/api/admin/prompts/route";
-import { GET as getPromptDetail, PUT as updatePrompt } from "@/app/api/admin/prompts/[key]/route";
-import { GET as getHistory } from "@/app/api/admin/prompts/[key]/history/route";
 import { GET as getVersion } from "@/app/api/admin/prompts/[key]/history/[version]/route";
+import { GET as getHistory } from "@/app/api/admin/prompts/[key]/history/route";
 import { POST as restoreVersion } from "@/app/api/admin/prompts/[key]/restore/route";
+import { GET as getPromptDetail, PUT as updatePrompt } from "@/app/api/admin/prompts/[key]/route";
+import { GET as getPromptsList } from "@/app/api/admin/prompts/route";
+import { requireAuth } from "@/lib/api/auth";
 
 const mockRequireAuth = requireAuth as ReturnType<typeof vi.fn>;
 
@@ -23,7 +23,7 @@ describe("Admin Prompts API", () => {
   describe("GET /api/admin/prompts", () => {
     it.skip("認証されていない場合は401を返す", async () => {
       mockRequireAuth.mockResolvedValue(
-        new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 })
+        new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 }),
       );
 
       const request = new NextRequest("http://localhost/api/admin/prompts");
@@ -36,11 +36,13 @@ describe("Admin Prompts API", () => {
   describe("GET /api/admin/prompts/[key]", () => {
     it.skip("認証されていない場合は401を返す", async () => {
       mockRequireAuth.mockResolvedValue(
-        new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 })
+        new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 }),
       );
 
       const request = new NextRequest("http://localhost/api/admin/prompts/MINUTES");
-      const response = await getPromptDetail(request, { params: Promise.resolve({ key: "MINUTES" }) });
+      const response = await getPromptDetail(request, {
+        params: Promise.resolve({ key: "MINUTES" }),
+      });
 
       expect(response.status).toBe(401);
     });
@@ -49,7 +51,7 @@ describe("Admin Prompts API", () => {
   describe("PUT /api/admin/prompts/[key]", () => {
     it.skip("認証されていない場合は401を返す", async () => {
       mockRequireAuth.mockResolvedValue(
-        new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 })
+        new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 }),
       );
 
       const request = new NextRequest("http://localhost/api/admin/prompts/MINUTES", {
@@ -65,7 +67,7 @@ describe("Admin Prompts API", () => {
   describe("GET /api/admin/prompts/[key]/history", () => {
     it.skip("認証されていない場合は401を返す", async () => {
       mockRequireAuth.mockResolvedValue(
-        new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 })
+        new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 }),
       );
 
       const request = new NextRequest("http://localhost/api/admin/prompts/MINUTES/history");
@@ -78,20 +80,27 @@ describe("Admin Prompts API", () => {
   describe("GET /api/admin/prompts/[key]/history/[version]", () => {
     it.skip("認証されていない場合は401を返す", async () => {
       mockRequireAuth.mockResolvedValue(
-        new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 })
+        new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 }),
       );
 
       const request = new NextRequest("http://localhost/api/admin/prompts/MINUTES/history/1");
-      const response = await getVersion(request, { params: Promise.resolve({ key: "MINUTES", version: "1" }) });
+      const response = await getVersion(request, {
+        params: Promise.resolve({ key: "MINUTES", version: "1" }),
+      });
 
       expect(response.status).toBe(401);
     });
 
     it("無効なバージョン番号の場合は400を返す", async () => {
-      mockRequireAuth.mockResolvedValue({ userId: "user-1", user: { id: "user-1", email: "test@example.com" } });
+      mockRequireAuth.mockResolvedValue({
+        userId: "user-1",
+        user: { id: "user-1", email: "test@example.com" },
+      });
 
       const request = new NextRequest("http://localhost/api/admin/prompts/MINUTES/history/invalid");
-      const response = await getVersion(request, { params: Promise.resolve({ key: "MINUTES", version: "invalid" }) });
+      const response = await getVersion(request, {
+        params: Promise.resolve({ key: "MINUTES", version: "invalid" }),
+      });
 
       expect(response.status).toBe(400);
       const data = await response.json();
@@ -102,14 +111,16 @@ describe("Admin Prompts API", () => {
   describe("POST /api/admin/prompts/[key]/restore", () => {
     it.skip("認証されていない場合は401を返す", async () => {
       mockRequireAuth.mockResolvedValue(
-        new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 })
+        new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 }),
       );
 
       const request = new NextRequest("http://localhost/api/admin/prompts/MINUTES/restore", {
         method: "POST",
         body: JSON.stringify({ version: 1 }),
       });
-      const response = await restoreVersion(request, { params: Promise.resolve({ key: "MINUTES" }) });
+      const response = await restoreVersion(request, {
+        params: Promise.resolve({ key: "MINUTES" }),
+      });
 
       expect(response.status).toBe(401);
     });

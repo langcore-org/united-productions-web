@@ -1,11 +1,11 @@
 /**
  * ThinkingStep コンポーネントのテスト
- * 
+ *
  * @updated 2026-02-20 23:45
  */
 
-import { describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
 import { ThinkingStep, ThinkingStepList } from "@/components/agent-thinking/ThinkingStep";
 import type { ThinkingStep as ThinkingStepType } from "@/types/agent-thinking";
 
@@ -80,10 +80,10 @@ describe("ThinkingStep", () => {
     if (button) {
       // クリックで折りたたむ
       fireEvent.click(button);
-      
+
       // クリックで展開
       fireEvent.click(button);
-      
+
       expect(screen.getByText("製品情報の検証")).toBeInTheDocument();
     }
   });

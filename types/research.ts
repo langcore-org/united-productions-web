@@ -1,4 +1,4 @@
-import { LLMProvider } from "@/lib/llm/types";
+import type { LLMProvider } from "@/lib/llm/types";
 
 export type ResearchAgentType = "people" | "evidence" | "location";
 

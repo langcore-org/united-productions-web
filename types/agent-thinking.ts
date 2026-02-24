@@ -1,8 +1,8 @@
 /**
  * エージェント思考プロセスの型定義
- * 
+ *
  * Manus風の階層的ステップ表示用
- * 
+ *
  * @updated 2026-02-20 23:10
  */
 
@@ -13,13 +13,13 @@ export interface SubStep {
   /** 一意のID */
   id: string;
   /** サブステップの種類 */
-  type: 'search' | 'tool_use' | 'knowledge' | 'file_edit' | 'read';
+  type: "search" | "tool_use" | "knowledge" | "file_edit" | "read";
   /** 表示ラベル */
   label: string;
   /** 詳細内容（オプション） */
   detail?: string;
   /** ステータス */
-  status: 'pending' | 'running' | 'completed' | 'error';
+  status: "pending" | "running" | "completed" | "error";
   /** 検索クエリ（type='search'の場合） */
   searchQuery?: string;
   /** ツール名（type='tool_use'の場合） */
@@ -65,13 +65,13 @@ export interface ThinkingStep {
   /** ステップ番号（表示用） */
   stepNumber: number;
   /** ステップの種類 */
-  type: 'thinking' | 'search' | 'analysis' | 'synthesis' | 'complete';
+  type: "thinking" | "search" | "analysis" | "synthesis" | "complete";
   /** タイトル */
   title: string;
   /** 説明文 */
   content?: string;
   /** ステータス */
-  status: 'running' | 'completed' | 'error';
+  status: "running" | "completed" | "error";
   /** サブステップ一覧 */
   subSteps: SubStep[];
   /** 検索結果（type='search'の場合） */
@@ -120,7 +120,7 @@ export interface ThinkingProcessState {
   /** 全ステップ数 */
   totalSteps: number;
   /** 全体のステータス */
-  overallStatus: 'idle' | 'running' | 'completed' | 'error';
+  overallStatus: "idle" | "running" | "completed" | "error";
   /** 開始時刻 */
   startedAt?: Date;
   /** 完了時刻 */
@@ -131,15 +131,15 @@ export interface ThinkingProcessState {
  * ストリーミングイベントの型
  */
 export type ThinkingEvent =
-  | { type: 'step_start'; step: ThinkingStep }
-  | { type: 'step_update'; stepId: string; updates: Partial<ThinkingStep> }
-  | { type: 'step_complete'; stepId: string; completedAt: Date }
-  | { type: 'substep_add'; stepId: string; subStep: SubStep }
-  | { type: 'substep_update'; stepId: string; subStepId: string; updates: Partial<SubStep> }
-  | { type: 'search_results'; stepId: string; subStepId: string; results: SearchResultItem[] }
-  | { type: 'content_append'; stepId: string; content: string }
-  | { type: 'complete' }
-  | { type: 'error'; error: string };
+  | { type: "step_start"; step: ThinkingStep }
+  | { type: "step_update"; stepId: string; updates: Partial<ThinkingStep> }
+  | { type: "step_complete"; stepId: string; completedAt: Date }
+  | { type: "substep_add"; stepId: string; subStep: SubStep }
+  | { type: "substep_update"; stepId: string; subStepId: string; updates: Partial<SubStep> }
+  | { type: "search_results"; stepId: string; subStepId: string; results: SearchResultItem[] }
+  | { type: "content_append"; stepId: string; content: string }
+  | { type: "complete" }
+  | { type: "error"; error: string };
 
 /**
  * コンポーネントPropsの共通型

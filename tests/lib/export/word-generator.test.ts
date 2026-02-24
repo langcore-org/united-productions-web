@@ -2,9 +2,9 @@
  * Wordジェネレーターのテスト
  */
 
-import { describe, it, expect } from "vitest";
-import { generateWordDocument } from "@/lib/export/word-generator";
+import { describe, expect, it } from "vitest";
 import { parseMarkdown } from "@/lib/export/markdown-parser";
+import { generateWordDocument } from "@/lib/export/word-generator";
 
 describe("Markdown Parser", () => {
   it("見出しをパースできる", () => {
@@ -64,7 +64,9 @@ describe("Word Document Generator", () => {
     });
 
     expect(blob).toBeInstanceOf(Blob);
-    expect(blob.type).toBe("application/vnd.openxmlformats-officedocument.wordprocessingml.document");
+    expect(blob.type).toBe(
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    );
     expect(blob.size).toBeGreaterThan(0);
   });
 

@@ -1,12 +1,12 @@
 /**
  * useTypingAnimation フックのテスト
- * 
+ *
  * @updated 2026-02-20 23:25
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { renderHook, act, waitFor } from "@testing-library/react";
-import { useTypingAnimation, useSequentialTyping } from "@/hooks/useTypingAnimation";
+import { act, renderHook, waitFor } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { useSequentialTyping, useTypingAnimation } from "@/hooks/useTypingAnimation";
 
 describe("useTypingAnimation", () => {
   beforeEach(() => {
@@ -39,7 +39,7 @@ describe("useTypingAnimation", () => {
     await act(async () => {
       vi.advanceTimersByTime(20);
       // requestAnimationFrameを待つ
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await new Promise((resolve) => setTimeout(resolve, 0));
     });
 
     // テストは非同期アニメーションのため、完了状態を確認
@@ -80,7 +80,7 @@ describe("useTypingAnimation", () => {
 
     // 停止後は完了していない
     expect(result.current.isComplete).toBe(false);
-    
+
     // テキストは空または部分的（タイミングによる）
     expect(result.current.displayText.length).toBeLessThanOrEqual("Hello World".length);
   });
@@ -141,9 +141,7 @@ describe("useSequentialTyping", () => {
   });
 
   it("should complete all immediately when completeAll() is called", () => {
-    const { result } = renderHook(() => 
-      useSequentialTyping({ typingSpeed: 10 })
-    );
+    const { result } = renderHook(() => useSequentialTyping({ typingSpeed: 10 }));
 
     const texts = ["First.", "Second.", "Third."];
 

@@ -6,8 +6,8 @@
 
 import { describe, expect, it } from "vitest";
 import {
-  ThresholdRollingSummaryMemory,
   type CompressionRateEntry,
+  ThresholdRollingSummaryMemory,
 } from "@/lib/llm/memory/threshold-rolling-summary";
 
 describe("ThresholdRollingSummaryMemory", () => {
@@ -83,10 +83,7 @@ describe("ThresholdRollingSummaryMemory", () => {
       ];
 
       for (const tc of testCases) {
-        const targetTokens = Math.min(
-          Math.floor(tc.input * tc.expectedRate),
-          500
-        );
+        const targetTokens = Math.min(Math.floor(tc.input * tc.expectedRate), 500);
         expect(targetTokens).toBeLessThanOrEqual(500);
       }
     });

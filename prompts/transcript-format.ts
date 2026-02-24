@@ -1,13 +1,13 @@
 /**
  * Transcript Format Prompts
- * 
+ *
  * Premiere Pro書き起こしテキストをNA原稿用に整形するプロンプト
  */
 
 /**
  * 話者ラベルの型
  */
-export type SpeakerLabel = '櫻井' | '末澤' | 'N' | 'その他';
+export type SpeakerLabel = "櫻井" | "末澤" | "N" | "その他";
 
 /**
  * 話者情報インターフェース

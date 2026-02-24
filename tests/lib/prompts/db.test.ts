@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // Prismaモジュールのモック（ファクトリ関数内で定義）
 vi.mock("@/lib/prisma", () => {
@@ -23,18 +23,18 @@ vi.mock("@/lib/prisma", () => {
 // モック後にインポート
 import { prisma } from "@/lib/prisma";
 import {
-  getPromptFromDB,
-  getPromptsFromDB,
-  getPromptsByCategory,
   getAllPrompts,
-  getPromptWithFallback,
-  updatePromptWithVersion,
-  getPromptVersionHistory,
+  getPromptFromDB,
+  getPromptsByCategory,
+  getPromptsFromDB,
   getPromptVersion,
-  restorePromptVersion,
+  getPromptVersionHistory,
+  getPromptWithFallback,
   getPromptWithHistory,
-  PROMPT_KEYS,
   PROMPT_CATEGORIES,
+  PROMPT_KEYS,
+  restorePromptVersion,
+  updatePromptWithVersion,
 } from "@/lib/prompts";
 
 const mockPrisma = prisma as unknown as {
@@ -109,9 +109,7 @@ describe("プロンプトDBユーティリティ", () => {
 
   describe("getPromptsByCategory", () => {
     it("カテゴリ別にプロンプトを取得できる", async () => {
-      const mockPrompts = [
-        { id: "1", key: "MINUTES", name: "議事録", category: "minutes" },
-      ];
+      const mockPrompts = [{ id: "1", key: "MINUTES", name: "議事録", category: "minutes" }];
       mockPrisma.systemPrompt.findMany.mockResolvedValue(mockPrompts);
 
       const result = await getPromptsByCategory("minutes");
@@ -202,12 +200,7 @@ describe("バージョン管理機能", () => {
       mockPrisma.systemPromptVersion.create.mockResolvedValue({ id: "version-3" });
       mockPrisma.systemPrompt.update.mockResolvedValue(updatedPrompt);
 
-      const result = await updatePromptWithVersion(
-        "TEST_KEY",
-        "新内容",
-        "user-1",
-        "テスト更新"
-      );
+      const result = await updatePromptWithVersion("TEST_KEY", "新内容", "user-1", "テスト更新");
 
       expect(result.currentVersion).toBe(3);
       expect(result.content).toBe("新内容");
@@ -225,9 +218,9 @@ describe("バージョン管理機能", () => {
     it("プロンプトが見つからない場合はエラーを投げる", async () => {
       mockPrisma.systemPrompt.findUnique.mockResolvedValue(null);
 
-      await expect(
-        updatePromptWithVersion("NON_EXISTENT", "内容")
-      ).rejects.toThrow("Prompt not found: NON_EXISTENT");
+      await expect(updatePromptWithVersion("NON_EXISTENT", "内容")).rejects.toThrow(
+        "Prompt not found: NON_EXISTENT",
+      );
     });
   });
 
@@ -312,9 +305,9 @@ describe("バージョン管理機能", () => {
       mockPrisma.systemPrompt.findUnique.mockResolvedValue({ id: "prompt-1" });
       mockPrisma.systemPromptVersion.findFirst.mockResolvedValue(null);
 
-      await expect(
-        restorePromptVersion("TEST_KEY", 999)
-      ).rejects.toThrow("Version 999 not found for prompt: TEST_KEY");
+      await expect(restorePromptVersion("TEST_KEY", 999)).rejects.toThrow(
+        "Version 999 not found for prompt: TEST_KEY",
+      );
     });
   });
 
