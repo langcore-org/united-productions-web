@@ -149,11 +149,20 @@ export function Sidebar({ className, onCollapseChange }: SidebarProps) {
       </div>
       */}
 
+      {/* Logo */}
+      {!isCollapsed && (
+        <div className="px-4 pt-4 pb-2">
+          <span className="font-bold text-xl text-[#1a1a1a] tracking-tight">
+            Teddy
+          </span>
+        </div>
+      )}
+
       {/* New Chat Buttons */}
       <nav className="flex-1 overflow-y-auto flex flex-col min-h-0 bg-[#f9f9f9] custom-scrollbar">
         {/* Section Title */}
         {!isCollapsed && (
-          <div className="px-3 pt-4 pb-2">
+          <div className="px-3 pt-2 pb-2">
             <span className="text-[11px] font-semibold text-[#6b7280] uppercase tracking-wider">
               新規作成
             </span>
