@@ -2,7 +2,7 @@
 
 > **複数LLMプロバイダーを統一インターフェースで利用するための概要**
 >
-> **最終更新**: 2026-02-23 18:30
+> **最終更新**: 2026-02-24
 
 ---
 
@@ -34,14 +34,11 @@ lib/llm/
     ├── factory.ts        # LangChainクライアント生成
     ├── config.ts         # LangChain設定
     ├── adapter.ts        # アダプター
-    ├── agents/           # Agent実装
-    ├── chains/           # Chain定義
-    │   ├── base.ts
-    │   └── streaming.ts
-    ├── memory/           # メモリ管理
-    ├── prompts/          # プロンプトテンプレート
-    ├── rag/              # RAG実装
-    └── tools/            # ツール定義
+    ├── callbacks/        # コールバックハンドラー
+    │   └── streaming.ts  # ストリーミング用コールバック
+    └── chains/           # Chain定義
+        ├── base.ts
+        └── streaming.ts
 ```
 
 ---
@@ -52,8 +49,7 @@ lib/llm/
 |---|---|
 | `/api/llm/chat` | 非同期チャットAPI |
 | `/api/llm/stream` | ストリーミングチャットAPI（SSE） |
-| `/api/llm/langchain/chat` | LangChain統合チャット |
-| `/api/llm/rag/query` | RAG検索クエリ |
+| `/api/llm/stream` | ストリーミングチャットAPI（SSE） |
 
 ---
 
@@ -105,11 +101,12 @@ export function createLangChainClient(config: LangChainConfig) {
 
 | 機能 | 説明 | 状態 |
 |-----|------|------|
-| ReAct Agent | 推論と行動の連鎖 | ✅ 実装済み |
-| Tool Calling | ツール呼び出し | ✅ 実装済み |
-| Memory | 会話履歴管理 | ✅ 実装済み |
-| RAG | 文書検索 | ✅ 実装済み |
+| Tool Calling | ツール呼び出し（Grokネイティブ） | ✅ 実装済み |
 | Streaming | ストリーミング応答 | ✅ 実装済み |
+| Callbacks | 思考プロセス・ツール実行の可視化 | ✅ 実装済み |
+| ReAct Agent | 推論と行動の連鎖 | ⏸️ 未使用（Grokで代替） |
+| Memory | 会話履歴管理 | ⏸️ Prismaで代替 |
+| RAG | 文書検索 | ❌ 削除済み（Grokで代替） |
 
 ---
 
@@ -131,7 +128,7 @@ XAI_API_KEY=            # xAI（$25無料クレジット）
 ## 関連ドキュメント
 
 - [llm-integration-patterns.md](./llm-integration-patterns.md) - 詳細実装パターン
-- [llm-framework-comparison.md](./llm-framework-comparison.md) - フレームワーク選定経緯
+- [langchain-usage-current.md](./langchain-usage-current.md) - LangChain使用状況の詳細
 - `lib/llm/` - LLMクライアント実装
 - `lib/llm/langchain/` - LangChain統合
 - `hooks/use-llm.ts` - LLM通信フック（独自実装）

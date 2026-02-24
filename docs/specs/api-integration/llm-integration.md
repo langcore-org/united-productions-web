@@ -2,7 +2,7 @@
 
 > **このファイルは分割されました**
 >
-> **最終更新**: 2026-02-22 11:16
+> **最終更新**: 2026-02-24
 
 ---
 
@@ -37,10 +37,9 @@
 ### 実装場所
 
 - `lib/llm/langchain/` - LangChain統合コード
-- `lib/llm/langchain/agents/` - Agent実装
+- `lib/llm/langchain/callbacks/` - コールバックハンドラー
 - `lib/llm/langchain/chains/` - Chain定義
-- `lib/llm/langchain/tools/` - ツール定義
 
 ### 選定経緯
 
-詳細は [llm-framework-comparison.md](./llm-framework-comparison.md) を参照。
+詳細は [langchain-usage-current.md](./langchain-usage-current.md) を参照。

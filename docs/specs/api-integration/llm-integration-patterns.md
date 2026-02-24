@@ -2,7 +2,7 @@
 
 > **LangChainを使用した詳細実装パターン**
 >
-> **最終更新**: 2026-02-22 11:16
+> **最終更新**: 2026-02-24
 
 ---
 
@@ -156,4 +156,4 @@ aihub:llm:{hash_slice}:{provider}
 ## 関連ドキュメント
 
 - [llm-integration-overview.md](./llm-integration-overview.md) - 概要・基本情報
-- [llm-framework-comparison.md](./llm-framework-comparison.md) - フレームワーク選定経緯
+- [langchain-usage-current.md](./langchain-usage-current.md) - LangChain使用状況の詳細
