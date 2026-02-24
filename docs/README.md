@@ -2,7 +2,7 @@
 
 > **本ディレクトリは「UPエージェント」（AI Hub）開発用のドキュメント群です。**
 > 
-> **最終更新**: 2026-02-22 11:16
+> **最終更新**: 2026-02-24 12:55
 
 ---
 
@@ -14,6 +14,10 @@
    - ファイルを変更したら、必ず**日時（時間含む）**を記載
    - 形式: `YYYY-MM-DD HH:MM` または ISO 8601
    - 位置: ファイル先頭のメタデータ欄、または変更箇所の近く
+   - **日時の取得コマンド**:
+     ```bash
+     date +"%Y-%m-%d %H:%M"
+     ```
 
 2. **ファイルサイズの制限**
    - 1ファイルは**200行以内**を目安
@@ -26,6 +30,18 @@
 4. **参照リンクの充実**
    - 関連する仕様・手順には必ずリンクを付ける
    - リンク形式: `[表示名](./path/to/file.md)`
+
+5. **ドキュメントは削除せず、アーカイブに移動する**
+   - 古くなったドキュメントや完了した計画書は削除しない
+   - 代わりに `archive/` ディレクトリに移動する
+   - 理由: 過去の決定事項や調査結果を後から参照する可能性があるため
+   - **アーカイブ時の命名規則**: ファイル名の先頭にアーカイブ日付を付ける
+     - 形式: `YYYY-MM-DD-元のファイル名.md`
+     - **日付の取得コマンド**:
+       ```bash
+       date +"%Y-%m-%d"
+       ```
+     - 例: `2026-02-24-sidebar-redesign.md`
 
 ### 参照リンクの優先順位
 
@@ -92,26 +108,15 @@ docs/
 │   ├── troubleshooting.md             # トラブルシューティング
 │   └── roadmap-cases.md               # 今後の予定・活用事例
 │
-├── plans/                             # 計画・設計
-│   ├── current/                       # 現在進行中
-│   │   ├── product-requirements.md    # 要件定義
-│   │   ├── tasks-overview.md          # タスク一覧（概要）
-│   │   ├── tasks-detailed.md          # タスク一覧（詳細）
-│   │   ├── status-dashboard.md        # 実装状況
-│   │   ├── sidebar-redesign.md        # サイドバー改修計画
-│   │   ├── agentic-chat-design.md     # Agentic Chat設計
-│   │   └── langchain-migration-plan.md # LangChain移行計画
-│   └── archive/                       # 完了した計画・分析レポート
-│       ├── 2026-02-improvements.md
-│       ├── 2026-02-refactoring.md
-│       ├── 2026-02-20-refactoring-completed.md
-│       ├── 2026-02-22-refactoring-completed.md
-│       ├── langchain-migration-completion-report.md
-│       ├── langchain-migration-verification-report.md
-│       ├── unused-code-report.md           # 未使用コード調査
-│       ├── unused-code-detailed-report.md  # 未使用コード詳細
-│       ├── duplicate-api-resolution.md     # API重複解消
-│       └── langchain-api-duplicate-analysis.md # LangChain API分析
+├── plans/                             # 計画・設計（進行中のみ）
+│   ├── product-requirements.md        # 要件定義
+│   ├── tasks-overview.md              # タスク一覧（概要）
+│   ├── tasks-detailed.md              # タスク一覧（詳細）
+│   ├── status-dashboard.md            # 実装状況
+│   ├── sidebar-redesign.md            # サイドバー改修計画
+│   ├── agentic-chat-design.md         # Agentic Chat設計
+│   ├── langchain-migration-plan.md    # LangChain移行計画
+│   └── knip-unused-code-report.md     # 未使用コードレポート
 │
 ├── guides/                            # 手順書・チュートリアル（開発者向け）
 │   ├── setup/                         # 環境構築
@@ -128,18 +133,34 @@ docs/
 │   ├── ui-ux-guidelines.md            # UI/UXガイドライン
 │   └── troubleshooting.md             # トラブルシューティングガイド
 │
-├── archive/                           # 過去資料（参照のみ、更新しない）
+├── archive/                           # 過去資料・完了した計画（参照のみ、更新しない）
 │   ├── SUMMARY.md                     # アーカイブサマリー
+│   │
+│   │   # 旧計画書（plans/archive/ から移行）
+│   ├── 2026-02-improvements.md
+│   ├── 2026-02-refactoring.md
+│   ├── 2026-02-20-refactoring-completed.md
+│   ├── 2026-02-22-refactoring-completed.md
+│   ├── framework-tool-evaluation.md
+│   ├── langchain-migration-completion-report.md
+│   ├── langchain-migration-verification-report.md
+│   ├── unused-code-report.md           # 未使用コード調査
+│   ├── unused-code-detailed-report.md  # 未使用コード詳細
+│   ├── duplicate-api-resolution.md     # API重複解消
+│   ├── langchain-api-duplicate-analysis.md # LangChain API分析
+│   │
+│   │   # 過去資料
 │   ├── 2〜4月ロードマップ.md
 │   ├── LC開発プラン.md
 │   ├── human-checkpoints.md
 │   ├── parallel-development.md
-│   ├── technical-review-20260215.md
+│   ├── genspark-api-research.md
 │   ├── リサーチ考査チャットアプリ_実装プラン.md
 │   ├── ロケスケ香盤車両表_ウェブアプリ実装プラン.md
 │   ├── 今後のプラン.md
 │   ├── 書き起こし機能のメモ.md
 │   ├── 業務洗い出しとソリューション.md
+│   │
 │   └── logs/                          # 過去のログ（アーカイブ済み）
 │       ├── README.md
 │       ├── SUMMARY.md
@@ -169,7 +190,7 @@ docs/
 
 1. [`specs/architecture/system-architecture.md`](specs/architecture/system-architecture.md) - システム構成
 2. [`specs/api-integration/api-specification.md`](specs/api-integration/api-specification.md) - API仕様
-3. [`plans/current/product-requirements.md`](plans/current/product-requirements.md) - 要件定義
+3. [`plans/product-requirements.md`](plans/product-requirements.md) - 要件定義
 
 ### 制作スタッフ・管理職向け
 
@@ -195,13 +216,13 @@ docs/
 ### 計画書のライフサイクル
 
 ```
-計画作成 → plans/current/ に配置 → 実装 → 完了 → plans/archive/ に移動
+計画作成 → plans/ に配置 → 実装 → 完了 → archive/ に移動
 ```
 
 | ステータス | 場所 | 操作 |
 |-----------|------|------|
-| 進行中 | `plans/current/` | 随時更新 |
-| 完了 | `plans/archive/` | 参照のみ、更新禁止 |
+| 進行中 | `plans/` | 随時更新 |
+| 完了 | `archive/` | 参照のみ、更新禁止 |
 
 ### 情報の信頼順位
 
@@ -245,7 +266,7 @@ find docs/ -name "*auth*.md"
 ### 技術者
 1. **必ず読む**: `specs/architecture/system-architecture.md`
 2. **API確認**: `specs/api-integration/api-specification.md`
-3. **現在のタスク**: `plans/current/`
+3. **現在のタスク**: `plans/`
 4. **トラブル時**: `guides/troubleshooting.md`
 
 ### 制作スタッフ

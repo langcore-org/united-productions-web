@@ -1,11 +1,11 @@
 /**
  * チャットコンポーネント共有型定義
- * 
+ *
  * @created 2026-02-22 11:50
  */
 
+import type { ReasoningStepInfo, ThinkingStepInfo, ToolCallInfo } from "@/hooks/useLLMStream";
 import type { LLMProvider } from "@/lib/llm/types";
-import type { ToolCallInfo, ReasoningStepInfo, ThinkingStepInfo } from "@/hooks/useLLMStream";
 
 export interface StreamingStepsProps {
   content: string;

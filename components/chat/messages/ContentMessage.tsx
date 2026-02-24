@@ -1,6 +1,6 @@
 /**
  * メインコンテンツメッセージコンポーネント
- * 
+ *
  * @created 2026-02-22 11:50
  */
 
@@ -8,7 +8,13 @@ import { Bot, Loader2 } from "lucide-react";
 import type { ContentMessageProps } from "../types";
 import { ToolUsageSummary } from "./ToolUsageSummary";
 
-export function ContentMessage({ content, provider, isComplete, toolUsage, usage }: ContentMessageProps) {
+export function ContentMessage({
+  content,
+  provider,
+  isComplete,
+  toolUsage,
+  usage,
+}: ContentMessageProps) {
   return (
     <div className="flex gap-4 px-4 py-2">
       <div className="flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center bg-gradient-to-br from-black to-gray-800 shadow-lg">
@@ -50,14 +56,14 @@ export function ContentMessage({ content, provider, isComplete, toolUsage, usage
             </div>
           )}
         </div>
-        
+
         {/* Usage Info & Tool Usage Summary */}
         {isComplete && (usage || toolUsage) && (
           <div className="mt-2 space-y-1">
             {usage && (
               <div className="text-xs text-gray-400">
-                {usage.inputTokens.toLocaleString()} 入力 / {usage.outputTokens.toLocaleString()} 出力
-                {" "}• ${usage.cost.toFixed(6)}
+                {usage.inputTokens.toLocaleString()} 入力 / {usage.outputTokens.toLocaleString()}{" "}
+                出力 • ${usage.cost.toFixed(6)}
               </div>
             )}
             <ToolUsageSummary toolUsage={toolUsage} />
