@@ -1,6 +1,6 @@
 /**
  * Agents（専用チャット機能）の定義
- * 
+ *
  * 特定の用途に特化したチャット機能（AI Agent）を定義
  * プロンプトはDB管理（lib/prompts/db.ts）がSingle Source of Truth
  */
@@ -16,44 +16,26 @@ export type AgentId =
   | "proposal"
   | "na-script";
 
-/** ツールオプション */
-export interface ToolOptions {
-  enableWebSearch?: boolean;
-  enableXSearch?: boolean;
-  enableCodeExecution?: boolean;
-}
-
 /** Agent（専用チャット機能）の定義 */
 export interface Agent {
   id: AgentId;
-  name: string;           // 表示名
-  description: string;    // 説明
-  icon: string;          // アイコン名
-  systemPrompt: string;  // システムプロンプト
-  placeholder: string;   // 入力欄のプレースホルダー
-  inputLabel?: string;   // 入力欄のラベル（オプション）
+  name: string; // 表示名
+  description: string; // 説明
+  icon: string; // アイコン名
+  systemPrompt: string; // システムプロンプト
+  placeholder: string; // 入力欄のプレースホルダー
+  inputLabel?: string; // 入力欄のラベル（オプション）
   outputFormat: "markdown" | "plaintext";
   category: "research" | "document" | "general";
-  color?: string;        // アクセントカラー
-  promptKey: string;     // DBプロンプトキー
-  toolOptions: ToolOptions; // デフォルトツール設定
+  color?: string; // アクセントカラー
+  promptKey: string; // DBプロンプトキー
 }
 
 // デフォルトプロンプトをキーで検索するヘルパー
 function getDefaultPromptContent(key: string): string {
-  const prompt = DEFAULT_PROMPTS.find(p => p.key === key);
+  const prompt = DEFAULT_PROMPTS.find((p) => p.key === key);
   return prompt?.content || "";
 }
-
-/** 機能別デフォルトツール設定 */
-const agentToolDefaults: Record<AgentId, ToolOptions> = {
-  "general": { enableWebSearch: true },
-  "research-cast": { enableWebSearch: true, enableXSearch: true },
-  "research-evidence": { enableWebSearch: true },
-  "minutes": { enableWebSearch: false },
-  "proposal": { enableWebSearch: true, enableXSearch: true },
-  "na-script": { enableWebSearch: false },
-};
 
 /** プロポーザル用システムプロンプトを生成（動的） */
 function getProposalSystemPrompt(programInfo: string, pastProposals: string): string {
@@ -61,7 +43,7 @@ function getProposalSystemPrompt(programInfo: string, pastProposals: string): st
   if (!programInfo && !pastProposals) {
     return basePrompt;
   }
-  
+
   return `${basePrompt}
 
 ## 番組情報
@@ -84,7 +66,6 @@ export const AGENTS: Agent[] = [
     category: "general",
     color: "#6366f1",
     promptKey: PROMPT_KEYS.GENERAL_CHAT,
-    toolOptions: agentToolDefaults["general"],
   },
   {
     id: "research-cast",
@@ -97,7 +78,6 @@ export const AGENTS: Agent[] = [
     category: "research",
     color: "#ec4899",
     promptKey: PROMPT_KEYS.RESEARCH_CAST,
-    toolOptions: agentToolDefaults["research-cast"],
   },
   {
     id: "research-evidence",
@@ -110,7 +90,6 @@ export const AGENTS: Agent[] = [
     category: "research",
     color: "#f59e0b",
     promptKey: PROMPT_KEYS.RESEARCH_EVIDENCE,
-    toolOptions: agentToolDefaults["research-evidence"],
   },
   {
     id: "minutes",
@@ -124,7 +103,6 @@ export const AGENTS: Agent[] = [
     category: "document",
     color: "#8b5cf6",
     promptKey: PROMPT_KEYS.MINUTES,
-    toolOptions: agentToolDefaults["minutes"],
   },
   {
     id: "proposal",
@@ -137,7 +115,6 @@ export const AGENTS: Agent[] = [
     category: "document",
     color: "#f97316",
     promptKey: PROMPT_KEYS.PROPOSAL,
-    toolOptions: agentToolDefaults["proposal"],
   },
   {
     id: "na-script",
@@ -151,7 +128,6 @@ export const AGENTS: Agent[] = [
     category: "document",
     color: "#14b8a6",
     promptKey: PROMPT_KEYS.TRANSCRIPT,
-    toolOptions: agentToolDefaults["na-script"],
   },
 ];
 
@@ -190,12 +166,15 @@ export function isProposalAgent(agentId: AgentId): boolean {
 }
 
 /** プロポーザルのシステムプロンプトを更新（動的プログラム情報を反映） */
-export function updateProposalSystemPrompt(agent: Agent, programInfo: string, pastProposals: string): Agent {
+export function updateProposalSystemPrompt(
+  agent: Agent,
+  programInfo: string,
+  pastProposals: string,
+): Agent {
   if (agent.id !== "proposal") return agent;
-  
+
   return {
     ...agent,
     systemPrompt: getProposalSystemPrompt(programInfo, pastProposals),
   };
 }
-

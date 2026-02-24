@@ -1,19 +1,27 @@
 "use client";
 
-import { useEffect, useState, Suspense, useCallback } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
-import { getAgentById, AGENTS, isProposalAgent, updateProposalSystemPrompt } from "@/lib/chat/agents";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useCallback, useEffect, useState } from "react";
+import {
+  AGENTS,
+  getAgentById,
+  isProposalAgent,
+  updateProposalSystemPrompt,
+} from "@/lib/chat/agents";
 
 // FeatureChatを動的インポート
-const FeatureChat = dynamic(() => import("@/components/ui/FeatureChat").then(mod => mod.FeatureChat), {
-  ssr: false,
-  loading: () => (
-    <div className="flex items-center justify-center h-full">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
-    </div>
-  ),
-});
+const FeatureChat = dynamic(
+  () => import("@/components/ui/FeatureChat").then((mod) => mod.FeatureChat),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex items-center justify-center h-full">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
+      </div>
+    ),
+  },
+);
 
 /**
  * 統合チャットページ
@@ -47,7 +55,7 @@ function ChatPageContent() {
             const updatedAgent = updateProposalSystemPrompt(
               selectedAgent,
               data.programInfo || "",
-              data.pastProposals || ""
+              data.pastProposals || "",
             );
             setSystemPrompt(updatedAgent.systemPrompt);
           } else {
@@ -75,7 +83,7 @@ function ChatPageContent() {
       params.set("chatId", newChatId);
       router.replace(`/chat?${params.toString()}`);
     },
-    [searchParams, router]
+    [searchParams, router],
   );
 
   if (isLoading) {
@@ -97,18 +105,19 @@ function ChatPageContent() {
       placeholder={agent.placeholder}
       inputLabel={agent.inputLabel}
       outputFormat={agent.outputFormat}
-      toolOptions={agent.toolOptions || { enableWebSearch: false }}
     />
   );
 }
 
 export default function ChatPage() {
   return (
-    <Suspense fallback={
-      <div className="flex items-center justify-center h-full">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center h-full">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
+        </div>
+      }
+    >
       <ChatPageContent />
     </Suspense>
   );

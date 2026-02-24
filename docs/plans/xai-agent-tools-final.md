@@ -2,120 +2,190 @@
 
 > **作成日**: 2026-02-24 14:10
 > **レビュー日**: 2026-02-24
-> **ステータス**: 要確認事項あり（実装前に解決が必要）
-> **方針**: 全機能共通ツール、選択肢多め、機能性最優先
+> **ステータス**: 実装可（確定）
+> **方針**: 全機能共通ツール、LangChain移行前のxAI直接実装を復元・改修
 
 ---
 
-## コードベースレビュー結果
+## 🔍 要調査事項（実装前に別AIに調査させること）
 
-> **レビュー日**: 2026-02-24
-> 既存コードベース（`lib/llm/`, `lib/chat/`, `app/api/llm/stream/route.ts` 等）と照合した結果。
+> **調査完了日**: 2026-02-24 15:30
 
-### 問題点（実装前に解決が必要）
+### 調査1: x_search のSSEイベント型 ✅
 
-#### 1. SSEイベント形式の不整合 ⚠️ 優先度: 高
+**調査結果:**
 
-現在の `app/api/llm/stream/route.ts` が出力するSSEイベント形式:
-```json
-{"accepted": true}
-{"stepStart": {"step": 1, "id": "...", "type": "thinking", "status": "running"}}
-{"toolCallEvent": {"id": "...", "type": "web_search", "status": "running"}}
-{"content": "..."}
-{"stepUpdate": {"id": "...", "status": "completed"}}
-{"done": true, "usage": {...}}
-```
-
-計画の `XAIClient.stream()` が出力する形式:
-```json
-{"content": "..."}
-{"toolCall": {...}}    ← toolCallEvent ではなく toolCall
-{"usage": {...}}
-{"done": true}
-```
-
-フロントエンドが `toolCallEvent` / `stepStart` / `stepUpdate` を期待している場合、表示が壊れる。
-**→ フロントエンドのSSEイベント受信コード（`components/` 配下）を確認の上、出力形式を合わせること。**
-
----
-
-#### 2. LangChain バイパス方針と修正ファイルリストの矛盾 ⚠️ 優先度: 中
-
-アーキテクチャ図ではxAIはLangChainを**バイパス**して直接Responses APIを叩く設計になっているが、
-「実装ファイル - 修正」の一覧に `lib/llm/langchain/chains/streaming.ts` が含まれている。
-
-- xAIはLangChainを使わないのであれば、`langchain/chains/streaming.ts` の修正は不要なはず
-- 既存のLangChainパスはGrok以外のプロバイダー（将来追加予定のGemini等）向けに残すのか、xAIも通すのかを明確にすること
-
-**→ どちらのアーキテクチャを採用するか決定してから修正ファイルリストを整理すること。**
-
----
-
-#### 3. `x_search` のSSEイベント型が未確認 ⚠️ 優先度: 中
-
-ストリームパーサーの以下の実装は推測に基づいている:
-
-```typescript
-// X検索（custom_tool_callで返ってくる）
-else if (itemType === 'custom_tool_call') {
-  const name = item.name as string;
-  if (name?.includes('x_')) { ... }
-}
-```
-
-xAI Responses APIが `x_search` ツール使用時に実際にどのイベント型（`itemType`）を返すかはAPIドキュメントまたは実際のリクエストで確認が取れていない。
-
-**→ xAI APIドキュメントを確認するか、テストリクエストで実際のイベント型を確認してからパーサーを実装すること。**
-
----
-
-#### 4. `collections_search` ツールの扱いが不明 ⚠️ 優先度: 低
-
-現在の `lib/settings/db.ts` で定義されている `GrokToolType` には以下4つが含まれている:
-```typescript
-type GrokToolType = 'web_search' | 'x_search' | 'code_execution' | 'collections_search'
-```
-
-計画の `XAIToolType` は `web_search` / `x_search` / `code_execution` の3つのみで、`collections_search` が含まれていない。
-
-**→ `collections_search`（ファイル検索）を意図的に削除する場合は、管理画面UI（`app/admin/grok-tools/page.tsx`）の修正範囲にも明示的に含めること。**
-
----
-
-#### 5. 非ストリーミング `chat()` メソッドがエラーをスロー ⚠️ 優先度: 中
-
-計画の `XAIClient` は以下のように非ストリーミングを未実装:
-
-```typescript
-async chat(messages: LLMMessage[]): Promise<LLMResponse> {
-  throw new Error('Non-streaming not implemented for xAI');
-}
-```
-
-既存コードベースでこのメソッドが呼ばれている箇所がある場合、実装後にランタイムエラーになる。
-
-**→ `lib/llm/` 全体でストリーミング以外の `chat()` 呼び出し箇所をgrepして確認すること。**
-
----
-
-### 問題なし（実装してOK）
-
-| 項目 | 理由 |
+| 項目 | 結果 |
 |------|------|
-| 全ツール常時有効の方針 | `lib/settings/db.ts` が2026-02-20更新で既にその方針に変更済み |
-| `lib/llm/xai/` 配下の新規ファイル群 | 既存ファイルと衝突しない |
-| `toolOptions` の削除 | `route.ts` の `toolOptions: { enableWebSearch?: boolean }` を削除する方針は整合している |
-| ツール表示名・アイコン定義 | 問題なし |
+| `x_search` 使用時の `item.type` | **`x_search_call`** |
+| `item.name` フィールド | **無し**（組み込みツールには存在しない） |
+| 正しい判定方法 | `item.type === 'x_search_call'` |
+
+**重要:** 現在の推測実装（`custom_tool_call` + `name.includes('x_')`）は**誤り**。正しくは `item.type === 'x_search_call'` で判定する。
+
+**イベント構造の例:**
+```json
+// ツール開始時: response.output_item.added
+{
+  "type": "response.output_item.added",
+  "item": {
+    "id": "item_001",
+    "type": "x_search_call",
+    "status": "in_progress"
+  }
+}
+
+// ツール完了時: response.output_item.done
+{
+  "type": "response.output_item.done",
+  "item": {
+    "id": "item_001",
+    "type": "x_search_call",
+    "status": "completed"
+  }
+}
+```
+
+**情報源:**
+- [xAI Tools Advanced Usage](https://docs.x.ai/developers/tools/advanced-usage) - `x_search_call` を確認
+- 命名パターン: `web_search` → `web_search_call`, `x_search` → `x_search_call`, `code_execution` → `code_interpreter_call`
 
 ---
 
-### 実装前チェックリスト
+### 調査2: フロントエンドのSSE受信コードの場所 ✅
 
-- [ ] フロントエンドのSSEイベント受信コードを確認し、出力形式を確定する
-- [ ] LangChainをバイパスするか通すかのアーキテクチャを決定し、修正ファイルリストを更新する
-- [ ] xAI APIでの `x_search` イベント型を確認する
-- [ ] `collections_search` の削除可否を決定し、計画に反映する
-- [ ] 非ストリーミング `chat()` の使用箇所をコードベース全体でgrepする
+**調査結果:**
+
+| ファイルパス | 用途 | 主要関数/コンポーネント |
+|-------------|------|----------------------|
+| `hooks/useLLMStream/index.ts` | メインのストリーミングフック | `useLLMStream()`, `startStream()` |
+| `lib/api/llm-client.ts` | APIクライアント（fetch + SSEパース） | `streamLLMResponse()` |
+| `lib/llm/sse-parser.ts` | SSEストリームパーサー | `parseSSEStream()` |
+
+**パースしているイベントキー:**
+```typescript
+// hooks/useLLMStream/index.ts
+if (event.content) { ... }           // コンテンツチャンク
+if (event.stepStart) { ... }         // 思考ステップ開始
+if (event.stepUpdate) { ... }        // 思考ステップ更新
+if (event.toolCallEvent) { ... }     // ツール呼び出しイベント
+if (event.toolUsage) { ... }         // ツール使用状況
+if (event.done) { ... }              // 完了イベント
+if (event.error) { ... }             // エラーイベント
+```
+
+**ツールインジケーターUI:**
+| ファイルパス | 表示内容 |
+|-------------|---------|
+| `components/chat/StreamingSteps.tsx` | ストリーミング中のステップ全体表示 |
+| `components/chat/messages/ToolCallMessage.tsx` | 個別のツール呼び出しメッセージ |
+| `components/chat/messages/ToolUsageSummary.tsx` | ツール使用サマリー |
+
+**旧イベント形式の構造:**
+```typescript
+// lib/llm/sse-parser.ts
+export interface SSEEvent {
+  content?: string;
+  stepStart?: SSEStepEvent;
+  stepUpdate?: { id: string; content?: string; status?: 'pending' | 'running' | 'completed' | 'error'; };
+  toolCallEvent?: { id: string; type: string; name?: string; input?: string; status: 'pending' | 'running' | 'completed' | 'failed'; };
+  toolUsage?: SSEToolUsage;
+  done?: boolean;
+  usage?: LLMUsage;
+  error?: string;
+}
+```
+
+**補足:** レガシーイベント（`thinking`, `toolCall`, `reasoning`）は後方互換性のために残されている。
+
+---
+
+## コードベースレビュー結果・決定事項
+
+> 既存コードベース（`lib/llm/`, `lib/chat/`, `app/api/llm/stream/route.ts` 等）と照合し、不明点を確認済み。
+
+### 現状把握（調査結果）
+
+#### 現在のLangChain実装の実態
+
+- LangChainは `https://api.x.ai/v1`（**`/v1/chat/completions`**）に接続している
+- xAI Agent Tools（x_search 等）は **`/v1/responses`** エンドポイント専用のため、LangChain経由では使用不可
+- ツールのコールバック（イベント追跡）コードは存在するが、実際にツールを有効化する仕組みがない
+  → 現時点では web_search も x_search も動作していない
+
+#### LangChain移行前の直接実装
+
+LangChain移行前（コミット `b8297cf` 付近）に `lib/llm/clients/grok.ts` として xAI Responses API への直接実装が存在した。このファイルはLangChain移行時に削除されたが、gitから復元して改修することで新規実装より効率的に対応できる。
+
+- 復元ファイル: `lib/llm/clients/grok.ts`（コミット `b8297cf`）
+- 合わせて `lib/llm/factory.ts` も削除前の版（コミット `70c1823~1`）を復元
+
+---
+
+### 決定事項
+
+| 項目 | 決定 | 理由 |
+|------|------|------|
+| アーキテクチャ | **LangChainバイパス・直接APIコール** | x_searchはResponses API専用。LangChain経由では使用不可 |
+| 実装方式 | **git復元 + 改修**（新規作成ではない） | `lib/llm/clients/grok.ts` が既にgitに存在するため |
+| LangChainの扱い | **保持**（削除しない） | 将来のGemini等追加時にLangChain経由で使用するため |
+| SSEイベント形式 | **理想形を新設**（フロントエンドも含めて変更） | 疑似ステップは不要。正確で一貫した設計を採用 |
+| collections_search | **削除**（3ツールに統一） | 使用しない |
+| x_searchイベント型 | **実装後にテストで確認** | 推測実装→動作確認→パーサー修正の順で進める |
+
+---
+
+### 理想のSSEイベント形式（新設計）
+
+#### 旧形式の問題点
+
+| 問題 | 詳細 |
+|------|------|
+| 疑似ステップ | `stepStart`/`stepUpdate` はLangChainが機械的に生成する「分析と計画」「情報収集」等で、モデルの実際の動作とは無関係 |
+| 構造の不統一 | イベントに共通の `type` ディスクリミネータがなく、フィールド名がばらばら |
+| LangChain依存 | xAI直接APIコールに移行するとコールバック機構がなくなり、疑似ステップの生成根拠がなくなる |
+
+#### 新しいSSEイベント型
+
+全イベントに `type` フィールドを持つ discriminated union として定義する（`lib/llm/types.ts`）：
+
+| type | 用途 | 主要フィールド |
+|------|------|---------------|
+| `start` | ストリーム開始 | - |
+| `tool_call` | ツール呼び出し開始・完了 | `id`, `name`, `displayName`, `status`, `input`（任意） |
+| `content` | テキストチャンク | `delta` |
+| `done` | 完了 | `usage`（トークン数・コスト・ツール使用回数） |
+| `error` | エラー | `message` |
+
+`tool_call` の `input` フィールドはクエリ内容やコードをUIに表示するために使用する。APIから取得できる場合は含め、取得できない場合は省略してよい。
+
+#### ストリームの流れ（例）
+
+```
+data: {"type": "start"}
+data: {"type": "tool_call", "id": "t-1", "name": "web_search", "displayName": "Web検索", "status": "running", "input": "最新のAI動向 2026"}
+data: {"type": "tool_call", "id": "t-1", "name": "web_search", "displayName": "Web検索", "status": "completed"}
+data: {"type": "tool_call", "id": "t-2", "name": "x_search", "displayName": "X検索", "status": "running", "input": "#AI2026"}
+data: {"type": "tool_call", "id": "t-2", "name": "x_search", "displayName": "X検索", "status": "completed"}
+data: {"type": "content", "delta": "調査結果によると..."}
+data: {"type": "done", "usage": {"inputTokens": 1234, "outputTokens": 567, "cost": 0.0023, "toolCalls": {"web_search": 1, "x_search": 1}}}
+```
+
+#### 旧形式との比較
+
+| 観点 | 旧形式 | 新形式 |
+|------|--------|--------|
+| ディスクリミネータ | なし（フィールドの有無で判断） | `type` フィールドで統一 |
+| 思考ステップ | 疑似的な5段階ステップ（実態と無関係） | なし（正確） |
+| ツール情報 | `toolCallEvent: {type, status, name, id}` | `{type: "tool_call", name, status, id, displayName}` |
+| フロントエンド変更 | 不要（維持） | **必要**（SSEイベント受信コード） |
+
+---
+
+### 残課題（実装時に確認）
+
+- [x] `x_search` の実際のSSEイベント型を確認し、パーサーを修正する（→ 冒頭「要調査事項」参照）
+- [x] フロントエンドのSSE受信コードを特定し、新形式に対応させる（→ 冒頭「要調査事項」参照）
 
 ---
 
@@ -138,14 +208,23 @@ X検索（Twitter検索）が必須要件。全チャット機能で共通のツ
 │                    （全ツール有効で統一）                      │
 └───────────────────────────┬─────────────────────────────────┘
                             │
+             ┌──────────────▼──────────────┐
+             │     lib/llm/factory.ts       │
+             │  grok-* → GrokClient (直接)  │
+             │  その他 → LangChain (将来)   │
+             └──────────────┬──────────────┘
+                            │ (grok の場合)
                             ▼
-                    ┌──────────────┐
-                    │ xAI Responses│
-                    │ (+ web_search│
-                    │  + x_search   │
-                    │  + code_exec) │
-                    └──────────────┘
+             ┌──────────────────────────────┐
+             │  lib/llm/clients/grok.ts     │
+             │  xAI /v1/responses API       │
+             │  (+ web_search               │
+             │   + x_search                 │
+             │   + code_execution)          │
+             └──────────────────────────────┘
 ```
+
+**LangChainは削除しない**: `lib/llm/langchain/` は将来のGemini等追加に備えて保持する。現在は Factory から呼ばれない。
 
 ---
 
@@ -159,17 +238,7 @@ X検索（Twitter検索）が必須要件。全チャット機能で共通のツ
 | `x_search` | X（Twitter）検索 - リアルタイム動向、トレンド |
 | `code_execution` | コード実行 - 計算、データ分析、グラフ生成 |
 
-```typescript
-// lib/llm/xai/config.ts
-export const DEFAULT_XAI_TOOLS: XAIToolType[] = [
-  'web_search',
-  'x_search', 
-  'code_execution',
-];
-
-// ツールなしオプション（将来的な拡張用）
-export const NO_TOOLS: XAIToolType[] = [];
-```
+`collections_search` は廃止（3ツールに統一）。
 
 ### AIの自律的ツール選択
 
@@ -203,473 +272,91 @@ export const NO_TOOLS: XAIToolType[] = [];
 
 ## 実装ファイル
 
-### 新規作成
+### 復元（git から取得）
 
-| ファイル | 説明 | 工数 |
-|---------|------|------|
-| `lib/llm/xai/config.ts` | 共通ツール設定 | 0.5h |
-| `lib/llm/xai/types.ts` | xAI固有の型定義 | 0.5h |
-| `lib/llm/xai/stream-parser.ts` | xAI SSEストリームパーサー | 2h |
-| `lib/llm/xai/client.ts` | xAI Responses APIクライアント | 3h |
+| ファイル | 取得元コミット | 説明 |
+|---------|--------------|------|
+| `lib/llm/clients/grok.ts` | `b8297cf` | xAI Responses API直接実装の最終版 |
+| `lib/llm/factory.ts` | `70c1823~1` | GrokClient使用版のFactory |
 
-### 修正
+### 修正（復元後に改修）
 
 | ファイル | 変更内容 | 工数 |
 |---------|---------|------|
-| `lib/llm/factory.ts` | xAIクライアント分岐を追加 | 1h |
-| `lib/llm/langchain/chains/streaming.ts` | xAIクライアント統合 | 2h |
-| `app/api/llm/stream/route.ts` | 全ツール有効で統一 | 1h |
-| `lib/chat/chat-config.ts` | 機能別ツール設定を削除 | 0.5h |
-| `lib/chat/agents.ts` | エージェント設定を簡略化 | 0.5h |
-| `app/admin/grok-tools/page.tsx` | ツール個別設定UIを削除 | 1h |
+| `lib/llm/clients/grok.ts` | ツール設定を簡略化（boolean flags → ツール配列）、`collections_search`削除、SSEイベント形式を新形式に変更 | 2h |
+| `lib/llm/factory.ts` | GrokClient分岐の整理、LangChainパスはコメントアウトで保持 | 0.5h |
+| `lib/llm/types.ts` | `streamWithUsage` メソッドをLLMClientインターフェースに追加、新SSEイベント型を定義 | 0.5h |
+| `lib/llm/index.ts` | エクスポートを整理（GrokClient関連の型・定数を公開） | 0.5h |
+| `app/api/llm/stream/route.ts` | `toolOptions` 削除、`streamWithUsage` に切り替え、新SSEイベント形式で出力 | 1h |
+| `lib/chat/chat-config.ts` | 機能別 `toolOptions` を削除 | 0.5h |
+| `lib/chat/agents.ts` | エージェントのツール設定を削除（全機能共通に統一） | 0.5h |
+| `app/admin/grok-tools/page.tsx` | ツール個別ON/OFF UIを削除、`collections_search` 列を削除 | 1h |
+| `lib/llm/sse-parser.ts` | 新SSEイベント型（discriminated union）のパース実装 | 1h |
+| `lib/api/llm-client.ts` | `streamLLMResponse()` を新形式対応（旧キー削除） | 0.5h |
+| `hooks/useLLMStream/index.ts` | `startStream()` を新形式（`type` ディスクリミネータ）に対応 | 0.5h |
 
-### 削除（または非表示）
+### 削除（または無効化）
 
 | ファイル/機能 | 理由 |
 |--------------|------|
-| `lib/settings/db.ts` の `isToolEnabled` | 全ツール常時有効のため不要 |
+| `lib/settings/db.ts` の `GrokToolType` の `collections_search` | 3ツールに統一 |
 | 管理画面のツール個別ON/OFF | 全ツール常時有効のため不要 |
-| `toolOptions` パラメータ | フロントエンドからの指定不要 |
+| `toolOptions` パラメータ（route.ts） | フロントエンドからの指定不要 |
 
-**合計工数: 約12時間（2-3日）**
+**合計工数: 約8.5時間**（git復元で新規作成コストが削減。フロントエンド修正ファイルは `lib/llm/sse-parser.ts`, `lib/api/llm-client.ts`, `hooks/useLLMStream/index.ts` の3ファイル確定）
 
 ---
 
 ## 実装詳細
 
-### 1. 共通設定
+### grok.ts の改修内容（復元後）
 
-```typescript
-// lib/llm/xai/config.ts
+復元した `lib/llm/clients/grok.ts` に対して以下3点を改修する：
 
-/** xAI Agent Tools タイプ */
-export type XAIToolType = 'web_search' | 'x_search' | 'code_execution';
+**1. ツール設定の簡略化**
 
-/** 全機能共通のデフォルトツールセット */
-export const DEFAULT_XAI_TOOLS: XAIToolType[] = [
-  'web_search',
-  'x_search',
-  'code_execution',
-];
+- 旧: `enableWebSearch`, `enableXSearch`, `enableCodeExecution`, `enableFileSearch` の boolean フラグ
+- 新: `tools?: GrokToolType[]` の配列（未指定時は全3ツールを使用）
+- `DEFAULT_GROK_TOOLS` 定数を定義し、`collections_search` は削除
+- `TOOL_DISPLAY_NAMES` 定数で表示名を管理
 
-/** ツール表示名 */
-export const TOOL_DISPLAY_NAMES: Record<XAIToolType, string> = {
-  web_search: 'Web検索',
-  x_search: 'X検索',
-  code_execution: 'コード実行',
-};
+**2. SSEイベント形式の変更**
 
-/** ツールアイコン（UI用） */
-export const TOOL_ICONS: Record<XAIToolType, string> = {
-  web_search: '🔍',
-  x_search: '🐦',
-  code_execution: '💻',
-};
-```
+`streamWithUsage()` が出力するイベントを新形式に変更：
 
-### 2. 型定義
+- ストリーム開始時に `{type: 'start'}` を emit
+- ツール開始時に `{type: 'tool_call', status: 'running', input: '...', ...}` を emit（`input` はAPIから取得できれば含める）
+- ツール完了時に `{type: 'tool_call', status: 'completed', ...}` を emit
+- テキストチャンクは `{type: 'content', delta: '...'}` で emit
+- 完了時に `{type: 'done', usage: {...}}` を emit（toolCalls使用回数含む）
+- エラー時に `{type: 'error', message: '...'}` を emit
 
-```typescript
-// lib/llm/xai/types.ts
+**3. x_search のイベント型**
 
-/** xAIツール設定 */
-export interface XAIToolConfig {
-  type: XAIToolType;
-}
+調査済み。xAI APIが `x_search` 呼び出し時に返すイベント型は `x_search_call`。命名パターン: `web_search` → `web_search_call`, `x_search` → `x_search_call`, `code_execution` → `code_interpreter_call`。
 
-/** xAIストリームイベント */
-export interface XAIStreamEvent {
-  /** コンテンツチャンク */
-  content?: string;
-  /** ツール呼び出しイベント */
-  toolCallEvent?: {
-    id: string;
-    type: XAIToolType;
-    status: 'running' | 'completed' | 'failed';
-    name: string;
-  };
-  /** 使用状況 */
-  usage?: {
-    inputTokens: number;
-    outputTokens: number;
-    cost: number;
-    /** ツール使用回数詳細 */
-    toolCalls?: {
-      web_search_calls?: number;
-      x_search_calls?: number;
-      code_interpreter_calls?: number;
-    };
-  };
-  /** 完了フラグ */
-  done?: boolean;
-  /** エラー */
-  error?: string;
-}
+- 組み込みツールには `item.name` フィールドは存在しない
+- 正しい判定方法: `item.type === 'x_search_call'`（`item.type === 'web_search_call'` 等と同様）
+- 旧推測実装（`custom_tool_call` + `name.includes('x_')`）は**誤り**のため使用しないこと
 
-/** xAIストリームオプション */
-export interface XAIStreamOptions {
-  model?: string;
-  temperature?: number;
-  maxTokens?: number;
-  /** ツール設定（デフォルト: DEFAULT_XAI_TOOLS） */
-  tools?: XAIToolType[];
-}
-```
+---
 
-### 3. クライアント実装
+### Factory の改修内容
 
-```typescript
-// lib/llm/xai/client.ts
+復元した `lib/llm/factory.ts` を以下のように整理：
 
-import { XAIStreamEvent, XAIStreamOptions, XAIToolType } from './types';
-import { DEFAULT_XAI_TOOLS } from './config';
-import { LLMMessage } from '@/lib/llm/types';
+- `grok-*` プロバイダーは `GrokClient`（直接実装）にルーティング
+- その他プロバイダーはLangChain経由にルーティング（現在は未使用だがコメントアウトで保持）
+- `grok-*` 以外が指定された場合は明示的なエラーを返す
 
-const XAI_API_BASE = 'https://api.x.ai/v1';
+---
 
-/**
- * xAI Responses APIを使用してストリーミングレスポンスを取得
- * 
- * @param messages - 会話メッセージ
- * @param options - ストリームオプション（tools未指定時は全ツール有効）
- */
-export async function* streamXAIResponses(
-  messages: LLMMessage[],
-  options: XAIStreamOptions = {}
-): AsyncIterable<XAIStreamEvent> {
-  const apiKey = process.env.XAI_API_KEY;
-  if (!apiKey) {
-    throw new Error('XAI_API_KEY is not set');
-  }
+### route.ts の改修内容
 
-  // ツール設定（デフォルトは全ツール有効）
-  const tools = options.tools ?? DEFAULT_XAI_TOOLS;
-
-  const response = await fetch(`${XAI_API_BASE}/responses`, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: options.model || 'grok-4-1-fast-reasoning',
-      input: messages.map(m => ({
-        role: m.role,
-        content: m.content,
-      })),
-      tools: tools.map(t => ({ type: t })),
-      stream: true,
-      temperature: options.temperature ?? 0.7,
-      max_tokens: options.maxTokens,
-    }),
-  });
-
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: 'Unknown error' }));
-    throw new Error(error.error || `xAI API error: ${response.status}`);
-  }
-
-  yield* parseXAIStream(response);
-}
-```
-
-### 4. ストリームパーサー
-
-```typescript
-// lib/llm/xai/stream-parser.ts
-
-import { XAIStreamEvent, XAIToolType } from './types';
-import { TOOL_DISPLAY_NAMES } from './config';
-
-export async function* parseXAIStream(
-  response: Response
-): AsyncGenerator<XAIStreamEvent> {
-  const reader = response.body?.getReader();
-  if (!reader) throw new Error('No response body');
-
-  const decoder = new TextDecoder();
-  let buffer = '';
-
-  try {
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-
-      buffer += decoder.decode(value, { stream: true });
-      const lines = buffer.split('\n');
-      buffer = lines.pop() ?? '';
-
-      for (const line of lines) {
-        if (!line.startsWith('data: ')) continue;
-        const data = line.slice(6);
-        if (data === '[DONE]') return;
-
-        try {
-          const event = JSON.parse(data);
-          yield* handleXAIEvent(event);
-        } catch {
-          // JSONパースエラーは無視
-        }
-      }
-    }
-  } finally {
-    reader.releaseLock();
-  }
-}
-
-function* handleXAIEvent(event: Record<string, unknown>): Generator<XAIStreamEvent> {
-  // ツール呼び出し開始
-  if (event.type === 'response.output_item.added') {
-    const item = event.item as Record<string, unknown> | undefined;
-    if (!item) return;
-
-    const itemType = item.type as string;
-    const itemId = String(item.id || '');
-
-    // Web検索
-    if (itemType === 'web_search_call') {
-      yield {
-        toolCallEvent: {
-          id: itemId,
-          type: 'web_search',
-          status: 'running',
-          name: TOOL_DISPLAY_NAMES.web_search,
-        },
-      };
-    }
-    
-    // X検索（custom_tool_callで返ってくる）
-    else if (itemType === 'custom_tool_call') {
-      const name = item.name as string;
-      if (name?.includes('x_')) {
-        yield {
-          toolCallEvent: {
-            id: itemId,
-            type: 'x_search',
-            status: 'running',
-            name: TOOL_DISPLAY_NAMES.x_search,
-          },
-        };
-      }
-    }
-    
-    // コード実行
-    else if (itemType === 'code_interpreter_call') {
-      yield {
-        toolCallEvent: {
-          id: itemId,
-          type: 'code_execution',
-          status: 'running',
-          name: TOOL_DISPLAY_NAMES.code_execution,
-        },
-      };
-    }
-  }
-
-  // コンテンツチャンク
-  if (event.type === 'response.output_text.delta' && event.delta) {
-    yield { content: String(event.delta) };
-  }
-
-  // 完了
-  if (event.type === 'response.completed') {
-    const response = event.response as Record<string, unknown> | undefined;
-    const usage = response?.usage as Record<string, unknown> | undefined;
-    const toolDetails = usage?.server_side_tool_usage_details as Record<string, number> | undefined;
-    
-    yield {
-      done: true,
-      usage: usage ? {
-        inputTokens: Number(usage.input_tokens || 0),
-        outputTokens: Number(usage.output_tokens || 0),
-        cost: Number(usage.cost_in_usd_ticks || 0) / 1e9,
-        toolCalls: toolDetails ? {
-          web_search_calls: toolDetails.web_search_calls,
-          x_search_calls: toolDetails.x_search_calls,
-          code_interpreter_calls: toolDetails.code_interpreter_calls,
-        } : undefined,
-      } : undefined,
-    };
-  }
-}
-```
-
-### 5. Factory統合
-
-```typescript
-// lib/llm/factory.ts
-
-import { streamXAIResponses, DEFAULT_XAI_TOOLS } from './xai';
-import type { XAIToolType } from './xai/types';
-
-export interface LLMOptions {
-  temperature?: number;
-  maxTokens?: number;
-  systemPrompt?: string;
-  /** 
-   * xAI Agent Tools
-   * - undefined: デフォルト（全ツール有効）
-   * - []: ツールなし
-   * - ['web_search', ...]: 指定ツールのみ
-   */
-  tools?: XAIToolType[];
-}
-
-export function createLLMClient(
-  provider: LLMProvider,
-  options?: LLMOptions
-): LLMClient {
-  // xAIは常に専用クライアント（ツール有無に関わらず）
-  if (provider.startsWith('grok-')) {
-    return new XAIClient(provider, options);
-  }
-  
-  // その他のプロバイダーはLangChain
-  return createLangChainClient(provider, options);
-}
-
-/** xAI専用クライアント */
-class XAIClient implements LLMClient {
-  constructor(
-    private provider: LLMProvider,
-    private options: LLMOptions
-  ) {}
-
-  async chat(messages: LLMMessage[]): Promise<LLMResponse> {
-    // 非ストリーミングは未実装
-    throw new Error('Non-streaming not implemented for xAI');
-  }
-
-  async *stream(messages: LLMMessage[]): AsyncIterable<LLMStreamChunk> {
-    const stream = streamXAIResponses(messages, {
-      model: this.provider,
-      temperature: this.options.temperature,
-      maxTokens: this.options.maxTokens,
-      tools: this.options.tools, // undefinedなら全ツール有効
-    });
-
-    for await (const event of stream) {
-      if (event.content) {
-        yield { content: event.content };
-      }
-      
-      if (event.toolCallEvent) {
-        yield {
-          toolCall: {
-            id: event.toolCallEvent.id,
-            type: event.toolCallEvent.type,
-            name: event.toolCallEvent.name,
-            status: event.toolCallEvent.status,
-          },
-        };
-      }
-      
-      if (event.usage) {
-        yield {
-          usage: {
-            inputTokens: event.usage.inputTokens,
-            outputTokens: event.usage.outputTokens,
-            cost: event.usage.cost,
-          },
-        };
-      }
-      
-      if (event.error) {
-        throw new Error(event.error);
-      }
-    }
-  }
-}
-```
-
-### 6. API Route簡略化
-
-```typescript
-// app/api/llm/stream/route.ts
-
-const streamRequestSchema = z.object({
-  messages: z.array(
-    z.object({
-      role: z.enum(['user', 'assistant', 'system']),
-      content: z.string().min(1),
-    }),
-  ).min(1),
-  provider: z.string().optional(),
-  temperature: z.number().min(0).max(2).optional(),
-  maxTokens: z.number().positive().optional(),
-  // toolOptions は削除（全ツール有効で統一）
-});
-
-export async function POST(request: NextRequest): Promise<Response> {
-  // ...認証処理...
-
-  const { messages, provider, temperature, maxTokens } = validationResult.data;
-
-  // xAIクライアント生成（全ツール有効で統一）
-  const client = createLLMClient(provider || DEFAULT_PROVIDER, {
-    temperature,
-    maxTokens,
-    // tools: undefined → デフォルト（全ツール有効）
-  });
-
-  // ストリーミング実行
-  const streamIterator = executeStreamingWithClient(client, messages);
-  const stream = createSSEStream(streamIterator);
-
-  return new Response(stream, {
-    headers: {
-      'Content-Type': 'text/event-stream',
-      'Cache-Control': 'no-cache',
-      Connection: 'keep-alive',
-    },
-  });
-}
-```
-
-### 7. チャット設定の簡略化
-
-```typescript
-// lib/chat/chat-config.ts
-
-// ToolOptions インターフェースは残す（将来の拡張用）
-export interface ToolOptions {
-  enableWebSearch?: boolean;
-  enableXSearch?: boolean;
-  enableCodeExecution?: boolean;
-}
-
-// 機能別設定から toolOptions を削除
-export interface ChatFeatureConfig {
-  featureId: ChatFeatureId;
-  title: string;
-  systemPrompt: string;
-  placeholder: string;
-  inputLabel?: string;
-  outputFormat: 'markdown' | 'plaintext';
-  icon?: string;
-  description?: string;
-  promptKey: string;
-  // toolOptions を削除（全機能共通）
-  promptSuggestions?: PromptSuggestion[];
-}
-
-// 各機能の設定例
-export const chatFeatureConfigs: Record<ChatFeatureId, ChatFeatureConfig> = {
-  'research-cast': {
-    featureId: 'research-cast',
-    title: '出演者リサーチ',
-    systemPrompt: getDefaultPromptContent(PROMPT_KEYS.RESEARCH_CAST),
-    placeholder: '企画内容・テーマを入力してください',
-    outputFormat: 'markdown',
-    icon: 'Users',
-    description: '企画に適した出演者候補を提案',
-    promptKey: PROMPT_KEYS.RESEARCH_CAST,
-    // toolOptions 削除
-    promptSuggestions: [...],
-  },
-  // ...他の機能も同様
-};
-```
+- リクエストスキーマから `toolOptions` を削除
+- `LLMClient.stream()` の代わりに `LLMClient.streamWithUsage()` を呼び出す
+- SSEストリームのエンコードは新イベント形式（各イベントにJSONシリアライズ）で統一
+- エラーはストリーム内で `{type: 'error', message: '...'}` として返す
 
 ---
 
@@ -678,7 +365,6 @@ export const chatFeatureConfigs: Record<ChatFeatureId, ChatFeatureConfig> = {
 ### ツールインジケーター（全機能共通）
 
 ```
-🧠 思考中...
 🔍 Web検索 [実行中...]
 🐦 X検索   [完了 ✓]
 💻 コード実行 [待機中]
@@ -697,33 +383,32 @@ Web検索: 2回 • X検索: 1回 • コード実行: 0回
 
 ## 実装スケジュール
 
-### Day 1: 基盤実装
+### Day 1: 復元・改修
 
-| 時間 | タスク |
-|------|--------|
-| 0-1h | `lib/llm/xai/config.ts` 作成 |
-| 1-2h | `lib/llm/xai/types.ts` 作成 |
-| 2-4h | `lib/llm/xai/stream-parser.ts` 作成 |
-| 4-7h | `lib/llm/xai/client.ts` 作成 |
-| 7-8h | 単体テスト |
+| タスク | 内容 |
+|--------|------|
+| git復元 | `grok.ts`（b8297cf）と `factory.ts`（70c1823~1）を復元 |
+| grok.ts改修 | ツール設定簡略化・SSEイベント形式変更 |
+| factory.ts整理 | GrokClient分岐を整理 |
+| types.ts更新 | `streamWithUsage` 追加・新SSEイベント型定義 |
+| 動作確認 | API疎通・ストリーム確認 |
 
 ### Day 2: 統合と簡略化
 
-| 時間 | タスク |
-|------|--------|
-| 0-2h | `lib/llm/factory.ts` 修正 |
-| 2-4h | `app/api/llm/stream/route.ts` 修正 |
-| 4-6h | `lib/chat/chat-config.ts` 簡略化 |
-| 6-8h | 各機能の動作確認 |
+| タスク | 内容 |
+|--------|------|
+| route.ts修正 | toolOptions削除・新形式対応 |
+| chat-config.ts修正 | toolOptions削除 |
+| agents.ts修正 | ツール設定削除 |
+| 管理画面UI修正 | ツール個別設定削除 |
 
-### Day 3: UI調整と最終確認
+### Day 3: フロントエンド対応と最終確認
 
-| 時間 | タスク |
-|------|--------|
-| 0-2h | 管理画面のツール設定UI削除 |
-| 2-4h | ツールインジケーター調整 |
-| 4-6h | 統合テスト |
-| 6-8h | ドキュメント更新 |
+| タスク | 内容 |
+|--------|------|
+| SSE受信コンポーネント修正 | 新イベント形式（typeディスクリミネータ）対応 |
+| x_searchイベント型確認 | 実APIレスポンスを見てパーサー修正 |
+| 統合テスト | 全機能・全ツールの動作確認 |
 
 ---
 
@@ -733,18 +418,18 @@ Web検索: 2回 • X検索: 1回 • コード実行: 0回
 
 | # | テスト項目 | 期待結果 |
 |---|-----------|---------|
-| 1 | 全機能でWeb検索 | 実行される |
-| 2 | 全機能でX検索 | 実行される |
-| 3 | 全機能でコード実行 | 実行される |
+| 1 | Web検索実行 | `type: 'tool_call'` イベントが生成される |
+| 2 | X検索実行 | `type: 'tool_call'` イベントが生成される |
+| 3 | コード実行 | `type: 'tool_call'` イベントが生成される |
 | 4 | AIの自律的ツール選択 | クエリに応じて適切なツールが選ばれる |
-| 5 | ツール実行中のUI表示 | インジケーターに全ツール表示 |
-| 6 | 使用状況サマリー | 各ツールの使用回数が表示 |
+| 5 | ツール実行中のUI表示 | ツールインジケーターが正しく表示される |
+| 6 | 使用状況サマリー | `done` イベントの `usage.toolCalls` に使用回数が含まれる |
 
 ### エラーテスト
 
 | # | テスト項目 | 期待結果 |
 |---|-----------|---------|
-| 1 | API Key無効 | エラーメッセージ表示 |
+| 1 | API Key無効 | `type: 'error'` イベントが生成される |
 | 2 | レート制限 | 適切なハンドリング |
 | 3 | ストリーム中断 | クリーンアップ |
 
@@ -773,4 +458,5 @@ Web検索: 2回 • X検索: 1回 • コード実行: 0回
 
 - [xAI Responses API](https://docs.x.ai/developers/endpoints/responses)
 - [xAI Tools Overview](https://docs.x.ai/developers/tools/overview)
-- `docs/specs/api-integration/grok-agent-tools.md`
+- [復元・実装ガイド](../backlog/xai-implementation-restore-guide.md)
+- `docs/specs/api-integration/streaming-events.md` - SSEイベント仕様

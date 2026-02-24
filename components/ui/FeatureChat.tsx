@@ -1,20 +1,19 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
-import { cn } from "@/lib/utils";
 import { Loader2, MessageSquare, RotateCcw } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { StreamingSteps } from "@/components/chat";
+import { type PromptSuggestion, PromptSuggestions } from "@/components/chat/PromptSuggestions";
 import { Button } from "@/components/ui/button";
-import { MessageBubble } from "./MessageBubble";
-import { AttachedFile } from "./FileAttachment";
-import { ChatHeader } from "./ChatHeader";
-import { ChatInputArea } from "./ChatInputArea";
+import { useConversationSave } from "@/hooks/useConversationSave";
+import { useLLMStream } from "@/hooks/useLLMStream";
 import { DEFAULT_PROVIDER } from "@/lib/llm/config";
 import type { LLMProvider } from "@/lib/llm/types";
-import { useLLMStream } from "@/hooks/useLLMStream";
-import type { ToolOptions } from "@/lib/chat/chat-config";
-import { PromptSuggestions, PromptSuggestion } from "@/components/chat/PromptSuggestions";
-import { useConversationSave } from "@/hooks/useConversationSave";
-import { StreamingSteps } from "@/components/chat";
+import { cn } from "@/lib/utils";
+import { ChatHeader } from "./ChatHeader";
+import { ChatInputArea } from "./ChatInputArea";
+import type { AttachedFile } from "./FileAttachment";
+import { MessageBubble } from "./MessageBubble";
 
 export interface Message {
   id: string;
@@ -42,8 +41,6 @@ export interface FeatureChatProps {
   emptyDescription?: string;
   /** ファイル添付を有効化 */
   enableFileAttachment?: boolean;
-  /** ツールオプション */
-  toolOptions?: ToolOptions;
   /** プロンプトサジェスト（AIレスポンス後に表示） */
   promptSuggestions?: PromptSuggestion[];
 }
@@ -61,7 +58,6 @@ export function FeatureChat({
   provider: initialProvider = DEFAULT_PROVIDER,
   emptyDescription,
   enableFileAttachment = true,
-  toolOptions = { enableWebSearch: false },
   promptSuggestions = [],
 }: FeatureChatProps) {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -75,28 +71,10 @@ export function FeatureChat({
   const [isUserScrolling, setIsUserScrolling] = useState(false);
   const userScrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const {
-    content,
-    thinking,
-    isComplete,
-    error,
-    usage,
-    toolCalls,
-    toolUsage,
-    reasoningSteps,
-    thinkingSteps,
-    isAccepted,
-    startStream,
-    resetStream,
-  } = useLLMStream();
+  const { content, isComplete, error, usage, toolCalls, startStream, resetStream } = useLLMStream();
 
-  const {
-    currentChatId,
-    setCurrentChatId,
-    isLoadingHistory,
-    loadConversation,
-    saveConversation,
-  } = useConversationSave({ featureId, initialChatId, onChatCreated });
+  const { currentChatId, setCurrentChatId, isLoadingHistory, loadConversation, saveConversation } =
+    useConversationSave({ featureId, initialChatId, onChatCreated });
 
   // 初回マウント時: chatIdがあれば履歴を読み込む、なければ新規（空）
   useEffect(() => {
@@ -120,7 +98,8 @@ export function FeatureChat({
         clearTimeout(userScrollTimeoutRef.current);
       }
       // ユーザーが最下部に近い場合は自動スクロールを再有効化
-      const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 100;
+      const isNearBottom =
+        container.scrollHeight - container.scrollTop - container.clientHeight < 100;
       if (isNearBottom) {
         userScrollTimeoutRef.current = setTimeout(() => setIsUserScrolling(false), 500);
       } else {
@@ -158,19 +137,16 @@ export function FeatureChat({
       resetStream();
       saveConversation([...messages, assistantMessage], currentChatId);
     }
-  }, [isComplete, content, messages, resetStream]);
+    // biome-ignore lint/correctness/useExhaustiveDependencies: 意図的に依存配列を制限
+  }, [isComplete, content]);
 
-  const buildStreamPayload = (userContent: string, history: Message[]) => {
+  const buildStreamMessages = (userContent: string, history: Message[]) => {
     const conversationHistory = history.map((m) => ({ role: m.role, content: m.content }));
-    const effectiveToolOptions = provider.startsWith("grok-") ? toolOptions : undefined;
-    return {
-      messages: [
-        { role: "system" as const, content: systemPrompt },
-        ...conversationHistory,
-        { role: "user" as const, content: userContent },
-      ],
-      effectiveToolOptions,
-    };
+    return [
+      { role: "system" as const, content: systemPrompt },
+      ...conversationHistory,
+      { role: "user" as const, content: userContent },
+    ];
   };
 
   const handleSend = async () => {
@@ -199,11 +175,8 @@ export function FeatureChat({
     setInput("");
     setAttachedFiles([]);
 
-    const { messages: streamMessages, effectiveToolOptions } = buildStreamPayload(
-      userMessage.content,
-      messages,
-    );
-    await startStream(streamMessages, provider, effectiveToolOptions);
+    const streamMessages = buildStreamMessages(userMessage.content, messages);
+    await startStream(streamMessages, provider);
   };
 
   const handleRegenerate = async () => {
@@ -215,11 +188,8 @@ export function FeatureChat({
     const newMessages = messages.slice(0, actualIndex);
     setMessages(newMessages);
 
-    const { messages: streamMessages, effectiveToolOptions } = buildStreamPayload(
-      lastUserMessage.content,
-      newMessages,
-    );
-    await startStream(streamMessages, provider, effectiveToolOptions);
+    const streamMessages = buildStreamMessages(lastUserMessage.content, newMessages);
+    await startStream(streamMessages, provider);
   };
 
   const handleCopy = async () => {
@@ -244,7 +214,7 @@ export function FeatureChat({
     }
   };
 
-  const isStreaming = !isComplete && (content || thinking);
+  const isStreaming = !isComplete && !!content;
   const lastAssistantMessage = [...messages].reverse().find((m) => m.role === "assistant");
   const hasMessages = messages.length > 0;
 
@@ -258,13 +228,11 @@ export function FeatureChat({
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, userMessage]);
-      const { messages: streamMessages, effectiveToolOptions } = buildStreamPayload(
-        userMessage.content,
-        messages,
-      );
-      await startStream(streamMessages, provider, effectiveToolOptions);
+      const streamMessages = buildStreamMessages(userMessage.content, messages);
+      await startStream(streamMessages, provider);
     },
-    [isStreaming, messages, provider, systemPrompt, toolOptions, startStream],
+    // biome-ignore lint/correctness/useExhaustiveDependencies: 意図的に依存配列を制限
+    [isStreaming, messages, provider, startStream],
   );
 
   return (
@@ -299,7 +267,9 @@ export function FeatureChat({
               {emptyDescription || "メッセージを送信して、AIと対話を始めましょう。"}
             </p>
             <div className="mt-6 flex items-center gap-2 text-xs text-gray-500">
-              <span className="px-2 py-1 rounded bg-gray-100 border border-gray-200">Ctrl + Enter</span>
+              <span className="px-2 py-1 rounded bg-gray-100 border border-gray-200">
+                Ctrl + Enter
+              </span>
               <span>で送信</span>
             </div>
           </div>
@@ -318,26 +288,24 @@ export function FeatureChat({
             {isStreaming && (
               <StreamingSteps
                 content={content}
-                thinking={thinking}
                 toolCalls={toolCalls}
-                reasoningSteps={reasoningSteps}
-                thinkingSteps={thinkingSteps}
-                isAccepted={isAccepted}
-                toolUsage={toolUsage}
                 usage={usage}
                 provider={provider}
                 isComplete={isComplete}
               />
             )}
 
-            {!isStreaming && hasMessages && lastAssistantMessage && promptSuggestions.length > 0 && (
-              <div className="px-4 py-4 max-w-3xl mx-auto">
-                <PromptSuggestions
-                  suggestions={promptSuggestions}
-                  onSuggestionClick={handleSuggestionClick}
-                />
-              </div>
-            )}
+            {!isStreaming &&
+              hasMessages &&
+              lastAssistantMessage &&
+              promptSuggestions.length > 0 && (
+                <div className="px-4 py-4 max-w-3xl mx-auto">
+                  <PromptSuggestions
+                    suggestions={promptSuggestions}
+                    onSuggestionClick={handleSuggestionClick}
+                  />
+                </div>
+              )}
 
             {!isStreaming && hasMessages && messages.some((m) => m.role === "assistant") && (
               <div className="flex justify-center py-4">

@@ -4,24 +4,28 @@
  * @created 2026-02-22 11:50
  */
 
-import type { ReasoningStepInfo, ThinkingStepInfo, ToolCallInfo } from "@/hooks/useLLMStream";
+import type { ToolCallInfo } from "@/hooks/useLLMStream";
 import type { LLMProvider } from "@/lib/llm/types";
+
+// レガシー表示コンポーネント用のローカル型定義
+export interface ReasoningStepInfo {
+  step: number;
+  content: string;
+  tokens?: number;
+}
+
+export interface ThinkingStepInfo {
+  id: string;
+  step: number;
+  title: string;
+  content?: string;
+  status: "pending" | "running" | "completed" | "error";
+  type: "thinking" | "search" | "analysis" | "synthesis" | "complete";
+}
 
 export interface StreamingStepsProps {
   content: string;
-  thinking: string;
   toolCalls: ToolCallInfo[];
-  reasoningSteps: ReasoningStepInfo[];
-  thinkingSteps: ThinkingStepInfo[];
-  isAccepted: boolean;
-  toolUsage: {
-    web_search_calls?: number;
-    x_search_calls?: number;
-    code_interpreter_calls?: number;
-    file_search_calls?: number;
-    mcp_calls?: number;
-    document_search_calls?: number;
-  } | null;
   usage: {
     inputTokens: number;
     outputTokens: number;
@@ -61,14 +65,6 @@ export interface ContentMessageProps {
   content: string;
   provider: LLMProvider | string;
   isComplete: boolean;
-  toolUsage: {
-    web_search_calls?: number;
-    x_search_calls?: number;
-    code_interpreter_calls?: number;
-    file_search_calls?: number;
-    mcp_calls?: number;
-    document_search_calls?: number;
-  } | null;
   usage: {
     inputTokens: number;
     outputTokens: number;

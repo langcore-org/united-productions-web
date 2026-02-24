@@ -1,18 +1,25 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
-import { getChatConfig, ChatFeatureId, updateChatConfigSystemPrompt } from "@/lib/chat/chat-config";
+import { useEffect, useState } from "react";
+import {
+  type ChatFeatureId,
+  getChatConfig,
+  updateChatConfigSystemPrompt,
+} from "@/lib/chat/chat-config";
 
 // FeatureChatを動的インポート
-const FeatureChat = dynamic(() => import("@/components/ui/FeatureChat").then(mod => mod.FeatureChat), {
-  ssr: false,
-  loading: () => (
-    <div className="flex items-center justify-center h-full">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
-    </div>
-  ),
-});
+const FeatureChat = dynamic(
+  () => import("@/components/ui/FeatureChat").then((mod) => mod.FeatureChat),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex items-center justify-center h-full">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
+      </div>
+    ),
+  },
+);
 
 interface ChatPageProps {
   featureId: ChatFeatureId;
@@ -38,7 +45,7 @@ export function ChatPage({ featureId }: ChatPageProps) {
             const updatedConfig = updateChatConfigSystemPrompt(
               baseConfig,
               data.programInfo || "",
-              data.pastProposals || ""
+              data.pastProposals || "",
             );
             setConfig(updatedConfig);
             setSystemPrompt(updatedConfig.systemPrompt);
@@ -79,7 +86,6 @@ export function ChatPage({ featureId }: ChatPageProps) {
       placeholder={config.placeholder}
       inputLabel={config.inputLabel}
       outputFormat={config.outputFormat}
-      toolOptions={config.toolOptions}
       promptSuggestions={config.promptSuggestions}
     />
   );

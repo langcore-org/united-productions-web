@@ -1,15 +1,15 @@
 /**
  * ツール呼び出しメッセージコンポーネント
- * 
+ *
  * @created 2026-02-22 11:50
  */
 
-import { Loader2, CheckCircle2 } from "lucide-react";
+import { CheckCircle2, Loader2 } from "lucide-react";
 import { getToolConfig } from "@/lib/tools/config";
 import type { ToolCallMessageProps } from "../types";
 
 export function ToolCallMessage({ toolCall, status, provider }: ToolCallMessageProps) {
-  const config = getToolConfig(toolCall.type, toolCall.name);
+  const config = getToolConfig(toolCall.name);
   const Icon = config.icon;
 
   return (

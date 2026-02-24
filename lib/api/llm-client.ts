@@ -5,8 +5,8 @@
  * フック（useLLMStream, useLangChainChat）から直接 fetch を呼ばなくて済むようにする。
  */
 
-import { parseSSEStream, type SSEEvent } from '@/lib/llm/sse-parser';
-import type { LLMMessage, LLMProvider } from '@/lib/llm/types';
+import { parseSSEStream, type SSEEvent } from "@/lib/llm/sse-parser";
+import type { LLMMessage, LLMProvider } from "@/lib/llm/types";
 
 /**
  * LLMストリームリクエストの型
@@ -14,7 +14,6 @@ import type { LLMMessage, LLMProvider } from '@/lib/llm/types';
 export interface LLMStreamRequest {
   messages: LLMMessage[];
   provider?: LLMProvider;
-  toolOptions?: { enableWebSearch?: boolean };
   temperature?: number;
   maxTokens?: number;
 }
@@ -32,12 +31,12 @@ export class LLMApiError extends Error {
     public readonly serverRequestId?: string,
   ) {
     super(message);
-    this.name = 'LLMApiError';
+    this.name = "LLMApiError";
   }
 }
 
 /** デフォルトのAPIエンドポイント */
-const DEFAULT_ENDPOINT = '/api/llm/stream';
+const DEFAULT_ENDPOINT = "/api/llm/stream";
 
 /**
  * LLMストリーミングレスポンスを取得する非同期ジェネレータ
@@ -70,8 +69,8 @@ export async function* streamLLMResponse(
   const endpoint = options?.endpoint ?? DEFAULT_ENDPOINT;
 
   const response = await fetch(endpoint, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(request),
     signal: options?.signal,
   });
@@ -93,7 +92,7 @@ export async function* streamLLMResponse(
 
   const reader = response.body?.getReader();
   if (!reader) {
-    throw new LLMApiError('Response body is not readable');
+    throw new LLMApiError("Response body is not readable");
   }
 
   yield* parseSSEStream(reader);

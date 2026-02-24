@@ -8,15 +8,15 @@
  * 管理者のみアクセス可能
  */
 
-import { NextRequest } from "next/server";
+import type { NextRequest } from "next/server";
 import { z } from "zod";
 import { requireAdmin } from "@/lib/api/auth";
 import { logger } from "@/lib/logger";
 import {
-  getSystemGrokToolSettings,
-  setSystemGrokToolSettings,
   DEFAULT_GROK_TOOL_SETTINGS,
   type GrokToolSettings,
+  getSystemGrokToolSettings,
+  setSystemGrokToolSettings,
 } from "@/lib/settings/db";
 
 /**
@@ -44,10 +44,10 @@ export async function GET(request: NextRequest): Promise<Response> {
     logger.error(`[${requestId}] Failed to get Grok tool settings`, {
       error: errorMessage,
     });
-    return new Response(
-      JSON.stringify({ error: "設定の取得に失敗しました", requestId }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
-    );
+    return new Response(JSON.stringify({ error: "設定の取得に失敗しました", requestId }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
   }
 }
 
@@ -57,12 +57,7 @@ export async function GET(request: NextRequest): Promise<Response> {
  *
  * body: Record<ChatFeatureId, GrokToolType[]>
  */
-const toolTypeSchema = z.enum([
-  "web_search",
-  "x_search",
-  "code_execution",
-  "collections_search",
-]);
+const toolTypeSchema = z.enum(["web_search", "x_search", "code_execution"]);
 
 const featureIdSchema = z.enum([
   "general-chat",
@@ -90,10 +85,10 @@ export async function POST(request: NextRequest): Promise<Response> {
     try {
       body = await request.json();
     } catch {
-      return new Response(
-        JSON.stringify({ error: "Invalid request body" }),
-        { status: 400, headers: { "Content-Type": "application/json" } }
-      );
+      return new Response(JSON.stringify({ error: "Invalid request body" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
     }
 
     const validationResult = saveSettingsSchema.safeParse(body);
@@ -103,7 +98,7 @@ export async function POST(request: NextRequest): Promise<Response> {
           error: "Invalid request",
           details: validationResult.error.format(),
         }),
-        { status: 400, headers: { "Content-Type": "application/json" } }
+        { status: 400, headers: { "Content-Type": "application/json" } },
       );
     }
 
@@ -121,9 +116,9 @@ export async function POST(request: NextRequest): Promise<Response> {
     logger.error(`[${requestId}] Failed to save Grok tool settings`, {
       error: errorMessage,
     });
-    return new Response(
-      JSON.stringify({ error: "設定の保存に失敗しました", requestId }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
-    );
+    return new Response(JSON.stringify({ error: "設定の保存に失敗しました", requestId }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
   }
 }

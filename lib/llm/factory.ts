@@ -1,43 +1,42 @@
 /**
  * LLM Factory
- * 
- * LangChainベースのLLMクライアント生成
+ *
+ * LLMプロバイダーを統一インターフェースで生成するFactoryパターン
+ * grok-* → GrokClient（直接実装・xAI Responses API）
+ * その他 → 将来のLangChain等に対応予定
+ *
+ * 復元元: git commit 70c1823~1（LangChain移行前）
  */
 
-import { LLMProvider, LLMClient, VALID_PROVIDERS } from './types';
-import { PROVIDER_CONFIG } from './config';
-import { createLangChainClient } from './langchain/adapter';
-import type { LangChainOptions } from './langchain/types';
+import { GrokClient } from "./clients/grok";
+import { PROVIDER_CONFIG } from "./config";
+import { type LLMClient, type LLMProvider, VALID_PROVIDERS } from "./types";
 
 export function getProviderInfo(provider: LLMProvider) {
   return PROVIDER_CONFIG[provider];
 }
 
 /**
- * LLMクライアントを生成するFactory関数（LangChain版）
- * 
+ * LLMクライアントを生成するFactory関数
+ *
  * @param provider - 使用するLLMプロバイダー
- * @param options - LangChainオプション
  * @returns LLMClientインターフェースを実装したクライアントインスタンス
- * 
- * @example
- * ```typescript
- * const client = createLLMClient('grok-4-1-fast-reasoning');
- * const response = await client.chat([{ role: 'user', content: 'Hello' }]);
- * ```
  */
-export function createLLMClient(
-  provider: LLMProvider,
-  options?: LangChainOptions
-): LLMClient {
-  return createLangChainClient(provider, options);
+export function createLLMClient(provider: LLMProvider): LLMClient {
+  switch (provider) {
+    case "grok-4-1-fast-reasoning":
+    case "grok-4-0709":
+      return new GrokClient(provider);
+
+    default: {
+      const _exhaustiveCheck: never = provider;
+      throw new Error(`Unknown or unsupported provider: ${_exhaustiveCheck}`);
+    }
+  }
 }
 
 /**
  * プロバイダーが有効かどうかを確認
- * 
- * @param provider - チェックするプロバイダー
- * @returns 有効な場合はtrue
  */
 export function isValidProvider(provider: string): provider is LLMProvider {
   return VALID_PROVIDERS.includes(provider as LLMProvider);
@@ -45,9 +44,6 @@ export function isValidProvider(provider: string): provider is LLMProvider {
 
 /**
  * プロバイダーの表示名を取得
- * 
- * @param provider - LLMプロバイダー
- * @returns 表示名
  */
 export function getProviderDisplayName(provider: LLMProvider): string {
   return getProviderInfo(provider).name;
@@ -55,21 +51,14 @@ export function getProviderDisplayName(provider: LLMProvider): string {
 
 /**
  * 同じベンダーのプロバイダーを取得
- * 
- * @param provider - 基準となるプロバイダー
- * @returns 同じベンダーのプロバイダー配列
  */
 export function getSameVendorProviders(provider: LLMProvider): LLMProvider[] {
   const info = getProviderInfo(provider);
   const vendor = info.provider;
-  
+
   const vendorMap: Record<string, LLMProvider[]> = {
-    'Google': VALID_PROVIDERS.filter(p => p.startsWith('gemini-')),
-    'xAI': VALID_PROVIDERS.filter(p => p.startsWith('grok-')),
-    'OpenAI': VALID_PROVIDERS.filter(p => p.startsWith('gpt-')),
-    'Anthropic': VALID_PROVIDERS.filter(p => p.startsWith('claude-')),
-    'Perplexity': VALID_PROVIDERS.filter(p => p.startsWith('perplexity-')),
+    xAI: VALID_PROVIDERS.filter((p) => p.startsWith("grok-")),
   };
-  
+
   return vendorMap[vendor] || [provider];
 }

@@ -5,22 +5,22 @@
  * 管理画面で変更された設定を永続化し、全ユーザーに適用する。
  */
 
-import { prisma } from '@/lib/prisma';
-import type { Prisma } from '@prisma/client';
-import { DEFAULT_PROVIDER } from '@/lib/llm/config';
-import { isValidProvider } from '@/lib/llm/factory';
-import { logger } from '@/lib/logger';
-import type { LLMProvider } from '@/lib/llm/types';
-import type { ChatFeatureId } from '@/lib/chat/chat-config';
-import { CACHE_TTL_MS } from '@/config/constants';
+import type { Prisma } from "@prisma/client";
+import { CACHE_TTL_MS } from "@/config/constants";
+import type { ChatFeatureId } from "@/lib/chat/chat-config";
+import { DEFAULT_PROVIDER } from "@/lib/llm/config";
+import { isValidProvider } from "@/lib/llm/factory";
+import type { LLMProvider } from "@/lib/llm/types";
+import { logger } from "@/lib/logger";
+import { prisma } from "@/lib/prisma";
 
 /**
  * 管理可能なシステム設定キーの定数
  * 設定キーをここに追加するだけで管理対象に加えられる
  */
 export const SYSTEM_SETTING_KEYS = {
-  DEFAULT_LLM_PROVIDER: 'llm.defaultProvider',
-  GROK_TOOL_SETTINGS: 'grok.toolSettings',
+  DEFAULT_LLM_PROVIDER: "llm.defaultProvider",
+  GROK_TOOL_SETTINGS: "grok.toolSettings",
 } as const;
 
 // ============================================
@@ -40,13 +40,13 @@ const cache = new Map<string, CacheEntry<unknown>>();
 function getCache<T>(key: string): T | null {
   const entry = cache.get(key);
   if (!entry) return null;
-  
+
   // TTLチェック
   if (Date.now() - entry.timestamp > CACHE_TTL_MS) {
     cache.delete(key);
     return null;
   }
-  
+
   return entry.data as T;
 }
 
@@ -64,7 +64,7 @@ function clearCache(key: string): void {
   cache.delete(key);
 }
 
-export type SystemSettingKey = typeof SYSTEM_SETTING_KEYS[keyof typeof SYSTEM_SETTING_KEYS];
+export type SystemSettingKey = (typeof SYSTEM_SETTING_KEYS)[keyof typeof SYSTEM_SETTING_KEYS];
 
 /**
  * システム設定を取得
@@ -120,25 +120,22 @@ export async function getDefaultLLMProvider(): Promise<LLMProvider> {
  * - web_search: Web検索
  * - x_search: X検索
  * - code_execution: コード実行
- * - collections_search: ファイル検索
+ * collections_search は廃止済み
  */
-export type GrokToolType = 'web_search' | 'x_search' | 'code_execution' | 'collections_search';
+export type GrokToolType = "web_search" | "x_search" | "code_execution";
 
 /** すべてのツールタイプ一覧 */
-export const ALL_TOOL_TYPES: GrokToolType[] = [
-  'web_search', 'x_search', 'code_execution', 'collections_search',
-];
+export const ALL_TOOL_TYPES: GrokToolType[] = ["web_search", "x_search", "code_execution"];
 
 /**
  * レスポンス用ツールタイプ（エイリアス含む）
- * code_interpreter → code_execution, file_search → collections_search
+ * code_interpreter → code_execution
  */
-export type GrokToolTypeWithAlias = GrokToolType | 'code_interpreter' | 'file_search';
+export type GrokToolTypeWithAlias = GrokToolType | "code_interpreter";
 
 /** エイリアスを正規名に変換 */
 export function normalizeToolType(toolType: GrokToolTypeWithAlias): GrokToolType {
-  if (toolType === 'code_interpreter') return 'code_execution';
-  if (toolType === 'file_search') return 'collections_search';
+  if (toolType === "code_interpreter") return "code_execution";
   return toolType;
 }
 
@@ -155,14 +152,14 @@ export type GrokToolSettings = Record<ChatFeatureId, GrokToolType[]>;
  * すべての機能で全ツールを有効化
  */
 export const DEFAULT_GROK_TOOL_SETTINGS: GrokToolSettings = {
-  'general-chat': [...ALL_TOOL_TYPES],
-  'research-cast': [...ALL_TOOL_TYPES],
-  'research-location': [...ALL_TOOL_TYPES],
-  'research-info': [...ALL_TOOL_TYPES],
-  'research-evidence': [...ALL_TOOL_TYPES],
-  'minutes': [...ALL_TOOL_TYPES],
-  'proposal': [...ALL_TOOL_TYPES],
-  'na-script': [...ALL_TOOL_TYPES],
+  "general-chat": [...ALL_TOOL_TYPES],
+  "research-cast": [...ALL_TOOL_TYPES],
+  "research-location": [...ALL_TOOL_TYPES],
+  "research-info": [...ALL_TOOL_TYPES],
+  "research-evidence": [...ALL_TOOL_TYPES],
+  minutes: [...ALL_TOOL_TYPES],
+  proposal: [...ALL_TOOL_TYPES],
+  "na-script": [...ALL_TOOL_TYPES],
 };
 
 /**
@@ -181,10 +178,7 @@ export function isToolEnabledInSettings(
 /**
  * 設定内で特定の機能にツールが1つでも有効かチェック
  */
-export function hasAnyToolEnabled(
-  settings: GrokToolSettings,
-  featureId: ChatFeatureId,
-): boolean {
+export function hasAnyToolEnabled(settings: GrokToolSettings, featureId: ChatFeatureId): boolean {
   const tools = settings[featureId];
   return Array.isArray(tools) && tools.length > 0;
 }
@@ -199,7 +193,7 @@ export async function isToolEnabled(
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _featureId: ChatFeatureId,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  _toolType: GrokToolTypeWithAlias
+  _toolType: GrokToolTypeWithAlias,
 ): Promise<boolean> {
   // 常に全ツール有効
   return true;
@@ -230,7 +224,7 @@ export async function getGrokToolSettings(userId: string): Promise<GrokToolSetti
     }
   } catch (error) {
     const err = error instanceof Error ? error : new Error(String(error));
-    logger.error('Failed to get Grok tool settings', { error: err.message });
+    logger.error("Failed to get Grok tool settings", { error: err.message });
   }
 
   return DEFAULT_GROK_TOOL_SETTINGS;
@@ -241,7 +235,7 @@ export async function getGrokToolSettings(userId: string): Promise<GrokToolSetti
  */
 export async function saveGrokToolSettings(
   userId: string,
-  settings: Partial<GrokToolSettings>
+  settings: Partial<GrokToolSettings>,
 ): Promise<GrokToolSettings> {
   const data = mergeWithDefaults(settings);
 
@@ -267,7 +261,7 @@ export async function isGrokToolEnabled(
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _userId: string,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  _featureId: ChatFeatureId
+  _featureId: ChatFeatureId,
 ): Promise<boolean> {
   // 常に全ツール有効
   return true;
@@ -301,7 +295,10 @@ export async function getSystemGrokToolSettings(): Promise<GrokToolSettings | nu
     }
   } catch (error) {
     const err = error instanceof Error ? error : new Error(String(error));
-    logger.error('Failed to get system Grok tool settings', { error: err.message, stack: err.stack });
+    logger.error("Failed to get system Grok tool settings", {
+      error: err.message,
+      stack: err.stack,
+    });
     throw err;
   }
 
@@ -322,7 +319,7 @@ export async function getSystemGrokToolSettingsOrDefault(): Promise<GrokToolSett
  * 保存後にキャッシュをクリア
  */
 export async function setSystemGrokToolSettings(
-  settings: Partial<GrokToolSettings>
+  settings: Partial<GrokToolSettings>,
 ): Promise<GrokToolSettings> {
   const data = mergeWithDefaults(settings);
 

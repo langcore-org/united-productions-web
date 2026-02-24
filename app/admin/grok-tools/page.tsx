@@ -1,334 +1,87 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { AdminLayout } from "@/components/layout/AdminLayout";
-import {
-  Bot,
-  Search,
-  Save,
-  Terminal,
-  FileSearch,
-  Twitter,
-  Settings,
-  ArrowLeft,
-  AlertCircle,
-  Loader2,
-} from "lucide-react";
+import { ArrowLeft, Bot, CheckCircle2, Search, Settings, Terminal, Twitter } from "lucide-react";
 import Link from "next/link";
-import type {
-  GrokToolSettings,
-  GrokToolType,
-} from "@/lib/settings/db";
-import type { ChatFeatureId } from "@/lib/chat/chat-config";
+import { AdminLayout } from "@/components/layout/AdminLayout";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-// 機能の定義（ChatFeatureId をそのまま使用）
-const TOOL_FEATURES: { id: ChatFeatureId; label: string }[] = [
-  { id: "general-chat", label: "一般チャット" },
-  { id: "research-cast", label: "出演者リサーチ" },
-  { id: "research-evidence", label: "エビデンスリサーチ" },
-  { id: "minutes", label: "議事録作成" },
-  { id: "proposal", label: "新企画立案" },
-  { id: "na-script", label: "NA原稿作成" },
-];
-
-// ツール定義
-const TOOLS: { id: GrokToolType; label: string; description: string; icon: React.ComponentType<{ className?: string }> }[] = [
+const TOOLS = [
   {
     id: "web_search",
     label: "Web検索",
     description: "インターネットから最新情報を検索",
     icon: Search,
+    color: "text-blue-500",
   },
   {
     id: "x_search",
     label: "X検索",
     description: "X（Twitter）からリアルタイム情報を検索",
     icon: Twitter,
+    color: "text-sky-500",
   },
   {
     id: "code_execution",
     label: "コード実行",
     description: "Pythonコードを安全なサンドボックスで実行",
     icon: Terminal,
-  },
-  {
-    id: "collections_search",
-    label: "ファイル検索",
-    description: "アップロードしたドキュメントを検索",
-    icon: FileSearch,
+    color: "text-green-500",
   },
 ];
 
 export default function GrokToolsPage() {
-  const [mounted, setMounted] = useState(false);
-  const [settings, setSettings] = useState<GrokToolSettings | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [isSaving, setIsSaving] = useState(false);
-  const [saveMessage, setSaveMessage] = useState<string | null>(null);
-
-  useEffect(() => {
-    setMounted(true);
-    fetchSettings();
-  }, []);
-
-  const fetchSettings = async () => {
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const response = await fetch("/api/settings/grok-tools");
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `HTTP ${response.status}: 設定の取得に失敗しました`);
-      }
-
-      const data = await response.json();
-
-      if (!data || typeof data !== "object") {
-        throw new Error("設定データが無効です");
-      }
-
-      setSettings(data as GrokToolSettings);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "設定の取得中にエラーが発生しました";
-      setError(errorMessage);
-      console.error("Failed to fetch Grok tool settings:", err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  /** 機能×ツールのトグル */
-  const toggleTool = (featureId: ChatFeatureId, toolId: GrokToolType) => {
-    if (!settings) return;
-    const current = settings[featureId] ?? [];
-    const next = current.includes(toolId)
-      ? current.filter((t) => t !== toolId)
-      : [...current, toolId];
-    setSettings({ ...settings, [featureId]: next });
-  };
-
-  const isEnabled = (featureId: ChatFeatureId, toolId: GrokToolType): boolean => {
-    return (settings?.[featureId] ?? []).includes(toolId);
-  };
-
-  const handleSave = async () => {
-    if (!settings) return;
-
-    setIsSaving(true);
-    setSaveMessage(null);
-
-    try {
-      const response = await fetch("/api/settings/grok-tools", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(settings),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || "保存に失敗しました");
-      }
-
-      setSaveMessage("保存しました");
-      setTimeout(() => setSaveMessage(null), 3000);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "保存に失敗しました";
-      setSaveMessage(errorMessage);
-      console.error("Failed to save Grok tool settings:", err);
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const Header = () => (
-    <div className="flex items-center gap-4 mb-8">
-      <Link
-        href="/admin"
-        className="flex items-center justify-center w-10 h-10 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors"
-      >
-        <ArrowLeft className="w-5 h-5" />
-      </Link>
-      <div className="w-12 h-12 rounded-xl bg-indigo-600 flex items-center justify-center">
-        <Bot className="w-6 h-6 text-white" />
-      </div>
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">Grokツール設定</h1>
-        <p className="text-gray-500">Agent Tools APIの有効化設定</p>
-      </div>
-    </div>
-  );
-
-  if (error) {
-    return (
-      <AdminLayout>
-        <div className="h-full overflow-y-auto p-8">
-          <div className="max-w-6xl mx-auto">
-            <Header />
-            <Card className="border-red-200">
-              <CardContent className="p-8">
-                <div className="flex flex-col items-center text-center">
-                  <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mb-4">
-                    <AlertCircle className="w-8 h-8 text-red-600" />
-                  </div>
-                  <h2 className="text-xl font-semibold text-gray-900 mb-2">
-                    設定の取得に失敗しました
-                  </h2>
-                  <p className="text-gray-600 mb-6 max-w-md">{error}</p>
-                  <button
-                    onClick={fetchSettings}
-                    className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-indigo-600 text-white hover:bg-indigo-700 transition-colors"
-                  >
-                    再試行
-                  </button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </AdminLayout>
-    );
-  }
-
-  if (isLoading || !settings) {
-    return (
-      <AdminLayout>
-        <div className="h-full overflow-y-auto p-8">
-          <div className="max-w-6xl mx-auto">
-            <Header />
-            <Card>
-              <CardContent className="p-12">
-                <div className="flex flex-col items-center">
-                  <Loader2 className="w-8 h-8 text-indigo-600 animate-spin mb-4" />
-                  <p className="text-gray-600">設定を読み込んでいます...</p>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </AdminLayout>
-    );
-  }
-
   return (
     <AdminLayout>
       <div className="h-full overflow-y-auto p-8">
         <div className="max-w-6xl mx-auto space-y-8">
-          <Header />
+          {/* ヘッダー */}
+          <div className="flex items-center gap-4 mb-8">
+            <Link
+              href="/admin"
+              className="flex items-center justify-center w-10 h-10 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </Link>
+            <div className="w-12 h-12 rounded-xl bg-indigo-600 flex items-center justify-center">
+              <Bot className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Grokツール設定</h1>
+              <p className="text-gray-500">Agent Tools APIの有効化設定</p>
+            </div>
+          </div>
 
           <Card>
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
                 <Settings className="w-5 h-5 text-indigo-600" />
-                機能別ツール設定
+                ツール有効化状況
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
-                <div className="p-4 rounded-lg bg-indigo-50 border border-indigo-200">
-                  <p className="text-sm text-indigo-900">
-                    Grokモデル使用時に、各機能でAgent Toolsを有効にすると、
-                    AIが自律的にツールを使いこなして回答を生成します。
-                    この設定は<strong>全ユーザーに適用</strong>されます。
-                  </p>
-                </div>
+            <CardContent className="space-y-4">
+              <div className="p-4 rounded-lg bg-indigo-50 border border-indigo-200">
+                <p className="text-sm text-indigo-900">
+                  全機能で以下の3ツールが<strong>常時有効</strong>
+                  です。AIが自律的にツールを選択して使用します。 機能別の個別設定は廃止されました。
+                </p>
+              </div>
 
-                {/* ツール別設定テーブル */}
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b border-gray-200">
-                        <th className="text-left py-3 px-4 text-sm font-medium text-gray-700">機能</th>
-                        {TOOLS.map((tool) => (
-                          <th
-                            key={tool.id}
-                            className="text-center py-3 px-2 text-sm font-medium text-gray-700 min-w-[100px]"
-                          >
-                            <div className="flex flex-col items-center gap-1">
-                              <tool.icon className="w-4 h-4 text-gray-600" />
-                              <span>{tool.label}</span>
-                            </div>
-                          </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {TOOL_FEATURES.map((feature) => (
-                        <tr key={feature.id} className="border-b border-gray-100 hover:bg-gray-50">
-                          <td className="py-3 px-4">
-                            <span className="text-sm font-medium text-gray-900">{feature.label}</span>
-                          </td>
-                          {TOOLS.map((tool) => {
-                            const enabled = isEnabled(feature.id, tool.id);
-                            return (
-                              <td key={tool.id} className="py-3 px-2 text-center">
-                                <button
-                                  onClick={() => toggleTool(feature.id, tool.id)}
-                                  className={`relative w-10 h-5 rounded-full transition-colors duration-200 ${
-                                    enabled ? "bg-gray-900" : "bg-gray-200"
-                                  }`}
-                                >
-                                  <span
-                                    className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform duration-200 ${
-                                      enabled ? "translate-x-5" : "translate-x-0"
-                                    }`}
-                                  />
-                                </button>
-                              </td>
-                            );
-                          })}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-
-                {/* ツール説明 */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-gray-200">
-                  {TOOLS.map((tool) => (
-                    <div key={tool.id} className="p-3 rounded-lg bg-gray-50 border border-gray-200">
-                      <div className="flex items-center gap-2 mb-1">
-                        <tool.icon className="w-4 h-4 text-gray-600" />
-                        <span className="text-sm font-medium text-gray-900">{tool.label}</span>
-                      </div>
-                      <p className="text-xs text-gray-600">{tool.description}</p>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="flex items-center justify-between pt-4 border-t border-gray-200">
-                  <div>
-                    {saveMessage && (
-                      <span
-                        className={`text-sm ${
-                          saveMessage === "保存しました" ? "text-green-600" : "text-red-600"
-                        }`}
-                      >
-                        {saveMessage}
-                      </span>
-                    )}
-                  </div>
-                  <button
-                    onClick={handleSave}
-                    disabled={isSaving}
-                    className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-indigo-600 text-white hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {TOOLS.map((tool) => (
+                  <div
+                    key={tool.id}
+                    className="p-4 rounded-lg border border-gray-200 bg-white flex items-start gap-3"
                   >
-                    {isSaving ? (
-                      <>
-                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        保存中...
-                      </>
-                    ) : (
-                      <>
-                        <Save className="w-4 h-4" />
-                        設定を保存
-                      </>
-                    )}
-                  </button>
-                </div>
+                    <tool.icon className={`w-5 h-5 mt-0.5 ${tool.color}`} />
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium text-gray-900">{tool.label}</span>
+                        <CheckCircle2 className="w-4 h-4 text-green-500" />
+                      </div>
+                      <p className="text-xs text-gray-500 mt-0.5">{tool.description}</p>
+                    </div>
+                  </div>
+                ))}
               </div>
             </CardContent>
           </Card>
