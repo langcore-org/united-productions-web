@@ -66,7 +66,8 @@ docs/
 │   │   ├── system-architecture.md
 │   │   ├── component-design.md
 │   │   ├── data-flow.md
-│   │   └── state-management.md
+│   │   ├── state-management.md
+│   │   └── theme-system.md      # テーマシステム仕様
 │   ├── api-integration/         # API・外部連携
 │   │   ├── api-specification.md
 │   │   ├── authentication.md

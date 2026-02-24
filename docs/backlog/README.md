@@ -90,6 +90,7 @@ mv docs/backlog/idea-xxx.md "docs/archive/$(date +%Y-%m-%d)-idea-xxx.md"
 
 ## 📁 現在のBacklog
 
-<!-- ファイルが追加されたらここに一覧を記載 -->
-
-*現在は空です。アイデアが生まれたらこのディレクトリに追加してください。*
+| ファイル | 種別 | 優先度 | 状態 | 概要 |
+|---------|------|-------|------|------|
+| [idea-sns-research-agent.md](./idea-sns-research-agent.md) | 新機能 | 🟡 中 | 検討中 | SNS人物探索エージェント（LangGraphワークフロー） |
+| [idea-sns-research-agent-ui.md](./idea-sns-research-agent-ui.md) | 新機能 | 🟢 低 | 検討中 | Gen Spark風カードベース進捗表示UI |
