@@ -7,8 +7,8 @@
 
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { generateProposals } from "@/lib/proposal/service";
 import { createApiHandler } from "@/lib/api/handler";
+import { generateProposals } from "@/lib/proposal/service";
 
 const proposalSchema = z.object({
   programInfo: z.string().min(1, "番組情報を入力してください"),
@@ -32,5 +32,5 @@ export const POST = createApiHandler(
       data: response,
     });
   },
-  { schema: proposalSchema }
+  { schema: proposalSchema },
 );

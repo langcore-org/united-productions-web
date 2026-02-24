@@ -1,12 +1,12 @@
 "use client";
 
+import { Check, Copy } from "lucide-react";
 import { memo, useState } from "react";
 import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
+import remarkGfm from "remark-gfm";
 import { cn } from "@/lib/utils";
-import { Copy, Check } from "lucide-react";
 
 interface MarkdownRendererProps {
   content: string;
@@ -84,7 +84,7 @@ export const MarkdownRenderer = memo(function MarkdownRenderer({
                 className={cn(
                   "px-1.5 py-0.5 rounded text-sm font-mono",
                   "bg-gray-100 text-amber-700",
-                  "border border-gray-600"
+                  "border border-gray-600",
                 )}
                 {...props}
               >
@@ -109,18 +109,10 @@ export const MarkdownRenderer = memo(function MarkdownRenderer({
             );
           },
           h3({ children }) {
-            return (
-              <h3 className="text-lg font-semibold text-gray-800 mt-4 mb-2">
-                {children}
-              </h3>
-            );
+            return <h3 className="text-lg font-semibold text-gray-800 mt-4 mb-2">{children}</h3>;
           },
           h4({ children }) {
-            return (
-              <h4 className="text-base font-semibold text-gray-700 mt-3 mb-2">
-                {children}
-              </h4>
-            );
+            return <h4 className="text-base font-semibold text-gray-700 mt-3 mb-2">{children}</h4>;
           },
 
           // 段落 - リスト内の段落はマージンを削除
@@ -150,9 +142,9 @@ export const MarkdownRenderer = memo(function MarkdownRenderer({
           li({ children, node }) {
             // 子要素が段落の場合はインライン表示にする
             const hasParagraph = node?.children?.some(
-              (child: any) => child.type === 'element' && child.tagName === 'p'
+              (child: any) => child.type === "element" && child.tagName === "p",
             );
-            
+
             if (hasParagraph) {
               return (
                 <li className="leading-relaxed pl-1">
@@ -160,30 +152,20 @@ export const MarkdownRenderer = memo(function MarkdownRenderer({
                 </li>
               );
             }
-            
-            return (
-              <li className="leading-relaxed pl-1">
-                {children}
-              </li>
-            );
+
+            return <li className="leading-relaxed pl-1">{children}</li>;
           },
 
           // テーブル
           table({ children }) {
             return (
               <div className="my-4 overflow-x-auto">
-                <table className="w-full border-collapse text-sm">
-                  {children}
-                </table>
+                <table className="w-full border-collapse text-sm">{children}</table>
               </div>
             );
           },
           thead({ children }) {
-            return (
-              <thead className="bg-gray-100 text-gray-800">
-                {children}
-              </thead>
-            );
+            return <thead className="bg-gray-100 text-gray-800">{children}</thead>;
           },
           th({ children }) {
             return (
@@ -193,11 +175,7 @@ export const MarkdownRenderer = memo(function MarkdownRenderer({
             );
           },
           td({ children }) {
-            return (
-              <td className="px-4 py-2 border border-gray-200 text-gray-700">
-                {children}
-              </td>
-            );
+            return <td className="px-4 py-2 border border-gray-200 text-gray-700">{children}</td>;
           },
 
           // 引用
@@ -225,9 +203,7 @@ export const MarkdownRenderer = memo(function MarkdownRenderer({
 
           // 水平線
           hr() {
-            return (
-              <hr className="my-6 border-t border-gray-200" />
-            );
+            return <hr className="my-6 border-t border-gray-200" />;
           },
 
           // 強調

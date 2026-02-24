@@ -1,14 +1,14 @@
 /**
  * タイピングアニメーションフック
- * 
+ *
  * 文字を1文字ずつ表示するアニメーション
- * 
+ *
  * @updated 2026-02-20 23:25
  */
 
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 export interface UseTypingAnimationOptions {
   /** 文字表示間隔（ミリ秒） */
@@ -38,33 +38,29 @@ export interface UseTypingAnimationReturn {
 
 /**
  * タイピングアニメーションフック
- * 
+ *
  * @example
  * ```typescript
  * const { displayText, isComplete, start } = useTypingAnimation({
  *   typingSpeed: 30,
  *   wordByWord: false,
  * });
- * 
+ *
  * useEffect(() => {
  *   start("こんにちは、世界！");
  * }, []);
  * ```
  */
 export function useTypingAnimation(
-  options: UseTypingAnimationOptions = {}
+  options: UseTypingAnimationOptions = {},
 ): UseTypingAnimationReturn {
-  const {
-    typingSpeed = 30,
-    wordByWord = false,
-    autoStart = false,
-  } = options;
+  const { typingSpeed = 30, wordByWord = false, autoStart = false } = options;
 
   const [displayText, setDisplayText] = useState("");
   const [isComplete, setIsComplete] = useState(false);
   const [targetText, setTargetText] = useState("");
   const [isRunning, setIsRunning] = useState(false);
-  
+
   const currentIndexRef = useRef(0);
   const rafRef = useRef<number | null>(null);
   const lastTimeRef = useRef<number>(0);
@@ -99,54 +95,57 @@ export function useTypingAnimation(
     setIsRunning(false);
   }, [clearTyping]);
 
-  const tick = useCallback((timestamp: number) => {
-    if (!lastTimeRef.current) {
-      lastTimeRef.current = timestamp;
-    }
-
-    const elapsed = timestamp - lastTimeRef.current;
-
-    if (elapsed >= typingSpeed) {
-      lastTimeRef.current = timestamp;
-
-      if (currentIndexRef.current >= targetText.length) {
-        setIsComplete(true);
-        setIsRunning(false);
-        return;
+  const tick = useCallback(
+    (timestamp: number) => {
+      if (!lastTimeRef.current) {
+        lastTimeRef.current = timestamp;
       }
 
-      if (wordByWord) {
-        // 単語区切りで表示
-        const remaining = targetText.slice(currentIndexRef.current);
-        const nextSpaceIndex = remaining.search(/\s/);
-        const chunkLength = nextSpaceIndex === -1 ? remaining.length : nextSpaceIndex + 1;
-        const nextIndex = currentIndexRef.current + chunkLength;
-        
-        setDisplayText(targetText.slice(0, nextIndex));
-        currentIndexRef.current = nextIndex;
-      } else {
-        // 1文字ずつ表示
-        const nextIndex = currentIndexRef.current + 1;
-        setDisplayText(targetText.slice(0, nextIndex));
-        currentIndexRef.current = nextIndex;
+      const elapsed = timestamp - lastTimeRef.current;
+
+      if (elapsed >= typingSpeed) {
+        lastTimeRef.current = timestamp;
+
+        if (currentIndexRef.current >= targetText.length) {
+          setIsComplete(true);
+          setIsRunning(false);
+          return;
+        }
+
+        if (wordByWord) {
+          // 単語区切りで表示
+          const remaining = targetText.slice(currentIndexRef.current);
+          const nextSpaceIndex = remaining.search(/\s/);
+          const chunkLength = nextSpaceIndex === -1 ? remaining.length : nextSpaceIndex + 1;
+          const nextIndex = currentIndexRef.current + chunkLength;
+
+          setDisplayText(targetText.slice(0, nextIndex));
+          currentIndexRef.current = nextIndex;
+        } else {
+          // 1文字ずつ表示
+          const nextIndex = currentIndexRef.current + 1;
+          setDisplayText(targetText.slice(0, nextIndex));
+          currentIndexRef.current = nextIndex;
+        }
+
+        if (currentIndexRef.current >= targetText.length) {
+          setIsComplete(true);
+          setIsRunning(false);
+          return;
+        }
       }
 
-      if (currentIndexRef.current >= targetText.length) {
-        setIsComplete(true);
-        setIsRunning(false);
-        return;
-      }
-    }
-
-    rafRef.current = requestAnimationFrame(tick);
-  }, [targetText, typingSpeed, wordByWord]);
+      rafRef.current = requestAnimationFrame(tick);
+    },
+    [targetText, typingSpeed, wordByWord],
+  );
 
   const start = useCallback(
     (text: string) => {
       reset();
       setTargetText(text);
       setIsRunning(true);
-      
+
       if (text.length > 0) {
         lastTimeRef.current = 0;
         rafRef.current = requestAnimationFrame(tick);
@@ -155,7 +154,7 @@ export function useTypingAnimation(
         setIsRunning(false);
       }
     },
-    [reset, tick]
+    [reset, tick],
   );
 
   // クリーンアップ
@@ -174,9 +173,8 @@ export function useTypingAnimation(
     }
   }, [autoStart, targetText, isComplete, displayText, isRunning, tick]);
 
-  const progress = targetText.length > 0 
-    ? Math.round((currentIndexRef.current / targetText.length) * 100)
-    : 0;
+  const progress =
+    targetText.length > 0 ? Math.round((currentIndexRef.current / targetText.length) * 100) : 0;
 
   return {
     displayText,
@@ -191,7 +189,7 @@ export function useTypingAnimation(
 
 /**
  * 複数テキストの連続タイピングアニメーションフック
- * 
+ *
  * 複数の段落を順番に表示する場合に使用
  */
 export interface UseSequentialTypingOptions {
@@ -217,7 +215,7 @@ export interface UseSequentialTypingReturn {
 }
 
 export function useSequentialTyping(
-  options: UseSequentialTypingOptions = {}
+  options: UseSequentialTypingOptions = {},
 ): UseSequentialTypingReturn {
   const { paragraphDelay = 300, typingSpeed = 30 } = options;
 
@@ -225,7 +223,7 @@ export function useSequentialTyping(
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAllComplete, setIsAllComplete] = useState(false);
   const [targetTexts, setTargetTexts] = useState<string[]>([]);
-  const [isRunning, setIsRunning] = useState(false);
+  const [_isRunning, setIsRunning] = useState(false);
 
   const rafRef = useRef<number | null>(null);
   const charIndexRef = useRef(0);
@@ -261,62 +259,65 @@ export function useSequentialTyping(
     setIsRunning(false);
   }, [clearAll, targetTexts]);
 
-  const tick = useCallback((timestamp: number) => {
-    // 遅延中
-    if (isDelayingRef.current) {
-      if (timestamp - delayStartRef.current < paragraphDelay) {
-        rafRef.current = requestAnimationFrame(tick);
-        return;
+  const tick = useCallback(
+    (timestamp: number) => {
+      // 遅延中
+      if (isDelayingRef.current) {
+        if (timestamp - delayStartRef.current < paragraphDelay) {
+          rafRef.current = requestAnimationFrame(tick);
+          return;
+        }
+        isDelayingRef.current = false;
+        lastTimeRef.current = timestamp;
       }
-      isDelayingRef.current = false;
-      lastTimeRef.current = timestamp;
-    }
 
-    if (currentIndex >= targetTexts.length) {
-      setIsAllComplete(true);
-      setIsRunning(false);
-      return;
-    }
-
-    const currentText = targetTexts[currentIndex];
-    
-    if (charIndexRef.current >= currentText.length) {
-      // 現在の段落完了、次へ
-      const nextIndex = currentIndex + 1;
-      setCurrentIndex(nextIndex);
-      charIndexRef.current = 0;
-      
-      if (nextIndex < targetTexts.length) {
-        // 段落間の遅延
-        isDelayingRef.current = true;
-        delayStartRef.current = timestamp;
-        rafRef.current = requestAnimationFrame(tick);
-      } else {
+      if (currentIndex >= targetTexts.length) {
         setIsAllComplete(true);
         setIsRunning(false);
+        return;
       }
-      return;
-    }
 
-    if (!lastTimeRef.current) {
-      lastTimeRef.current = timestamp;
-    }
+      const currentText = targetTexts[currentIndex];
 
-    const elapsed = timestamp - lastTimeRef.current;
+      if (charIndexRef.current >= currentText.length) {
+        // 現在の段落完了、次へ
+        const nextIndex = currentIndex + 1;
+        setCurrentIndex(nextIndex);
+        charIndexRef.current = 0;
 
-    if (elapsed >= typingSpeed) {
-      lastTimeRef.current = timestamp;
-      // 次の文字を表示
-      charIndexRef.current += 1;
-      setDisplayTexts((prev) => {
-        const newTexts = [...prev];
-        newTexts[currentIndex] = currentText.slice(0, charIndexRef.current);
-        return newTexts;
-      });
-    }
+        if (nextIndex < targetTexts.length) {
+          // 段落間の遅延
+          isDelayingRef.current = true;
+          delayStartRef.current = timestamp;
+          rafRef.current = requestAnimationFrame(tick);
+        } else {
+          setIsAllComplete(true);
+          setIsRunning(false);
+        }
+        return;
+      }
 
-    rafRef.current = requestAnimationFrame(tick);
-  }, [currentIndex, targetTexts, paragraphDelay, typingSpeed]);
+      if (!lastTimeRef.current) {
+        lastTimeRef.current = timestamp;
+      }
+
+      const elapsed = timestamp - lastTimeRef.current;
+
+      if (elapsed >= typingSpeed) {
+        lastTimeRef.current = timestamp;
+        // 次の文字を表示
+        charIndexRef.current += 1;
+        setDisplayTexts((prev) => {
+          const newTexts = [...prev];
+          newTexts[currentIndex] = currentText.slice(0, charIndexRef.current);
+          return newTexts;
+        });
+      }
+
+      rafRef.current = requestAnimationFrame(tick);
+    },
+    [currentIndex, targetTexts, paragraphDelay, typingSpeed],
+  );
 
   const start = useCallback(
     (texts: string[]) => {
@@ -324,7 +325,7 @@ export function useSequentialTyping(
       setTargetTexts(texts);
       setDisplayTexts(texts.map(() => ""));
       setIsRunning(true);
-      
+
       if (texts.length > 0 && texts[0].length > 0) {
         lastTimeRef.current = 0;
         rafRef.current = requestAnimationFrame(tick);
@@ -333,7 +334,7 @@ export function useSequentialTyping(
         setIsRunning(false);
       }
     },
-    [reset, tick]
+    [reset, tick],
   );
 
   useEffect(() => {

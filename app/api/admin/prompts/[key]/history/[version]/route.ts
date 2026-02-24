@@ -1,10 +1,10 @@
 /**
  * Admin Prompt Version Detail API
- * 
+ *
  * GET /api/admin/prompts/[key]/history/[version] - 特定バージョンの内容取得
  */
 
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/api/auth";
 import { getPromptVersion } from "@/lib/prompts";
 
@@ -16,10 +16,7 @@ interface RouteParams {
  * GET /api/admin/prompts/[key]/history/[version]
  * 特定バージョンのプロンプト内容を取得
  */
-export async function GET(
-  request: NextRequest,
-  { params }: RouteParams
-) {
+export async function GET(request: NextRequest, { params }: RouteParams) {
   // 認証チェック
   const authResult = await requireAuth(request);
   if (authResult instanceof NextResponse) {
@@ -31,20 +28,17 @@ export async function GET(
     const decodedKey = decodeURIComponent(key);
     const versionNum = parseInt(version, 10);
 
-    if (isNaN(versionNum) || versionNum < 1) {
+    if (Number.isNaN(versionNum) || versionNum < 1) {
       return NextResponse.json(
         { success: false, error: "Invalid version number" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     const versionData = await getPromptVersion(decodedKey, versionNum);
 
     if (!versionData) {
-      return NextResponse.json(
-        { success: false, error: "Version not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ success: false, error: "Version not found" }, { status: 404 });
     }
 
     return NextResponse.json({
@@ -62,7 +56,7 @@ export async function GET(
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
     return NextResponse.json(
       { success: false, error: "Failed to fetch prompt version", details: errorMessage },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

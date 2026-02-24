@@ -1,43 +1,42 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AdminLayout } from "@/components/layout/AdminLayout";
 import {
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  LineChart,
-  Line,
-} from "recharts";
-import {
-  DollarSign,
   Activity,
-  Users,
-  Cpu,
-  TrendingUp,
-  TrendingDown,
-  Calendar,
-  RefreshCw,
   AlertCircle,
+  Bot,
+  Calendar,
   ChevronDown,
   ChevronUp,
-  Bot,
+  Cpu,
+  DollarSign,
+  FileSearch,
+  RefreshCw,
   Search,
   Terminal,
-  FileSearch,
+  TrendingDown,
+  TrendingUp,
   Twitter,
+  Users,
 } from "lucide-react";
 import Link from "next/link";
-
+import { useEffect, useState } from "react";
+import {
+  CartesianGrid,
+  Cell,
+  Line,
+  LineChart,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
+import { AdminLayout } from "@/components/layout/AdminLayout";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 // プロバイダー表示名
 const PROVIDER_LABELS: Record<string, string> = {
@@ -55,32 +54,38 @@ const PROVIDER_LABELS: Record<string, string> = {
 
 // プロバイダー色
 const COLORS = [
-  "#ff6b00", "#3b82f6", "#22c55e", "#f59e0b",
-  "#ef4444", "#8b5cf6", "#ec4899", "#14b8a6",
+  "#ff6b00",
+  "#3b82f6",
+  "#22c55e",
+  "#f59e0b",
+  "#ef4444",
+  "#8b5cf6",
+  "#ec4899",
+  "#14b8a6",
 ];
 
 // ツール表示名
 const TOOL_LABELS: Record<string, string> = {
-  "Web検索": "Web検索",
-  "X検索": "X検索",
-  "コード実行": "コード実行",
-  "ファイル検索": "ファイル検索",
+  Web検索: "Web検索",
+  X検索: "X検索",
+  コード実行: "コード実行",
+  ファイル検索: "ファイル検索",
 };
 
 // ツールアイコン
 const TOOL_ICONS: Record<string, React.ElementType> = {
-  "Web検索": Search,
-  "X検索": Twitter,
-  "コード実行": Terminal,
-  "ファイル検索": FileSearch,
+  Web検索: Search,
+  X検索: Twitter,
+  コード実行: Terminal,
+  ファイル検索: FileSearch,
 };
 
 // ツール色
 const TOOL_COLORS = {
-  "Web検索": "#3b82f6",
-  "X検索": "#000000",
-  "コード実行": "#22c55e",
-  "ファイル検索": "#f59e0b",
+  Web検索: "#3b82f6",
+  X検索: "#000000",
+  コード実行: "#22c55e",
+  ファイル検索: "#f59e0b",
 };
 
 interface UsageStats {
@@ -159,14 +164,14 @@ export default function UsagePage() {
   useEffect(() => {
     fetchData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [period]);
+  }, [fetchData]);
 
   // 自動更新（30秒ごと）
   useEffect(() => {
     const interval = setInterval(fetchData, 30000);
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [period]);
+  }, [fetchData]);
 
   // 金額フォーマット
   const formatCurrency = (amount: number) => {
@@ -190,23 +195,18 @@ export default function UsagePage() {
   };
 
   // ツール情報の型
-type ToolInfo = {
-  webSearch?: boolean;
-  xSearch?: boolean;
-  codeExecution?: boolean;
-  fileSearch?: boolean;
-};
+  type ToolInfo = {
+    webSearch?: boolean;
+    xSearch?: boolean;
+    codeExecution?: boolean;
+    fileSearch?: boolean;
+  };
 
   // ツール使用有無を判定
   const hasToolUsage = (log: RecentLog): boolean => {
     const tools = log.metadata?.tools as ToolInfo | undefined;
     if (!tools) return false;
-    return Boolean(
-      tools.webSearch ||
-      tools.xSearch ||
-      tools.codeExecution ||
-      tools.fileSearch
-    );
+    return Boolean(tools.webSearch || tools.xSearch || tools.codeExecution || tools.fileSearch);
   };
 
   // 使用ツール一覧を取得
@@ -449,11 +449,8 @@ type ToolInfo = {
                             outerRadius={100}
                             paddingAngle={2}
                           >
-                            {stats.byProvider.map((entry, index) => (
-                              <Cell
-                                key={`cell-${index}`}
-                                fill={COLORS[index % COLORS.length]}
-                              />
+                            {stats.byProvider.map((_entry, index) => (
+                              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                             ))}
                           </Pie>
                           <Tooltip
@@ -496,9 +493,7 @@ type ToolInfo = {
                             </div>
                           </div>
                           <div className="text-right">
-                            <p className="font-semibold text-sm">
-                              {formatCurrency(provider.cost)}
-                            </p>
+                            <p className="font-semibold text-sm">{formatCurrency(provider.cost)}</p>
                             <p className="text-xs text-gray-500">
                               {formatNumber(provider.inputTokens + provider.outputTokens)} tokens
                             </p>
@@ -536,10 +531,14 @@ type ToolInfo = {
                               outerRadius={100}
                               paddingAngle={2}
                             >
-                              {stats.byTool.map((entry, index) => (
+                              {stats.byTool.map((_entry, index) => (
                                 <Cell
                                   key={`cell-${index}`}
-                                  fill={Object.values(TOOL_COLORS)[index % Object.values(TOOL_COLORS).length]}
+                                  fill={
+                                    Object.values(TOOL_COLORS)[
+                                      index % Object.values(TOOL_COLORS).length
+                                    ]
+                                  }
                                 />
                               ))}
                             </Pie>
@@ -575,7 +574,8 @@ type ToolInfo = {
                       <div className="space-y-3">
                         {stats.byTool.map((tool) => {
                           const Icon = TOOL_ICONS[tool.toolName] || Bot;
-                          const color = TOOL_COLORS[tool.toolName as keyof typeof TOOL_COLORS] || "#6b7280";
+                          const color =
+                            TOOL_COLORS[tool.toolName as keyof typeof TOOL_COLORS] || "#6b7280";
                           return (
                             <div
                               key={tool.toolName}
@@ -598,12 +598,8 @@ type ToolInfo = {
                                 </div>
                               </div>
                               <div className="text-right">
-                                <p className="font-semibold text-sm">
-                                  {formatCurrency(tool.cost)}
-                                </p>
-                                <p className="text-xs text-gray-500">
-                                  コスト
-                                </p>
+                                <p className="font-semibold text-sm">{formatCurrency(tool.cost)}</p>
+                                <p className="text-xs text-gray-500">コスト</p>
                               </div>
                             </div>
                           );
@@ -624,12 +620,35 @@ type ToolInfo = {
                       <p className="text-sm font-medium text-gray-700 mb-3">利用可能なツール</p>
                       <div className="grid grid-cols-2 gap-3">
                         {[
-                          { name: "Web検索", icon: Search, desc: "インターネット検索", color: "#3b82f6" },
-                          { name: "X検索", icon: Twitter, desc: "X(Twitter)検索", color: "#000000" },
-                          { name: "コード実行", icon: Terminal, desc: "Python実行", color: "#22c55e" },
-                          { name: "ファイル検索", icon: FileSearch, desc: "ドキュメント検索", color: "#f59e0b" },
+                          {
+                            name: "Web検索",
+                            icon: Search,
+                            desc: "インターネット検索",
+                            color: "#3b82f6",
+                          },
+                          {
+                            name: "X検索",
+                            icon: Twitter,
+                            desc: "X(Twitter)検索",
+                            color: "#000000",
+                          },
+                          {
+                            name: "コード実行",
+                            icon: Terminal,
+                            desc: "Python実行",
+                            color: "#22c55e",
+                          },
+                          {
+                            name: "ファイル検索",
+                            icon: FileSearch,
+                            desc: "ドキュメント検索",
+                            color: "#f59e0b",
+                          },
                         ].map((tool) => (
-                          <div key={tool.name} className="flex items-center gap-2 p-2 rounded-lg bg-gray-50">
+                          <div
+                            key={tool.name}
+                            className="flex items-center gap-2 p-2 rounded-lg bg-gray-50"
+                          >
                             <div
                               className="w-8 h-8 rounded flex items-center justify-center"
                               style={{ backgroundColor: `${tool.color}15` }}
@@ -662,34 +681,30 @@ type ToolInfo = {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    {stats.byUser
-                      .slice(0, expandedUsers ? undefined : 10)
-                      .map((user, index) => (
-                        <div
-                          key={user.userId}
-                          className="flex items-center justify-between p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors"
-                        >
-                          <div className="flex items-center gap-3">
-                            <span className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-xs font-medium text-gray-600">
-                              {index + 1}
-                            </span>
-                            <div>
-                              <p className="font-medium text-sm text-gray-900">
-                                {user.userName || "未設定"}
-                              </p>
-                              <p className="text-xs text-gray-500">{user.userEmail}</p>
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <p className="font-semibold text-sm">
-                              {formatCurrency(user.cost)}
+                    {stats.byUser.slice(0, expandedUsers ? undefined : 10).map((user, index) => (
+                      <div
+                        key={user.userId}
+                        className="flex items-center justify-between p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors"
+                      >
+                        <div className="flex items-center gap-3">
+                          <span className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-xs font-medium text-gray-600">
+                            {index + 1}
+                          </span>
+                          <div>
+                            <p className="font-medium text-sm text-gray-900">
+                              {user.userName || "未設定"}
                             </p>
-                            <p className="text-xs text-gray-500">
-                              {formatNumber(user.requests)} リクエスト
-                            </p>
+                            <p className="text-xs text-gray-500">{user.userEmail}</p>
                           </div>
                         </div>
-                      ))}
+                        <div className="text-right">
+                          <p className="font-semibold text-sm">{formatCurrency(user.cost)}</p>
+                          <p className="text-xs text-gray-500">
+                            {formatNumber(user.requests)} リクエスト
+                          </p>
+                        </div>
+                      </div>
+                    ))}
                   </div>
 
                   {stats.byUser.length > 10 && (
@@ -786,13 +801,9 @@ type ToolInfo = {
                           )}
                         </td>
                         <td className="py-3 px-4 text-sm text-right">
-                          <span className="text-gray-600">
-                            {formatNumber(log.inputTokens)}
-                          </span>
+                          <span className="text-gray-600">{formatNumber(log.inputTokens)}</span>
                           <span className="text-gray-400 mx-1">/</span>
-                          <span className="text-gray-600">
-                            {formatNumber(log.outputTokens)}
-                          </span>
+                          <span className="text-gray-600">{formatNumber(log.outputTokens)}</span>
                         </td>
                         <td className="py-3 px-4 text-sm font-medium text-right">
                           {formatCurrency(log.cost)}

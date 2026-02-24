@@ -103,7 +103,7 @@ export default function ProgramDetailPage() {
 
   useEffect(() => {
     fetchProgram();
-  }, [programId]);
+  }, [fetchProgram]);
 
   const fetchProgram = async () => {
     try {

@@ -1,12 +1,12 @@
 "use client";
 
-import { useRef, useEffect } from "react";
-import { cn } from "@/lib/utils";
+import { Loader2, Send, Trash2 } from "lucide-react";
+import { useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Send, Loader2, Trash2 } from "lucide-react";
-import { FileAttachButton, AttachedFile } from "./FileAttachment";
 import { TEXTAREA_MAX_HEIGHT_PX } from "@/config/constants";
+import { cn } from "@/lib/utils";
+import { type AttachedFile, FileAttachButton } from "./FileAttachment";
 
 export interface ChatInputAreaProps {
   input: string;
@@ -42,7 +42,7 @@ export function ChatInputArea({
         TEXTAREA_MAX_HEIGHT_PX,
       )}px`;
     }
-  }, [input]);
+  }, []);
 
   return (
     <div className="border-t border-gray-200 px-6 py-4 bg-white">

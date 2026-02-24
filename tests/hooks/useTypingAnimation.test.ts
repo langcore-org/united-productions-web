@@ -4,7 +4,7 @@
  * @updated 2026-02-20 23:25
  */
 
-import { act, renderHook, waitFor } from "@testing-library/react";
+import { act, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useSequentialTyping, useTypingAnimation } from "@/hooks/useTypingAnimation";
 

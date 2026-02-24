@@ -1,9 +1,9 @@
 "use client";
 
-import { cn } from "@/lib/utils";
 import { cva, type VariantProps } from "class-variance-authority";
 import Link from "next/link";
 import { forwardRef } from "react";
+import { cn } from "@/lib/utils";
 
 // Button size variants
 const featureButtonVariants = cva(
@@ -56,7 +56,7 @@ const featureButtonVariants = cva(
       variant: "light",
       size: "md",
     },
-  }
+  },
 );
 
 // Icon container variants
@@ -86,7 +86,7 @@ const iconContainerVariants = cva(
       variant: "light",
       size: "md",
     },
-  }
+  },
 );
 
 // Shortcut key styles
@@ -116,7 +116,7 @@ const shortcutVariants = cva(
     defaultVariants: {
       variant: "light",
     },
-  }
+  },
 );
 
 // Types
@@ -156,14 +156,10 @@ const FeatureButtonItem = forwardRef<HTMLButtonElement | HTMLAnchorElement, Feat
   ({ button, variant, size, className }, ref) => {
     const buttonContent = (
       <>
-        <span className={cn(iconContainerVariants({ variant, size }))}>
-          {button.icon}
-        </span>
+        <span className={cn(iconContainerVariants({ variant, size }))}>{button.icon}</span>
         <span className="whitespace-nowrap">{button.label}</span>
         {button.shortcut && (
-          <span className={cn(shortcutVariants({ variant }))}>
-            {button.shortcut}
-          </span>
+          <span className={cn(shortcutVariants({ variant }))}>{button.shortcut}</span>
         )}
       </>
     );
@@ -176,18 +172,14 @@ const FeatureButtonItem = forwardRef<HTMLButtonElement | HTMLAnchorElement, Feat
         "data-[disabled=true]:opacity-50",
         "data-[disabled=true]:cursor-not-allowed",
         "data-[disabled=true]:hover:scale-100",
-        className
+        className,
       ),
     };
 
     // Render as Link if href is provided
     if (button.href && !button.disabled) {
       return (
-        <Link
-          href={button.href}
-          ref={ref as React.Ref<HTMLAnchorElement>}
-          {...commonProps}
-        >
+        <Link href={button.href} ref={ref as React.Ref<HTMLAnchorElement>} {...commonProps}>
           {buttonContent}
         </Link>
       );
@@ -204,7 +196,7 @@ const FeatureButtonItem = forwardRef<HTMLButtonElement | HTMLAnchorElement, Feat
         {buttonContent}
       </button>
     );
-  }
+  },
 );
 
 FeatureButtonItem.displayName = "FeatureButtonItem";
@@ -223,7 +215,7 @@ export function FeatureButtons({
     "flex",
     orientation === "horizontal" ? "flex-row flex-wrap" : "flex-col",
     gapStyles[gap],
-    className
+    className,
   );
 
   return (

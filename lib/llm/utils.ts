@@ -1,12 +1,12 @@
 /**
  * LLM関連ユーティリティ
- * 
+ *
  * プロバイダー検証、デフォルト値取得などの共通関数
  */
 
 import { DEFAULT_PROVIDER, PROJECT_DEFAULT_PROVIDERS } from "./config";
-import type { LLMProvider } from "./types";
 import { isValidProvider } from "./factory";
+import type { LLMProvider } from "./types";
 
 /**
  * 有効なプロバイダーを取得
@@ -17,7 +17,7 @@ import { isValidProvider } from "./factory";
  */
 export function resolveProvider(
   requestedProvider?: string,
-  projectId?: keyof typeof PROJECT_DEFAULT_PROVIDERS
+  projectId?: keyof typeof PROJECT_DEFAULT_PROVIDERS,
 ): LLMProvider {
   // リクエストされたプロバイダーを検証
   if (requestedProvider) {

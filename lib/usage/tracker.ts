@@ -2,9 +2,9 @@
  * API使用量追跡ユーティリティ
  */
 
-import { prisma } from "@/lib/prisma";
-import type { LLMProvider } from "@/lib/llm/types";
 import { PROVIDER_CONFIG } from "@/lib/llm/config";
+import type { LLMProvider } from "@/lib/llm/types";
+import { prisma } from "@/lib/prisma";
 
 interface UsageData {
   userId: string;

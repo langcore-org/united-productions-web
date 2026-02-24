@@ -3,13 +3,14 @@
  *
  * LLMストリーミングAPIとの連携を行うカスタムフック
  * 新SSEイベント形式（discriminated union）に対応
- * Rolling Summary Memory統合版
+ * ClientMemory統合版（サーバーサイドGrokClient非依存）
+ *
+ * @updated 2026-02-24: GrokClient直接依存を削除し、ClientMemory経由で要約
  */
 
 import { useCallback, useRef, useState } from "react";
 import { LLMApiError, streamLLMResponse } from "@/lib/api/llm-client";
-import { GrokClient } from "@/lib/llm/clients/grok";
-import { ThresholdRollingSummaryMemory } from "@/lib/llm/memory/threshold-rolling-summary";
+import { ClientMemory } from "@/lib/llm/memory/client-memory";
 import type { LLMMessage, LLMProvider } from "@/lib/llm/types";
 import type { FollowUpInfo, ToolCallInfo, UsageInfo } from "./types";
 
@@ -40,7 +41,8 @@ export function useLLMStream(options: UseLLMStreamOptions = {}) {
   });
 
   const abortControllerRef = useRef<AbortController | null>(null);
-  const memoryRef = useRef<ThresholdRollingSummaryMemory | null>(null);
+  const memoryRef = useRef<ClientMemory | null>(null);
+  const providerRef = useRef<LLMProvider | null>(null);
 
   const cleanup = useCallback(() => {
     if (abortControllerRef.current) {
@@ -52,15 +54,20 @@ export function useLLMStream(options: UseLLMStreamOptions = {}) {
   /**
    * Memoryを初期化または取得
    */
-  const getOrCreateMemory = useCallback(() => {
-    if (!memoryRef.current) {
-      memoryRef.current = new ThresholdRollingSummaryMemory({
-        tokenThreshold,
-        maxRecentTurns,
-      });
-    }
-    return memoryRef.current;
-  }, [tokenThreshold, maxRecentTurns]);
+  const getOrCreateMemory = useCallback(
+    (provider: LLMProvider) => {
+      // プロバイダーが変わった場合は新規作成
+      if (!memoryRef.current || providerRef.current !== provider) {
+        providerRef.current = provider;
+        memoryRef.current = new ClientMemory(provider, {
+          tokenThreshold,
+          maxRecentTurns,
+        });
+      }
+      return memoryRef.current;
+    },
+    [tokenThreshold, maxRecentTurns],
+  );
 
   /**
    * ストリームを開始
@@ -81,16 +88,11 @@ export function useLLMStream(options: UseLLMStreamOptions = {}) {
       abortControllerRef.current = new AbortController();
 
       // Memoryを初期化し、メッセージをロード
-      const memory = getOrCreateMemory();
+      const memory = getOrCreateMemory(provider);
       memory.clear(); // 新しい会話のためにクリア
 
-      // GrokClientを作成（要約用）- サーバーサイドのみでインスタンス化
-      // クライアントサイドでは環境変数にアクセスできないため、要約は行わない
-      const isServer = typeof window === 'undefined';
-      const grokClient = isServer && provider.startsWith("grok-") ? new GrokClient(provider) : undefined;
-
-      // メッセージをMemoryに追加（要約が必要な場合は自動実行）
-      await memory.addMessages(messages, grokClient);
+      // ClientMemoryは内部でAPI経由で要約を実行
+      await memory.addMessages(messages);
 
       // 適切なコンテキストを取得（要約済み or 全履歴）
       const context = memory.getContext();
@@ -206,6 +208,7 @@ export function useLLMStream(options: UseLLMStreamOptions = {}) {
     // Memoryもクリア
     memoryRef.current?.clear();
     memoryRef.current = null;
+    providerRef.current = null;
   }, [cleanup]);
 
   /**

@@ -7,11 +7,11 @@
  * 番組情報・過去企画の設定を管理
  */
 
-import { NextRequest } from "next/server";
+import type { NextRequest } from "next/server";
 import { z } from "zod";
-import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/api/auth";
 import { logger } from "@/lib/logger";
+import { prisma } from "@/lib/prisma";
 
 /**
  * GET /api/settings/program
@@ -27,15 +27,22 @@ export async function GET(request: NextRequest): Promise<Response> {
     }
     const userId = authResult.user.id;
 
-    const settings = await (prisma as unknown as { programSettings: { findUnique: (args: unknown) => Promise<{ programInfo: string; pastProposals: string; updatedAt: Date } | null> } }).programSettings.findUnique({
+    const settings = await (
+      prisma as unknown as {
+        programSettings: {
+          findUnique: (
+            args: unknown,
+          ) => Promise<{ programInfo: string; pastProposals: string; updatedAt: Date } | null>;
+        };
+      }
+    ).programSettings.findUnique({
       where: { userId },
     });
 
     if (!settings) {
-      return new Response(
-        JSON.stringify({ programInfo: "", pastProposals: "" }),
-        { headers: { "Content-Type": "application/json" } }
-      );
+      return new Response(JSON.stringify({ programInfo: "", pastProposals: "" }), {
+        headers: { "Content-Type": "application/json" },
+      });
     }
 
     return new Response(
@@ -44,18 +51,17 @@ export async function GET(request: NextRequest): Promise<Response> {
         pastProposals: settings.pastProposals,
         updatedAt: settings.updatedAt,
       }),
-      { headers: { "Content-Type": "application/json" } }
+      { headers: { "Content-Type": "application/json" } },
     );
   } catch (error) {
-    const errorMessage =
-      error instanceof Error ? error.message : "Unknown error";
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
     logger.error(`[${requestId}] Failed to get program settings`, {
       error: errorMessage,
     });
-    return new Response(
-      JSON.stringify({ error: "Failed to get settings", requestId }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
-    );
+    return new Response(JSON.stringify({ error: "Failed to get settings", requestId }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
   }
 }
 
@@ -82,10 +88,10 @@ export async function POST(request: NextRequest): Promise<Response> {
     try {
       body = await request.json();
     } catch {
-      return new Response(
-        JSON.stringify({ error: "Invalid request body" }),
-        { status: 400, headers: { "Content-Type": "application/json" } }
-      );
+      return new Response(JSON.stringify({ error: "Invalid request body" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
     }
 
     const validationResult = saveSettingsSchema.safeParse(body);
@@ -95,14 +101,22 @@ export async function POST(request: NextRequest): Promise<Response> {
           error: "Invalid request",
           details: validationResult.error.format(),
         }),
-        { status: 400, headers: { "Content-Type": "application/json" } }
+        { status: 400, headers: { "Content-Type": "application/json" } },
       );
     }
 
     const { programInfo, pastProposals } = validationResult.data;
 
     // upsertで保存
-    const settings = await (prisma as unknown as { programSettings: { upsert: (args: unknown) => Promise<{ programInfo: string; pastProposals: string; updatedAt: Date }> } }).programSettings.upsert({
+    const settings = await (
+      prisma as unknown as {
+        programSettings: {
+          upsert: (
+            args: unknown,
+          ) => Promise<{ programInfo: string; pastProposals: string; updatedAt: Date }>;
+        };
+      }
+    ).programSettings.upsert({
       where: { userId },
       update: {
         programInfo,
@@ -124,17 +138,16 @@ export async function POST(request: NextRequest): Promise<Response> {
         pastProposals: settings.pastProposals,
         updatedAt: settings.updatedAt,
       }),
-      { headers: { "Content-Type": "application/json" } }
+      { headers: { "Content-Type": "application/json" } },
     );
   } catch (error) {
-    const errorMessage =
-      error instanceof Error ? error.message : "Unknown error";
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
     logger.error(`[${requestId}] Failed to save program settings`, {
       error: errorMessage,
     });
-    return new Response(
-      JSON.stringify({ error: "Failed to save settings", requestId }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
-    );
+    return new Response(JSON.stringify({ error: "Failed to save settings", requestId }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
   }
 }

@@ -8,10 +8,10 @@
  * リサーチ結果をストリーミング
  */
 
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { executeResearch, streamResearch } from "@/lib/research/service";
 import { createApiHandler } from "@/lib/api/handler";
+import { executeResearch, streamResearch } from "@/lib/research/service";
 
 const researchSchema = z.object({
   type: z.enum(["cast", "location", "info", "evidence"]),
@@ -39,7 +39,7 @@ export const POST = createApiHandler(
       data: response,
     });
   },
-  { schema: researchSchema }
+  { schema: researchSchema },
 );
 
 /**
@@ -56,20 +56,13 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
 
-    const type = searchParams.get("type") as
-      | "cast"
-      | "location"
-      | "info"
-      | "evidence";
+    const type = searchParams.get("type") as "cast" | "location" | "info" | "evidence";
     const query = searchParams.get("query");
     const includeX = searchParams.get("includeX") === "true";
     const includeWeb = searchParams.get("includeWeb") === "true";
 
     if (!type || !query) {
-      return NextResponse.json(
-        { success: false, error: "typeとqueryは必須です" },
-        { status: 400 }
-      );
+      return NextResponse.json({ success: false, error: "typeとqueryは必須です" }, { status: 400 });
     }
 
     const stream = streamResearch({
@@ -100,9 +93,6 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error("Research stream error:", error);
-    return NextResponse.json(
-      { success: false, error: "リサーチに失敗しました" },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, error: "リサーチに失敗しました" }, { status: 500 });
   }
 }

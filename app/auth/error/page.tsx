@@ -1,8 +1,8 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
-import Link from "next/link";
 import { AlertCircle, ArrowLeft } from "lucide-react";
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 
 export default function AuthErrorPage() {
   const searchParams = useSearchParams();
@@ -19,7 +19,9 @@ export default function AuthErrorPage() {
     sessionrequired: "このページにアクセスするにはログインが必要です。",
   };
 
-  const errorMessage = error ? errorMessages[error] || errorMessages.default : errorMessages.default;
+  const errorMessage = error
+    ? errorMessages[error] || errorMessages.default
+    : errorMessages.default;
 
   return (
     <div className="min-h-screen bg-[#0d0d12] flex items-center justify-center p-4">

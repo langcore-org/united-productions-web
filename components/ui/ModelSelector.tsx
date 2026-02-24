@@ -1,7 +1,7 @@
 "use client";
 
+import { ChevronDown, Sparkles } from "lucide-react";
 import { useState } from "react";
-import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -10,10 +10,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ChevronDown, Sparkles, Zap, Brain, Bot } from "lucide-react";
-import type { LLMProvider } from "@/lib/llm/types";
-import { PROVIDER_LABELS } from "@/lib/llm/constants";
 import { DEFAULT_PROVIDER } from "@/lib/llm/config";
+import type { LLMProvider } from "@/lib/llm/types";
+import { cn } from "@/lib/utils";
 
 interface ModelInfo {
   id: LLMProvider;
@@ -76,10 +75,8 @@ export function ModelSelector({
 }: ModelSelectorProps) {
   const [open, setOpen] = useState(false);
 
-  const currentModel = [...PRIMARY_MODELS, ...OTHER_MODELS].find(
-    (m) => m.id === value
-  ) || PRIMARY_MODELS[0];
-
+  const currentModel =
+    [...PRIMARY_MODELS, ...OTHER_MODELS].find((m) => m.id === value) || PRIMARY_MODELS[0];
 
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
@@ -90,7 +87,7 @@ export function ModelSelector({
           disabled={disabled}
           className={cn(
             "h-8 px-3 gap-2 border-gray-200 bg-white hover:bg-gray-50 transition-all",
-            className
+            className,
           )}
         >
           <span className="text-gray-600">{currentModel.icon}</span>
@@ -104,10 +101,7 @@ export function ModelSelector({
         </Button>
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent
-        align="end"
-        className="w-72 bg-white border-gray-200 p-2"
-      >
+      <DropdownMenuContent align="end" className="w-72 bg-white border-gray-200 p-2">
         {/* Primary Models */}
         <div className="space-y-1">
           {PRIMARY_MODELS.map((model) => (
@@ -121,7 +115,7 @@ export function ModelSelector({
                 "flex items-start gap-3 p-3 rounded-lg cursor-pointer transition-all",
                 value === model.id
                   ? "bg-gray-100 border border-gray-200"
-                  : "hover:bg-gray-100 border border-transparent"
+                  : "hover:bg-gray-100 border border-transparent",
               )}
             >
               <div className="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center bg-gray-100 text-gray-600">
@@ -129,9 +123,7 @@ export function ModelSelector({
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium text-gray-800">
-                    {model.name}
-                  </span>
+                  <span className="text-sm font-medium text-gray-800">{model.name}</span>
                   {model.isRecommended && (
                     <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-600">
                       推奨
@@ -166,12 +158,10 @@ export function ModelSelector({
                   "flex items-center gap-2 px-2 py-2 rounded cursor-pointer",
                   value === model.id
                     ? "bg-gray-100 text-gray-800"
-                    : "text-gray-600 hover:bg-gray-100 hover:text-gray-800"
+                    : "text-gray-600 hover:bg-gray-100 hover:text-gray-800",
                 )}
               >
-                <span className="text-gray-600">
-                  {model.icon}
-                </span>
+                <span className="text-gray-600">{model.icon}</span>
                 <span className="text-sm">{model.name}</span>
               </DropdownMenuItem>
             ))}

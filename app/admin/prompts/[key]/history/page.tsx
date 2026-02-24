@@ -1,11 +1,22 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter, useParams } from "next/navigation";
-import { cn } from "@/lib/utils";
+import {
+  AlertCircle,
+  ArrowLeft,
+  Check,
+  Clock,
+  Eye,
+  History,
+  Loader2,
+  RotateCcw,
+  User,
+} from "lucide-react";
+import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { AdminLayout } from "@/components/layout/AdminLayout";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -15,18 +26,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { AdminLayout } from "@/components/layout/AdminLayout";
-import {
-  Loader2,
-  ArrowLeft,
-  History,
-  RotateCcw,
-  Eye,
-  Clock,
-  User,
-  Check,
-  AlertCircle,
-} from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface PromptVersion {
   version: number;
@@ -52,7 +52,7 @@ export default function AdminPromptHistoryPage() {
 
   useEffect(() => {
     loadHistory();
-  }, [key]);
+  }, [loadHistory]);
 
   const loadHistory = async () => {
     setIsLoading(true);
@@ -65,9 +65,7 @@ export default function AdminPromptHistoryPage() {
         setCurrentVersion(detailData.data.currentVersion);
       }
 
-      const response = await fetch(
-        `/api/admin/prompts/${encodeURIComponent(key)}/history`
-      );
+      const response = await fetch(`/api/admin/prompts/${encodeURIComponent(key)}/history`);
       if (response.ok) {
         const data = await response.json();
         setVersions(data.data.versions || []);
@@ -89,17 +87,14 @@ export default function AdminPromptHistoryPage() {
     setError(null);
 
     try {
-      const response = await fetch(
-        `/api/admin/prompts/${encodeURIComponent(key)}/restore`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            version: restoreTarget.version,
-            changeNote: restoreNote || undefined,
-          }),
-        }
-      );
+      const response = await fetch(`/api/admin/prompts/${encodeURIComponent(key)}/restore`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          version: restoreTarget.version,
+          changeNote: restoreNote || undefined,
+        }),
+      });
 
       const data = await response.json();
 
@@ -158,9 +153,7 @@ export default function AdminPromptHistoryPage() {
           <div className="flex items-center justify-between">
             <div>
               <div className="flex items-center gap-3 mb-2">
-                <h1 className="text-2xl font-bold text-gray-900">
-                  {promptName || key}
-                </h1>
+                <h1 className="text-2xl font-bold text-gray-900">{promptName || key}</h1>
                 <Badge variant="secondary">v{currentVersion}</Badge>
               </div>
               <p className="text-gray-600">バージョン履歴</p>
@@ -192,14 +185,14 @@ export default function AdminPromptHistoryPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              {versions.map((version, index) => (
+              {versions.map((version, _index) => (
                 <div
                   key={version.version}
                   className={cn(
                     "flex items-center justify-between p-4 rounded-lg border",
                     version.version === currentVersion
                       ? "bg-blue-50 border-blue-200"
-                      : "bg-white border-gray-200 hover:bg-gray-50"
+                      : "bg-white border-gray-200 hover:bg-gray-50",
                   )}
                 >
                   <div className="flex items-center gap-4">
@@ -208,7 +201,7 @@ export default function AdminPromptHistoryPage() {
                         "w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold",
                         version.version === currentVersion
                           ? "bg-blue-500 text-white"
-                          : "bg-gray-100 text-gray-600"
+                          : "bg-gray-100 text-gray-600",
                       )}
                     >
                       v{version.version}
@@ -221,9 +214,7 @@ export default function AdminPromptHistoryPage() {
                           </Badge>
                         )}
                         {version.changeNote ? (
-                          <span className="text-sm text-gray-700">
-                            {version.changeNote}
-                          </span>
+                          <span className="text-sm text-gray-700">{version.changeNote}</span>
                         ) : (
                           <span className="text-sm text-gray-400">-</span>
                         )}
@@ -249,7 +240,7 @@ export default function AdminPromptHistoryPage() {
                       size="sm"
                       onClick={() =>
                         router.push(
-                          `/admin/prompts/${encodeURIComponent(key)}/history/${version.version}`
+                          `/admin/prompts/${encodeURIComponent(key)}/history/${version.version}`,
                         )
                       }
                     >
@@ -257,11 +248,7 @@ export default function AdminPromptHistoryPage() {
                       内容を見る
                     </Button>
                     {version.version !== currentVersion && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setRestoreTarget(version)}
-                      >
+                      <Button variant="outline" size="sm" onClick={() => setRestoreTarget(version)}>
                         <RotateCcw className="w-4 h-4 mr-1" />
                         復元
                       </Button>
@@ -286,8 +273,8 @@ export default function AdminPromptHistoryPage() {
             <DialogHeader>
               <DialogTitle>バージョンの復元</DialogTitle>
               <DialogDescription>
-                バージョン {restoreTarget?.version} に戻します。
-                現在の内容はバージョン {currentVersion + 1} として保存されます。
+                バージョン {restoreTarget?.version} に戻します。 現在の内容はバージョン{" "}
+                {currentVersion + 1} として保存されます。
               </DialogDescription>
             </DialogHeader>
 
@@ -307,11 +294,7 @@ export default function AdminPromptHistoryPage() {
               <Button variant="outline" onClick={() => setRestoreTarget(null)}>
                 キャンセル
               </Button>
-              <Button
-                onClick={handleRestore}
-                disabled={isRestoring}
-                className="gap-2"
-              >
+              <Button onClick={handleRestore} disabled={isRestoring} className="gap-2">
                 {isRestoring ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />

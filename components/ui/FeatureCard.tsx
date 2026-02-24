@@ -11,18 +11,13 @@ interface FeatureCardProps {
  * FeatureCardコンポーネント
  * 機能紹介カードを表示する共通コンポーネント
  */
-export function FeatureCard({
-  icon,
-  title,
-  description,
-  className,
-}: FeatureCardProps) {
+export function FeatureCard({ icon, title, description, className }: FeatureCardProps) {
   return (
     <div
       className={cn(
         "p-4 rounded-xl bg-white border border-gray-200 transition-all duration-300",
         "hover:border-gray-300 hover:bg-gray-50",
-        className
+        className,
       )}
     >
       <div className="w-10 h-10 rounded-lg bg-black/5 flex items-center justify-center mb-3 text-black">

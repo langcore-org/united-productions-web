@@ -1,31 +1,29 @@
 /**
  * ThinkingStep コンポーネント
- * 
+ *
  * 個別の思考ステップを表示（折りたたみ対応）
- * 
+ *
  * @updated 2026-02-20 23:40
  */
 
 "use client";
 
-import { useState, useEffect } from "react";
-import { cn } from "@/lib/utils";
 import {
+  BrainCircuit,
   CheckCircle2,
-  Loader2,
-  XCircle,
   ChevronDown,
   ChevronUp,
-  Clock,
-  Search,
-  BrainCircuit,
   FileCheck,
-  Sparkles,
+  Loader2,
   Monitor,
+  Search,
+  XCircle,
 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useTypingAnimation } from "@/hooks/useTypingAnimation";
+import { cn } from "@/lib/utils";
 import type { ThinkingStep as ThinkingStepType } from "@/types/agent-thinking";
 import { SubStepList } from "./SubStep";
-import { useTypingAnimation } from "@/hooks/useTypingAnimation";
 
 // アイコンマッピング
 const iconMap = {
@@ -51,7 +49,7 @@ const statusStyles = {
 };
 
 // ステップタイプラベル
-const typeLabels: Record<ThinkingStepType["type"], string> = {
+const _typeLabels: Record<ThinkingStepType["type"], string> = {
   thinking: "思考",
   search: "検索",
   analysis: "分析",
@@ -73,7 +71,7 @@ export interface ThinkingStepProps {
 
 /**
  * 思考ステップコンポーネント
- * 
+ *
  * 親ステップのタイトル、説明、サブステップを折りたたみ可能な形式で表示
  */
 export function ThinkingStep({
@@ -99,7 +97,11 @@ export function ThinkingStep({
   const statusStyle = statusStyles[step.status];
 
   // タイピングアニメーション
-  const { displayText, isComplete: isTypingComplete, start } = useTypingAnimation({
+  const {
+    displayText,
+    isComplete: isTypingComplete,
+    start,
+  } = useTypingAnimation({
     typingSpeed: 20,
     autoStart: false,
   });
@@ -116,9 +118,7 @@ export function ThinkingStep({
   const hasSearchResults = step.searchResults && step.searchResults.length > 0;
 
   // 進捗表示
-  const progressText = step.progress
-    ? `${step.progress.current}/${step.progress.total}`
-    : null;
+  const progressText = step.progress ? `${step.progress.current}/${step.progress.total}` : null;
 
   return (
     <div
@@ -128,7 +128,7 @@ export function ThinkingStep({
         step.status === "running" && "border-blue-200 ring-1 ring-blue-100",
         step.status === "completed" && "border-gray-200",
         step.status === "error" && "border-red-200 ring-1 ring-red-100",
-        className
+        className,
       )}
     >
       {/* ヘッダー（クリックで展開/折りたたみ） */}
@@ -138,17 +138,13 @@ export function ThinkingStep({
           "w-full flex items-center gap-3 px-4 py-3 text-left",
           "hover:bg-gray-50 transition-colors",
           "rounded-xl",
-          !isExpanded && "rounded-b-xl"
+          !isExpanded && "rounded-b-xl",
         )}
       >
         {/* ステータスアイコン */}
         <div className="flex-shrink-0">
           <StatusIcon
-            className={cn(
-              "w-5 h-5",
-              statusStyle,
-              step.status === "running" && "animate-spin"
-            )}
+            className={cn("w-5 h-5", statusStyle, step.status === "running" && "animate-spin")}
           />
         </div>
 
@@ -159,9 +155,7 @@ export function ThinkingStep({
 
         {/* タイトル */}
         <div className="flex-1 min-w-0">
-          <h3 className="text-sm font-medium text-gray-900 truncate">
-            {step.title}
-          </h3>
+          <h3 className="text-sm font-medium text-gray-900 truncate">{step.title}</h3>
         </div>
 
         {/* メタデータ */}
@@ -182,9 +176,7 @@ export function ThinkingStep({
           )}
 
           {/* 進捗 */}
-          {progressText && (
-            <span className="text-xs text-gray-400">{progressText}</span>
-          )}
+          {progressText && <span className="text-xs text-gray-400">{progressText}</span>}
 
           {/* タイムスタンプ */}
           {step.completedAt && (
@@ -199,11 +191,7 @@ export function ThinkingStep({
           {/* 展開インジケーター */}
           {(hasSubSteps || hasContent) && (
             <div className="text-gray-400">
-              {isExpanded ? (
-                <ChevronUp className="w-4 h-4" />
-              ) : (
-                <ChevronDown className="w-4 h-4" />
-              )}
+              {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
             </div>
           )}
         </div>
@@ -238,9 +226,7 @@ export function ThinkingStep({
           {/* 検索結果プレビュー */}
           {hasSearchResults && step.searchResults && (
             <div className="pl-10 mt-3 pt-3 border-t border-gray-100">
-              <p className="text-xs text-gray-500 mb-2">
-                検索結果: {step.searchResults.length}件
-              </p>
+              <p className="text-xs text-gray-500 mb-2">検索結果: {step.searchResults.length}件</p>
             </div>
           )}
         </div>

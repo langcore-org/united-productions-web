@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
 import { AlertCircle, RefreshCw } from "lucide-react";
+import { useEffect } from "react";
 
 interface ErrorBoundaryProps {
   error: Error & { digest?: string };

@@ -7,12 +7,12 @@
  * DELETE /api/chat/feature?chatId=xxx      → 特定チャット削除
  */
 
-import { NextRequest } from "next/server";
+import type { NextRequest } from "next/server";
 import { z } from "zod";
-import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/api/auth";
-import { logger } from "@/lib/logger";
 import { createLLMClient } from "@/lib/llm";
+import { logger } from "@/lib/logger";
+import { prisma } from "@/lib/prisma";
 
 /**
  * チャットのタイトルをGrokで自動生成する（バックグラウンド実行）
@@ -25,7 +25,8 @@ async function generateAndSaveChatTitle(chatId: string, firstUserMessage: string
     const response = await grok.chat([
       {
         role: "system",
-        content: "あなたはチャット会話のタイトルを生成する専門家です。与えられたメッセージの内容を要約した簡潔なタイトルを日本語で生成してください。タイトルのみを返してください。余分な記号や説明は不要です。",
+        content:
+          "あなたはチャット会話のタイトルを生成する専門家です。与えられたメッセージの内容を要約した簡潔なタイトルを日本語で生成してください。タイトルのみを返してください。余分な記号や説明は不要です。",
       },
       {
         role: "user",
@@ -115,20 +116,19 @@ export async function GET(request: NextRequest): Promise<Response> {
       });
     }
 
-    return new Response(
-      JSON.stringify({ error: "chatId or featureId is required" }),
-      { status: 400, headers: { "Content-Type": "application/json" } }
-    );
+    return new Response(JSON.stringify({ error: "chatId or featureId is required" }), {
+      status: 400,
+      headers: { "Content-Type": "application/json" },
+    });
   } catch (error) {
-    const errorMessage =
-      error instanceof Error ? error.message : "Unknown error";
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
     logger.error(`[${requestId}] Failed to get conversation`, {
       error: errorMessage,
     });
-    return new Response(
-      JSON.stringify({ error: "Failed to get conversation", requestId }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
-    );
+    return new Response(JSON.stringify({ error: "Failed to get conversation", requestId }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
   }
 }
 
@@ -149,7 +149,7 @@ const saveRequestSchema = z.object({
       content: z.string(),
       timestamp: z.string().or(z.date()).optional(),
       llmProvider: z.string().optional(),
-    })
+    }),
   ),
 });
 
@@ -167,10 +167,10 @@ export async function POST(request: NextRequest): Promise<Response> {
     try {
       body = await request.json();
     } catch {
-      return new Response(
-        JSON.stringify({ error: "Invalid request body" }),
-        { status: 400, headers: { "Content-Type": "application/json" } }
-      );
+      return new Response(JSON.stringify({ error: "Invalid request body" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
     }
 
     const validationResult = saveRequestSchema.safeParse(body);
@@ -180,7 +180,7 @@ export async function POST(request: NextRequest): Promise<Response> {
           error: "Invalid request",
           details: validationResult.error.format(),
         }),
-        { status: 400, headers: { "Content-Type": "application/json" } }
+        { status: 400, headers: { "Content-Type": "application/json" } },
       );
     }
 
@@ -197,10 +197,10 @@ export async function POST(request: NextRequest): Promise<Response> {
         where: { id: chatId, userId },
       });
       if (!chat) {
-        return new Response(
-          JSON.stringify({ error: "Chat not found" }),
-          { status: 404, headers: { "Content-Type": "application/json" } }
-        );
+        return new Response(JSON.stringify({ error: "Chat not found" }), {
+          status: 404,
+          headers: { "Content-Type": "application/json" },
+        });
       }
     } else {
       // 新規チャット作成（タイトルは後からLLMで生成）
@@ -222,7 +222,7 @@ export async function POST(request: NextRequest): Promise<Response> {
     if (messages.length > 0) {
       await prisma.researchMessage.createMany({
         data: messages.map((msg) => ({
-          chatId: chat!.id,
+          chatId: chat?.id,
           role: msg.role.toUpperCase(),
           content: msg.content,
         })),
@@ -244,15 +244,14 @@ export async function POST(request: NextRequest): Promise<Response> {
       headers: { "Content-Type": "application/json" },
     });
   } catch (error) {
-    const errorMessage =
-      error instanceof Error ? error.message : "Unknown error";
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
     logger.error(`[${requestId}] Failed to save conversation`, {
       error: errorMessage,
     });
-    return new Response(
-      JSON.stringify({ error: "Failed to save conversation", requestId }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
-    );
+    return new Response(JSON.stringify({ error: "Failed to save conversation", requestId }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
   }
 }
 
@@ -279,18 +278,18 @@ export async function DELETE(request: NextRequest): Promise<Response> {
       try {
         body = await request.json();
       } catch {
-        return new Response(
-          JSON.stringify({ error: "chatId is required" }),
-          { status: 400, headers: { "Content-Type": "application/json" } }
-        );
+        return new Response(JSON.stringify({ error: "chatId is required" }), {
+          status: 400,
+          headers: { "Content-Type": "application/json" },
+        });
       }
 
       const parsed = z.object({ featureId: z.string() }).safeParse(body);
       if (!parsed.success) {
-        return new Response(
-          JSON.stringify({ error: "chatId is required" }),
-          { status: 400, headers: { "Content-Type": "application/json" } }
-        );
+        return new Response(JSON.stringify({ error: "chatId is required" }), {
+          status: 400,
+          headers: { "Content-Type": "application/json" },
+        });
       }
 
       // featureId指定の場合は最新チャットを1件削除（旧API互換）
@@ -319,14 +318,13 @@ export async function DELETE(request: NextRequest): Promise<Response> {
       headers: { "Content-Type": "application/json" },
     });
   } catch (error) {
-    const errorMessage =
-      error instanceof Error ? error.message : "Unknown error";
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
     logger.error(`[${requestId}] Failed to delete conversation`, {
       error: errorMessage,
     });
-    return new Response(
-      JSON.stringify({ error: "Failed to delete conversation", requestId }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
-    );
+    return new Response(JSON.stringify({ error: "Failed to delete conversation", requestId }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
   }
 }

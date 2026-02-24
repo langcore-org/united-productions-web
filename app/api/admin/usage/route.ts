@@ -1,15 +1,15 @@
 /**
  * API使用量・コスト監視API
- * 
+ *
  * GET /api/admin/usage
  * 使用量統計を取得（ツール使用状況含む）
- * 
+ *
  * 更新: 2026-02-20 - ツール使用量・ログ統計を追加
  */
 
-import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { type NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/api/auth";
+import { prisma } from "@/lib/prisma";
 
 interface UsageStats {
   totalCost: number;
@@ -50,12 +50,12 @@ export async function GET(request: NextRequest) {
     if (authResult instanceof NextResponse) return authResult;
 
     const { searchParams } = new URL(request.url);
-    
+
     // 日付範囲の取得（デフォルト：過去30日）
     const days = parseInt(searchParams.get("days") || "30", 10);
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
-    
+
     // 全体の統計
     const totalStats = await prisma.usageLog.aggregate({
       where: {
@@ -183,7 +183,7 @@ export async function GET(request: NextRequest) {
     for (const log of grokLogs) {
       const metadata = log.metadata as Record<string, unknown> | null;
       const tools = metadata?.tools as ToolInfo | undefined;
-      
+
       if (tools) {
         if (tools.webSearch) {
           toolStats.webSearch.requests++;
@@ -209,7 +209,7 @@ export async function GET(request: NextRequest) {
       { toolName: "X検索", ...toolStats.xSearch },
       { toolName: "コード実行", ...toolStats.codeExecution },
       { toolName: "ファイル検索", ...toolStats.fileSearch },
-    ].filter(t => t.requests > 0);
+    ].filter((t) => t.requests > 0);
 
     // 最近の使用履歴
     const recentLogs = await prisma.usageLog.findMany({
@@ -244,11 +244,13 @@ export async function GET(request: NextRequest) {
         inputTokens: p._sum.inputTokens || 0,
         outputTokens: p._sum.outputTokens || 0,
       })),
-      byDay: (byDay as { date: Date; cost: bigint | number; requests: bigint | number }[]).map((d) => ({
-        date: d.date.toISOString().split("T")[0],
-        cost: Number(d.cost) || 0,
-        requests: Number(d.requests) || 0,
-      })),
+      byDay: (byDay as { date: Date; cost: bigint | number; requests: bigint | number }[]).map(
+        (d) => ({
+          date: d.date.toISOString().split("T")[0],
+          cost: Number(d.cost) || 0,
+          requests: Number(d.requests) || 0,
+        }),
+      ),
       byUser: byUser.map((u) => {
         const user = userMap.get(u.userId);
         return {
@@ -284,12 +286,11 @@ export async function GET(request: NextRequest) {
         },
       },
     });
-
   } catch (error) {
     console.error("Usage stats error:", error);
     return NextResponse.json(
       { success: false, error: "統計データの取得に失敗しました" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

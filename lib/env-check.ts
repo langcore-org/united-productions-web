@@ -19,11 +19,7 @@ export function checkAuthEnv(): EnvStatus {
   const info: Record<string, string> = {};
 
   // 必須環境変数
-  const required = [
-    "GOOGLE_CLIENT_ID",
-    "GOOGLE_CLIENT_SECRET",
-    "NEXTAUTH_SECRET",
-  ];
+  const required = ["GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET", "NEXTAUTH_SECRET"];
 
   for (const key of required) {
     if (!process.env[key]) {
@@ -33,11 +29,11 @@ export function checkAuthEnv(): EnvStatus {
 
   // NEXTAUTH_URLのチェック
   const nextAuthUrl = getNextAuthUrl();
-  info["NEXTAUTH_URL"] = nextAuthUrl;
+  info.NEXTAUTH_URL = nextAuthUrl;
 
   if (!process.env.NEXTAUTH_URL) {
     if (process.env.VERCEL_URL) {
-      info["NEXTAUTH_URL_SOURCE"] = "VERCEL_URL (自動設定)";
+      info.NEXTAUTH_URL_SOURCE = "VERCEL_URL (自動設定)";
     } else {
       warnings.push("NEXTAUTH_URLが明示的に設定されていません（フォールバック: localhost:3000）");
     }
@@ -45,8 +41,8 @@ export function checkAuthEnv(): EnvStatus {
 
   // Vercel環境の確認
   if (process.env.VERCEL_ENV) {
-    info["VERCEL_ENV"] = process.env.VERCEL_ENV;
-    
+    info.VERCEL_ENV = process.env.VERCEL_ENV;
+
     if (process.env.VERCEL_ENV === "preview" && !process.env.AUTH_TRUST_HOST) {
       warnings.push("プレビュー環境で AUTH_TRUST_HOST=true の設定を推奨");
     }
@@ -54,7 +50,7 @@ export function checkAuthEnv(): EnvStatus {
 
   // Google Cloud Console設定のヒント
   const callbackUrl = `${nextAuthUrl}/api/auth/callback/google`;
-  info["GOOGLE_CALLBACK_URL"] = callbackUrl;
+  info.GOOGLE_CALLBACK_URL = callbackUrl;
 
   return {
     isValid: missing.length === 0,
@@ -71,15 +67,15 @@ function getNextAuthUrl(): string {
   if (process.env.NEXTAUTH_URL) {
     return process.env.NEXTAUTH_URL;
   }
-  
+
   if (process.env.VERCEL_PROJECT_PRODUCTION_URL) {
     return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`;
   }
-  
+
   if (process.env.VERCEL_URL) {
     return `https://${process.env.VERCEL_URL}`;
   }
-  
+
   return "http://localhost:3000";
 }
 
@@ -88,7 +84,7 @@ function getNextAuthUrl(): string {
  */
 export function getEnvDebugInfo(): string {
   const status = checkAuthEnv();
-  
+
   const lines = [
     "=== 環境変数チェック ===",
     `有効性: ${status.isValid ? "✅ OK" : "❌ 問題あり"}`,
@@ -99,12 +95,12 @@ export function getEnvDebugInfo(): string {
 
   if (status.missing.length > 0) {
     lines.push("", "【不足している変数】");
-    lines.push(...status.missing.map(m => `  ❌ ${m}`));
+    lines.push(...status.missing.map((m) => `  ❌ ${m}`));
   }
 
   if (status.warnings.length > 0) {
     lines.push("", "【警告】");
-    lines.push(...status.warnings.map(w => `  ⚠️  ${w}`));
+    lines.push(...status.warnings.map((w) => `  ⚠️  ${w}`));
   }
 
   return lines.join("\n");

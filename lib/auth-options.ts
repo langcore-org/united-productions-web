@@ -1,40 +1,40 @@
 /**
  * NextAuth.js 認証設定
  * AI Hub - United Productions 制作支援統合プラットフォーム
- * 
+ *
  * Google Workspace SSO認証 + Drive API連携
- * 
+ *
  * 【Vercelプレビュー環境対応】
  * - NEXTAUTH_URL: 本番環境では自動設定、ローカルでは明示的に設定
  * - AUTH_TRUST_HOST: Vercel環境でtrueに設定（複数ホスト対応）
  * - Preview環境ではCredentialsProviderを追加（E2Eテスト用）
  */
 
-import type { AuthOptions } from "next-auth/core/types";
-import GoogleProvider from "next-auth/providers/google";
-import CredentialsProvider from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@auth/prisma-adapter";
+import type { AuthOptions } from "next-auth/core/types";
+import CredentialsProvider from "next-auth/providers/credentials";
+import GoogleProvider from "next-auth/providers/google";
 import { prisma } from "./prisma";
 
 /**
  * 現在のホストURLを取得（Vercelプレビュー環境対応）
  */
-function getNextAuthUrl(): string {
+function _getNextAuthUrl(): string {
   // 1. 明示的に設定されたNEXTAUTH_URLを優先
   if (process.env.NEXTAUTH_URL) {
     return process.env.NEXTAUTH_URL;
   }
-  
+
   // 2. Vercel本番環境
   if (process.env.VERCEL_PROJECT_PRODUCTION_URL) {
     return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`;
   }
-  
+
   // 3. Vercelプレビュー環境（ブランチデプロイなど）
   if (process.env.VERCEL_URL) {
     return `https://${process.env.VERCEL_URL}`;
   }
-  
+
   // 4. フォールバック（ローカル開発用）
   return "http://localhost:3000";
 }
@@ -83,10 +83,7 @@ if (process.env.VERCEL_ENV === "preview") {
         const { email, password } = credentials;
 
         // 環境変数と照合
-        if (
-          email === process.env.PREVIEW_E2E_USER &&
-          password === process.env.PREVIEW_E2E_PASS
-        ) {
+        if (email === process.env.PREVIEW_E2E_USER && password === process.env.PREVIEW_E2E_PASS) {
           return {
             id: "preview-e2e-user",
             email,
@@ -97,20 +94,20 @@ if (process.env.VERCEL_ENV === "preview") {
 
         return null;
       },
-    })
+    }),
   );
 }
 
 /**
  * NextAuth設定オプション
- * 
+ *
  * 認証プロバイダー: Google OAuth 2.0 (+ Preview環境ではCredentials)
  * アダプター: Prisma（PostgreSQL）
  * スコープ: openid, email, profile, drive.readonly
  */
 export const authOptions: AuthOptions = {
   adapter: PrismaAdapter(prisma),
-  
+
   providers,
 
   /**
@@ -164,12 +161,12 @@ export const authOptions: AuthOptions = {
       if (token && session.user) {
         session.user.id = token.userId as string;
         session.accessToken = token.accessToken as string;
-        
+
         // token.roleがあればsession.user.roleに渡す（Preview E2E用）
         if (token.role) {
           session.user.role = token.role as string;
         }
-        
+
         // DBから最新のユーザー情報（role）を取得
         try {
           const dbUser = await prisma.user.findUnique({

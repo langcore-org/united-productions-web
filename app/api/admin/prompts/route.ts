@@ -1,14 +1,14 @@
 /**
  * Admin Prompts API
- * 
+ *
  * GET /api/admin/prompts - 全プロンプト一覧取得
  * PUT /api/admin/prompts?key=xxx - プロンプト更新
  */
 
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/api/auth";
+import { prisma } from "@/lib/prisma";
 
 // プロンプト更新用スキーマ
 const updatePromptSchema = z.object({
@@ -41,10 +41,7 @@ export async function GET(request: NextRequest) {
       });
 
       if (!prompt) {
-        return NextResponse.json(
-          { success: false, error: "Prompt not found" },
-          { status: 404 }
-        );
+        return NextResponse.json({ success: false, error: "Prompt not found" }, { status: 404 });
       }
 
       return NextResponse.json({ success: true, data: prompt });
@@ -76,7 +73,7 @@ export async function GET(request: NextRequest) {
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
     return NextResponse.json(
       { success: false, error: "Failed to fetch prompts", details: errorMessage },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -99,7 +96,7 @@ export async function PUT(request: NextRequest) {
     if (!key) {
       return NextResponse.json(
         { success: false, error: "Key parameter is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -119,14 +116,11 @@ export async function PUT(request: NextRequest) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { success: false, error: "Invalid request data", details: error.issues },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     console.error("Failed to update prompt:", error);
-    return NextResponse.json(
-      { success: false, error: "Failed to update prompt" },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, error: "Failed to update prompt" }, { status: 500 });
   }
 }

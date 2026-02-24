@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
 import { AlertCircle, RefreshCcw } from "lucide-react";
+import { useEffect } from "react";
 
 export default function Error({
   error,
@@ -24,9 +24,7 @@ export default function Error({
           <h2 className="text-lg font-semibold text-gray-900">エラーが発生しました</h2>
         </div>
 
-        <p className="text-gray-500 mb-6">
-          {error.message || "予期しないエラーが発生しました。"}
-        </p>
+        <p className="text-gray-500 mb-6">{error.message || "予期しないエラーが発生しました。"}</p>
 
         <button
           onClick={reset}

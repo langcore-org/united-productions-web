@@ -1,16 +1,8 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { FileAudio, FileText, Loader2, MessageSquare, Send, Upload } from "lucide-react";
+import { useCallback, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
-import { 
-  Upload, 
-  FileText, 
-  X, 
-  Send, 
-  Loader2,
-  MessageSquare,
-  FileAudio
-} from "lucide-react";
 
 interface Message {
   id: string;
@@ -40,7 +32,7 @@ export function FileUploadChat({
 }: FileUploadChatProps) {
   const [text, setText] = useState("");
   const [chatInput, setChatInput] = useState("");
-  const [isUploading, setIsUploading] = useState(false);
+  const [_isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const chatInputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -50,15 +42,11 @@ export function FileUploadChat({
       if (!file) return;
 
       // VTTまたはTXTファイルのみ許可
-      const validTypes = [
-        "text/vtt",
-        "text/plain",
-        "application/x-subrip",
-      ];
+      const validTypes = ["text/vtt", "text/plain", "application/x-subrip"];
       const validExtensions = [".vtt", ".txt", ".srt"];
-      
-      const hasValidExtension = validExtensions.some(ext => 
-        file.name.toLowerCase().endsWith(ext)
+
+      const hasValidExtension = validExtensions.some((ext) =>
+        file.name.toLowerCase().endsWith(ext),
       );
 
       if (!hasValidExtension && !validTypes.includes(file.type)) {
@@ -70,7 +58,7 @@ export function FileUploadChat({
       await onFileUpload(file);
       setIsUploading(false);
     },
-    [onFileUpload]
+    [onFileUpload],
   );
 
   const handleTextSubmit = useCallback(() => {
@@ -96,7 +84,7 @@ export function FileUploadChat({
         }
       }
     },
-    [handleTextSubmit, handleChatSubmit, messages.length]
+    [handleTextSubmit, handleChatSubmit, messages.length],
   );
 
   const isInitialState = messages.length === 0 && !uploadedFile && !inputText;
@@ -137,17 +125,13 @@ export function FileUploadChat({
               className={cn(
                 "border-2 border-dashed border-white/10 rounded-xl p-8",
                 "hover:border-gray-500 hover:bg-white/[0.02]",
-                "transition-colors cursor-pointer text-center"
+                "transition-colors cursor-pointer text-center",
               )}
               onClick={() => fileInputRef.current?.click()}
             >
               <Upload className="w-8 h-8 text-gray-500 mx-auto mb-3" />
-              <p className="text-sm text-gray-400">
-                クリックしてファイルを選択
-              </p>
-              <p className="text-xs text-gray-600 mt-1">
-                .vtt, .txt, .srt
-              </p>
+              <p className="text-sm text-gray-400">クリックしてファイルを選択</p>
+              <p className="text-xs text-gray-600 mt-1">.vtt, .txt, .srt</p>
               <input
                 ref={fileInputRef}
                 type="file"
@@ -166,9 +150,7 @@ export function FileUploadChat({
 
             {/* Text Input */}
             <div className="space-y-3">
-              <p className="text-sm text-gray-400 text-center">
-                テキストを直接貼り付け
-              </p>
+              <p className="text-sm text-gray-400 text-center">テキストを直接貼り付け</p>
               <textarea
                 value={text}
                 onChange={(e) => setText(e.target.value)}
@@ -178,7 +160,7 @@ export function FileUploadChat({
                   "w-full h-48 bg-white/5 border border-white/10 rounded-xl p-4",
                   "text-sm text-white placeholder-gray-600",
                   "focus:outline-none focus:border-gray-500",
-                  "resize-none"
+                  "resize-none",
                 )}
               />
               <button
@@ -188,7 +170,7 @@ export function FileUploadChat({
                   "w-full py-3 rounded-xl font-medium transition-all",
                   text.trim() && !isGenerating
                     ? "bg-gray-600 text-white hover:bg-gray-500"
-                    : "bg-white/10 text-gray-500 cursor-not-allowed"
+                    : "bg-white/10 text-gray-500 cursor-not-allowed",
                 )}
               >
                 {isGenerating ? (
@@ -210,9 +192,7 @@ export function FileUploadChat({
               <div className="flex items-center gap-3 p-3 bg-white/5 rounded-lg border border-white/10">
                 <FileText className="w-5 h-5 text-gray-400" />
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm text-white truncate">
-                    {uploadedFile.name}
-                  </p>
+                  <p className="text-sm text-white truncate">{uploadedFile.name}</p>
                   <p className="text-xs text-gray-500">
                     {(uploadedFile.size / 1024).toFixed(1)} KB
                   </p>
@@ -226,15 +206,13 @@ export function FileUploadChat({
                 key={message.id}
                 className={cn(
                   "flex gap-3",
-                  message.role === "user" ? "flex-row-reverse" : "flex-row"
+                  message.role === "user" ? "flex-row-reverse" : "flex-row",
                 )}
               >
                 <div
                   className={cn(
                     "w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0",
-                    message.role === "user"
-                      ? "bg-gray-600"
-                      : "bg-white/10"
+                    message.role === "user" ? "bg-gray-600" : "bg-white/10",
                   )}
                 >
                   {message.role === "user" ? (
@@ -248,7 +226,7 @@ export function FileUploadChat({
                     "max-w-[80%] rounded-2xl px-4 py-2.5 text-sm",
                     message.role === "user"
                       ? "bg-gray-600 text-white rounded-tr-sm"
-                      : "bg-white/5 text-gray-200 rounded-tl-sm border border-white/10"
+                      : "bg-white/5 text-gray-200 rounded-tl-sm border border-white/10",
                   )}
                 >
                   {message.content}
@@ -273,7 +251,7 @@ export function FileUploadChat({
                 "flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3",
                 "text-sm text-white placeholder-gray-600",
                 "focus:outline-none focus:border-gray-500",
-                "resize-none min-h-[44px] max-h-[120px]"
+                "resize-none min-h-[44px] max-h-[120px]",
               )}
               rows={1}
             />
@@ -284,7 +262,7 @@ export function FileUploadChat({
                 "w-11 h-11 rounded-xl flex items-center justify-center transition-all",
                 chatInput.trim() && !isGenerating
                   ? "bg-gray-600 text-white hover:bg-gray-500"
-                  : "bg-white/10 text-gray-500 cursor-not-allowed"
+                  : "bg-white/10 text-gray-500 cursor-not-allowed",
               )}
             >
               {isGenerating ? (
@@ -294,9 +272,7 @@ export function FileUploadChat({
               )}
             </button>
           </div>
-          <p className="mt-2 text-xs text-gray-600 text-center">
-            Enterで送信 · Shift+Enterで改行
-          </p>
+          <p className="mt-2 text-xs text-gray-600 text-center">Enterで送信 · Shift+Enterで改行</p>
         </div>
       )}
     </div>

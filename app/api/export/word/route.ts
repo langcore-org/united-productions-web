@@ -5,10 +5,10 @@
  * MarkdownコンテンツをWord(.docx)に変換して返却
  */
 
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { generateWordDocument } from "@/lib/export/word-generator";
 import { requireAuth } from "@/lib/api/auth";
+import { generateWordDocument } from "@/lib/export/word-generator";
 
 // リクエストスキーマ
 const wordExportSchema = z.object({
@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
           error: "入力データが不正です",
           details: validationResult.error.issues,
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -76,8 +76,7 @@ export async function POST(request: NextRequest) {
     return new NextResponse(buffer, {
       status: 200,
       headers: {
-        "Content-Type":
-          "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "Content-Type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         "Content-Disposition": `attachment; filename="${encodeURIComponent(outputFilename)}"`,
         "Content-Length": buffer.length.toString(),
       },
@@ -87,12 +86,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         success: false,
-        error:
-          error instanceof Error
-            ? error.message
-            : "Word出力中にエラーが発生しました",
+        error: error instanceof Error ? error.message : "Word出力中にエラーが発生しました",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

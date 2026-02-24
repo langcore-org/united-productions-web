@@ -154,7 +154,7 @@ export default function ChatHistoryPage() {
       // 削除後にリストを更新
       setHistory((prev) => prev.filter((h) => h.id !== id));
       setMessage({ type: "success", text: "履歴を削除しました" });
-    } catch (err) {
+    } catch (_err) {
       setMessage({ type: "error", text: "削除に失敗しました" });
     }
   };

@@ -1,7 +1,7 @@
 /**
  * Google Drive API 連携モジュール
  * AI Hub - United Productions 制作支援統合プラットフォーム
- * 
+ *
  * Google Drive API v3 を使用したファイル操作機能
  * - ファイル一覧取得
  * - ファイル検索
@@ -65,11 +65,11 @@ import type { Session } from "next-auth";
 async function getAccessToken(): Promise<string> {
   const session = await getServerSession(authOptions);
   const typedSession = session as Session | null;
-  
+
   if (!typedSession?.accessToken) {
     throw new Error("Google Driveアクセスのための認証が必要です");
   }
-  
+
   return typedSession.accessToken;
 }
 
@@ -79,12 +79,9 @@ async function getAccessToken(): Promise<string> {
  * @param options リクエストオプション
  * @returns APIレスポンス
  */
-async function driveApiRequest<T>(
-  endpoint: string,
-  options: RequestInit = {}
-): Promise<T> {
+async function driveApiRequest<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const accessToken = await getAccessToken();
-  
+
   const url = `${DRIVE_API_BASE_URL}${endpoint}`;
   const response = await fetch(url, {
     ...options,
@@ -98,7 +95,7 @@ async function driveApiRequest<T>(
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
     throw new Error(
-      `Google Drive APIエラー: ${response.status} ${response.statusText} - ${errorData.error?.message || "Unknown error"}`
+      `Google Drive APIエラー: ${response.status} ${response.statusText} - ${errorData.error?.message || "Unknown error"}`,
     );
   }
 
@@ -110,9 +107,7 @@ async function driveApiRequest<T>(
  * @param options 検索オプション
  * @returns ファイル一覧
  */
-export async function listFiles(
-  options: DriveSearchOptions = {}
-): Promise<DriveFileListResponse> {
+export async function listFiles(options: DriveSearchOptions = {}): Promise<DriveFileListResponse> {
   const {
     pageSize = 100,
     pageToken,
@@ -141,7 +136,7 @@ export async function listFiles(
  */
 export async function searchFiles(
   query: string,
-  options: Omit<DriveSearchOptions, "query"> = {}
+  options: Omit<DriveSearchOptions, "query"> = {},
 ): Promise<DriveFileListResponse> {
   const {
     pageSize = 100,
@@ -172,7 +167,7 @@ export async function searchFiles(
  */
 export async function listFilesInFolder(
   folderId: string,
-  options: Omit<DriveSearchOptions, "query"> = {}
+  options: Omit<DriveSearchOptions, "query"> = {},
 ): Promise<DriveFileListResponse> {
   const query = `'${folderId}' in parents and trashed = false`;
   return searchFiles(query, options);
@@ -186,7 +181,7 @@ export async function listFilesInFolder(
  */
 export async function searchFilesByName(
   fileName: string,
-  options: Omit<DriveSearchOptions, "query"> = {}
+  options: Omit<DriveSearchOptions, "query"> = {},
 ): Promise<DriveFileListResponse> {
   const query = `name contains '${fileName.replace(/'/g, "\\'")}' and trashed = false`;
   return searchFiles(query, options);
@@ -200,7 +195,7 @@ export async function searchFilesByName(
  */
 export async function searchFilesByMimeType(
   mimeType: string,
-  options: Omit<DriveSearchOptions, "query"> = {}
+  options: Omit<DriveSearchOptions, "query"> = {},
 ): Promise<DriveFileListResponse> {
   const query = `mimeType = '${mimeType}' and trashed = false`;
   return searchFiles(query, options);
@@ -213,7 +208,7 @@ export async function searchFilesByMimeType(
  */
 export async function getTextFileContent(fileId: string): Promise<string> {
   const accessToken = await getAccessToken();
-  
+
   const url = `${DRIVE_API_BASE_URL}/files/${fileId}?alt=media`;
   const response = await fetch(url, {
     headers: {
@@ -224,7 +219,7 @@ export async function getTextFileContent(fileId: string): Promise<string> {
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
     throw new Error(
-      `ファイル内容の取得に失敗しました: ${response.status} ${response.statusText} - ${errorData.error?.message || "Unknown error"}`
+      `ファイル内容の取得に失敗しました: ${response.status} ${response.statusText} - ${errorData.error?.message || "Unknown error"}`,
     );
   }
 
@@ -239,7 +234,7 @@ export async function getTextFileContent(fileId: string): Promise<string> {
  */
 export async function getFileMetadata(
   fileId: string,
-  fields: string = "id,name,mimeType,size,createdTime,modifiedTime,webViewLink,webContentLink,thumbnailLink,iconLink,parents,description"
+  fields: string = "id,name,mimeType,size,createdTime,modifiedTime,webViewLink,webContentLink,thumbnailLink,iconLink,parents,description",
 ): Promise<DriveFile> {
   const params = new URLSearchParams({ fields });
   return driveApiRequest<DriveFile>(`/files/${fileId}?${params.toString()}`);
@@ -253,10 +248,10 @@ export async function getFileMetadata(
  */
 export async function getImagePreviewUrl(
   fileId: string,
-  size: "small" | "medium" | "large" = "large"
+  size: "small" | "medium" | "large" = "large",
 ): Promise<{ thumbnailUrl: string | null; webViewLink: string | null }> {
   const metadata = await getFileMetadata(fileId, "thumbnailLink,webViewLink,mimeType");
-  
+
   // 画像ファイルでない場合
   if (!metadata.mimeType?.startsWith("image/")) {
     return {
@@ -295,15 +290,12 @@ export async function getImagePreviewUrl(
  * @param mimeType エクスポート先のMIMEタイプ
  * @returns エクスポートされたファイルの内容
  */
-export async function exportFile(
-  fileId: string,
-  mimeType: string
-): Promise<string> {
+export async function exportFile(fileId: string, mimeType: string): Promise<string> {
   const accessToken = await getAccessToken();
-  
+
   const params = new URLSearchParams({ mimeType });
   const url = `${DRIVE_API_BASE_URL}/files/${fileId}/export?${params.toString()}`;
-  
+
   const response = await fetch(url, {
     headers: {
       Authorization: `Bearer ${accessToken}`,
@@ -313,7 +305,7 @@ export async function exportFile(
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
     throw new Error(
-      `ファイルのエクスポートに失敗しました: ${response.status} ${response.statusText} - ${errorData.error?.message || "Unknown error"}`
+      `ファイルのエクスポートに失敗しました: ${response.status} ${response.statusText} - ${errorData.error?.message || "Unknown error"}`,
     );
   }
 
@@ -355,12 +347,12 @@ export async function getGoogleSheetAsCsv(fileId: string): Promise<string> {
 export async function getFileDownloadUrl(fileId: string): Promise<string> {
   const accessToken = await getAccessToken();
   const metadata = await getFileMetadata(fileId, "webContentLink,name");
-  
+
   // 直接ダウンロードリンクがない場合は、API経由のダウンロードURLを生成
   if (!metadata.webContentLink) {
     return `${DRIVE_API_BASE_URL}/files/${fileId}?alt=media&access_token=${encodeURIComponent(accessToken)}`;
   }
-  
+
   return metadata.webContentLink;
 }
 
@@ -383,7 +375,8 @@ export const DriveSearchQueries = {
   /** Googleスプレッドシート */
   allGoogleSheets: "mimeType = 'application/vnd.google-apps.spreadsheet' and trashed = false",
   /** 最近更新されたファイル（過去7日間） */
-  recentlyModified: "modifiedTime > '${new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()}' and trashed = false",
+  recentlyModified:
+    "modifiedTime > '${new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()}' and trashed = false",
   /** 共有ファイル */
   sharedFiles: "sharedWithMe = true and trashed = false",
   /** スター付きファイル */
@@ -401,14 +394,14 @@ export const MimeTypes = {
   GOOGLE_SLIDE: "application/vnd.google-apps.presentation",
   GOOGLE_FORM: "application/vnd.google-apps.form",
   GOOGLE_DRAWING: "application/vnd.google-apps.drawing",
-  
+
   // 一般的なファイル
   FOLDER: "application/vnd.google-apps.folder",
   PDF: "application/pdf",
   TEXT: "text/plain",
   HTML: "text/html",
   MARKDOWN: "text/markdown",
-  
+
   // 画像
   JPEG: "image/jpeg",
   PNG: "image/png",
@@ -416,7 +409,7 @@ export const MimeTypes = {
   BMP: "image/bmp",
   SVG: "image/svg+xml",
   WEBP: "image/webp",
-  
+
   // Microsoft Office
   WORD: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
   EXCEL: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",

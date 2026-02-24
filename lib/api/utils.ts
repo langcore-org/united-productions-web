@@ -1,10 +1,10 @@
 /**
  * API共通ユーティリティ
- * 
+ *
  * API Routesでの共通処理をまとめます。
  */
 
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { ZodError } from "zod";
 import { LLMError } from "@/lib/llm/errors";
 
@@ -19,14 +19,14 @@ export function handleApiError(error: unknown): NextResponse {
   // Zodバリデーションエラー
   if (error instanceof ZodError) {
     return NextResponse.json(
-      { 
-        error: "バリデーションエラー", 
-        details: error.issues.map(e => ({
+      {
+        error: "バリデーションエラー",
+        details: error.issues.map((e) => ({
           path: e.path.join("."),
           message: e.message,
-        }))
+        })),
       },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -34,18 +34,15 @@ export function handleApiError(error: unknown): NextResponse {
   if (error instanceof LLMError) {
     return NextResponse.json(
       { error: error.message, code: error.code },
-      { status: error.statusCode }
+      { status: error.statusCode },
     );
   }
 
   // 一般的なエラー
   const message = error instanceof Error ? error.message : "不明なエラーが発生しました";
   console.error("APIエラー:", error);
-  
-  return NextResponse.json(
-    { error: "内部サーバーエラー", message },
-    { status: 500 }
-  );
+
+  return NextResponse.json({ error: "内部サーバーエラー", message }, { status: 500 });
 }
 
 /**
@@ -64,20 +61,17 @@ export function successResponse<T>(data: T, status: number = 200): NextResponse 
  * @param validProviders - 有効なプロバイダーの配列
  * @returns 検証済みプロバイダーまたはnull
  */
-export function validateProvider(
-  provider: string,
-  validProviders: string[]
-): string | null {
+export function validateProvider(provider: string, validProviders: string[]): string | null {
   if (!provider || typeof provider !== "string") {
     return null;
   }
-  
+
   const normalized = provider.toLowerCase().trim();
-  
+
   if (validProviders.includes(normalized)) {
     return normalized;
   }
-  
+
   return null;
 }
 

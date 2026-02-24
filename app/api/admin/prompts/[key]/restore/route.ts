@@ -1,10 +1,10 @@
 /**
  * Admin Prompt Restore API
- * 
+ *
  * POST /api/admin/prompts/[key]/restore - 指定バージョンに復元
  */
 
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { requireAuth } from "@/lib/api/auth";
 import { restorePromptVersion } from "@/lib/prompts";
@@ -23,10 +23,7 @@ interface RouteParams {
  * POST /api/admin/prompts/[key]/restore
  * 指定バージョンに復元（新バージョンとして記録）
  */
-export async function POST(
-  request: NextRequest,
-  { params }: RouteParams
-) {
+export async function POST(request: NextRequest, { params }: RouteParams) {
   // 認証チェック
   const authResult = await requireAuth(request);
   if (authResult instanceof NextResponse) {
@@ -44,7 +41,7 @@ export async function POST(
       decodedKey,
       validatedData.version,
       authResult.userId,
-      validatedData.changeNote
+      validatedData.changeNote,
     );
 
     return NextResponse.json({
@@ -63,24 +60,21 @@ export async function POST(
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { success: false, error: "Invalid request data", details: error.issues },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     if (error instanceof Error) {
       const message = error.message;
       if (message.includes("not found")) {
-        return NextResponse.json(
-          { success: false, error: message },
-          { status: 404 }
-        );
+        return NextResponse.json({ success: false, error: message }, { status: 404 });
       }
     }
 
     console.error("Failed to restore prompt:", error);
     return NextResponse.json(
       { success: false, error: "Failed to restore prompt" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

@@ -18,10 +18,7 @@ export default function Loading() {
         {/* Template Selector */}
         <div className="flex gap-4">
           {Array.from({ length: 2 }).map((_, i) => (
-            <div
-              key={i}
-              className="w-32 h-10 bg-white/10 rounded-lg animate-pulse"
-            />
+            <div key={i} className="w-32 h-10 bg-white/10 rounded-lg animate-pulse" />
           ))}
         </div>
 

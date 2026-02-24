@@ -3,8 +3,8 @@
  */
 
 import { createLLMClient } from "@/lib/llm";
-import { getPromptFromDB, PROMPT_KEYS } from "@/lib/prompts";
 import type { LLMMessage } from "@/lib/llm/types";
+import { getPromptFromDB, PROMPT_KEYS } from "@/lib/prompts";
 
 export interface ProposalRequest {
   programInfo: string; // 番組情報
@@ -34,17 +34,8 @@ export interface ProposalResponse {
 /**
  * 企画案を生成
  */
-export async function generateProposals(
-  request: ProposalRequest
-): Promise<ProposalResponse> {
-  const {
-    programInfo,
-    theme,
-    targetAudience,
-    duration,
-    budget,
-    numProposals = 3,
-  } = request;
+export async function generateProposals(request: ProposalRequest): Promise<ProposalResponse> {
+  const { programInfo, theme, targetAudience, duration, budget, numProposals = 3 } = request;
 
   // プロンプト取得
   const systemPrompt = await getPromptFromDB(PROMPT_KEYS.PROPOSAL);
@@ -119,7 +110,7 @@ function createProposalQuery(params: {
  */
 function parseProposalResponse(
   content: string,
-  expectedCount: number
+  expectedCount: number,
 ): ProposalResponse["proposals"] {
   const proposals: ProposalResponse["proposals"] = [];
 
@@ -129,7 +120,7 @@ function parseProposalResponse(
     // パターン: "案1:", "案1：", "【案1】", "1. " などに対応
     const pattern = new RegExp(
       `(?:案${i}|【案${i}】|${i}\\.\\s*)[:：]?\\s*([^]*?)(?=(?:案${nextI}|【案${nextI}】|${nextI}\\.\\s*)[:：]?|$)`,
-      "i"
+      "i",
     );
     const match = content.match(pattern);
 
@@ -162,27 +153,19 @@ function parseProposalResponse(
 }
 
 function extractField(text: string, fieldNames: string): string {
-  const pattern = new RegExp(
-    `(?:${fieldNames})[:：]\\s*([^\\n]+)`,
-    "i"
-  );
+  const pattern = new RegExp(`(?:${fieldNames})[:：]\\s*([^\\n]+)`, "i");
   const match = text.match(pattern);
   return match ? match[1].trim() : "";
 }
 
 function extractList(text: string, fieldNames: string): string[] {
-  const pattern = new RegExp(
-    `(?:${fieldNames})[:：]\\s*([^]*?)(?=\\n\\n|\\n[^•\\-\\d]|$)`,
-    "i"
-  );
+  const pattern = new RegExp(`(?:${fieldNames})[:：]\\s*([^]*?)(?=\\n\\n|\\n[^•\\-\\d]|$)`, "i");
   const match = text.match(pattern);
 
   if (!match) return [];
 
   return match[1]
     .split(/[\\n,、]/)
-    .map((item) =>
-      item.replace(/^[•\\-\\d.\\)\\）]\\s*/, "").trim()
-    )
+    .map((item) => item.replace(/^[•\\-\\d.\\)\\）]\\s*/, "").trim())
     .filter(Boolean);
 }

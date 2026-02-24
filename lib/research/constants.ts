@@ -4,9 +4,10 @@
 
 // ResearchAgentTypeの定義
 type ResearchAgentType = "people" | "location" | "evidence";
-import { LLMProvider } from "@/lib/llm/types";
-import { Users, MapPin, ShieldCheck } from "lucide-react";
+
+import { MapPin, ShieldCheck, Users } from "lucide-react";
 import React from "react";
+import type { LLMProvider } from "@/lib/llm/types";
 
 /**
  * エージェント別デフォルトプロバイダー
@@ -46,7 +47,8 @@ export const AGENT_CONFIG: Record<ResearchAgentType, AgentConfig> = {
   people: {
     label: "人探し",
     icon: React.createElement(Users, { className: "w-4 h-4" }),
-    description: "X検索を活用して、特定の人物を効率的に探します。名前、職業、所在地などの手がかりを入力してください。",
+    description:
+      "X検索を活用して、特定の人物を効率的に探します。名前、職業、所在地などの手がかりを入力してください。",
     placeholder: "探したい人物について教えてください（名前、職業、所在地など）",
     color: "#3b82f6",
     gradient: "from-blue-500/20 to-cyan-500/20",

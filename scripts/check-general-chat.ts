@@ -6,7 +6,7 @@ async function main() {
   const latest = await getLatestPrompt("GENERAL_CHAT");
   console.log("最新バージョン:", latest?.version);
   console.log("内容プレビュー:");
-  console.log(latest?.content?.substring(0, 300) + "...\n");
+  console.log(`${latest?.content?.substring(0, 300)}...\n`);
 
   const versions = await getPromptVersions("GENERAL_CHAT");
   console.log("バージョン履歴:");

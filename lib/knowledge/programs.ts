@@ -4,25 +4,25 @@
  * 網羅的な番組情報をTypeScriptとして管理
  */
 
-import type { ProgramInfo, CompanyInfo, KnowledgeBase, ProgramOption } from "./types";
 import {
   companyInfoDetailed,
-  programMatsuko,
-  programShikujiri,
-  programKaneo,
   programAchikochi,
   programKamaigachi,
-  programOnirenchan,
+  programKaneo,
   programManiasan,
+  programMatsuko,
+  programOnirenchan,
+  programShikujiri,
 } from "./programs-detailed-data";
 import {
   programHayashiosamu,
   programKamichallenge,
   programNikagame,
-  programYakai,
   programSorega,
   programTalksurvivor,
+  programYakai,
 } from "./programs-detailed-data-2";
+import type { CompanyInfo, KnowledgeBase, ProgramInfo, ProgramOption } from "./types";
 
 // 会社概要（詳細版）
 export const companyInfo: CompanyInfo = companyInfoDetailed;

@@ -1,7 +1,7 @@
 "use client";
 
-import { cn } from "@/lib/utils";
 import { MessageSquare, Sparkles, Zap } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export interface EmptyStateProps {
   title?: string;

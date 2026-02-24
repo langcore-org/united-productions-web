@@ -1,11 +1,22 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter, useParams } from "next/navigation";
-import { cn } from "@/lib/utils";
+import {
+  AlertCircle,
+  ArrowLeft,
+  Check,
+  Clock,
+  FileText,
+  History,
+  Loader2,
+  RotateCcw,
+  User,
+} from "lucide-react";
+import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { AdminLayout } from "@/components/layout/AdminLayout";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -15,18 +26,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { AdminLayout } from "@/components/layout/AdminLayout";
-import {
-  Loader2,
-  ArrowLeft,
-  History,
-  RotateCcw,
-  Clock,
-  User,
-  FileText,
-  Check,
-  AlertCircle,
-} from "lucide-react";
 
 interface VersionDetail {
   version: number;
@@ -54,7 +53,7 @@ export default function AdminPromptVersionPage() {
 
   useEffect(() => {
     loadVersion();
-  }, [key, versionNum]);
+  }, [loadVersion]);
 
   const loadVersion = async () => {
     setIsLoading(true);
@@ -68,7 +67,7 @@ export default function AdminPromptVersionPage() {
       }
 
       const response = await fetch(
-        `/api/admin/prompts/${encodeURIComponent(key)}/history/${versionNum}`
+        `/api/admin/prompts/${encodeURIComponent(key)}/history/${versionNum}`,
       );
       if (response.ok) {
         const data = await response.json();
@@ -89,17 +88,14 @@ export default function AdminPromptVersionPage() {
     setError(null);
 
     try {
-      const response = await fetch(
-        `/api/admin/prompts/${encodeURIComponent(key)}/restore`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            version: versionNum,
-            changeNote: restoreNote || undefined,
-          }),
-        }
-      );
+      const response = await fetch(`/api/admin/prompts/${encodeURIComponent(key)}/restore`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          version: versionNum,
+          changeNote: restoreNote || undefined,
+        }),
+      });
 
       const data = await response.json();
 
@@ -181,20 +177,14 @@ export default function AdminPromptVersionPage() {
           <div className="flex items-center justify-between">
             <div>
               <div className="flex items-center gap-3 mb-2">
-                <h1 className="text-2xl font-bold text-gray-900">
-                  {promptName || key}
-                </h1>
-                <Badge
-                  variant={isCurrentVersion ? "default" : "secondary"}
-                >
+                <h1 className="text-2xl font-bold text-gray-900">{promptName || key}</h1>
+                <Badge variant={isCurrentVersion ? "default" : "secondary"}>
                   v{version.version}
                   {isCurrentVersion && " (現在)"}
                 </Badge>
               </div>
               <p className="text-gray-600">
-                {isCurrentVersion
-                  ? "現在のバージョン"
-                  : `バージョン ${version.version} の内容`}
+                {isCurrentVersion ? "現在のバージョン" : `バージョン ${version.version} の内容`}
               </p>
             </div>
             {!isCurrentVersion && (
@@ -271,9 +261,7 @@ export default function AdminPromptVersionPage() {
                 {version.changeNote && (
                   <div>
                     <span className="text-xs text-gray-500">変更メモ</span>
-                    <p className="text-sm mt-1 text-gray-600">
-                      {version.changeNote}
-                    </p>
+                    <p className="text-sm mt-1 text-gray-600">{version.changeNote}</p>
                   </div>
                 )}
               </CardContent>
@@ -286,10 +274,7 @@ export default function AdminPromptVersionPage() {
                   <CardTitle className="text-base">アクション</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2">
-                  <Button
-                    className="w-full"
-                    onClick={() => setShowRestoreDialog(true)}
-                  >
+                  <Button className="w-full" onClick={() => setShowRestoreDialog(true)}>
                     <RotateCcw className="w-4 h-4 mr-2" />
                     このバージョンに復元
                   </Button>
@@ -313,8 +298,8 @@ export default function AdminPromptVersionPage() {
             <DialogHeader>
               <DialogTitle>バージョンの復元</DialogTitle>
               <DialogDescription>
-                バージョン {version.version} に戻します。
-                現在の内容はバージョン {currentVersion + 1} として保存されます。
+                バージョン {version.version} に戻します。 現在の内容はバージョン{" "}
+                {currentVersion + 1} として保存されます。
               </DialogDescription>
             </DialogHeader>
 
@@ -334,11 +319,7 @@ export default function AdminPromptVersionPage() {
               <Button variant="outline" onClick={() => setShowRestoreDialog(false)}>
                 キャンセル
               </Button>
-              <Button
-                onClick={handleRestore}
-                disabled={isRestoring}
-                className="gap-2"
-              >
+              <Button onClick={handleRestore} disabled={isRestoring} className="gap-2">
                 {isRestoring ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />

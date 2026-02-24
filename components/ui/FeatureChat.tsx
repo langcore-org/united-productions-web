@@ -229,7 +229,7 @@ export function FeatureChat({
         return newMessages;
       });
     },
-    [isStreaming, provider, startStream, buildStreamMessages],
+    [isStreaming, provider, startStream, buildStreamMessages, selectedProgramId],
   );
 
   return (

@@ -1,6 +1,6 @@
 /**
  * ドキュメントファイルパーサー
- * 
+ *
  * PDF、Word、Excelファイルからテキストを抽出します。
  * サーバーサイドでのみ実行されます。
  */
@@ -59,7 +59,7 @@ export async function parsePDF(buffer: Buffer): Promise<ParsedDocument> {
     const pdfParseModule = await eval('import("pdf-parse")');
     const pdfParse = pdfParseModule as unknown as PDFParseModule;
     const result = await pdfParse.default(buffer);
-    
+
     return {
       text: result.text,
       fileType: "application/pdf",
@@ -85,7 +85,7 @@ export async function parseWord(buffer: Buffer): Promise<ParsedDocument> {
     const mammothModule = await eval('import("mammoth")');
     const mammoth = mammothModule as unknown as MammothModule;
     const result = await mammoth.extractRawText({ buffer });
-    
+
     return {
       text: result.value,
       fileType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -108,7 +108,7 @@ export async function parseExcel(buffer: Buffer): Promise<ParsedDocument> {
     const xlsxModule = await eval('import("xlsx")');
     const XLSX = xlsxModule as unknown as XLSXModule;
     const workbook = XLSX.read(buffer, { type: "buffer" });
-    
+
     // 全シートのテキストを結合
     let text = "";
     workbook.SheetNames.forEach((sheetName) => {
@@ -116,7 +116,7 @@ export async function parseExcel(buffer: Buffer): Promise<ParsedDocument> {
       const sheetText = XLSX.utils.sheet_to_csv(sheet);
       text += `\n--- ${sheetName} ---\n${sheetText}`;
     });
-    
+
     return {
       text: text.trim(),
       fileType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -136,7 +136,7 @@ export async function parseExcel(buffer: Buffer): Promise<ParsedDocument> {
  */
 export function detectFileType(fileName: string): string {
   const ext = fileName.toLowerCase().split(".").pop();
-  
+
   switch (ext) {
     case "pdf":
       return "application/pdf";
@@ -158,14 +158,11 @@ export function detectFileType(fileName: string): string {
 /**
  * ファイルをパース
  */
-export async function parseDocument(
-  buffer: Buffer,
-  fileName: string
-): Promise<ParsedDocument> {
+export async function parseDocument(buffer: Buffer, fileName: string): Promise<ParsedDocument> {
   const fileType = detectFileType(fileName);
-  
+
   let result: ParsedDocument;
-  
+
   switch (fileType) {
     case "application/pdf":
       result = await parsePDF(buffer);
@@ -187,7 +184,7 @@ export async function parseDocument(
     default:
       throw new Error(`未対応のファイル形式です: ${fileType}`);
   }
-  
+
   result.fileName = fileName;
   return result;
 }

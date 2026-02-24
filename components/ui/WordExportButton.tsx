@@ -4,10 +4,10 @@
 
 "use client";
 
+import { Check, FileText, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useWordExport } from "@/hooks/useWordExport";
-import { FileText, Loader2, Check } from "lucide-react";
 
 interface WordExportButtonProps {
   content: string;
@@ -65,13 +65,9 @@ export function WordExportButton({
         ) : (
           <FileText className="h-4 w-4" />
         )}
-        <span className="ml-2 hidden sm:inline">
-          {isExporting ? "出力中..." : "Wordで保存"}
-        </span>
+        <span className="ml-2 hidden sm:inline">{isExporting ? "出力中..." : "Wordで保存"}</span>
       </Button>
-      {error && (
-        <span className="text-xs text-destructive">{error}</span>
-      )}
+      {error && <span className="text-xs text-destructive">{error}</span>}
     </div>
   );
 }

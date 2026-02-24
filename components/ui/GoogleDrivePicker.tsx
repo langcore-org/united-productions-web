@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { ChevronRight, FileText, FolderOpen, Loader2, Search, X } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
-import { FolderOpen, FileText, X, ChevronRight, Loader2, Search } from "lucide-react";
 
 export interface DriveFile {
   id: string;
@@ -23,17 +23,17 @@ interface GoogleDrivePickerProps {
 function formatFileSize(bytes?: string): string {
   if (!bytes) return "-";
   const size = parseInt(bytes, 10);
-  if (isNaN(size)) return "-";
-  
+  if (Number.isNaN(size)) return "-";
+
   const units = ["B", "KB", "MB", "GB"];
   let unitIndex = 0;
   let value = size;
-  
+
   while (value >= 1024 && unitIndex < units.length - 1) {
     value /= 1024;
     unitIndex++;
   }
-  
+
   return `${value.toFixed(1)} ${units[unitIndex]}`;
 }
 
@@ -65,10 +65,10 @@ export function GoogleDrivePicker({ onSelect, onCancel, accept }: GoogleDrivePic
       try {
         // 検索クエリ構築
         let query = "trashed=false";
-        
+
         // MIMEタイプでフィルタ
         if (accept && accept.length > 0) {
-          const mimeQueries = accept.map(mime => `mimeType='${mime}'`).join(" or ");
+          const mimeQueries = accept.map((mime) => `mimeType='${mime}'`).join(" or ");
           query += ` and (${mimeQueries})`;
         }
 
@@ -111,7 +111,7 @@ export function GoogleDrivePicker({ onSelect, onCancel, accept }: GoogleDrivePic
       const fileWithExportedName = {
         ...selectedFile,
         name: data.metadata.name, // エクスポート後の名前（.txt等が付く）
-        mimeType: data.metadata.isGoogleWorkspaceFile 
+        mimeType: data.metadata.isGoogleWorkspaceFile
           ? "text/plain" // エクスポート後はテキストとして扱う
           : selectedFile.mimeType,
       };
@@ -126,8 +126,8 @@ export function GoogleDrivePicker({ onSelect, onCancel, accept }: GoogleDrivePic
   }, [selectedFile, onSelect]);
 
   // 検索フィルタ
-  const filteredFiles = files.filter(file =>
-    file.name.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredFiles = files.filter((file) =>
+    file.name.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   const getFileIcon = (mimeType: string) => {
@@ -158,10 +158,7 @@ export function GoogleDrivePicker({ onSelect, onCancel, accept }: GoogleDrivePic
             <FolderOpen className="w-5 h-5 text-black" />
             <h3 className="font-semibold text-gray-900">Google Driveから選択</h3>
           </div>
-          <button
-            onClick={onCancel}
-            className="p-1 rounded-lg hover:bg-gray-100 text-gray-500"
-          >
+          <button onClick={onCancel} className="p-1 rounded-lg hover:bg-gray-100 text-gray-500">
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -206,23 +203,19 @@ export function GoogleDrivePicker({ onSelect, onCancel, accept }: GoogleDrivePic
                   onClick={() => setSelectedFile(file)}
                   className={cn(
                     "w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors",
-                    selectedFile?.id === file.id && "bg-black/5"
+                    selectedFile?.id === file.id && "bg-black/5",
                   )}
                 >
                   <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center">
                     {getFileIcon(file.mimeType)}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 truncate">
-                      {file.name}
-                    </p>
+                    <p className="text-sm font-medium text-gray-900 truncate">{file.name}</p>
                     <p className="text-xs text-gray-500">
                       {formatFileSize(file.size)} • {formatDate(file.modifiedTime)}
                     </p>
                   </div>
-                  {selectedFile?.id === file.id && (
-                    <ChevronRight className="w-4 h-4 text-black" />
-                  )}
+                  {selectedFile?.id === file.id && <ChevronRight className="w-4 h-4 text-black" />}
                 </button>
               ))}
             </div>
@@ -231,9 +224,7 @@ export function GoogleDrivePicker({ onSelect, onCancel, accept }: GoogleDrivePic
 
         {/* Footer */}
         <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200 bg-gray-50">
-          <span className="text-xs text-gray-500">
-            {filteredFiles.length} 件のファイル
-          </span>
+          <span className="text-xs text-gray-500">{filteredFiles.length} 件のファイル</span>
           <div className="flex items-center gap-2">
             <button
               onClick={onCancel}
@@ -248,7 +239,7 @@ export function GoogleDrivePicker({ onSelect, onCancel, accept }: GoogleDrivePic
                 "px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2",
                 selectedFile && !isDownloading
                   ? "bg-black text-white hover:bg-gray-800"
-                  : "bg-gray-200 text-gray-400 cursor-not-allowed"
+                  : "bg-gray-200 text-gray-400 cursor-not-allowed",
               )}
             >
               {isDownloading && <Loader2 className="w-4 h-4 animate-spin" />}

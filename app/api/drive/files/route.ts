@@ -1,13 +1,13 @@
 /**
  * Google Drive Files API Route
- * 
+ *
  * GET /api/drive/files - ファイル一覧取得
  * POST /api/drive/files - ファイルアップロード
  */
 
-import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth/next";
+import { type NextRequest, NextResponse } from "next/server";
 import type { Session } from "next-auth";
+import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth-options";
 
 const DRIVE_API_BASE = "https://www.googleapis.com/drive/v3";
@@ -30,8 +30,18 @@ const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
 // 危険な拡張子のブラックリスト
 const DANGEROUS_EXTENSIONS = [
-  ".exe", ".dll", ".bat", ".cmd", ".sh", ".php", 
-  ".jsp", ".asp", ".aspx", ".py", ".rb", ".pl"
+  ".exe",
+  ".dll",
+  ".bat",
+  ".cmd",
+  ".sh",
+  ".php",
+  ".jsp",
+  ".asp",
+  ".aspx",
+  ".py",
+  ".rb",
+  ".pl",
 ];
 
 interface FileValidationResult {
@@ -45,10 +55,10 @@ interface FileValidationResult {
 function sanitizeFilename(filename: string): string {
   // パストラバーサル対策
   return filename
-    .replace(/[\\/]/g, "_")      // パス区切り文字を除去
-    .replace(/\.\./g, "_")       // 親ディレクトリ参照を除去
-    .replace(/[^\w\-\.]/g, "_")  // 英数字・ハイフン・ドット以外を除去
-    .substring(0, 255);          // 長さ制限
+    .replace(/[\\/]/g, "_") // パス区切り文字を除去
+    .replace(/\.\./g, "_") // 親ディレクトリ参照を除去
+    .replace(/[^\w\-.]/g, "_") // 英数字・ハイフン・ドット以外を除去
+    .substring(0, 255); // 長さ制限
 }
 
 /**
@@ -57,9 +67,9 @@ function sanitizeFilename(filename: string): string {
 function sanitizeDriveQuery(query: string): string {
   // 制御文字を除去
   return query
-    .replace(/[\x00-\x1F\x7F]/g, "")  // 制御文字
-    .replace(/[<>]/g, "")              // HTMLタグ
-    .substring(0, 100);                // 長さ制限
+    .replace(/[\x00-\x1F\x7F]/g, "") // 制御文字
+    .replace(/[<>]/g, "") // HTMLタグ
+    .substring(0, 100); // 長さ制限
 }
 
 /**
@@ -109,31 +119,25 @@ function validateFile(file: File, allowedName?: string): FileValidationResult {
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    
+
     const typedSession = session as Session | null;
     if (!typedSession?.accessToken) {
-      return NextResponse.json(
-        { error: "認証が必要です" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "認証が必要です" }, { status: 401 });
     }
 
     const { searchParams } = new URL(request.url);
     const pageSize = Math.min(
       parseInt(searchParams.get("pageSize") || "20", 10),
-      100 // 最大100件に制限
+      100, // 最大100件に制限
     );
     const rawQuery = searchParams.get("q") || "";
 
     // クエリパラメータのバリデーションとサニタイズ
     const query = sanitizeDriveQuery(rawQuery);
-    
+
     // pageSizeのバリデーション
-    if (isNaN(pageSize) || pageSize < 1) {
-      return NextResponse.json(
-        { error: "無効なpageSizeです" },
-        { status: 400 }
-      );
+    if (Number.isNaN(pageSize) || pageSize < 1) {
+      return NextResponse.json({ error: "無効なpageSizeです" }, { status: 400 });
     }
 
     // Drive APIクエリ構築
@@ -150,27 +154,20 @@ export async function GET(request: NextRequest) {
         headers: {
           Authorization: `Bearer ${typedSession.accessToken}`,
         },
-      }
+      },
     );
 
     if (!response.ok) {
       const error = await response.json();
       console.error("Drive API error:", error);
-      return NextResponse.json(
-        { error: "Drive APIエラー" },
-        { status: response.status }
-      );
+      return NextResponse.json({ error: "Drive APIエラー" }, { status: response.status });
     }
 
     const data = await response.json();
     return NextResponse.json({ files: data.files || [] });
-
   } catch (error) {
     console.error("Drive files error:", error);
-    return NextResponse.json(
-      { error: "サーバーエラー" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "サーバーエラー" }, { status: 500 });
   }
 }
 
@@ -180,13 +177,10 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    
+
     const typedSession = session as Session | null;
     if (!typedSession?.accessToken) {
-      return NextResponse.json(
-        { error: "認証が必要です" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "認証が必要です" }, { status: 401 });
     }
 
     const formData = await request.formData();
@@ -194,19 +188,13 @@ export async function POST(request: NextRequest) {
     const name = formData.get("name") as string;
 
     if (!file) {
-      return NextResponse.json(
-        { error: "ファイルが必要です" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "ファイルが必要です" }, { status: 400 });
     }
 
     // ファイル検証
     const validation = validateFile(file, name);
     if (!validation.valid) {
-      return NextResponse.json(
-        { error: validation.error },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: validation.error }, { status: 400 });
     }
 
     // サニタイズされたファイル名
@@ -224,36 +212,35 @@ export async function POST(request: NextRequest) {
 
     // multipart upload
     const boundary = "-------314159265358979323846";
-    const delimiter = "\r\n--" + boundary + "\r\n";
-    const close_delim = "\r\n--" + boundary + "--";
+    const delimiter = `\r\n--${boundary}\r\n`;
+    const close_delim = `\r\n--${boundary}--`;
 
     const body =
       delimiter +
       "Content-Type: application/json; charset=UTF-8\r\n\r\n" +
       JSON.stringify(metadata) +
       delimiter +
-      "Content-Type: " + metadata.mimeType + "\r\n\r\n" +
+      "Content-Type: " +
+      metadata.mimeType +
+      "\r\n\r\n" +
       buffer.toString("binary") +
       close_delim;
 
-    const response = await fetch(
-      `${DRIVE_API_BASE}/files?uploadType=multipart`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${typedSession.accessToken}`,
-          "Content-Type": "multipart/related; boundary=" + boundary,
-        },
-        body: body,
-      }
-    );
+    const response = await fetch(`${DRIVE_API_BASE}/files?uploadType=multipart`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${typedSession.accessToken}`,
+        "Content-Type": `multipart/related; boundary=${boundary}`,
+      },
+      body: body,
+    });
 
     if (!response.ok) {
       const error = await response.json();
       console.error("Drive upload error:", error);
       return NextResponse.json(
         { error: "アップロードに失敗しました" },
-        { status: response.status }
+        { status: response.status },
       );
     }
 
@@ -266,12 +253,8 @@ export async function POST(request: NextRequest) {
         webViewLink: data.webViewLink,
       },
     });
-
   } catch (error) {
     console.error("Drive upload error:", error);
-    return NextResponse.json(
-      { error: "サーバーエラー" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "サーバーエラー" }, { status: 500 });
   }
 }

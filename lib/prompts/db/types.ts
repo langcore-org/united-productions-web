@@ -1,10 +1,10 @@
 /**
  * プロンプトDB操作用型定義
- * 
+ *
  * @created 2026-02-22 12:10
  */
 
-import { SystemPrompt, SystemPromptVersion } from "@prisma/client";
+import type { SystemPrompt, SystemPromptVersion } from "@prisma/client";
 
 export interface PromptVersionInfo {
   version: number;

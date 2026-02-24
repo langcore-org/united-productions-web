@@ -1,17 +1,17 @@
 /**
  * アプリケーションログAPI
- * 
+ *
  * GET /api/admin/logs
  * ログ一覧を取得（フィルタ、ソート、ページネーション対応）
- * 
+ *
  * DELETE /api/admin/logs
  * 古いログを削除
  */
 
-import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import type { LogCategory, LogLevel } from "@prisma/client";
+import { type NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/api/auth";
-import type { LogLevel, LogCategory } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
 
 interface LogFilters {
   level?: LogLevel;
@@ -25,7 +25,7 @@ interface LogFilters {
 /**
  * GET /api/admin/logs
  * ログ一覧を取得
- * 
+ *
  * Query Parameters:
  * - level: DEBUG | INFO | WARN | ERROR | AUDIT
  * - category: AUTH | API | DB | SYSTEM | USER_ACTION | SECURITY | PERFORMANCE
@@ -148,12 +148,11 @@ export async function GET(request: NextRequest) {
         },
       },
     });
-
   } catch (error) {
     console.error("Logs API error:", error);
     return NextResponse.json(
       { success: false, error: "ログの取得に失敗しました" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -161,7 +160,7 @@ export async function GET(request: NextRequest) {
 /**
  * DELETE /api/admin/logs
  * 古いログを削除
- * 
+ *
  * Query Parameters:
  * - days: 保持日数（これより古いログを削除）
  */
@@ -192,12 +191,11 @@ export async function DELETE(request: NextRequest) {
         deletedBefore: cutoffDate.toISOString(),
       },
     });
-
   } catch (error) {
     console.error("Logs delete error:", error);
     return NextResponse.json(
       { success: false, error: "ログの削除に失敗しました" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

@@ -1,8 +1,8 @@
 "use client";
 
-import { cn } from "@/lib/utils";
-import { Bell, User, Menu, X } from "lucide-react";
+import { Bell, Menu, User, X } from "lucide-react";
 import { useState } from "react";
+import { cn } from "@/lib/utils";
 
 interface HeaderProps {
   className?: string;
@@ -45,7 +45,7 @@ export function Header({ className, onMenuClick, showMobileMenu }: HeaderProps) 
       className={cn(
         "h-16 bg-[#0d0d12] border-b border-[#2a2a35]",
         "flex items-center justify-between px-4",
-        className
+        className,
       )}
     >
       {/* Left Section */}
@@ -55,17 +55,11 @@ export function Header({ className, onMenuClick, showMobileMenu }: HeaderProps) 
           onClick={onMenuClick}
           className="lg:hidden p-2 rounded-lg text-gray-400 hover:bg-[#1a1a24] hover:text-gray-200"
         >
-          {showMobileMenu ? (
-            <X className="w-5 h-5" />
-          ) : (
-            <Menu className="w-5 h-5" />
-          )}
+          {showMobileMenu ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
         </button>
 
         {/* Page Title - Can be passed as children or configured */}
-        <h1 className="text-lg font-semibold text-white hidden sm:block">
-          AI Hub
-        </h1>
+        <h1 className="text-lg font-semibold text-white hidden sm:block">AI Hub</h1>
       </div>
 
       {/* Right Section */}
@@ -77,7 +71,7 @@ export function Header({ className, onMenuClick, showMobileMenu }: HeaderProps) 
             className={cn(
               "relative p-2 rounded-lg",
               "text-gray-400 hover:bg-[#1a1a24] hover:text-gray-200",
-              "transition-colors duration-200"
+              "transition-colors duration-200",
             )}
           >
             <Bell className="w-5 h-5" />
@@ -91,16 +85,13 @@ export function Header({ className, onMenuClick, showMobileMenu }: HeaderProps) 
           {/* Notifications Dropdown */}
           {isNotificationsOpen && (
             <>
-              <div
-                className="fixed inset-0 z-40"
-                onClick={() => setIsNotificationsOpen(false)}
-              />
+              <div className="fixed inset-0 z-40" onClick={() => setIsNotificationsOpen(false)} />
               <div
                 className={cn(
                   "absolute right-0 top-full mt-2 z-50",
                   "w-80 max-h-96 overflow-y-auto",
                   "bg-[#1a1a24] border border-[#2a2a35] rounded-xl",
-                  "shadow-xl shadow-black/50"
+                  "shadow-xl shadow-black/50",
                 )}
               >
                 <div className="flex items-center justify-between px-4 py-3 border-b border-[#2a2a35]">
@@ -121,7 +112,7 @@ export function Header({ className, onMenuClick, showMobileMenu }: HeaderProps) 
                         className={cn(
                           "w-full px-4 py-3 text-left",
                           "hover:bg-[#2a2a35] transition-colors",
-                          "border-b border-[#2a2a35] last:border-b-0"
+                          "border-b border-[#2a2a35] last:border-b-0",
                         )}
                         onClick={() => setIsNotificationsOpen(false)}
                       >
@@ -136,9 +127,7 @@ export function Header({ className, onMenuClick, showMobileMenu }: HeaderProps) 
                             <p className="text-xs text-gray-500 mt-0.5">
                               {notification.description}
                             </p>
-                            <p className="text-xs text-gray-600 mt-1">
-                              {notification.time}
-                            </p>
+                            <p className="text-xs text-gray-600 mt-1">{notification.time}</p>
                           </div>
                         </div>
                       </button>
@@ -159,7 +148,7 @@ export function Header({ className, onMenuClick, showMobileMenu }: HeaderProps) 
         <button
           className={cn(
             "flex items-center gap-2 p-1.5 pr-3 rounded-lg",
-            "hover:bg-[#1a1a24] transition-colors duration-200"
+            "hover:bg-[#1a1a24] transition-colors duration-200",
           )}
         >
           <div className="w-8 h-8 rounded-full bg-[#2a2a35] flex items-center justify-center">

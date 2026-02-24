@@ -1,17 +1,17 @@
 /**
  * 設定管理の型定義
- * 
+ *
  * アプリケーション全体の設定を一元管理するための型定義
  */
 
 /** 設定カテゴリ */
-export type SettingCategory = 
-  | "general"      // 一般設定
-  | "llm"          // LLM設定
-  | "cache"        // キャッシュ設定
-  | "rateLimit"    // レート制限
-  | "ui"           // UI設定
-  | "security";    // セキュリティ設定
+export type SettingCategory =
+  | "general" // 一般設定
+  | "llm" // LLM設定
+  | "cache" // キャッシュ設定
+  | "rateLimit" // レート制限
+  | "ui" // UI設定
+  | "security"; // セキュリティ設定
 
 /** 設定項目の型 */
 export type SettingValue = string | number | boolean | string[];
@@ -27,11 +27,11 @@ export interface SettingItem {
   value: SettingValue;
   defaultValue: SettingValue;
   options?: { label: string; value: string }[]; // select/multiselect用
-  min?: number;      // number用
-  max?: number;      // number用
-  step?: number;     // number用
+  min?: number; // number用
+  max?: number; // number用
+  step?: number; // number用
   required?: boolean;
-  secret?: boolean;  // パスワード等（表示時にマスク）
+  secret?: boolean; // パスワード等（表示時にマスク）
   readOnly?: boolean;
 }
 
@@ -296,14 +296,19 @@ export const DEFAULT_SETTINGS: SettingItem[] = [
 ];
 
 /** 設定をカテゴリ別にグループ化 */
-export function groupSettingsByCategory(settings: SettingItem[]): Record<SettingCategory, SettingItem[]> {
-  return settings.reduce((acc, setting) => {
-    if (!acc[setting.category]) {
-      acc[setting.category] = [];
-    }
-    acc[setting.category].push(setting);
-    return acc;
-  }, {} as Record<SettingCategory, SettingItem[]>);
+export function groupSettingsByCategory(
+  settings: SettingItem[],
+): Record<SettingCategory, SettingItem[]> {
+  return settings.reduce(
+    (acc, setting) => {
+      if (!acc[setting.category]) {
+        acc[setting.category] = [];
+      }
+      acc[setting.category].push(setting);
+      return acc;
+    },
+    {} as Record<SettingCategory, SettingItem[]>,
+  );
 }
 
 /** 設定値の検証 */
@@ -317,7 +322,7 @@ export function validateSetting(setting: SettingItem, value: SettingValue): stri
   switch (setting.type) {
     case "number": {
       const num = Number(value);
-      if (isNaN(num)) {
+      if (Number.isNaN(num)) {
         return "数値を入力してください";
       }
       if (setting.min !== undefined && num < setting.min) {
@@ -336,7 +341,7 @@ export function validateSetting(setting: SettingItem, value: SettingValue): stri
       break;
     }
     case "select": {
-      if (!setting.options?.some(opt => opt.value === value)) {
+      if (!setting.options?.some((opt) => opt.value === value)) {
         return "有効な選択肢を選んでください";
       }
       break;

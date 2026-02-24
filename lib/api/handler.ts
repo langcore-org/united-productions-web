@@ -1,11 +1,11 @@
 /**
  * API共通ハンドラー
- * 
+ *
  * API Routesでの認証・バリデーション・エラーハンドリングを共通化
  */
 
-import { NextRequest, NextResponse } from "next/server";
-import { ZodSchema, ZodError } from "zod";
+import { type NextRequest, NextResponse } from "next/server";
+import { ZodError, type ZodSchema } from "zod";
 import { requireAuth } from "./auth";
 import { handleApiError } from "./utils";
 
@@ -22,14 +22,14 @@ interface HandlerContext<T> {
 
 /**
  * APIハンドラーを作成
- * 
+ *
  * @param handler - リクエストハンドラー
  * @param options - オプション（スキーマ、認証要件）
  * @returns Next.js APIハンドラー
- * 
+ *
  * @example
  * const requestSchema = z.object({ name: z.string() });
- * 
+ *
  * export const POST = createApiHandler(
  *   async ({ request, data, userId }) => {
  *     // ビジネスロジック
@@ -40,7 +40,7 @@ interface HandlerContext<T> {
  */
 export function createApiHandler<T>(
   handler: (ctx: HandlerContext<T>) => Promise<NextResponse | Response>,
-  options: HandlerOptions<T> = {}
+  options: HandlerOptions<T> = {},
 ) {
   const { schema, requireAuth: shouldRequireAuth = true } = options;
 
@@ -62,7 +62,7 @@ export function createApiHandler<T>(
         try {
           const body = await request.json();
           const validationResult = schema.safeParse(body);
-          
+
           if (!validationResult.success) {
             return NextResponse.json(
               {
@@ -72,15 +72,15 @@ export function createApiHandler<T>(
                   message: e.message,
                 })),
               },
-              { status: 400 }
+              { status: 400 },
             );
           }
-          
+
           data = validationResult.data;
         } catch {
           return NextResponse.json(
             { error: "リクエストボディのパースに失敗しました" },
-            { status: 400 }
+            { status: 400 },
           );
         }
       }
@@ -97,10 +97,10 @@ export function createApiHandler<T>(
               message: e.message,
             })),
           },
-          { status: 400 }
+          { status: 400 },
         );
       }
-      
+
       return handleApiError(error);
     }
   };
@@ -109,26 +109,20 @@ export function createApiHandler<T>(
 /**
  * ストリーミングレスポンスを作成
  */
-export function createStreamingResponse(
-  generator: AsyncIterable<string>
-): Response {
+export function createStreamingResponse(generator: AsyncIterable<string>): Response {
   const encoder = new TextEncoder();
 
   const stream = new ReadableStream({
     async start(controller) {
       try {
         for await (const chunk of generator) {
-          controller.enqueue(
-            encoder.encode(`data: ${JSON.stringify({ content: chunk })}\n\n`)
-          );
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ content: chunk })}\n\n`));
         }
         controller.enqueue(encoder.encode("data: [DONE]\n\n"));
         controller.close();
       } catch (error) {
         const message = error instanceof Error ? error.message : "ストリーミングエラー";
-        controller.enqueue(
-          encoder.encode(`data: ${JSON.stringify({ error: message })}\n\n`)
-        );
+        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ error: message })}\n\n`));
         controller.close();
       }
     },

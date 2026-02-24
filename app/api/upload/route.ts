@@ -5,9 +5,9 @@
  * 各種ファイルからテキストを抽出
  */
 
-import { NextRequest, NextResponse } from "next/server";
-import { parseFile, MAX_FILE_SIZE } from "@/lib/upload/file-parser";
+import { type NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/api/auth";
+import { MAX_FILE_SIZE, parseFile } from "@/lib/upload/file-parser";
 
 /**
  * POST /api/upload
@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
     if (!file) {
       return NextResponse.json(
         { success: false, error: "ファイルが見つかりません" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
           error: `ファイルサイズは${formatBytes(MAX_FILE_SIZE)}以下にしてください`,
           code: "FILE_TOO_LARGE",
         },
-        { status: 413 }
+        { status: 413 },
       );
     }
 
@@ -73,13 +73,13 @@ export async function POST(request: NextRequest) {
       const parseError = error as { code: string; message: string };
       return NextResponse.json(
         { success: false, error: parseError.message, code: parseError.code },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     return NextResponse.json(
       { success: false, error: "ファイルの処理に失敗しました" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -89,7 +89,7 @@ function formatBytes(bytes: number): string {
   const k = 1024;
   const sizes = ["Bytes", "KB", "MB", "GB"];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+  return `${parseFloat((bytes / k ** i).toFixed(2))} ${sizes[i]}`;
 }
 
 export const runtime = "nodejs";

@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { Check, Loader2, Save } from "lucide-react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Save, Loader2, Check } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
 
 export default function ProgramSettingsPage() {
   const [programInfo, setProgramInfo] = useState("");
@@ -97,7 +97,9 @@ export default function ProgramSettingsPage() {
           <CardContent>
             <Textarea
               value={programInfo}
-              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setProgramInfo(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                setProgramInfo(e.target.value)
+              }
               placeholder={`例：
 番組名：深夜のお悩み相談室
 放送時間：毎週金曜 25:00-26:00
@@ -121,7 +123,9 @@ export default function ProgramSettingsPage() {
           <CardContent>
             <Textarea
               value={pastProposals}
-              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setPastProposals(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                setPastProposals(e.target.value)
+              }
               placeholder={`例：
 ・第1回「恋愛の悩み」視聴者からの恋愛相談に回答
 ・第2回「仕事の悩み」キャリアや人間関係の相談
@@ -134,11 +138,7 @@ export default function ProgramSettingsPage() {
 
         {/* 保存ボタン */}
         <div className="flex justify-end">
-          <Button
-            onClick={handleSave}
-            disabled={isSaving}
-            className="gap-2"
-          >
+          <Button onClick={handleSave} disabled={isSaving} className="gap-2">
             {isSaving ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />

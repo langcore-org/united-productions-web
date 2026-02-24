@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
 interface SplitPaneLayoutProps {
@@ -21,7 +21,7 @@ export function SplitPaneLayout({
   const [ratio, setRatio] = useState(defaultRatio);
   const [isDragging, setIsDragging] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
-  
+
   // refsを使用して最新値を保持し、useEffect依存配列から除外
   const isDraggingRef = useRef(isDragging);
   const ratioRef = useRef(ratio);
@@ -64,7 +64,7 @@ export function SplitPaneLayout({
         setRatio(newRatio);
       }
     },
-    [minLeftWidth, minRightWidth] // 状態（isDragging）を除外
+    [minLeftWidth, minRightWidth], // 状態（isDragging）を除外
   );
 
   useEffect(() => {
@@ -84,15 +84,9 @@ export function SplitPaneLayout({
   }, [isDragging, handleMouseMove, handleMouseUp]);
 
   return (
-    <div
-      ref={containerRef}
-      className="flex h-full w-full overflow-hidden"
-    >
+    <div ref={containerRef} className="flex h-full w-full overflow-hidden">
       {/* Left Panel */}
-      <div
-        className="h-full overflow-hidden"
-        style={{ width: `${ratio}%` }}
-      >
+      <div className="h-full overflow-hidden" style={{ width: `${ratio}%` }}>
         {leftPanel}
       </div>
 
@@ -100,7 +94,7 @@ export function SplitPaneLayout({
       <div
         className={cn(
           "w-1 bg-white/10 hover:bg-black/50 cursor-col-resize transition-colors relative",
-          isDragging && "bg-black"
+          isDragging && "bg-black",
         )}
         onMouseDown={handleMouseDown}
       >
@@ -109,7 +103,7 @@ export function SplitPaneLayout({
             "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2",
             "w-4 h-8 rounded-full bg-[#2a2a35] border border-white/10",
             "flex items-center justify-center",
-            "hover:border-black/50 transition-colors"
+            "hover:border-black/50 transition-colors",
           )}
         >
           <div className="flex gap-0.5">
@@ -120,10 +114,7 @@ export function SplitPaneLayout({
       </div>
 
       {/* Right Panel */}
-      <div
-        className="h-full overflow-hidden flex-1"
-        style={{ width: `${100 - ratio}%` }}
-      >
+      <div className="h-full overflow-hidden flex-1" style={{ width: `${100 - ratio}%` }}>
         {rightPanel}
       </div>
     </div>

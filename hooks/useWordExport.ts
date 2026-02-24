@@ -2,7 +2,7 @@
  * Word出力カスタムフック
  */
 
-import { useState, useCallback } from "react";
+import { useCallback, useState } from "react";
 
 interface UseWordExportOptions {
   onSuccess?: () => void;
@@ -39,9 +39,7 @@ export function useWordExport(options: UseWordExportOptions = {}): UseWordExport
 
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
-          throw new Error(
-            errorData.error || `Word出力に失敗しました (${response.status})`
-          );
+          throw new Error(errorData.error || `Word出力に失敗しました (${response.status})`);
         }
 
         // ファイル名取得
@@ -62,8 +60,7 @@ export function useWordExport(options: UseWordExportOptions = {}): UseWordExport
 
         options.onSuccess?.();
       } catch (err) {
-        const error =
-          err instanceof Error ? err : new Error("Word出力に失敗しました");
+        const error = err instanceof Error ? err : new Error("Word出力に失敗しました");
         setError(error);
         options.onError?.(error);
         throw error;
@@ -71,7 +68,7 @@ export function useWordExport(options: UseWordExportOptions = {}): UseWordExport
         setIsExporting(false);
       }
     },
-    [options]
+    [options],
   );
 
   return {

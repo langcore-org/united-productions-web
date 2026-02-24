@@ -1,28 +1,28 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter, useParams } from "next/navigation";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { AdminLayout } from "@/components/layout/AdminLayout";
 import {
-  Loader2,
-  Save,
-  History,
+  AlertCircle,
   ArrowLeft,
   Check,
-  AlertCircle,
-  FileText,
   Clock,
-  User,
+  FileText,
+  History,
+  Loader2,
+  Save,
   Tag,
+  User,
 } from "lucide-react";
+import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { AdminLayout } from "@/components/layout/AdminLayout";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
 
 interface PromptVersion {
   id: string;
@@ -74,7 +74,7 @@ export default function AdminPromptDetailPage() {
 
   useEffect(() => {
     loadPrompt();
-  }, [key]);
+  }, [loadPrompt]);
 
   const loadPrompt = async () => {
     setIsLoading(true);
@@ -206,19 +206,13 @@ export default function AdminPromptDetailPage() {
             <div className="flex items-center gap-2">
               <Button
                 variant="outline"
-                onClick={() =>
-                  router.push(`/admin/prompts/${encodeURIComponent(key)}/history`)
-                }
+                onClick={() => router.push(`/admin/prompts/${encodeURIComponent(key)}/history`)}
               >
                 <History className="w-4 h-4 mr-2" />
                 履歴を見る
               </Button>
               {hasChanges && (
-                <Button
-                  onClick={handleSave}
-                  disabled={isSaving}
-                  className="gap-2"
-                >
+                <Button onClick={handleSave} disabled={isSaving} className="gap-2">
                   {isSaving ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
@@ -264,7 +258,7 @@ export default function AdminPromptDetailPage() {
                   onChange={(e) => handleContentChange(e.target.value)}
                   className={cn(
                     "min-h-[500px] font-mono text-sm resize-none",
-                    hasChanges && "border-blue-500"
+                    hasChanges && "border-blue-500",
                   )}
                   placeholder="プロンプト内容を入力..."
                 />
@@ -356,9 +350,7 @@ export default function AdminPromptDetailPage() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() =>
-                    router.push(`/admin/prompts/${encodeURIComponent(key)}/history`)
-                  }
+                  onClick={() => router.push(`/admin/prompts/${encodeURIComponent(key)}/history`)}
                 >
                   すべて見る
                 </Button>
@@ -371,23 +363,19 @@ export default function AdminPromptDetailPage() {
                       className="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 cursor-pointer"
                       onClick={() =>
                         router.push(
-                          `/admin/prompts/${encodeURIComponent(key)}/history/${version.version}`
+                          `/admin/prompts/${encodeURIComponent(key)}/history/${version.version}`,
                         )
                       }
                     >
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium">
-                          v{version.version}
-                        </span>
+                        <span className="text-sm font-medium">v{version.version}</span>
                         {version.changeNote && (
                           <span className="text-xs text-gray-500 truncate max-w-[150px]">
                             {version.changeNote}
                           </span>
                         )}
                       </div>
-                      <span className="text-xs text-gray-400">
-                        {formatDate(version.createdAt)}
-                      </span>
+                      <span className="text-xs text-gray-400">{formatDate(version.createdAt)}</span>
                     </div>
                   ))}
                 </div>

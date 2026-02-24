@@ -1,18 +1,24 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  AlertCircle,
+  AlertTriangle,
+  Bug,
+  ChevronLeft,
+  ChevronRight,
+  Eye,
+  FileText,
+  Info,
+  RefreshCw,
+  Search,
+  Trash2,
+  X,
+} from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { AdminLayout } from "@/components/layout/AdminLayout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { AdminLayout } from "@/components/layout/AdminLayout";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -20,22 +26,14 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import {
-  ChevronLeft,
-  ChevronRight,
-  RefreshCw,
-  Search,
-  FileText,
-  AlertCircle,
-  Info,
-  AlertTriangle,
-  Bug,
-  Eye,
-  Trash2,
-  User,
-  Clock,
-  X,
-} from "lucide-react";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 
 const LOG_LEVELS = [
@@ -213,7 +211,10 @@ export default function LogsPage() {
                   />
                 </div>
 
-                <Select value={selectedLevel || "all"} onValueChange={(v) => setSelectedLevel(v === "all" ? "" : v)}>
+                <Select
+                  value={selectedLevel || "all"}
+                  onValueChange={(v) => setSelectedLevel(v === "all" ? "" : v)}
+                >
                   <SelectTrigger className="w-[150px]">
                     <SelectValue placeholder="レベル" />
                   </SelectTrigger>
@@ -227,7 +228,10 @@ export default function LogsPage() {
                   </SelectContent>
                 </Select>
 
-                <Select value={selectedCategory || "all"} onValueChange={(v) => setSelectedCategory(v === "all" ? "" : v)}>
+                <Select
+                  value={selectedCategory || "all"}
+                  onValueChange={(v) => setSelectedCategory(v === "all" ? "" : v)}
+                >
                   <SelectTrigger className="w-[180px]">
                     <SelectValue placeholder="カテゴリ" />
                   </SelectTrigger>
@@ -277,12 +281,24 @@ export default function LogsPage() {
                 <table className="w-full">
                   <thead className="bg-gray-50 border-b">
                     <tr>
-                      <th className="text-left py-3 px-4 text-xs font-medium text-gray-500">レベル</th>
-                      <th className="text-left py-3 px-4 text-xs font-medium text-gray-500">カテゴリ</th>
-                      <th className="text-left py-3 px-4 text-xs font-medium text-gray-500">メッセージ</th>
-                      <th className="text-left py-3 px-4 text-xs font-medium text-gray-500">ユーザー</th>
-                      <th className="text-left py-3 px-4 text-xs font-medium text-gray-500">日時</th>
-                      <th className="text-center py-3 px-4 text-xs font-medium text-gray-500">詳細</th>
+                      <th className="text-left py-3 px-4 text-xs font-medium text-gray-500">
+                        レベル
+                      </th>
+                      <th className="text-left py-3 px-4 text-xs font-medium text-gray-500">
+                        カテゴリ
+                      </th>
+                      <th className="text-left py-3 px-4 text-xs font-medium text-gray-500">
+                        メッセージ
+                      </th>
+                      <th className="text-left py-3 px-4 text-xs font-medium text-gray-500">
+                        ユーザー
+                      </th>
+                      <th className="text-left py-3 px-4 text-xs font-medium text-gray-500">
+                        日時
+                      </th>
+                      <th className="text-center py-3 px-4 text-xs font-medium text-gray-500">
+                        詳細
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
@@ -312,7 +328,9 @@ export default function LogsPage() {
                             )}
                           </td>
                           <td className="py-3 px-4">
-                            <span className="text-xs text-gray-500">{formatDate(log.createdAt)}</span>
+                            <span className="text-xs text-gray-500">
+                              {formatDate(log.createdAt)}
+                            </span>
                           </td>
                           <td className="py-3 px-4 text-center">
                             <Dialog>
@@ -332,11 +350,30 @@ export default function LogsPage() {
                                 <div className="space-y-4 mt-4">
                                   <p className="text-sm">{log.message}</p>
                                   <div className="grid grid-cols-2 gap-4 text-sm">
-                                    <div><span className="text-gray-500">カテゴリ:</span> {log.category}</div>
-                                    <div><span className="text-gray-500">日時:</span> {formatDate(log.createdAt)}</div>
-                                    {log.user && <div><span className="text-gray-500">ユーザー:</span> {log.user.email}</div>}
-                                    {log.ip && <div><span className="text-gray-500">IP:</span> {log.ip}</div>}
-                                    {log.path && <div><span className="text-gray-500">パス:</span> {log.path}</div>}
+                                    <div>
+                                      <span className="text-gray-500">カテゴリ:</span>{" "}
+                                      {log.category}
+                                    </div>
+                                    <div>
+                                      <span className="text-gray-500">日時:</span>{" "}
+                                      {formatDate(log.createdAt)}
+                                    </div>
+                                    {log.user && (
+                                      <div>
+                                        <span className="text-gray-500">ユーザー:</span>{" "}
+                                        {log.user.email}
+                                      </div>
+                                    )}
+                                    {log.ip && (
+                                      <div>
+                                        <span className="text-gray-500">IP:</span> {log.ip}
+                                      </div>
+                                    )}
+                                    {log.path && (
+                                      <div>
+                                        <span className="text-gray-500">パス:</span> {log.path}
+                                      </div>
+                                    )}
                                   </div>
                                   {log.details && (
                                     <pre className="bg-gray-100 p-3 rounded text-xs overflow-x-auto">
@@ -366,7 +403,11 @@ export default function LogsPage() {
                   <span className="text-sm text-gray-500">
                     {pagination.totalCount.toLocaleString()}件中
                     {((pagination.page - 1) * pagination.limit + 1).toLocaleString()} -
-                    {Math.min(pagination.page * pagination.limit, pagination.totalCount).toLocaleString()}件
+                    {Math.min(
+                      pagination.page * pagination.limit,
+                      pagination.totalCount,
+                    ).toLocaleString()}
+                    件
                   </span>
                   <div className="flex items-center gap-2">
                     <Button

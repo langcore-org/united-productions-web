@@ -26,7 +26,7 @@ export interface AuthResult {
  * @param req - NextRequestオブジェクト
  * @returns AuthResultまたはNextResponse（エラー時）
  */
-export async function requireAuth(req: NextRequest): Promise<AuthResult | NextResponse> {
+export async function requireAuth(_req: NextRequest): Promise<AuthResult | NextResponse> {
   try {
     const session = await getServerSession(authOptions);
 
@@ -53,7 +53,7 @@ export async function requireAuth(req: NextRequest): Promise<AuthResult | NextRe
  * @param req - NextRequestオブジェクト
  * @returns AuthResultまたはnull（未ログイン時）
  */
-export async function optionalAuth(req: NextRequest): Promise<AuthResult | null> {
+export async function optionalAuth(_req: NextRequest): Promise<AuthResult | null> {
   try {
     const session = await getServerSession(authOptions);
 
@@ -80,7 +80,7 @@ export async function optionalAuth(req: NextRequest): Promise<AuthResult | null>
  */
 export async function requireRole(
   req: NextRequest,
-  allowedRoles: string[],
+  _allowedRoles: string[],
 ): Promise<AuthResult | NextResponse> {
   const authResult = await requireAuth(req);
 

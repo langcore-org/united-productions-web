@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import { signIn } from "next-auth/react";
 import { Chrome, Loader2 } from "lucide-react";
+import { signIn } from "next-auth/react";
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 
 export default function SignInPage() {
@@ -19,14 +19,26 @@ export default function SignInPage() {
         {/* Logo */}
         <div className="text-center mb-8">
           <div className="w-16 h-16 rounded-2xl bg-amber-600 flex items-center justify-center mx-auto mb-4">
-            <svg width="40" height="40" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <circle cx="8" cy="8" r="4" fill="#8B4513"/>
-              <circle cx="24" cy="8" r="4" fill="#8B4513"/>
-              <ellipse cx="16" cy="18" rx="10" ry="9" fill="#D2691E"/>
-              <circle cx="12" cy="15" r="1.5" fill="white"/>
-              <circle cx="20" cy="15" r="1.5" fill="white"/>
-              <ellipse cx="16" cy="19" rx="2.5" ry="1.8" fill="#1a1a1a"/>
-              <path d="M13 22 Q16 25 19 22" stroke="#1a1a1a" strokeWidth="1.5" strokeLinecap="round" fill="none"/>
+            <svg
+              width="40"
+              height="40"
+              viewBox="0 0 32 32"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <circle cx="8" cy="8" r="4" fill="#8B4513" />
+              <circle cx="24" cy="8" r="4" fill="#8B4513" />
+              <ellipse cx="16" cy="18" rx="10" ry="9" fill="#D2691E" />
+              <circle cx="12" cy="15" r="1.5" fill="white" />
+              <circle cx="20" cy="15" r="1.5" fill="white" />
+              <ellipse cx="16" cy="19" rx="2.5" ry="1.8" fill="#1a1a1a" />
+              <path
+                d="M13 22 Q16 25 19 22"
+                stroke="#1a1a1a"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                fill="none"
+              />
             </svg>
           </div>
           <h1 className="text-2xl font-bold text-white mb-2">Teddy</h1>
@@ -35,9 +47,7 @@ export default function SignInPage() {
 
         {/* Sign In Card */}
         <div className="bg-[#1a1a24] border border-[#2a2a35] rounded-2xl p-8">
-          <h2 className="text-lg font-semibold text-white mb-2 text-center">
-            サインイン
-          </h2>
+          <h2 className="text-lg font-semibold text-white mb-2 text-center">サインイン</h2>
           <p className="text-sm text-gray-500 mb-6 text-center">
             Google Workspace アカウントでログインしてください
           </p>
@@ -49,7 +59,7 @@ export default function SignInPage() {
               "w-full flex items-center justify-center gap-3 px-6 py-4 rounded-xl",
               "bg-white text-gray-900 font-medium",
               "hover:bg-gray-100 transition-all duration-200",
-              "disabled:opacity-50 disabled:cursor-not-allowed"
+              "disabled:opacity-50 disabled:cursor-not-allowed",
             )}
           >
             {isLoading ? (

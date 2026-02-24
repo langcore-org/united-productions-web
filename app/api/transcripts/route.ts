@@ -1,20 +1,20 @@
 /**
  * Transcripts API Route
- * 
+ *
  * POST /api/transcripts
  * Premiere Pro書き起こしテキストをNA原稿用に整形
  */
 
-import { NextResponse } from 'next/server';
-import { z } from 'zod';
-import { createLLMClient } from '@/lib/llm';
-import { getPromptFromDB, PROMPT_KEYS } from '@/lib/prompts';
-import { createUserPrompt } from '@/prompts/transcript-format';
-import { createApiHandler } from '@/lib/api/handler';
-import type { LLMMessage } from '@/lib/llm/types';
+import { NextResponse } from "next/server";
+import { z } from "zod";
+import { createApiHandler } from "@/lib/api/handler";
+import { createLLMClient } from "@/lib/llm";
+import type { LLMMessage } from "@/lib/llm/types";
+import { getPromptFromDB, PROMPT_KEYS } from "@/lib/prompts";
+import { createUserPrompt } from "@/prompts/transcript-format";
 
 const transcriptRequestSchema = z.object({
-  transcript: z.string().min(1, '書き起こしテキストを入力してください'),
+  transcript: z.string().min(1, "書き起こしテキストを入力してください"),
 });
 
 export type TranscriptRequest = z.infer<typeof transcriptRequestSchema>;
@@ -30,13 +30,13 @@ export interface TranscriptResponse {
 
 /**
  * POST /api/transcripts
- * 
+ *
  * Request:
  * {
  *   "transcript": "Premiere Pro書き起こしテキスト...",
  *   "provider": "gemini-2.5-flash-lite" // オプション
  * }
- * 
+ *
  * Response:
  * {
  *   "content": "整形されたNA原稿（Markdown）",
@@ -46,18 +46,18 @@ export interface TranscriptResponse {
 export const POST = createApiHandler(
   async ({ data }) => {
     const { transcript } = data;
-    
+
     // DBからプロンプトを取得
     const systemPrompt = await getPromptFromDB(PROMPT_KEYS.TRANSCRIPT_FORMAT);
     if (!systemPrompt) {
-      throw new Error('System prompt not found');
+      throw new Error("System prompt not found");
     }
-    
-    const client = createLLMClient('grok-4-1-fast-reasoning');
+
+    const client = createLLMClient("grok-4-1-fast-reasoning");
 
     const messages: LLMMessage[] = [
-      { role: 'system', content: systemPrompt },
-      { role: 'user', content: createUserPrompt(transcript) },
+      { role: "system", content: systemPrompt },
+      { role: "user", content: createUserPrompt(transcript) },
     ];
 
     const response = await client.chat(messages);
@@ -67,5 +67,5 @@ export const POST = createApiHandler(
       usage: response.usage ?? null,
     });
   },
-  { schema: transcriptRequestSchema }
+  { schema: transcriptRequestSchema },
 );

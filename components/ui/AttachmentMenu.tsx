@@ -1,20 +1,20 @@
 "use client";
 
-import { useEffect, useRef, useCallback, useState } from "react";
-import { cn } from "@/lib/utils";
 import {
-  Paperclip,
-  FileText,
-  Pencil,
-  Palette,
-  Cloud,
-  History,
   ChevronRight,
-  FileImage,
+  Cloud,
   FileCode,
+  FileImage,
   FileSpreadsheet,
+  FileText,
+  History,
   MoreHorizontal,
+  Palette,
+  Paperclip,
+  Pencil,
 } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { cn } from "@/lib/utils";
 
 interface AttachmentMenuProps {
   isOpen: boolean;
@@ -76,20 +76,35 @@ const menuItems: MenuItem[] = [
     icon: <History className="w-5 h-5" />,
     hasSubmenu: true,
     submenuItems: [
-      { id: "recent-1", label: "document.pdf", icon: <FileText className="w-4 h-4" />, timestamp: "2分前" },
-      { id: "recent-2", label: "image.png", icon: <FileImage className="w-4 h-4" />, timestamp: "1時間前" },
-      { id: "recent-3", label: "data.csv", icon: <FileSpreadsheet className="w-4 h-4" />, timestamp: "昨日" },
-      { id: "recent-4", label: "script.js", icon: <FileCode className="w-4 h-4" />, timestamp: "2日前" },
+      {
+        id: "recent-1",
+        label: "document.pdf",
+        icon: <FileText className="w-4 h-4" />,
+        timestamp: "2分前",
+      },
+      {
+        id: "recent-2",
+        label: "image.png",
+        icon: <FileImage className="w-4 h-4" />,
+        timestamp: "1時間前",
+      },
+      {
+        id: "recent-3",
+        label: "data.csv",
+        icon: <FileSpreadsheet className="w-4 h-4" />,
+        timestamp: "昨日",
+      },
+      {
+        id: "recent-4",
+        label: "script.js",
+        icon: <FileCode className="w-4 h-4" />,
+        timestamp: "2日前",
+      },
     ],
   },
 ];
 
-export function AttachmentMenu({
-  isOpen,
-  onClose,
-  onSelect,
-  triggerRef,
-}: AttachmentMenuProps) {
+export function AttachmentMenu({ isOpen, onClose, onSelect, triggerRef }: AttachmentMenuProps) {
   const menuRef = useRef<HTMLDivElement>(null);
   const [activeSubmenu, setActiveSubmenu] = useState<string | null>(null);
   const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
@@ -109,19 +124,16 @@ export function AttachmentMenu({
   const handleClickOutside = useCallback(
     (event: MouseEvent) => {
       const target = event.target as Node;
-      
+
       // メニュー自体またはトリガーボタンのクリックは無視
-      if (
-        menuRef.current?.contains(target) ||
-        triggerRef?.current?.contains(target)
-      ) {
+      if (menuRef.current?.contains(target) || triggerRef?.current?.contains(target)) {
         return;
       }
 
       onClose();
       setActiveSubmenu(null);
     },
-    [onClose, triggerRef]
+    [onClose, triggerRef],
   );
 
   // Escapeキーで閉じる
@@ -132,7 +144,7 @@ export function AttachmentMenu({
         setActiveSubmenu(null);
       }
     },
-    [onClose]
+    [onClose],
   );
 
   useEffect(() => {
@@ -181,7 +193,7 @@ export function AttachmentMenu({
         "shadow-[0_4px_20px_rgba(0,0,0,0.15)]",
         "border border-gray-200",
         "animate-in fade-in zoom-in-95 duration-150",
-        "origin-top-left"
+        "origin-top-left",
       )}
       style={{
         top: menuPosition.top,
@@ -191,9 +203,7 @@ export function AttachmentMenu({
       {/* メニューヘッダー */}
       <div className="px-4 py-3 border-b border-gray-100">
         <p className="text-sm font-semibold text-gray-900">アタッチメント</p>
-        <p className="text-xs text-gray-500 mt-0.5">
-          ファイルやコンテンツを追加
-        </p>
+        <p className="text-xs text-gray-500 mt-0.5">ファイルやコンテンツを追加</p>
       </div>
 
       {/* メニュー項目リスト */}
@@ -201,9 +211,7 @@ export function AttachmentMenu({
         {menuItems.map((item, index) => (
           <div key={item.id}>
             {/* 区切り線（特定の項目の後） */}
-            {index === 3 && (
-              <div className="my-2 border-t border-gray-100" />
-            )}
+            {index === 3 && <div className="my-2 border-t border-gray-100" />}
 
             {/* メニュー項目 */}
             <button
@@ -213,7 +221,7 @@ export function AttachmentMenu({
                 "text-left transition-all duration-150",
                 "hover:bg-gray-100 focus:bg-gray-100",
                 "focus:outline-none focus:ring-2 focus:ring-gray-200",
-                activeSubmenu === item.id && "bg-gray-100"
+                activeSubmenu === item.id && "bg-gray-100",
               )}
             >
               {/* アイコン */}
@@ -221,7 +229,7 @@ export function AttachmentMenu({
                 className={cn(
                   "flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center",
                   "bg-gray-50 text-gray-600",
-                  "group-hover:bg-gray-100"
+                  "group-hover:bg-gray-100",
                 )}
               >
                 {item.icon}
@@ -229,13 +237,9 @@ export function AttachmentMenu({
 
               {/* テキストコンテンツ */}
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 truncate">
-                  {item.label}
-                </p>
+                <p className="text-sm font-medium text-gray-900 truncate">{item.label}</p>
                 {item.description && (
-                  <p className="text-xs text-gray-500 truncate">
-                    {item.description}
-                  </p>
+                  <p className="text-xs text-gray-500 truncate">{item.description}</p>
                 )}
               </div>
 
@@ -244,7 +248,7 @@ export function AttachmentMenu({
                 <ChevronRight
                   className={cn(
                     "w-4 h-4 text-gray-400 transition-transform duration-200",
-                    activeSubmenu === item.id && "rotate-90"
+                    activeSubmenu === item.id && "rotate-90",
                   )}
                 />
               )}
@@ -255,7 +259,7 @@ export function AttachmentMenu({
               <div
                 className={cn(
                   "mt-1 ml-4 pl-4 border-l-2 border-gray-100",
-                  "animate-in slide-in-from-top-1 duration-150"
+                  "animate-in slide-in-from-top-1 duration-150",
                 )}
               >
                 {item.submenuItems.map((subItem) => (
@@ -266,16 +270,12 @@ export function AttachmentMenu({
                       "w-full flex items-center gap-2.5 px-3 py-2 rounded-lg",
                       "text-left transition-all duration-150",
                       "hover:bg-gray-100 focus:bg-gray-100",
-                      "focus:outline-none"
+                      "focus:outline-none",
                     )}
                   >
-                    <div className="flex-shrink-0 text-gray-500">
-                      {subItem.icon}
-                    </div>
+                    <div className="flex-shrink-0 text-gray-500">{subItem.icon}</div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm text-gray-700 truncate">
-                        {subItem.label}
-                      </p>
+                      <p className="text-sm text-gray-700 truncate">{subItem.label}</p>
                     </div>
                     {subItem.timestamp && (
                       <span className="text-xs text-gray-400 flex-shrink-0">
@@ -290,7 +290,7 @@ export function AttachmentMenu({
                     "w-full flex items-center gap-2.5 px-3 py-2 rounded-lg",
                     "text-left transition-all duration-150",
                     "hover:bg-gray-100 focus:bg-gray-100",
-                    "focus:outline-none text-gray-500"
+                    "focus:outline-none text-gray-500",
                   )}
                 >
                   <MoreHorizontal className="w-4 h-4" />

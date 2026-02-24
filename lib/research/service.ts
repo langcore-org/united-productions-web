@@ -4,8 +4,8 @@
  */
 
 import { createLLMClient } from "@/lib/llm";
-import { getPromptFromDB, PROMPT_KEYS } from "@/lib/prompts";
 import type { LLMMessage } from "@/lib/llm/types";
+import { getPromptFromDB, PROMPT_KEYS } from "@/lib/prompts";
 
 export type ResearchType = "cast" | "location" | "info" | "evidence";
 
@@ -38,7 +38,7 @@ const RESEARCH_PROMPT_KEYS: Record<ResearchType, string> = {
 };
 
 // リサーチタイプ別のPJコード
-const RESEARCH_PROJECT_CODES: Record<ResearchType, string> = {
+const _RESEARCH_PROJECT_CODES: Record<ResearchType, string> = {
   cast: "PJ-C-people",
   location: "PJ-C-location",
   info: "PJ-C-info",
@@ -48,9 +48,7 @@ const RESEARCH_PROJECT_CODES: Record<ResearchType, string> = {
 /**
  * リサーチを実行
  */
-export async function executeResearch(
-  request: ResearchRequest
-): Promise<ResearchResponse> {
+export async function executeResearch(request: ResearchRequest): Promise<ResearchResponse> {
   const { type, query, options = {} } = request;
 
   // プロンプト取得
@@ -85,9 +83,7 @@ export async function executeResearch(
 /**
  * ストリーミングリサーチ
  */
-export async function* streamResearch(
-  request: ResearchRequest
-): AsyncIterable<string> {
+export async function* streamResearch(request: ResearchRequest): AsyncIterable<string> {
   const { type, query, options = {} } = request;
 
   const promptKey = RESEARCH_PROMPT_KEYS[type];
@@ -113,10 +109,7 @@ export async function* streamResearch(
 /**
  * リサーチクエリ作成
  */
-function createResearchQuery(
-  query: string,
-  options: ResearchRequest["options"]
-): string {
+function createResearchQuery(query: string, options: ResearchRequest["options"]): string {
   let fullQuery = query;
 
   if (options?.includeX) {

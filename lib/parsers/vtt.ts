@@ -1,13 +1,13 @@
 /**
  * VTT (WebVTT) パーサー
- * 
+ *
  * Zoomの文字起こしVTTファイルをパースします。
  */
 
 export interface VttCue {
   id?: string;
   startTime: number; // ミリ秒
-  endTime: number;   // ミリ秒
+  endTime: number; // ミリ秒
   text: string;
   speaker?: string;
 }
@@ -25,7 +25,7 @@ export interface VttParseResult {
  */
 function parseVttTime(timeStr: string): number {
   const parts = timeStr.split(":").map(Number);
-  
+
   if (parts.length === 3) {
     // HH:MM:SS.mmm
     const [hours, minutes, seconds] = parts;
@@ -35,7 +35,7 @@ function parseVttTime(timeStr: string): number {
     const [minutes, seconds] = parts;
     return minutes * 60000 + seconds * 1000;
   }
-  
+
   return 0;
 }
 
@@ -64,59 +64,59 @@ export function parseVtt(vttContent: string): VttParseResult {
   const lines = vttContent.split("\n");
   const cues: VttCue[] = [];
   const speakers = new Set<string>();
-  
+
   let i = 0;
-  
+
   // WEBVTTヘッダーをスキップ
   while (i < lines.length && !lines[i].includes("-->")) {
     i++;
   }
-  
+
   while (i < lines.length) {
     const line = lines[i].trim();
-    
+
     // タイムスタンプ行を検索
     if (line.includes("-->")) {
       const timeMatch = line.match(/(.+?)\s*-->\s*(.+?)(?:\s+|$)/);
       if (timeMatch) {
         const startTimeStr = timeMatch[1].trim();
         const endTimeStr = timeMatch[2].trim();
-        
+
         const startTime = parseVttTime(startTimeStr);
         const endTime = parseVttTime(endTimeStr);
-        
+
         // テキスト行を収集
         const textLines: string[] = [];
         i++;
-        
+
         while (i < lines.length && lines[i].trim() !== "" && !lines[i].includes("-->")) {
           textLines.push(lines[i].trim());
           i++;
         }
-        
+
         const text = textLines.join(" ");
         const [content, speaker] = extractSpeaker(text);
-        
+
         if (speaker) {
           speakers.add(speaker);
         }
-        
+
         cues.push({
           startTime,
           endTime,
           text: content,
           speaker,
         });
-        
+
         continue;
       }
     }
-    
+
     i++;
   }
-  
+
   const duration = cues.length > 0 ? cues[cues.length - 1].endTime : 0;
-  
+
   return {
     cues,
     speakers: Array.from(speakers),
@@ -133,7 +133,7 @@ export function formatTime(ms: number): string {
   const hours = Math.floor(ms / 3600000);
   const minutes = Math.floor((ms % 3600000) / 60000);
   const seconds = Math.floor((ms % 60000) / 1000);
-  
+
   if (hours > 0) {
     return `${hours}:${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
   }
@@ -161,12 +161,15 @@ export function cuesToConversation(cues: VttCue[]): string {
  * @returns 話者別の発言配列
  */
 export function groupBySpeaker(cues: VttCue[]): Record<string, VttCue[]> {
-  return cues.reduce((acc, cue) => {
-    const speaker = cue.speaker || "不明";
-    if (!acc[speaker]) {
-      acc[speaker] = [];
-    }
-    acc[speaker].push(cue);
-    return acc;
-  }, {} as Record<string, VttCue[]>);
+  return cues.reduce(
+    (acc, cue) => {
+      const speaker = cue.speaker || "不明";
+      if (!acc[speaker]) {
+        acc[speaker] = [];
+      }
+      acc[speaker].push(cue);
+      return acc;
+    },
+    {} as Record<string, VttCue[]>,
+  );
 }

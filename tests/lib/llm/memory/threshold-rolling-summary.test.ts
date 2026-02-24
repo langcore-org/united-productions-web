@@ -69,7 +69,7 @@ describe("ThresholdRollingSummaryMemory", () => {
     });
 
     it("目標要約サイズ計算", () => {
-      const memory = new ThresholdRollingSummaryMemory({
+      const _memory = new ThresholdRollingSummaryMemory({
         compressionRates: testCompressionRates,
         maxSummaryTokens: 500, // 小さめに設定
       });

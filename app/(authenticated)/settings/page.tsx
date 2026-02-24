@@ -1,23 +1,22 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
-import { cn } from "@/lib/utils";
-import { AppLayout } from "@/components/layout/AppLayout";
-
 import {
-  User,
-  Camera,
+  AlertTriangle,
   Bell,
+  Camera,
+  Check,
   Database,
   Download,
-  Trash2,
-  AlertTriangle,
-  Check,
-  X,
   Mail,
   MessageSquare,
   Save,
+  Trash2,
+  User,
+  X,
 } from "lucide-react";
+import { useRef, useState } from "react";
+import { AppLayout } from "@/components/layout/AppLayout";
+import { cn } from "@/lib/utils";
 
 // ============================================
 // Types
@@ -43,8 +42,6 @@ interface NotificationSettings {
   };
 }
 
-
-
 // ============================================
 // Components
 // ============================================
@@ -60,20 +57,9 @@ interface SettingsCardProps {
   className?: string;
 }
 
-function SettingsCard({
-  title,
-  description,
-  icon,
-  children,
-  className,
-}: SettingsCardProps) {
+function SettingsCard({ title, description, icon, children, className }: SettingsCardProps) {
   return (
-    <div
-      className={cn(
-        "bg-white border border-gray-200 rounded-xl overflow-hidden",
-        className
-      )}
-    >
+    <div className={cn("bg-white border border-gray-200 rounded-xl overflow-hidden", className)}>
       <div className="px-6 py-4 border-b border-gray-200">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-lg bg-black/10 flex items-center justify-center">
@@ -81,9 +67,7 @@ function SettingsCard({
           </div>
           <div>
             <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
-            {description && (
-              <p className="text-sm text-gray-500">{description}</p>
-            )}
+            {description && <p className="text-sm text-gray-500">{description}</p>}
           </div>
         </div>
       </div>
@@ -107,21 +91,19 @@ function Toggle({ checked, onChange, label, description }: ToggleProps) {
     <div className="flex items-center justify-between">
       <div className="flex-1">
         {label && <p className="text-sm font-medium text-gray-800">{label}</p>}
-        {description && (
-          <p className="text-xs text-gray-500 mt-0.5">{description}</p>
-        )}
+        {description && <p className="text-xs text-gray-500 mt-0.5">{description}</p>}
       </div>
       <button
         onClick={() => onChange(!checked)}
         className={cn(
           "relative w-11 h-6 rounded-full transition-colors duration-200",
-          checked ? "bg-black" : "bg-gray-200"
+          checked ? "bg-black" : "bg-gray-200",
         )}
       >
         <span
           className={cn(
             "absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform duration-200",
-            checked ? "translate-x-5" : "translate-x-0"
+            checked ? "translate-x-5" : "translate-x-0",
           )}
         />
       </button>
@@ -174,15 +156,11 @@ function ProfileSection() {
             className={cn(
               "relative w-20 h-20 rounded-full overflow-hidden cursor-pointer",
               "bg-gray-100 border-2 border-gray-200",
-              "hover:border-black/50 transition-colors"
+              "hover:border-black/50 transition-colors",
             )}
           >
             {profile.avatar ? (
-              <img
-                src={profile.avatar}
-                alt="Avatar"
-                className="w-full h-full object-cover"
-              />
+              <img src={profile.avatar} alt="Avatar" className="w-full h-full object-cover" />
             ) : (
               <div className="w-full h-full flex items-center justify-center">
                 <User className="w-8 h-8 text-gray-500" />
@@ -201,13 +179,8 @@ function ProfileSection() {
           />
           <div>
             <p className="text-sm font-medium text-gray-800">プロフィール画像</p>
-            <p className="text-xs text-gray-500 mt-0.5">
-              JPG、PNG、GIF形式（最大2MB）
-            </p>
-            <button
-              onClick={handleAvatarClick}
-              className="text-sm text-black hover:underline mt-2"
-            >
+            <p className="text-xs text-gray-500 mt-0.5">JPG、PNG、GIF形式（最大2MB）</p>
+            <button onClick={handleAvatarClick} className="text-sm text-black hover:underline mt-2">
               画像を変更
             </button>
           </div>
@@ -221,14 +194,12 @@ function ProfileSection() {
               <input
                 type="text"
                 value={profile.displayName}
-                onChange={(e) =>
-                  setProfile((prev) => ({ ...prev, displayName: e.target.value }))
-                }
+                onChange={(e) => setProfile((prev) => ({ ...prev, displayName: e.target.value }))}
                 className={cn(
                   "flex-1 px-3 py-2 rounded-lg",
                   "bg-gray-50 border border-gray-200",
                   "text-gray-900 text-sm",
-                  "focus:outline-none focus:border-black/50"
+                  "focus:outline-none focus:border-black/50",
                 )}
               />
               <button
@@ -264,9 +235,7 @@ function ProfileSection() {
             <Mail className="w-4 h-4 text-gray-500" />
             <span className="text-sm text-gray-600">{profile.email}</span>
           </div>
-          <p className="text-xs text-gray-500">
-            メールアドレスは管理者のみが変更できます
-          </p>
+          <p className="text-xs text-gray-500">メールアドレスは管理者のみが変更できます</p>
         </div>
       </div>
     </SettingsCard>
@@ -294,20 +263,14 @@ function NotificationSection() {
     },
   });
 
-  const updateEmailSetting = (
-    key: keyof NotificationSettings["email"],
-    value: boolean
-  ) => {
+  const updateEmailSetting = (key: keyof NotificationSettings["email"], value: boolean) => {
     setSettings((prev) => ({
       ...prev,
       email: { ...prev.email, [key]: value },
     }));
   };
 
-  const updatePushSetting = (
-    key: keyof NotificationSettings["push"],
-    value: boolean
-  ) => {
+  const updatePushSetting = (key: keyof NotificationSettings["push"], value: boolean) => {
     setSettings((prev) => ({
       ...prev,
       push: { ...prev.push, [key]: value },
@@ -325,9 +288,7 @@ function NotificationSection() {
         <div className="space-y-4">
           <div className="flex items-center gap-2 pb-2 border-b border-gray-200">
             <Mail className="w-4 h-4 text-gray-600" />
-            <span className="text-sm font-medium text-gray-700">
-              メール通知
-            </span>
+            <span className="text-sm font-medium text-gray-700">メール通知</span>
           </div>
           <Toggle
             checked={settings.email.enabled}
@@ -339,23 +300,17 @@ function NotificationSection() {
             <div className="pl-4 space-y-3 border-l-2 border-gray-200">
               <Toggle
                 checked={settings.email.meetingNotes}
-                onChange={(checked) =>
-                  updateEmailSetting("meetingNotes", checked)
-                }
+                onChange={(checked) => updateEmailSetting("meetingNotes", checked)}
                 label="議事録・文字起こし"
               />
               <Toggle
                 checked={settings.email.transcripts}
-                onChange={(checked) =>
-                  updateEmailSetting("transcripts", checked)
-                }
+                onChange={(checked) => updateEmailSetting("transcripts", checked)}
                 label="起こし・NA原稿"
               />
               <Toggle
                 checked={settings.email.research}
-                onChange={(checked) =>
-                  updateEmailSetting("research", checked)
-                }
+                onChange={(checked) => updateEmailSetting("research", checked)}
                 label="リサーチ・考査"
               />
               {/* ロケスケ設定は削除 */}
@@ -367,9 +322,7 @@ function NotificationSection() {
         <div className="space-y-4">
           <div className="flex items-center gap-2 pb-2 border-b border-gray-200">
             <MessageSquare className="w-4 h-4 text-gray-600" />
-            <span className="text-sm font-medium text-gray-700">
-              プッシュ通知
-            </span>
+            <span className="text-sm font-medium text-gray-700">プッシュ通知</span>
           </div>
           <Toggle
             checked={settings.push.enabled}
@@ -381,23 +334,17 @@ function NotificationSection() {
             <div className="pl-4 space-y-3 border-l-2 border-gray-200">
               <Toggle
                 checked={settings.push.meetingNotes}
-                onChange={(checked) =>
-                  updatePushSetting("meetingNotes", checked)
-                }
+                onChange={(checked) => updatePushSetting("meetingNotes", checked)}
                 label="議事録・文字起こし"
               />
               <Toggle
                 checked={settings.push.transcripts}
-                onChange={(checked) =>
-                  updatePushSetting("transcripts", checked)
-                }
+                onChange={(checked) => updatePushSetting("transcripts", checked)}
                 label="起こし・NA原稿"
               />
               <Toggle
                 checked={settings.push.research}
-                onChange={(checked) =>
-                  updatePushSetting("research", checked)
-                }
+                onChange={(checked) => updatePushSetting("research", checked)}
                 label="リサーチ・考査"
               />
               {/* ロケスケ設定は削除 */}
@@ -441,9 +388,7 @@ function DataManagementSection() {
             <Download className="w-4 h-4 text-gray-600" />
             <span className="text-sm font-medium text-gray-700">データエクスポート</span>
           </div>
-          <p className="text-sm text-gray-500">
-            作成したデータをJSON形式でエクスポートできます
-          </p>
+          <p className="text-sm text-gray-500">作成したデータをJSON形式でエクスポートできます</p>
           <div className="grid grid-cols-2 gap-3">
             {[
               { id: "all", label: "すべてのデータ" },
@@ -455,15 +400,13 @@ function DataManagementSection() {
               <button
                 key={item.id}
                 onClick={() =>
-                  handleExport(
-                    item.id as "all" | "meeting-notes" | "transcripts" | "research"
-                  )
+                  handleExport(item.id as "all" | "meeting-notes" | "transcripts" | "research")
                 }
                 className={cn(
                   "flex items-center justify-between px-4 py-3 rounded-lg",
                   "bg-gray-50 border border-gray-200",
                   "hover:border-black/50 hover:bg-gray-50",
-                  "transition-colors duration-200"
+                  "transition-colors duration-200",
                 )}
               >
                 <span className="text-sm text-gray-700">{item.label}</span>
@@ -479,18 +422,11 @@ function DataManagementSection() {
             <Trash2 className="w-4 h-4 text-gray-500" />
             <span className="text-sm font-medium text-gray-600">データ削除</span>
           </div>
-          <div
-            className={cn(
-              "p-4 rounded-lg border",
-              "bg-gray-100 border-gray-200"
-            )}
-          >
+          <div className={cn("p-4 rounded-lg border", "bg-gray-100 border-gray-200")}>
             <div className="flex items-start gap-3">
               <AlertTriangle className="w-5 h-5 text-gray-500 flex-shrink-0 mt-0.5" />
               <div className="flex-1">
-                <p className="text-sm font-medium text-gray-700">
-                  すべてのデータを削除
-                </p>
+                <p className="text-sm font-medium text-gray-700">すべてのデータを削除</p>
                 <p className="text-xs text-gray-500 mt-1">
                   この操作は元に戻せません。すべての議事録、文字起こし、リサーチ結果、スケジュールが永久に削除されます。
                 </p>
@@ -500,16 +436,14 @@ function DataManagementSection() {
                     className={cn(
                       "mt-3 px-4 py-2 rounded-lg text-sm font-medium",
                       "bg-gray-200 text-gray-700 border border-gray-300",
-                      "hover:bg-gray-300 transition-colors"
+                      "hover:bg-gray-300 transition-colors",
                     )}
                   >
                     データを削除
                   </button>
                 ) : (
                   <div className="mt-3 space-y-3">
-                    <p className="text-xs text-gray-600">
-                      確認のため「削除」と入力してください
-                    </p>
+                    <p className="text-xs text-gray-600">確認のため「削除」と入力してください</p>
                     <div className="flex items-center gap-2">
                       <input
                         type="text"
@@ -520,7 +454,7 @@ function DataManagementSection() {
                           "flex-1 px-3 py-2 rounded-lg",
                           "bg-gray-50 border border-gray-300",
                           "text-gray-900 text-sm placeholder:text-gray-400",
-                          "focus:outline-none focus:border-gray-500"
+                          "focus:outline-none focus:border-gray-500",
                         )}
                       />
                       <button
@@ -530,7 +464,7 @@ function DataManagementSection() {
                           "px-4 py-2 rounded-lg text-sm font-medium",
                           "bg-gray-700 text-white",
                           "hover:bg-gray-800 transition-colors",
-                          "disabled:opacity-50 disabled:cursor-not-allowed"
+                          "disabled:opacity-50 disabled:cursor-not-allowed",
                         )}
                       >
                         削除する
@@ -568,9 +502,7 @@ export default function SettingsPage() {
             {/* Page Header */}
             <div className="mb-8">
               <h1 className="text-2xl font-bold text-gray-900">設定</h1>
-              <p className="text-gray-500 mt-1">
-                アカウントとアプリケーションの設定を管理します
-              </p>
+              <p className="text-gray-500 mt-1">アカウントとアプリケーションの設定を管理します</p>
             </div>
 
             {/* Settings Sections */}
@@ -586,7 +518,7 @@ export default function SettingsPage() {
                 className={cn(
                   "flex items-center gap-2 px-6 py-2.5 rounded-lg",
                   "bg-black text-white font-medium",
-                  "hover:bg-gray-800 transition-colors"
+                  "hover:bg-gray-800 transition-colors",
                 )}
               >
                 <Save className="w-4 h-4" />

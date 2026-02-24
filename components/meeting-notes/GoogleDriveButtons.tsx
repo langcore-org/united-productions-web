@@ -1,10 +1,10 @@
 "use client";
 
+import { Check, FolderOpen, Loader2, Upload } from "lucide-react";
 import { useState } from "react";
-import { cn } from "@/lib/utils";
-import { FolderOpen, Upload, Loader2, Check } from "lucide-react";
-import { useGoogleDrive, DriveFile } from "@/hooks/useGoogleDrive";
 import { GoogleDrivePicker } from "@/components/ui/GoogleDrivePicker";
+import { type DriveFile, useGoogleDrive } from "@/hooks/useGoogleDrive";
+import { cn } from "@/lib/utils";
 
 interface DriveUploadButtonProps {
   content: string;
@@ -40,7 +40,7 @@ export function DriveUploadButton({ content, filename, onSuccess }: DriveUploadB
         "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all",
         uploaded
           ? "bg-gray-100 text-gray-700 border border-gray-200"
-          : "bg-white border border-gray-200 text-gray-700 hover:border-black hover:text-black"
+          : "bg-white border border-gray-200 text-gray-700 hover:border-black hover:text-black",
       )}
     >
       {isLoading ? (
@@ -69,7 +69,7 @@ export function DriveFileSelectButton({ onSelect, accept }: DriveFileSelectButto
 
   const handleSelect = async (file: DriveFile) => {
     setShowPicker(false);
-    
+
     const result = await downloadFile(file.id);
     if (result) {
       onSelect(result.content, result.metadata.name);
@@ -83,7 +83,7 @@ export function DriveFileSelectButton({ onSelect, accept }: DriveFileSelectButto
         disabled={isLoading}
         className={cn(
           "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all",
-          "bg-white border border-gray-200 text-gray-700 hover:border-black hover:text-black"
+          "bg-white border border-gray-200 text-gray-700 hover:border-black hover:text-black",
         )}
       >
         {isLoading ? (

@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { AlertCircle, Check, ChevronDown, Download, FileSpreadsheet, FileText } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { type ExportOptions, type ExportResult, exportData } from "@/lib/export";
 import { cn } from "@/lib/utils";
-import { Download, FileText, FileSpreadsheet, ChevronDown, Check, AlertCircle } from "lucide-react";
-import { exportData, ExportOptions, ExportResult } from "@/lib/export";
 
 export type ExportFormat = "markdown" | "csv";
 
@@ -121,20 +121,15 @@ export function ExportButton({
           "hover:border-gray-700/50 transition-all duration-200",
           "text-sm text-gray-700",
           "disabled:opacity-50 disabled:cursor-not-allowed",
-          isOpen && "border-gray-700/50"
+          isOpen && "border-gray-700/50",
         )}
       >
-        <Download
-          className={cn(
-            "w-4 h-4 transition-transform",
-            isExporting && "animate-bounce"
-          )}
-        />
+        <Download className={cn("w-4 h-4 transition-transform", isExporting && "animate-bounce")} />
         <span className="font-medium">エクスポート</span>
         <ChevronDown
           className={cn(
             "w-4 h-4 text-gray-500 transition-transform duration-200",
-            isOpen && "rotate-180"
+            isOpen && "rotate-180",
           )}
         />
       </button>
@@ -143,10 +138,7 @@ export function ExportButton({
       {isOpen && (
         <>
           {/* オーバーレイ */}
-          <div
-            className="fixed inset-0 z-40"
-            onClick={() => setIsOpen(false)}
-          />
+          <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
 
           {/* メニュー */}
           <div
@@ -156,7 +148,7 @@ export function ExportButton({
               "bg-white border border-gray-200",
               "shadow-xl shadow-gray-200/50",
               "overflow-hidden",
-              "animate-in fade-in zoom-in-95 duration-100"
+              "animate-in fade-in zoom-in-95 duration-100",
             )}
           >
             {/* ヘッダー */}
@@ -175,7 +167,7 @@ export function ExportButton({
                   className={cn(
                     "w-full flex items-start gap-3 px-3 py-3 rounded-lg",
                     "hover:bg-gray-100 transition-colors",
-                    "text-left group"
+                    "text-left group",
                   )}
                 >
                   <div
@@ -183,23 +175,17 @@ export function ExportButton({
                       "flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center",
                       "bg-gray-100 group-hover:bg-gray-200 transition-colors",
                       option.id === "markdown" && "text-gray-600",
-                      option.id === "csv" && "text-gray-500"
+                      option.id === "csv" && "text-gray-500",
                     )}
                   >
                     {option.icon}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="text-sm text-gray-700 font-medium">
-                        {option.label}
-                      </span>
-                      <span className="text-xs text-gray-500">
-                        {option.extension}
-                      </span>
+                      <span className="text-sm text-gray-700 font-medium">{option.label}</span>
+                      <span className="text-xs text-gray-500">{option.extension}</span>
                     </div>
-                    <span className="text-xs text-gray-500">
-                      {option.description}
-                    </span>
+                    <span className="text-xs text-gray-500">{option.description}</span>
                   </div>
                 </button>
               ))}
@@ -217,7 +203,7 @@ export function ExportButton({
             "text-sm animate-in fade-in slide-in-from-top-2",
             exportStatus.success
               ? "bg-gray-100 border border-gray-200 text-gray-700"
-              : "bg-gray-100 border border-gray-300 text-gray-600"
+              : "bg-gray-100 border border-gray-300 text-gray-600",
           )}
         >
           {exportStatus.success ? (
@@ -278,15 +264,10 @@ export function SimpleExportButton({
         "hover:border-gray-700/50 transition-all duration-200",
         "text-sm text-gray-700",
         "disabled:opacity-50 disabled:cursor-not-allowed",
-        className
+        className,
       )}
     >
-      <Download
-        className={cn(
-          "w-4 h-4 transition-transform",
-          isExporting && "animate-bounce"
-        )}
-      />
+      <Download className={cn("w-4 h-4 transition-transform", isExporting && "animate-bounce")} />
       <span className="font-medium">{option?.label || "エクスポート"}</span>
     </button>
   );

@@ -4,20 +4,19 @@
  */
 
 import {
+  AlignmentType,
+  BorderStyle,
   Document,
-  Paragraph,
-  TextRun,
   HeadingLevel,
+  Packer,
+  Paragraph,
   Table,
   TableCell,
   TableRow,
+  TextRun,
   WidthType,
-  AlignmentType,
-  Packer,
-  BorderStyle,
 } from "docx";
 import { parseMarkdown } from "./markdown-parser";
-import type { MarkdownElement } from "@/types/export";
 
 export interface WordGenerationOptions {
   title?: string;
@@ -26,7 +25,7 @@ export interface WordGenerationOptions {
 
 export async function generateWordDocument(
   markdownContent: string,
-  options: WordGenerationOptions = {}
+  options: WordGenerationOptions = {},
 ): Promise<Blob> {
   const elements = parseMarkdown(markdownContent);
   const children: (Paragraph | Table)[] = [];
@@ -39,7 +38,7 @@ export async function generateWordDocument(
         heading: HeadingLevel.TITLE,
         alignment: AlignmentType.CENTER,
         spacing: { after: 400 },
-      })
+      }),
     );
   }
 
@@ -49,9 +48,7 @@ export async function generateWordDocument(
 
     switch (element.type) {
       case "heading":
-        children.push(
-          createHeadingParagraph(element.content, element.level || 1)
-        );
+        children.push(createHeadingParagraph(element.content, element.level || 1));
         break;
 
       case "paragraph":
@@ -120,14 +117,14 @@ function createParagraph(text: string): Paragraph {
         new TextRun({
           text: part.slice(2, -2),
           bold: true,
-        })
+        }),
       );
     } else if (part.startsWith("*") && part.endsWith("*") && part.length > 2) {
       runs.push(
         new TextRun({
           text: part.slice(1, -1),
           italics: true,
-        })
+        }),
       );
     } else if (part) {
       runs.push(new TextRun({ text: part }));
@@ -198,7 +195,7 @@ function createTable(rows: string[][]): Table {
           },
         });
       }),
-    })
+    }),
   );
 
   // データ行
@@ -217,7 +214,7 @@ function createTable(rows: string[][]): Table {
             },
           });
         }),
-      })
+      }),
     );
   }
 

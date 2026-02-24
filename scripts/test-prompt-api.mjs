@@ -29,7 +29,7 @@ async function testGetPrompt(key) {
     console.log("Status:", res.status);
     if (data.content) {
       console.log("Version:", data.version);
-      console.log("Content preview:", data.content.substring(0, 200) + "...");
+      console.log("Content preview:", `${data.content.substring(0, 200)}...`);
     } else {
       console.log("Error:", data.error);
     }

@@ -1,15 +1,14 @@
 /**
  * Admin Prompt Detail API
- * 
+ *
  * GET /api/admin/prompts/[key] - プロンプト詳細取得（バージョン履歴付き）
  * PUT /api/admin/prompts/[key] - プロンプト更新（バージョン自動採番）
  */
 
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/api/auth";
-import { updatePromptWithVersion, getPromptWithHistory } from "@/lib/prompts";
+import { getPromptWithHistory, updatePromptWithVersion } from "@/lib/prompts";
 
 // プロンプト更新用スキーマ
 const updatePromptSchema = z.object({
@@ -25,10 +24,7 @@ interface RouteParams {
  * GET /api/admin/prompts/[key]
  * プロンプト詳細を取得（バージョン履歴付き）
  */
-export async function GET(
-  request: NextRequest,
-  { params }: RouteParams
-) {
+export async function GET(request: NextRequest, { params }: RouteParams) {
   // 認証チェック
   const authResult = await requireAuth(request);
   if (authResult instanceof NextResponse) {
@@ -42,10 +38,7 @@ export async function GET(
     const prompt = await getPromptWithHistory(decodedKey);
 
     if (!prompt) {
-      return NextResponse.json(
-        { success: false, error: "Prompt not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ success: false, error: "Prompt not found" }, { status: 404 });
     }
 
     return NextResponse.json({ success: true, data: prompt });
@@ -54,7 +47,7 @@ export async function GET(
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
     return NextResponse.json(
       { success: false, error: "Failed to fetch prompt", details: errorMessage },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -63,10 +56,7 @@ export async function GET(
  * PUT /api/admin/prompts/[key]
  * プロンプトを更新（バージョン自動採番）
  */
-export async function PUT(
-  request: NextRequest,
-  { params }: RouteParams
-) {
+export async function PUT(request: NextRequest, { params }: RouteParams) {
   // 認証チェック
   const authResult = await requireAuth(request);
   if (authResult instanceof NextResponse) {
@@ -84,7 +74,7 @@ export async function PUT(
       decodedKey,
       validatedData.content,
       authResult.userId,
-      validatedData.changeNote
+      validatedData.changeNote,
     );
 
     return NextResponse.json({
@@ -102,21 +92,15 @@ export async function PUT(
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { success: false, error: "Invalid request data", details: error.issues },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     if (error instanceof Error && error.message.includes("not found")) {
-      return NextResponse.json(
-        { success: false, error: error.message },
-        { status: 404 }
-      );
+      return NextResponse.json({ success: false, error: error.message }, { status: 404 });
     }
 
     console.error("Failed to update prompt:", error);
-    return NextResponse.json(
-      { success: false, error: "Failed to update prompt" },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, error: "Failed to update prompt" }, { status: 500 });
   }
 }

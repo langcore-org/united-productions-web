@@ -53,7 +53,7 @@ export function parseMarkdown(content: string): MarkdownElement[] {
     const listMatch = line.match(/^(\s*)[-*+]\s+(.+)$/);
     if (listMatch) {
       const items: string[] = [];
-      const baseIndent = listMatch[1].length;
+      const _baseIndent = listMatch[1].length;
 
       while (i < lines.length) {
         const currentLine = lines[i];

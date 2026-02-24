@@ -10,8 +10,6 @@ import {
   Copy,
   Download,
   FileText,
-  FolderOpen,
-  Loader2,
   MessageSquare,
   Mic,
   RotateCcw,
@@ -23,16 +21,11 @@ import {
   Users,
 } from "lucide-react";
 import { useCallback, useRef, useState } from "react";
-import {
-  DriveFileSelectButton,
-  DriveUploadButton,
-} from "@/components/meeting-notes/GoogleDriveButtons";
+import { DriveUploadButton } from "@/components/meeting-notes/GoogleDriveButtons";
 import { FeatureCard } from "@/components/ui/FeatureCard";
 import { FileUpload } from "@/components/ui/FileUpload";
-import { Label } from "@/components/ui/label";
 import { ProgramSelector } from "@/components/ui/ProgramSelector";
 import { DEFAULT_PROVIDER } from "@/lib/llm/config";
-import type { LLMProvider } from "@/lib/llm/types";
 import { cn } from "@/lib/utils";
 import { sanitizeAndFormatMarkdown } from "@/lib/xss-sanitizer";
 
@@ -197,7 +190,7 @@ export default function MeetingNotesPage() {
     } finally {
       abortControllerRef.current = null;
     }
-  }, [transcript, selectedTemplate]);
+  }, [transcript, selectedTemplate, selectedProgramId]);
 
   const handleCancel = () => {
     if (abortControllerRef.current) {
@@ -343,7 +336,7 @@ export default function MeetingNotesPage() {
           {/* File Upload */}
           <div className="mb-4">
             <FileUpload
-              onUpload={(text, filename) => setTranscript(text)}
+              onUpload={(text, _filename) => setTranscript(text)}
               accept={{
                 "text/plain": [".txt"],
                 "text/vtt": [".vtt"],

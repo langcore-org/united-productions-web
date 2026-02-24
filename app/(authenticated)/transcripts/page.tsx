@@ -6,7 +6,6 @@ import {
   Check,
   Copy,
   FileText,
-  Loader2,
   Mic,
   RotateCcw,
   Scissors,
@@ -20,7 +19,6 @@ import { FeatureCard } from "@/components/ui/FeatureCard";
 import { FileUpload } from "@/components/ui/FileUpload";
 import { ProgramSelector } from "@/components/ui/ProgramSelector";
 import { DEFAULT_PROVIDER } from "@/lib/llm/config";
-import type { LLMProvider } from "@/lib/llm/types";
 import { cn } from "@/lib/utils";
 
 type ProcessingStatus = "idle" | "streaming" | "completed" | "error";
@@ -235,7 +233,7 @@ Premiere Proの書き起こしテキストを、放送用のNA原稿形式に整
     } finally {
       abortControllerRef.current = null;
     }
-  }, [transcript]);
+  }, [transcript, selectedProgramId]);
 
   const handleCancel = () => {
     if (abortControllerRef.current) {
@@ -375,7 +373,7 @@ Premiere Proの書き起こしテキストを、放送用のNA原稿形式に整
           {/* File Upload */}
           <div className="mb-4">
             <FileUpload
-              onUpload={(text, filename) => setTranscript(text)}
+              onUpload={(text, _filename) => setTranscript(text)}
               accept={{
                 "text/plain": [".txt"],
                 "text/vtt": [".vtt"],

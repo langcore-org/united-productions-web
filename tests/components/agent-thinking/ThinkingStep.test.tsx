@@ -5,7 +5,7 @@
  */
 
 import { fireEvent, render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { ThinkingStep, ThinkingStepList } from "@/components/agent-thinking/ThinkingStep";
 import type { ThinkingStep as ThinkingStepType } from "@/types/agent-thinking";
 

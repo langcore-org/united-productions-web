@@ -1,10 +1,10 @@
 /**
  * LLM共通定数
- * 
+ *
  * プロバイダー関連の定数を一元管理します。
  */
 
-import { LLMProvider } from "./types";
+import type { LLMProvider } from "./types";
 
 /**
  * プロバイダー表示名

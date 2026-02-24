@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
-import { cn } from "@/lib/utils";
-import { Paperclip, X, FileText, Image, FileCode, File } from "lucide-react";
+import { File, FileCode, FileText, Image, Paperclip, X } from "lucide-react";
+import { useCallback, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { MAX_FILE_SIZE_MB } from "@/config/constants";
+import { cn } from "@/lib/utils";
 
 export interface AttachedFile {
   id: string;
@@ -77,9 +77,13 @@ export function FileAttachment({
           content: e.target?.result as string,
         });
       };
-      
+
       // テキストファイルはテキストとして読み込み、画像はBase64
-      if (file.type.startsWith("text/") || file.type.includes("json") || file.type.includes("javascript")) {
+      if (
+        file.type.startsWith("text/") ||
+        file.type.includes("json") ||
+        file.type.includes("javascript")
+      ) {
         reader.readAsText(file);
       } else if (file.type.startsWith("image/")) {
         reader.readAsDataURL(file);
@@ -121,16 +125,16 @@ export function FileAttachment({
         onFilesChange([...files, ...newFiles]);
       }
     },
-    [files, onFilesChange, maxFiles, maxSizeMB, disabled]
+    [files, onFilesChange, maxFiles, disabled, processFile, validateFile],
   );
 
-  const handleDragOver = useCallback(
+  const _handleDragOver = useCallback(
     (e: React.DragEvent) => {
       e.preventDefault();
       e.stopPropagation();
       if (!disabled) setIsDragging(true);
     },
-    [disabled]
+    [disabled],
   );
 
   const handleDragLeave = useCallback((e: React.DragEvent) => {
@@ -146,7 +150,7 @@ export function FileAttachment({
       setIsDragging(false);
       handleFiles(e.dataTransfer.files);
     },
-    [handleFiles]
+    [handleFiles],
   );
 
   const removeFile = useCallback(
@@ -154,7 +158,7 @@ export function FileAttachment({
       onFilesChange(files.filter((f) => f.id !== id));
       setError(null);
     },
-    [files, onFilesChange]
+    [files, onFilesChange],
   );
 
   return (
@@ -169,9 +173,7 @@ export function FileAttachment({
           <div className="bg-white border-2 border-dashed border-gray-700 rounded-2xl p-12 text-center shadow-lg">
             <Paperclip className="w-12 h-12 text-gray-700 mx-auto mb-4" />
             <p className="text-lg font-medium text-gray-900">ファイルをドロップ</p>
-            <p className="text-sm text-gray-500 mt-1">
-              テキスト、画像、コードファイルに対応
-            </p>
+            <p className="text-sm text-gray-500 mt-1">テキスト、画像、コードファイルに対応</p>
           </div>
         </div>
       )}
@@ -188,12 +190,8 @@ export function FileAttachment({
               >
                 <Icon className="w-4 h-4 text-gray-500" />
                 <div className="flex flex-col">
-                  <span className="text-xs text-gray-700 max-w-[150px] truncate">
-                    {file.name}
-                  </span>
-                  <span className="text-[10px] text-gray-500">
-                    {formatFileSize(file.size)}
-                  </span>
+                  <span className="text-xs text-gray-700 max-w-[150px] truncate">{file.name}</span>
+                  <span className="text-[10px] text-gray-500">{formatFileSize(file.size)}</span>
                 </div>
                 <button
                   onClick={() => removeFile(file.id)}
@@ -221,7 +219,7 @@ export function FileAttachment({
         type="file"
         multiple
         accept={Object.entries(ACCEPTED_TYPES)
-          .map(([type, exts]) => exts.join(","))
+          .map(([_type, exts]) => exts.join(","))
           .join(",")}
         onChange={(e) => handleFiles(e.target.files)}
         className="hidden"
@@ -257,7 +255,7 @@ export function FileAttachButton({ onFilesSelect, disabled }: FileAttachButtonPr
             content: event.target?.result as string,
           });
         };
-        
+
         if (file.type.startsWith("text/") || file.type.includes("json")) {
           reader.readAsText(file);
         } else if (file.type.startsWith("image/")) {

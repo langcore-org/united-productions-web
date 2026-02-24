@@ -1,26 +1,26 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { AdminLayout } from "@/components/layout/AdminLayout";
 import {
-  Users,
-  Search,
-  Loader2,
+  AlertTriangle,
   ChevronLeft,
   ChevronRight,
   FileText,
-  Mic,
-  MessageSquare,
+  Loader2,
   Mail,
-  User,
+  MessageSquare,
+  Mic,
+  Search,
   Shield,
+  User,
   UserCircle,
-  AlertTriangle,
+  Users,
 } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { AdminLayout } from "@/components/layout/AdminLayout";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { STYLES } from "@/lib/admin-styles";
 
 interface UserData {
@@ -121,7 +121,7 @@ export default function AdminUsersPage() {
     setUpdatingUserId(userId);
     try {
       const newRole = currentRole === "ADMIN" ? "USER" : "ADMIN";
-      
+
       const response = await fetch(`/api/admin/users/${userId}/role`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -132,9 +132,7 @@ export default function AdminUsersPage() {
 
       if (result.success) {
         setUsers((prev) =>
-          prev.map((user) =>
-            user.id === userId ? { ...user, role: newRole } : user
-          )
+          prev.map((user) => (user.id === userId ? { ...user, role: newRole } : user)),
         );
         setMessage({
           type: "success",
@@ -173,9 +171,7 @@ export default function AdminUsersPage() {
               </div>
               <div>
                 <h1 className="text-3xl font-bold text-gray-900">ユーザー一覧</h1>
-                <p className="text-gray-500">
-                  登録ユーザー: {pagination.total.toLocaleString()}名
-                </p>
+                <p className="text-gray-500">登録ユーザー: {pagination.total.toLocaleString()}名</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -284,12 +280,10 @@ export default function AdminUsersPage() {
                         styleIndex={2}
                       />
                       <div className="ml-4 pl-4 border-l border-gray-200">
-                        <div className="text-2xl font-bold text-gray-900">
-                          {user.usage.total}
-                        </div>
+                        <div className="text-2xl font-bold text-gray-900">{user.usage.total}</div>
                         <div className="text-xs text-gray-500">合計利用</div>
                       </div>
-                      
+
                       {/* 権限切り替えボタン */}
                       <div className="ml-4 pl-4 border-l border-gray-200">
                         <Button

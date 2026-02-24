@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
-import { signIn } from "next-auth/react";
+import { AlertCircle, Eye, EyeOff, Loader2, Lock, Mail } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
+import { useState } from "react";
 import { cn } from "@/lib/utils";
-import { Eye, EyeOff, Lock, Mail, AlertCircle, Loader2 } from "lucide-react";
 
 export default function PreviewLoginPage() {
   const router = useRouter();
@@ -59,12 +59,8 @@ export default function PreviewLoginPage() {
               <div className="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center mb-4">
                 <AlertCircle className="w-6 h-6 text-red-500" />
               </div>
-              <h2 className="text-lg font-semibold text-white mb-2">
-                アクセス制限
-              </h2>
-              <p className="text-gray-400">
-                このページはPreview環境でのみ利用可能です
-              </p>
+              <h2 className="text-lg font-semibold text-white mb-2">アクセス制限</h2>
+              <p className="text-gray-400">このページはPreview環境でのみ利用可能です</p>
             </div>
           </div>
 
@@ -91,9 +87,7 @@ export default function PreviewLoginPage() {
 
         {/* Login Card */}
         <div className="bg-[#1a1a24] border border-[#2a2a35] rounded-2xl p-8">
-          <h2 className="text-lg font-semibold text-white mb-2 text-center">
-            ログイン
-          </h2>
+          <h2 className="text-lg font-semibold text-white mb-2 text-center">ログイン</h2>
           <p className="text-sm text-gray-500 mb-6 text-center">
             Preview環境用のアカウントでログインしてください
           </p>
@@ -109,10 +103,7 @@ export default function PreviewLoginPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Email Field */}
             <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium text-gray-400 mb-2"
-              >
+              <label htmlFor="email" className="block text-sm font-medium text-gray-400 mb-2">
                 メールアドレス
               </label>
               <div className="relative">
@@ -131,7 +122,7 @@ export default function PreviewLoginPage() {
                     "text-white placeholder-gray-600",
                     "focus:outline-none focus:border-[#ff6b00] focus:ring-1 focus:ring-[#ff6b00]",
                     "disabled:opacity-50 disabled:cursor-not-allowed",
-                    "transition-all duration-200"
+                    "transition-all duration-200",
                   )}
                 />
               </div>
@@ -139,10 +130,7 @@ export default function PreviewLoginPage() {
 
             {/* Password Field */}
             <div>
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium text-gray-400 mb-2"
-              >
+              <label htmlFor="password" className="block text-sm font-medium text-gray-400 mb-2">
                 パスワード
               </label>
               <div className="relative">
@@ -161,7 +149,7 @@ export default function PreviewLoginPage() {
                     "text-white placeholder-gray-600",
                     "focus:outline-none focus:border-[#ff6b00] focus:ring-1 focus:ring-[#ff6b00]",
                     "disabled:opacity-50 disabled:cursor-not-allowed",
-                    "transition-all duration-200"
+                    "transition-all duration-200",
                   )}
                 />
                 <button
@@ -172,14 +160,10 @@ export default function PreviewLoginPage() {
                     "absolute right-4 top-1/2 -translate-y-1/2",
                     "text-gray-500 hover:text-gray-400",
                     "disabled:opacity-50 disabled:cursor-not-allowed",
-                    "transition-colors duration-200"
+                    "transition-colors duration-200",
                   )}
                 >
-                  {showPassword ? (
-                    <EyeOff className="w-5 h-5" />
-                  ) : (
-                    <Eye className="w-5 h-5" />
-                  )}
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
               </div>
             </div>
@@ -192,7 +176,7 @@ export default function PreviewLoginPage() {
                 "w-full flex items-center justify-center gap-3 px-6 py-4 rounded-xl mt-6",
                 "bg-[#ff6b00] text-white font-medium",
                 "hover:bg-[#ff8533] transition-all duration-200",
-                "disabled:opacity-50 disabled:cursor-not-allowed"
+                "disabled:opacity-50 disabled:cursor-not-allowed",
               )}
             >
               {isLoading ? (

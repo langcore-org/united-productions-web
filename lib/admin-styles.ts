@@ -136,7 +136,7 @@ export const ADMIN_MENU_ITEMS = [
 /**
  * プロバイダーに応じたバッジスタイルを取得（モノトーン版）
  */
-export function getProviderBadgeStyle(providerId: string): string {
+export function getProviderBadgeStyle(_providerId: string): string {
   // すべてのプロバイダーで共通のグレースタイルを使用
   return "bg-gray-100 text-gray-800 border-gray-200";
 }

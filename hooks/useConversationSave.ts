@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 /**
  * useConversationSave
@@ -7,8 +7,8 @@
  * currentChatId と isLoadingHistory の状態も内包する。
  */
 
-import { useState, useCallback } from 'react';
-import type { Message } from '@/components/ui/FeatureChat';
+import { useCallback, useState } from "react";
+import type { Message } from "@/components/ui/FeatureChat";
 
 interface UseConversationSaveOptions {
   featureId: string;
@@ -39,7 +39,7 @@ export function useConversationSave({
       }
       return [];
     } catch (err) {
-      console.error('Failed to load conversation:', err);
+      console.error("Failed to load conversation:", err);
       return [];
     } finally {
       setIsLoadingHistory(false);
@@ -49,9 +49,9 @@ export function useConversationSave({
   const saveConversation = useCallback(
     async (updatedMessages: Message[], chatId: string | undefined) => {
       try {
-        const response = await fetch('/api/chat/feature', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+        const response = await fetch("/api/chat/feature", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ chatId, featureId, messages: updatedMessages }),
         });
         if (response.ok) {
@@ -62,7 +62,7 @@ export function useConversationSave({
           }
         }
       } catch (err) {
-        console.error('Failed to save conversation:', err);
+        console.error("Failed to save conversation:", err);
       }
     },
     [featureId, onChatCreated],

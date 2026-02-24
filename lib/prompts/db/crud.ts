@@ -1,11 +1,11 @@
 /**
  * プロンプト基本CRUD操作
- * 
+ *
  * @created 2026-02-22 12:10
  */
 
+import type { SystemPrompt } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { SystemPrompt } from "@prisma/client";
 import { DEFAULT_PROMPTS } from "../constants";
 
 /**
@@ -30,9 +30,7 @@ export async function getPromptFromDB(key: string): Promise<string | null> {
  * @param keys - プロンプトキーの配列
  * @returns キーと内容のマップ
  */
-export async function getPromptsFromDB(
-  keys: string[]
-): Promise<Record<string, string | null>> {
+export async function getPromptsFromDB(keys: string[]): Promise<Record<string, string | null>> {
   try {
     const prompts = await prisma.systemPrompt.findMany({
       where: { key: { in: keys } },
@@ -89,10 +87,7 @@ export async function getAllPrompts(): Promise<SystemPrompt[]> {
  * @param defaultValue - デフォルト値
  * @returns プロンプト内容
  */
-export async function getPromptWithFallback(
-  key: string,
-  defaultValue: string
-): Promise<string> {
+export async function getPromptWithFallback(key: string, defaultValue: string): Promise<string> {
   const content = await getPromptFromDB(key);
   return content || defaultValue;
 }

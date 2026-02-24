@@ -8,14 +8,10 @@ interface TeddyIconProps {
   variant?: "default" | "outline" | "filled";
 }
 
-export function TeddyIcon({ 
-  className, 
-  size = 32,
-  variant = "default" 
-}: TeddyIconProps) {
+export function TeddyIcon({ className, size = 32, variant = "default" }: TeddyIconProps) {
   const fillColor = variant === "filled" ? "currentColor" : "none";
-  const strokeColor = "currentColor";
-  
+  const _strokeColor = "currentColor";
+
   return (
     <svg
       width={size}
@@ -26,64 +22,21 @@ export function TeddyIcon({
       className={cn("", className)}
     >
       {/* 左耳 - ぷっくり丸みを帯びた耳 */}
-      <circle
-        cx="7"
-        cy="7"
-        r="4.5"
-        fill={variant === "filled" ? "currentColor" : "#6b7280"}
-      />
+      <circle cx="7" cy="7" r="4.5" fill={variant === "filled" ? "currentColor" : "#6b7280"} />
       {/* 右耳 */}
-      <circle
-        cx="25"
-        cy="7"
-        r="4.5"
-        fill={variant === "filled" ? "currentColor" : "#6b7280"}
-      />
+      <circle cx="25" cy="7" r="4.5" fill={variant === "filled" ? "currentColor" : "#6b7280"} />
       {/* 顔の輪郭 - より丸く */}
-      <circle
-        cx="16"
-        cy="17"
-        r="11"
-        fill={variant === "filled" ? "currentColor" : "#4b5563"}
-      />
+      <circle cx="16" cy="17" r="11" fill={variant === "filled" ? "currentColor" : "#4b5563"} />
       {/* 左目 - アニメ風大きめの目 */}
-      <ellipse
-        cx="11"
-        cy="15"
-        rx="2"
-        ry="2.5"
-        fill="#1a1a1a"
-      />
+      <ellipse cx="11" cy="15" rx="2" ry="2.5" fill="#1a1a1a" />
       {/* 左目のハイライト */}
-      <circle
-        cx="12"
-        cy="13.5"
-        r="0.8"
-        fill="white"
-      />
+      <circle cx="12" cy="13.5" r="0.8" fill="white" />
       {/* 右目 - アニメ風大きめの目 */}
-      <ellipse
-        cx="21"
-        cy="15"
-        rx="2"
-        ry="2.5"
-        fill="#1a1a1a"
-      />
+      <ellipse cx="21" cy="15" rx="2" ry="2.5" fill="#1a1a1a" />
       {/* 右目のハイライト */}
-      <circle
-        cx="22"
-        cy="13.5"
-        r="0.8"
-        fill="white"
-      />
+      <circle cx="22" cy="13.5" r="0.8" fill="white" />
       {/* 鼻 - 小さめシンプル */}
-      <ellipse
-        cx="16"
-        cy="19"
-        rx="1.5"
-        ry="1"
-        fill="#1a1a1a"
-      />
+      <ellipse cx="16" cy="19" rx="1.5" ry="1" fill="#1a1a1a" />
       {/* 口 - ω型でかわいらしく */}
       <path
         d="M14 21 Q16 23 18 21"
@@ -93,23 +46,9 @@ export function TeddyIcon({
         fill="none"
       />
       {/* 左頬 - ぷっくり強調 */}
-      <ellipse
-        cx="8"
-        cy="19"
-        rx="2"
-        ry="1.2"
-        fill="#d1d5db"
-        opacity="0.7"
-      />
+      <ellipse cx="8" cy="19" rx="2" ry="1.2" fill="#d1d5db" opacity="0.7" />
       {/* 右頬 */}
-      <ellipse
-        cx="24"
-        cy="19"
-        rx="2"
-        ry="1.2"
-        fill="#d1d5db"
-        opacity="0.7"
-      />
+      <ellipse cx="24" cy="19" rx="2" ry="1.2" fill="#d1d5db" opacity="0.7" />
     </svg>
   );
 }
@@ -120,19 +59,13 @@ interface TeddyLogoProps {
   showText?: boolean;
 }
 
-export function TeddyLogo({
-  className,
-  size = 40,
-  showText = true
-}: TeddyLogoProps) {
+export function TeddyLogo({ className, size = 40, showText = true }: TeddyLogoProps) {
   return (
     <div className={cn("flex items-center gap-2", className)}>
       <div className="relative">
         <TeddyIcon size={size} variant="filled" className="text-gray-700" />
       </div>
-      {showText && (
-        <span className="font-bold text-xl tracking-tight">Teddy</span>
-      )}
+      {showText && <span className="font-bold text-xl tracking-tight">Teddy</span>}
     </div>
   );
 }

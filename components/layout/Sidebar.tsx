@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  ChevronDown,
   ChevronRight,
   FileText,
   History,
@@ -11,7 +10,6 @@ import {
   Mic,
   PanelLeft,
   Plus,
-  Search,
   Shield,
   Users,
 } from "lucide-react";
@@ -152,9 +150,7 @@ export function Sidebar({ className, onCollapseChange }: SidebarProps) {
       {/* Logo */}
       {!isCollapsed && (
         <div className="px-4 pt-4 pb-2">
-          <span className="font-bold text-xl text-[#1a1a1a] tracking-tight">
-            Teddy
-          </span>
+          <span className="font-bold text-xl text-[#1a1a1a] tracking-tight">Teddy</span>
         </div>
       )}
 

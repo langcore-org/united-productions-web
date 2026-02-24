@@ -1,7 +1,7 @@
 "use client";
 
-import { cn } from "@/lib/utils";
 import { ArrowRight } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export interface PromptSuggestion {
   id: string;
@@ -33,7 +33,7 @@ export function PromptSuggestions({
             "bg-gray-50 hover:bg-gray-100",
             "border border-gray-200 hover:border-gray-300",
             "transition-all duration-200",
-            "text-sm text-gray-700 hover:text-gray-900"
+            "text-sm text-gray-700 hover:text-gray-900",
           )}
         >
           <span className="flex-1 pr-3 leading-relaxed">{suggestion.text}</span>

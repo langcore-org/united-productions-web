@@ -1,12 +1,12 @@
 /**
  * プロンプトバージョン管理
- * 
+ *
  * @created 2026-02-22 12:10
  */
 
+import type { SystemPrompt, SystemPromptVersion } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { SystemPrompt, SystemPromptVersion } from "@prisma/client";
-import { PromptWithVersions } from "./types";
+import type { PromptWithVersions } from "./types";
 
 /**
  * プロンプトを更新（バージョン自動採番）
@@ -20,7 +20,7 @@ export async function updatePromptWithVersion(
   key: string,
   content: string,
   changedBy?: string,
-  changeNote?: string
+  changeNote?: string,
 ): Promise<SystemPrompt> {
   return await prisma.$transaction(async (tx) => {
     const current = await tx.systemPrompt.findUnique({
@@ -63,9 +63,7 @@ export async function updatePromptWithVersion(
  * @param key - プロンプトキー
  * @returns バージョン履歴一覧
  */
-export async function getPromptVersionHistory(
-  key: string
-): Promise<SystemPromptVersion[]> {
+export async function getPromptVersionHistory(key: string): Promise<SystemPromptVersion[]> {
   const prompt = await prisma.systemPrompt.findUnique({
     where: { key },
     include: {
@@ -90,7 +88,7 @@ export async function getPromptVersionHistory(
  */
 export async function getPromptVersion(
   key: string,
-  version: number
+  version: number,
 ): Promise<SystemPromptVersion | null> {
   const prompt = await prisma.systemPrompt.findUnique({
     where: { key },
@@ -120,7 +118,7 @@ export async function restorePromptVersion(
   key: string,
   version: number,
   changedBy?: string,
-  changeNote?: string
+  changeNote?: string,
 ): Promise<SystemPrompt> {
   return await prisma.$transaction(async (tx) => {
     const current = await tx.systemPrompt.findUnique({
@@ -143,7 +141,7 @@ export async function restorePromptVersion(
     }
 
     const newVersion = current.currentVersion + 1;
-    const restoreNote = changeNote 
+    const restoreNote = changeNote
       ? `${changeNote}（バージョン${version}から復元）`
       : `バージョン${version}から復元`;
 
@@ -177,9 +175,7 @@ export async function restorePromptVersion(
  * @param key - プロンプトキー
  * @returns プロンプト詳細
  */
-export async function getPromptWithHistory(
-  key: string
-): Promise<PromptWithVersions | null> {
+export async function getPromptWithHistory(key: string): Promise<PromptWithVersions | null> {
   return await prisma.systemPrompt.findUnique({
     where: { key },
     include: {

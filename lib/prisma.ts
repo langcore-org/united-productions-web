@@ -1,9 +1,9 @@
 /**
  * Prisma Client インスタンス
- * 
+ *
  * 開発環境でのホットリロード時の複数インスタンス生成を防止するため、
  * グローバルにキャッシュして使用します。
- * 
+ *
  * 推奨: DATABASE_URLに接続プールパラメータを追加
  *   postgresql://user:pass@host/db?connection_limit=5&pool_timeout=10
  */
@@ -17,9 +17,7 @@ const globalForPrisma = globalThis as unknown as {
 // 接続プール設定付きのPrismaClient作成
 function createPrismaClient(): PrismaClient {
   const client = new PrismaClient({
-    log: process.env.NODE_ENV === "development" 
-      ? ["query", "error", "warn"] 
-      : ["error"],
+    log: process.env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error"],
   });
   return client;
 }
@@ -38,9 +36,7 @@ function getPrismaClient(): PrismaClient {
     return client;
   } catch (error) {
     console.error("Prisma Client initialization failed:", error);
-    throw new Error(
-      "Prisma Clientの初期化に失敗しました。DATABASE_URLを確認してください。"
-    );
+    throw new Error("Prisma Clientの初期化に失敗しました。DATABASE_URLを確認してください。");
   }
 }
 

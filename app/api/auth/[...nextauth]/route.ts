@@ -1,7 +1,7 @@
 /**
  * NextAuth.js API Route
  * AI Hub - United Productions 制作支援統合プラットフォーム
- * 
+ *
  * App Router形式でのNextAuth.js実装
  * パス: /api/auth/[...nextauth]
  */

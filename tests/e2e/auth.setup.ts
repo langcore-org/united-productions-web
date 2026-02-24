@@ -1,5 +1,5 @@
+import path from "node:path";
 import { expect, test as setup } from "@playwright/test";
-import path from "path";
 
 /**
  * 認証セットアップテスト

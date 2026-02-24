@@ -1,5 +1,5 @@
-import { ResearchAgentType } from "@/types/research";
 import type { LLMProvider } from "@/lib/llm/types";
+import type { ResearchAgentType } from "@/types/research";
 
 export const AGENT_DEFAULT_PROVIDERS: Record<ResearchAgentType, LLMProvider> = {
   people: "grok-4-1-fast-reasoning",

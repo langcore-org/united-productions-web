@@ -1,28 +1,28 @@
 /**
  * SubStep コンポーネント
- * 
+ *
  * 検索クエリ、ツール呼び出し等のサブステップを表示
- * 
+ *
  * @updated 2026-02-20 23:30
  */
 
 "use client";
 
-import { useState } from "react";
-import { cn } from "@/lib/utils";
 import {
-  Search,
-  FileEdit,
   BookOpen,
-  Wrench,
-  Eye,
+  CheckCircle2,
   ChevronDown,
   ChevronUp,
-  Loader2,
-  CheckCircle2,
-  XCircle,
   Clock,
+  Eye,
+  FileEdit,
+  Loader2,
+  Search,
+  Wrench,
+  XCircle,
 } from "lucide-react";
+import { useState } from "react";
+import { cn } from "@/lib/utils";
 import type { SubStep as SubStepType } from "@/types/agent-thinking";
 
 // アイコンマッピング
@@ -51,7 +51,7 @@ const statusStyles = {
 };
 
 // ラベルマッピング
-const typeLabels: Record<SubStepType["type"], string> = {
+const _typeLabels: Record<SubStepType["type"], string> = {
   search: "検索",
   tool_use: "ツール",
   knowledge: "ナレッジ",
@@ -71,15 +71,10 @@ export interface SubStepProps {
 
 /**
  * サブステップコンポーネント
- * 
+ *
  * 検索クエリやツール呼び出しを表示する小さなバッジ/カード
  */
-export function SubStep({
-  subStep,
-  onClick,
-  isActive = false,
-  className,
-}: SubStepProps) {
+export function SubStep({ subStep, onClick, isActive = false, className }: SubStepProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
   const Icon = iconMap[subStep.type] || Wrench;
@@ -96,7 +91,7 @@ export function SubStep({
         "bg-gray-50 border-gray-200",
         isActive && "bg-blue-50 border-blue-200 ring-1 ring-blue-200",
         isClickable && "cursor-pointer hover:border-gray-300 hover:bg-gray-100",
-        className
+        className,
       )}
     >
       {/* メイン行 */}
@@ -115,9 +110,7 @@ export function SubStep({
         </div>
 
         {/* ラベル */}
-        <span className="flex-shrink-0 text-xs font-medium text-gray-600">
-          {subStep.label}
-        </span>
+        <span className="flex-shrink-0 text-xs font-medium text-gray-600">{subStep.label}</span>
 
         {/* 検索クエリ（ある場合） */}
         {subStep.searchQuery && (
@@ -128,9 +121,7 @@ export function SubStep({
 
         {/* ツール名（ある場合） */}
         {subStep.toolName && (
-          <span className="flex-1 min-w-0 text-xs text-gray-500 truncate">
-            {subStep.toolName}
-          </span>
+          <span className="flex-1 min-w-0 text-xs text-gray-500 truncate">{subStep.toolName}</span>
         )}
 
         {/* ステータスアイコン */}
@@ -138,18 +129,14 @@ export function SubStep({
           className={cn(
             "w-4 h-4 flex-shrink-0",
             statusStyle,
-            subStep.status === "running" && "animate-spin"
+            subStep.status === "running" && "animate-spin",
           )}
         />
 
         {/* 展開インジケーター */}
         {hasDetail && (
           <div className="flex-shrink-0 text-gray-400">
-            {isExpanded ? (
-              <ChevronUp className="w-3 h-3" />
-            ) : (
-              <ChevronDown className="w-3 h-3" />
-            )}
+            {isExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
           </div>
         )}
       </div>
@@ -160,7 +147,7 @@ export function SubStep({
           <div className="pl-6 text-xs text-gray-600 whitespace-pre-wrap leading-relaxed">
             {subStep.detail}
           </div>
-          
+
           {/* メタデータ */}
           {subStep.metadata && (
             <div className="pl-6 mt-2 flex flex-wrap gap-2">

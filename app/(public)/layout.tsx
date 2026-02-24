@@ -3,10 +3,6 @@
  * 認証不要のページで使用
  */
 
-export default function PublicLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function PublicLayout({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }

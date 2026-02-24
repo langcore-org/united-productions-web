@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronRight, ExternalLink, Filter, Search, Tv } from "lucide-react";
+import { ChevronRight, ExternalLink, Search, Tv } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AdminLayout } from "@/components/layout/AdminLayout";
@@ -47,11 +47,11 @@ export default function ProgramsAdminPage() {
 
   useEffect(() => {
     fetchPrograms();
-  }, []);
+  }, [fetchPrograms]);
 
   useEffect(() => {
     filterPrograms();
-  }, [programs, searchQuery, stationFilter]);
+  }, [filterPrograms]);
 
   const fetchPrograms = async () => {
     try {

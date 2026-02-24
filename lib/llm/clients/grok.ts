@@ -370,4 +370,36 @@ export class GrokClient implements LLMClient {
       if (event.type === "content") yield event.delta;
     }
   }
+
+  /**
+   * 会話履歴の要約を生成
+   *
+   * @param messages - 要約対象のメッセージ配列
+   * @returns 要約テキスト
+   */
+  async summarize(messages: LLMMessage[]): Promise<string> {
+    logger.info("Starting summarization", { messageCount: messages.length });
+
+    const summaryPrompt: LLMMessage[] = [
+      {
+        role: "system",
+        content:
+          "あなたは会話の要約専門家です。与えられた会話履歴を簡潔に要約してください。重要なポイント、決定事項、文脈を保持しつつ、できるだけ短くまとめてください。",
+      },
+      {
+        role: "user",
+        content: `以下の会話を要約してください:\n\n${messages
+          .map((m) => `[${m.role}] ${m.content}`)
+          .join("\n\n")}`,
+      },
+    ];
+
+    const response = await this.chat(summaryPrompt);
+    logger.info("Summarization completed", {
+      inputMessages: messages.length,
+      summaryLength: response.content.length,
+    });
+
+    return response.content;
+  }
 }

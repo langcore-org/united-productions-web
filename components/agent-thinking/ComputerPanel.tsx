@@ -1,29 +1,28 @@
 /**
  * ComputerPanel コンポーネント
- * 
+ *
  * 右側の検索結果表示パネル
- * 
+ *
  * @updated 2026-02-20 23:50
  */
 
 "use client";
 
+import {
+  ExternalLink,
+  FileText,
+  Globe,
+  Image as ImageIcon,
+  Monitor,
+  Search,
+  X,
+} from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import {
-  X,
-  Search,
-  ExternalLink,
-  Monitor,
-  ChevronRight,
-  Globe,
-  FileText,
-  Image as ImageIcon,
-} from "lucide-react";
 import type { SearchResultItem, SubStep } from "@/types/agent-thinking";
 
 // 結果タイプに応じたアイコン
-const resultTypeIcons = {
+const _resultTypeIcons = {
   web: Globe,
   document: FileText,
   image: ImageIcon,
@@ -40,11 +39,7 @@ export interface SearchResultCardProps {
 /**
  * 検索結果カード
  */
-export function SearchResultCard({
-  result,
-  onClick,
-  className,
-}: SearchResultCardProps) {
+export function SearchResultCard({ result, onClick, className }: SearchResultCardProps) {
   const handleClick = () => {
     if (result.url) {
       window.open(result.url, "_blank", "noopener,noreferrer");
@@ -64,7 +59,7 @@ export function SearchResultCard({
         "group p-3 rounded-lg border cursor-pointer",
         "bg-white border-gray-200 hover:border-gray-300 hover:bg-gray-50",
         "transition-all duration-200",
-        className
+        className,
       )}
     >
       {/* ヘッダー：ファビコン + ドメイン */}
@@ -91,9 +86,7 @@ export function SearchResultCard({
       </h4>
 
       {/* 説明 */}
-      <p className="text-xs text-gray-600 line-clamp-3 leading-relaxed">
-        {result.description}
-      </p>
+      <p className="text-xs text-gray-600 line-clamp-3 leading-relaxed">{result.description}</p>
 
       {/* 外部リンクインジケーター */}
       <div className="flex items-center gap-1 mt-2 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -121,7 +114,7 @@ export interface ComputerPanelProps {
 
 /**
  * Computerパネル
- * 
+ *
  * 検索結果を表示するサイドパネル
  */
 export function ComputerPanel({
@@ -132,7 +125,7 @@ export function ComputerPanel({
   searchQuery,
   className,
 }: ComputerPanelProps) {
-  const [selectedResultId, setSelectedResultId] = useState<string | null>(null);
+  const [_selectedResultId, setSelectedResultId] = useState<string | null>(null);
 
   if (!isOpen) {
     return null;
@@ -147,7 +140,7 @@ export function ComputerPanel({
         "w-full sm:w-[400px] md:w-[450px]",
         "bg-white border-l border-gray-200 shadow-xl",
         "flex flex-col",
-        className
+        className,
       )}
     >
       {/* ヘッダー */}
@@ -202,9 +195,7 @@ export function ComputerPanel({
           <div className="flex flex-col items-center justify-center h-full text-center">
             <Search className="w-12 h-12 text-gray-300 mb-3" />
             <p className="text-sm text-gray-500">検索結果がありません</p>
-            <p className="text-xs text-gray-400 mt-1">
-              検索が実行されると結果がここに表示されます
-            </p>
+            <p className="text-xs text-gray-400 mt-1">検索が実行されると結果がここに表示されます</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -222,9 +213,7 @@ export function ComputerPanel({
       {/* フッター */}
       {hasResults && (
         <div className="px-4 py-3 border-t border-gray-200 bg-gray-50">
-          <p className="text-xs text-gray-500 text-center">
-            {searchResults.length}件の結果
-          </p>
+          <p className="text-xs text-gray-500 text-center">{searchResults.length}件の結果</p>
         </div>
       )}
     </div>
@@ -260,7 +249,7 @@ export function ComputerPanelToggle({
         "bg-gray-900 text-white shadow-lg hover:bg-gray-800",
         "transition-all duration-200",
         isOpen && "opacity-0 pointer-events-none",
-        className
+        className,
       )}
     >
       <Monitor className="w-4 h-4" />
@@ -284,10 +273,7 @@ export interface ComputerPanelOverlayProps {
   onClose: () => void;
 }
 
-export function ComputerPanelOverlay({
-  isOpen,
-  onClose,
-}: ComputerPanelOverlayProps) {
+export function ComputerPanelOverlay({ isOpen, onClose }: ComputerPanelOverlayProps) {
   if (!isOpen) return null;
 
   return (

@@ -21,7 +21,7 @@ export const MAX_FILE_SIZE = 10 * 1024 * 1024;
  */
 export async function parseFile(
   file: File,
-  options: { maxSize?: number } = {}
+  options: { maxSize?: number } = {},
 ): Promise<ParsedFile> {
   const maxSize = options.maxSize || MAX_FILE_SIZE;
 
@@ -29,7 +29,7 @@ export async function parseFile(
   if (file.size > maxSize) {
     throw createError(
       "FILE_TOO_LARGE",
-      `ファイルサイズは${formatBytes(maxSize)}以下にしてください`
+      `ファイルサイズは${formatBytes(maxSize)}以下にしてください`,
     );
   }
 
@@ -63,7 +63,7 @@ export async function parseFile(
 
       throw createError(
         "UNSUPPORTED_TYPE",
-        "サポートされていないファイル形式です (.txt, .vtt, .docx)"
+        "サポートされていないファイル形式です (.txt, .vtt, .docx)",
       );
   }
 }
@@ -96,7 +96,7 @@ async function parseTextFile(file: File): Promise<ParsedFile> {
       size: file.size,
       encoding,
     };
-  } catch (error) {
+  } catch (_error) {
     throw createError("ENCODING_ERROR", "文字コードの変換に失敗しました");
   }
 }
@@ -127,7 +127,7 @@ async function parseVTTFile(file: File): Promise<ParsedFile> {
       size: file.size,
       encoding,
     };
-  } catch (error) {
+  } catch (_error) {
     throw createError("PARSE_ERROR", "VTTファイルの解析に失敗しました");
   }
 }
@@ -146,7 +146,7 @@ async function parseDocxFile(file: File): Promise<ParsedFile> {
       size: file.size,
       encoding: "UTF-8",
     };
-  } catch (error) {
+  } catch (_error) {
     throw createError("PARSE_ERROR", "Wordファイルの解析に失敗しました");
   }
 }
@@ -243,13 +243,11 @@ function detectMimeType(filename: string): string {
  * テキスト正規化
  */
 function normalizeText(text: string): string {
-  return (
-    text
-      .replace(/\r\n/g, "\n") // Windows改行を統一
-      .replace(/\r/g, "\n") // Mac改行を統一
-      .replace(/\n{3,}/g, "\n\n") // 連続改行を2つに制限
-      .trim()
-  );
+  return text
+    .replace(/\r\n/g, "\n") // Windows改行を統一
+    .replace(/\r/g, "\n") // Mac改行を統一
+    .replace(/\n{3,}/g, "\n\n") // 連続改行を2つに制限
+    .trim();
 }
 
 /**
@@ -267,5 +265,5 @@ function formatBytes(bytes: number): string {
   const k = 1024;
   const sizes = ["Bytes", "KB", "MB", "GB"];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+  return `${parseFloat((bytes / k ** i).toFixed(2))} ${sizes[i]}`;
 }

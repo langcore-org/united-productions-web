@@ -1,19 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { cn } from "@/lib/utils";
-import { AppLayout } from "@/components/layout/AppLayout";
-import { 
-  FileText, 
-  Mic, 
-  Search, 
-  AtSign, 
-  Send, 
-  Sparkles,
-  ArrowUp,
-  Globe
-} from "lucide-react";
+import { ArrowUp, AtSign, FileText, Globe, Mic, Search, Sparkles } from "lucide-react";
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { AppLayout } from "@/components/layout/AppLayout";
+import { cn } from "@/lib/utils";
 
 interface ModeButton {
   id: string;
@@ -90,9 +81,7 @@ export default function DashboardPage() {
                 <div className="w-12 h-12 rounded-2xl bg-black flex items-center justify-center">
                   <Sparkles className="w-6 h-6 text-white" />
                 </div>
-                <h1 className="text-4xl font-semibold tracking-tight text-gray-900">
-                  Teddy
-                </h1>
+                <h1 className="text-4xl font-semibold tracking-tight text-gray-900">Teddy</h1>
               </div>
               {/* ロゴ下のサブタイトル削除 */}
             </div>
@@ -103,7 +92,7 @@ export default function DashboardPage() {
                 className={cn(
                   "relative flex flex-col bg-white border border-gray-200 rounded-3xl shadow-lg",
                   "transition-all duration-300",
-                  isFocused && "border-black shadow-xl ring-4 ring-black/5"
+                  isFocused && "border-black shadow-xl ring-4 ring-black/5",
                 )}
               >
                 {/* Input Row */}
@@ -136,7 +125,7 @@ export default function DashboardPage() {
                       "flex items-center justify-center w-10 h-10 rounded-full",
                       inputValue.trim()
                         ? "bg-black text-white hover:bg-gray-800"
-                        : "bg-gray-200 text-gray-400 cursor-not-allowed"
+                        : "bg-gray-200 text-gray-400 cursor-not-allowed",
                     )}
                   >
                     <ArrowUp className="w-5 h-5" />
@@ -158,9 +147,7 @@ export default function DashboardPage() {
                   </div>
 
                   {inputValue.length > 0 && (
-                    <span className="text-xs text-gray-400">
-                      {inputValue.length}
-                    </span>
+                    <span className="text-xs text-gray-400">{inputValue.length}</span>
                   )}
                 </div>
               </div>

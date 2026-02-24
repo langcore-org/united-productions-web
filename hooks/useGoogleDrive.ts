@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useCallback, useState } from "react";
 
 export interface DriveFile {
   id: string;
@@ -46,10 +46,7 @@ export function useGoogleDrive() {
   /**
    * ファイルをアップロード
    */
-  const uploadFile = useCallback(async (
-    file: File,
-    name?: string
-  ): Promise<DriveFile | null> => {
+  const uploadFile = useCallback(async (file: File, name?: string): Promise<DriveFile | null> => {
     setIsLoading(true);
     setError(null);
 
@@ -82,32 +79,33 @@ export function useGoogleDrive() {
   /**
    * ファイルをダウンロード
    */
-  const downloadFile = useCallback(async (
-    fileId: string
-  ): Promise<{ metadata: DriveFile; content: string } | null> => {
-    setIsLoading(true);
-    setError(null);
+  const downloadFile = useCallback(
+    async (fileId: string): Promise<{ metadata: DriveFile; content: string } | null> => {
+      setIsLoading(true);
+      setError(null);
 
-    try {
-      const response = await fetch(`/api/drive/download?fileId=${fileId}`);
-      const data = await response.json();
+      try {
+        const response = await fetch(`/api/drive/download?fileId=${fileId}`);
+        const data = await response.json();
 
-      if (!response.ok) {
-        throw new Error(data.error || "ダウンロードに失敗しました");
+        if (!response.ok) {
+          throw new Error(data.error || "ダウンロードに失敗しました");
+        }
+
+        return {
+          metadata: data.metadata,
+          content: data.content,
+        };
+      } catch (err) {
+        const message = err instanceof Error ? err.message : "エラーが発生しました";
+        setError(message);
+        return null;
+      } finally {
+        setIsLoading(false);
       }
-
-      return {
-        metadata: data.metadata,
-        content: data.content,
-      };
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "エラーが発生しました";
-      setError(message);
-      return null;
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+    },
+    [],
+  );
 
   return {
     listFiles,

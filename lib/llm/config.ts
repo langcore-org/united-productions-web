@@ -1,17 +1,17 @@
 /**
  * LLM設定
- * 
+ *
  * 各モデルの価格、コンテキスト長、推奨用途等の設定
  * 2026年2月時点の最新情報
- * 
+ *
  * 現在使用中: Grokのみ
  */
 
-import { LLMProvider, ProviderInfo } from './types';
+import type { LLMProvider, ProviderInfo } from "./types";
 
 /**
  * プロバイダー情報マップ
- * 
+ *
  * 注意: 現在使用しているのはgrokのみ
  */
 export const PROVIDER_CONFIG: Record<LLMProvider, ProviderInfo> = {
@@ -42,26 +42,26 @@ export const PROVIDER_CONFIG: Record<LLMProvider, ProviderInfo> = {
   */
 
   // xAI Grok - 現在使用中
-  'grok-4-1-fast-reasoning': {
-    id: 'grok-4-1-fast-reasoning',
-    name: 'Grok 4.1 Fast',
-    provider: 'xAI',
-    description: 'Grok 4.1高速推論モデル。X検索対応。2Mコンテキスト。',
-    inputPrice: 0.20,
-    outputPrice: 0.50,
+  "grok-4-1-fast-reasoning": {
+    id: "grok-4-1-fast-reasoning",
+    name: "Grok 4.1 Fast",
+    provider: "xAI",
+    description: "Grok 4.1高速推論モデル。X検索対応。2Mコンテキスト。",
+    inputPrice: 0.2,
+    outputPrice: 0.5,
     contextLength: 2000000,
-    recommendedFor: ['PJ-C', '人探し', 'X検索', 'リアルタイム情報'],
+    recommendedFor: ["PJ-C", "人探し", "X検索", "リアルタイム情報"],
     isAvailable: true,
   },
-  'grok-4-0709': {
-    id: 'grok-4-0709',
-    name: 'Grok 4',
-    provider: 'xAI',
-    description: 'Grok 4標準版。高品質推論。256kコンテキスト。',
-    inputPrice: 3.00,
-    outputPrice: 15.00,
+  "grok-4-0709": {
+    id: "grok-4-0709",
+    name: "Grok 4",
+    provider: "xAI",
+    description: "Grok 4標準版。高品質推論。256kコンテキスト。",
+    inputPrice: 3.0,
+    outputPrice: 15.0,
     contextLength: 256000,
-    recommendedFor: ['高品質タスク', '複雑なタスク'],
+    recommendedFor: ["高品質タスク", "複雑なタスク"],
     isAvailable: true,
   },
 
@@ -125,7 +125,7 @@ export const PROVIDER_CONFIG: Record<LLMProvider, ProviderInfo> = {
 /**
  * デフォルトプロバイダー
  */
-export const DEFAULT_PROVIDER: LLMProvider = 'grok-4-1-fast-reasoning';
+export const DEFAULT_PROVIDER: LLMProvider = "grok-4-1-fast-reasoning";
 
 /**
  * レート制限設定（リクエスト/分、リクエスト/日）
@@ -136,8 +136,8 @@ export const RATE_LIMITS: Record<LLMProvider, { rpm: number; rpd: number }> = {
   // 'gemini-3.0-flash': { rpm: 30, rpd: 1500 },
 
   // xAI Grok - 現在使用中
-  'grok-4-1-fast-reasoning': { rpm: 60, rpd: 10000 },
-  'grok-4-0709': { rpm: 60, rpd: 10000 },
+  "grok-4-1-fast-reasoning": { rpm: 60, rpd: 10000 },
+  "grok-4-0709": { rpm: 60, rpd: 10000 },
 
   // OpenAI - 将来追加予定
   // 'gpt-4o-mini': { rpm: 60, rpd: 10000 },
@@ -170,25 +170,25 @@ export const CACHE_CONFIG = {
   // キャッシュ有効期限（秒）
   ttl: 60 * 60 * 24, // 24時間
   // キャッシュキープレフィックス
-  keyPrefix: 'llm:',
+  keyPrefix: "llm:",
 } as const;
 
 /**
  * 無料枠レート制限設定
  */
 export const FREE_TIER_LIMITS: Record<LLMProvider, { rpm: number; rpd: number }> = {
-  'grok-4-1-fast-reasoning': { rpm: 60, rpd: 10000 },
-  'grok-4-0709': { rpm: 60, rpd: 10000 },
+  "grok-4-1-fast-reasoning": { rpm: 60, rpd: 10000 },
+  "grok-4-0709": { rpm: 60, rpd: 10000 },
 };
 
 /**
  * プロジェクト別デフォルトプロバイダー
  */
 export const PROJECT_DEFAULT_PROVIDERS: Record<string, LLMProvider> = {
-  'PJ-A': 'grok-4-1-fast-reasoning',
-  'PJ-B': 'grok-4-1-fast-reasoning',
-  'PJ-C': 'grok-4-1-fast-reasoning',
-  'PJ-D': 'grok-4-1-fast-reasoning',
+  "PJ-A": "grok-4-1-fast-reasoning",
+  "PJ-B": "grok-4-1-fast-reasoning",
+  "PJ-C": "grok-4-1-fast-reasoning",
+  "PJ-D": "grok-4-1-fast-reasoning",
 };
 
 /**

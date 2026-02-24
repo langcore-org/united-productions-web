@@ -5,11 +5,11 @@
 
 "use client";
 
+import { Check, File, FolderOpen, Loader2, Upload, X } from "lucide-react";
 import { useCallback, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useFileUpload } from "@/hooks/useFileUpload";
 import { cn } from "@/lib/utils";
-import { Upload, File, X, Loader2, Check, FolderOpen } from "lucide-react";
 import { GoogleDrivePicker } from "./GoogleDrivePicker";
 
 interface FileUploadProps {
@@ -23,9 +23,7 @@ interface FileUploadProps {
 const DEFAULT_ACCEPT = {
   "text/plain": [".txt"],
   "text/vtt": [".vtt"],
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [
-    ".docx",
-  ],
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [".docx"],
 };
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
@@ -35,25 +33,25 @@ function formatBytes(bytes: number): string {
   const k = 1024;
   const sizes = ["Bytes", "KB", "MB", "GB"];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+  return `${parseFloat((bytes / k ** i).toFixed(2))} ${sizes[i]}`;
 }
 
 // MIMEタイプをGoogle Drive API用に変換
 function getGoogleDriveMimeTypes(accept: Record<string, string[]>): string[] {
   const mimeTypes: string[] = [];
-  
+
   // 通常のMIMEタイプ
-  Object.keys(accept).forEach(mime => {
+  Object.keys(accept).forEach((mime) => {
     mimeTypes.push(mime);
   });
-  
+
   // Google Workspaceファイルも追加
   mimeTypes.push(
-    "application/vnd.google-apps.document",      // Google Docs
-    "application/vnd.google-apps.spreadsheet",   // Google Sheets
-    "application/vnd.google-apps.presentation"   // Google Slides
+    "application/vnd.google-apps.document", // Google Docs
+    "application/vnd.google-apps.spreadsheet", // Google Sheets
+    "application/vnd.google-apps.presentation", // Google Slides
   );
-  
+
   return mimeTypes;
 }
 
@@ -82,7 +80,7 @@ export function FileUpload({
 
     // 拡張子チェック
     const allowedExtensions = Object.values(accept).flat();
-    const fileExtension = "." + file.name.split(".").pop()?.toLowerCase();
+    const fileExtension = `.${file.name.split(".").pop()?.toLowerCase()}`;
     if (!allowedExtensions.includes(fileExtension)) {
       return "対応していないファイル形式です (.txt, .vtt, .docx)";
     }
@@ -122,7 +120,7 @@ export function FileUpload({
         handleFile(file);
       }
     },
-    [uploadFile]
+    [handleFile],
   );
 
   const handleInputChange = useCallback(
@@ -132,7 +130,7 @@ export function FileUpload({
         handleFile(file);
       }
     },
-    [uploadFile]
+    [handleFile],
   );
 
   const handleClear = () => {
@@ -142,15 +140,18 @@ export function FileUpload({
   };
 
   // Google Driveからファイルを選択
-  const handleDriveSelect = (file: { id: string; name: string; mimeType: string }, content: string) => {
+  const handleDriveSelect = (
+    file: { id: string; name: string; mimeType: string },
+    content: string,
+  ) => {
     setShowDrivePicker(false);
-    
+
     // ファイル名を設定
     setUploadedFile({
       name: file.name,
       size: content.length,
     } as File);
-    
+
     // 内容を親コンポーネントに渡す
     onUpload(content, file.name);
   };
@@ -160,13 +161,11 @@ export function FileUpload({
     const k = 1024;
     const sizes = ["Bytes", "KB", "MB"];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+    return `${parseFloat((bytes / k ** i).toFixed(2))} ${sizes[i]}`;
   };
 
   const formatAcceptTypes = () => {
-    return Object.values(accept)
-      .flat()
-      .join(", ");
+    return Object.values(accept).flat().join(", ");
   };
 
   return (
@@ -183,7 +182,7 @@ export function FileUpload({
           validationError && "border-destructive",
           !isDragOver &&
             !validationError &&
-            "border-muted-foreground/25 hover:border-muted-foreground/50"
+            "border-muted-foreground/25 hover:border-muted-foreground/50",
         )}
       >
         <input
@@ -194,10 +193,7 @@ export function FileUpload({
           className="hidden"
           id="file-upload"
         />
-        <label
-          htmlFor="file-upload"
-          className="cursor-pointer block"
-        >
+        <label htmlFor="file-upload" className="cursor-pointer block">
           <div className="flex flex-col items-center gap-2">
             {isUploading ? (
               <Loader2 className="h-10 w-10 text-muted-foreground animate-spin" />
@@ -209,9 +205,7 @@ export function FileUpload({
 
             <div className="text-sm">
               {isDragOver ? (
-                <p className="text-primary font-medium">
-                  ここにファイルをドロップ
-                </p>
+                <p className="text-primary font-medium">ここにファイルをドロップ</p>
               ) : isUploading ? (
                 <p className="text-muted-foreground">アップロード中...</p>
               ) : (
@@ -261,17 +255,10 @@ export function FileUpload({
               <File className="h-5 w-5 text-primary" />
               <div>
                 <p className="text-sm font-medium">{uploadedFile.name}</p>
-                <p className="text-xs text-muted-foreground">
-                  {formatFileSize(uploadedFile.size)}
-                </p>
+                <p className="text-xs text-muted-foreground">{formatFileSize(uploadedFile.size)}</p>
               </div>
             </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleClear}
-              disabled={isUploading}
-            >
+            <Button variant="ghost" size="icon" onClick={handleClear} disabled={isUploading}>
               <X className="h-4 w-4" />
             </Button>
           </div>
@@ -280,14 +267,12 @@ export function FileUpload({
           {isUploading && (
             <div className="space-y-1">
               <div className="h-2 bg-muted rounded-full overflow-hidden">
-                <div 
-                  className="h-full bg-primary transition-all duration-300" 
+                <div
+                  className="h-full bg-primary transition-all duration-300"
                   style={{ width: `${progress}%` }}
                 />
               </div>
-              <p className="text-xs text-muted-foreground text-right">
-                {progress}%
-              </p>
+              <p className="text-xs text-muted-foreground text-right">{progress}%</p>
             </div>
           )}
 
