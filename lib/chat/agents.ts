@@ -92,6 +92,7 @@ export const AGENTS: Agent[] = [
       "料理の企画に詳しい出演者を教えて",
       "過去の出演履歴から候補を絞って",
     ],
+    enableProgramSelector: true,
   },
   {
     id: "research-evidence",
@@ -109,6 +110,7 @@ export const AGENTS: Agent[] = [
       "この噂は本当か調べて",
       "SNSで話題の情報をファクトチェックして",
     ],
+    enableProgramSelector: true,
   },
   {
     id: "minutes",
@@ -127,6 +129,7 @@ export const AGENTS: Agent[] = [
       "会議の決定事項を抽出して",
       "TODOリストを作成して",
     ],
+    enableProgramSelector: true,
   },
   {
     id: "proposal",
@@ -144,6 +147,7 @@ export const AGENTS: Agent[] = [
       "過去の企画をアレンジした新案を出して",
       "季節に合った特番企画を提案して",
     ],
+    enableProgramSelector: true,
   },
   {
     id: "na-script",
@@ -162,6 +166,7 @@ export const AGENTS: Agent[] = [
       "話者を判定して整形して",
       "フィラーを除去して原稿にして",
     ],
+    enableProgramSelector: true,
   },
 ];
 

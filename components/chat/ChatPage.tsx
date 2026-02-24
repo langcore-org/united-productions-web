@@ -87,6 +87,7 @@ export function ChatPage({ featureId }: ChatPageProps) {
       inputLabel={config.inputLabel}
       outputFormat={config.outputFormat}
       promptSuggestions={config.promptSuggestions}
+      enableProgramSelector={true}
     />
   );
 }

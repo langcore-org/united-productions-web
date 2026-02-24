@@ -30,6 +30,7 @@ import {
 import { FeatureCard } from "@/components/ui/FeatureCard";
 import { FileUpload } from "@/components/ui/FileUpload";
 import { Label } from "@/components/ui/label";
+import { ProgramSelector } from "@/components/ui/ProgramSelector";
 import { DEFAULT_PROVIDER } from "@/lib/llm/config";
 import type { LLMProvider } from "@/lib/llm/types";
 import { cn } from "@/lib/utils";
@@ -71,6 +72,7 @@ export default function MeetingNotesPage() {
   const [result, setResult] = useState("");
   const [status, setStatus] = useState<ProcessingStatus>("idle");
   const [error, setError] = useState<string | null>(null);
+  const [selectedProgramId, setSelectedProgramId] = useState<string>("all");
 
   const [copied, setCopied] = useState(false);
   const resultRef = useRef<HTMLDivElement>(null);
@@ -106,6 +108,7 @@ export default function MeetingNotesPage() {
             },
           ],
           provider: DEFAULT_PROVIDER,
+          programId: selectedProgramId,
         }),
         signal: abortController.signal,
       });
@@ -252,6 +255,11 @@ export default function MeetingNotesPage() {
                 <p className="text-sm text-gray-500">Zoom文字起こしをAIで整形</p>
               </div>
             </div>
+            <ProgramSelector
+              value={selectedProgramId}
+              onChange={setSelectedProgramId}
+              disabled={status === "streaming"}
+            />
           </div>
         </div>
       </header>

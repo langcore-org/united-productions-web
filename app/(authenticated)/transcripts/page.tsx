@@ -18,6 +18,7 @@ import {
 import { useCallback, useRef, useState } from "react";
 import { FeatureCard } from "@/components/ui/FeatureCard";
 import { FileUpload } from "@/components/ui/FileUpload";
+import { ProgramSelector } from "@/components/ui/ProgramSelector";
 import { DEFAULT_PROVIDER } from "@/lib/llm/config";
 import type { LLMProvider } from "@/lib/llm/types";
 import { cn } from "@/lib/utils";
@@ -76,6 +77,7 @@ export default function TranscriptsPage() {
   const [result, setResult] = useState("");
   const [status, setStatus] = useState<ProcessingStatus>("idle");
   const [error, setError] = useState<string | null>(null);
+  const [selectedProgramId, setSelectedProgramId] = useState<string>("all");
 
   const [copied, setCopied] = useState(false);
   const resultRef = useRef<HTMLDivElement>(null);
@@ -144,6 +146,7 @@ Premiere Proの書き起こしテキストを、放送用のNA原稿形式に整
             },
           ],
           provider: DEFAULT_PROVIDER,
+          programId: selectedProgramId,
         }),
         signal: abortController.signal,
       });
@@ -310,6 +313,11 @@ Premiere Proの書き起こしテキストを、放送用のNA原稿形式に整
                 <p className="text-sm text-gray-500">Premiere Pro書き起こしをAIで整形</p>
               </div>
             </div>
+            <ProgramSelector
+              value={selectedProgramId}
+              onChange={setSelectedProgramId}
+              disabled={status === "streaming"}
+            />
           </div>
         </div>
       </header>
