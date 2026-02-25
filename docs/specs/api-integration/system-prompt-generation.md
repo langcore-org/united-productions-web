@@ -75,17 +75,11 @@ sequenceDiagram
     participant Client as llm-client.ts
     participant API as /api/llm/stream
 
-    User->>FC: "バラエティ企画に合う<br/>若手俳優を探して"
-    FC->>Hook: startStream(
-        messages,
-        provider,
-        "research-cast",
-        "shikujiri"
-    )
-    Hook->>Client: streamLLMResponse({
-        featureId: "research-cast",
-        programId: "shikujiri"
-    })
+    User->>FC: バラエティ企画に合う若手俳優を探して
+    FC->>Hook: startStream(messages, provider, featureId, programId)
+    Note over FC,Hook: featureId: "research-cast", programId: "shikujiri"
+    Hook->>Client: streamLLMResponse(params)
+    Note over Hook,Client: featureId: "research-cast", programId: "shikujiri"
     Client->>API: POST /api/llm/stream
 ```
 
@@ -110,22 +104,19 @@ sequenceDiagram
     participant DB1 as FeaturePrompt<br/>テーブル
     participant DB2 as SystemPrompt<br/>テーブル
 
-    API->>SP: buildSystemPrompt(
-        "shikujiri",
-        "research-cast"
-    )
+    API->>SP: buildSystemPrompt("shikujiri", "research-cast")
 
     SP->>SP: buildProgramPrompt("shikujiri")
-    Note over SP: 会社概要 + 番組情報<br/>約800文字
+    Note over SP: 会社概要 + 番組情報（約800文字）
 
-    SP->>DB1: SELECT * FROM FeaturePrompt<br/>WHERE featureId = 'research-cast'
-    DB1-->>SP: { promptKey: 'RESEARCH_CAST' }
+    SP->>DB1: SELECT FROM FeaturePrompt WHERE featureId = 'research-cast'
+    DB1-->>SP: promptKey: 'RESEARCH_CAST'
 
-    SP->>DB2: SELECT * FROM SystemPrompt<br/>WHERE key = 'RESEARCH_CAST'
-    DB2-->>SP: { content: '## 出演者リサーチ...' }
+    SP->>DB2: SELECT FROM SystemPrompt WHERE key = 'RESEARCH_CAST'
+    DB2-->>SP: content: '## 出演者リサーチ...'
 
     SP->>SP: 結合（セパレータ付き）
-    Note over SP: 番組情報 + --- + 機能プロンプト<br/>約2000文字
+    Note over SP: 番組情報 + 機能プロンプト（約2000文字）
 
     SP-->>API: systemPrompt
 ```
@@ -244,14 +235,16 @@ sequenceDiagram
     participant API as APIルート
     participant User as ユーザー
 
-    Admin->>DB: INSERT INTO SystemPrompt<br/>(key: 'RESEARCH_VTUBER', content: '...')
-    Admin->>DB: INSERT INTO FeaturePrompt<br/>(featureId: 'research-vtuber', promptKey: 'RESEARCH_VTUBER')
+    Admin->>DB: INSERT SystemPrompt(key, content)
+    Note over Admin,DB: key: 'RESEARCH_VTUBER'
+    Admin->>DB: INSERT FeaturePrompt(featureId, promptKey)
+    Note over Admin,DB: featureId: 'research-vtuber'
     DB-->>Admin: 完了
 
     Note over Admin,User: コード変更・デプロイ不要
 
     User->>API: featureId: 'research-vtuber'
-    API->>DB: 自動的に新しいプロンプトを取得
+    API->>DB: 新しいプロンプトを取得
     DB-->>API: VTuberリサーチ用プロンプト
     API-->>User: 応答
 ```

@@ -28,11 +28,11 @@ async function test() {
     console.log("Contains 'United Productions':", prompt2.includes("United Productions"));
     console.log("Contains 'しくじり先生':", prompt2.includes("しくじり先生"));
     console.log("Contains '機能固有の指示':", prompt2.includes("機能固有の指示"));
-    
+
     // 機能プロンプトの内容も確認
     const hasFeatureContent = prompt2.length > prompt1.length;
     console.log("Feature prompt added:", hasFeatureContent);
-    
+
     if (hasFeatureContent) {
       console.log("\n--- プロンプトの最後の部分（機能固有の指示）---");
       const lines = prompt2.split("\n");

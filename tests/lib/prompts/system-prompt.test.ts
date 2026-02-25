@@ -3,8 +3,8 @@
  */
 
 import { describe, expect, it, vi } from "vitest";
-import { buildProgramPrompt, buildSystemPrompt } from "@/lib/prompts/system-prompt";
 import { prisma } from "@/lib/prisma";
+import { buildProgramPrompt, buildSystemPrompt } from "@/lib/prompts/system-prompt";
 
 // Prismaをモック
 vi.mock("@/lib/prisma", () => ({
