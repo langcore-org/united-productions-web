@@ -72,10 +72,16 @@ export function useLLMStream(options: UseLLMStreamOptions = {}) {
   /**
    * ストリームを開始
    * toolOptions は廃止 - 全ツール常時有効
+   * @param featureId - 機能ID（例: research-cast, proposal）
    * @param programId - 番組ID（"all"または特定の番組ID）
    */
   const startStream = useCallback(
-    async (messages: LLMMessage[], provider: LLMProvider, programId?: string): Promise<void> => {
+    async (
+      messages: LLMMessage[],
+      provider: LLMProvider,
+      featureId?: string,
+      programId?: string,
+    ): Promise<void> => {
       cleanup();
 
       setContent("");
@@ -131,7 +137,7 @@ export function useLLMStream(options: UseLLMStreamOptions = {}) {
 
       try {
         for await (const event of streamLLMResponse(
-          { messages: context.messages, provider, programId },
+          { messages: context.messages, provider, featureId, programId },
           { signal: abortControllerRef.current.signal },
         )) {
           switch (event.type) {

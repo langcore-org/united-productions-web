@@ -184,7 +184,7 @@ export function FeatureChat({
     setAttachedFiles([]);
 
     const streamMessages = buildStreamMessages(userMessage.content, messages);
-    await startStream(streamMessages, provider, selectedProgramId);
+    await startStream(streamMessages, provider, featureId, selectedProgramId);
   };
 
   const handleCopy = async () => {
@@ -225,7 +225,7 @@ export function FeatureChat({
       setMessages((prev) => {
         const newMessages = [...prev, userMessage];
         const streamMessages = buildStreamMessages(userMessage.content, newMessages.slice(0, -1));
-        startStream(streamMessages, provider, selectedProgramId);
+        startStream(streamMessages, provider, featureId, selectedProgramId);
         return newMessages;
       });
     },

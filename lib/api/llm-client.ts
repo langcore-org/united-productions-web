@@ -16,6 +16,8 @@ export interface LLMStreamRequest {
   provider?: LLMProvider;
   temperature?: number;
   maxTokens?: number;
+  /** 機能ID（例: research-cast, proposal, general-chat） */
+  featureId?: string;
   /** 番組ID（"all"または特定の番組ID） */
   programId?: string;
 }

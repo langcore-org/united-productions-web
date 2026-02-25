@@ -1,10 +1,17 @@
 /**
- * United Productions レギュラー番組データ
+ * United Productions レギュラー番組データ（簡易版）
  *
  * マークダウンからパースせず、直接TypeScriptとして管理
  * 型安全性とIDEサポートを優先
  */
 
+import {
+  companyToPromptText,
+  createAllProgramsPromptBase,
+  createCompositeSystemPrompt as createCompositePrompt,
+  createSingleProgramPromptBase,
+  programToPromptTextSimple,
+} from "./system-prompt";
 import type { CompanyInfo, KnowledgeBase, ProgramInfo, ProgramOption } from "./types";
 
 export const companyInfo: CompanyInfo = {
@@ -176,79 +183,25 @@ export function getProgramById(id: string): ProgramInfo | undefined {
   return programs.find((p) => p.id === id);
 }
 
-/** 番組情報をプロンプト用テキストに変換 */
+/** 番組情報をプロンプト用テキストに変換（簡易版） */
 export function programToPromptText(program: ProgramInfo): string {
-  const lines = [
-    `## ${program.name}`,
-    "",
-    `- 放送局: ${program.station}`,
-    `- 放送時間: ${program.schedule}`,
-    `- MC/出演者: ${program.cast || "記載なし"}`,
-    `- 番組内容: ${program.description}`,
-  ];
-
-  if (program.startDate) {
-    lines.push(`- 開始時期: ${program.startDate}`);
-  }
-  if (program.notes) {
-    lines.push(`- 特記事項: ${program.notes}`);
-  }
-
-  return lines.join("\n");
+  return programToPromptTextSimple(program);
 }
 
-/** 会社概要をプロンプト用テキストに変換 */
-export function companyToPromptText(company: CompanyInfo): string {
-  return [
-    "# United Productions 会社概要",
-    "",
-    `- 社名: ${company.name}`,
-    `- 設立: ${company.founded}`,
-    `- 所在地: ${company.location}`,
-    `- 代表者: ${company.representative}`,
-    `- 従業員数: ${company.employees}`,
-    `- 資本金: ${company.capital}`,
-    `- ミッション: ${company.mission}`,
-  ].join("\n");
+/** 会社概要をプロンプト用テキストに変換（簡易版） */
+export function companyToPromptTextFn(company: CompanyInfo): string {
+  return companyToPromptText(company);
 }
 
-/** システムプロンプトを生成（単一番組） */
+/** システムプロンプトを生成（単一番組・簡易版） */
 export function createSingleProgramPrompt(programId: string): string {
   const program = getProgramById(programId);
-  if (!program) {
-    return createAllProgramsPrompt();
-  }
-
-  return [
-    companyToPromptText(companyInfo),
-    "",
-    "# 選択中の番組情報",
-    "",
-    programToPromptText(program),
-    "",
-    "---",
-    "",
-    "上記の番組情報を基に、ユーザーの質問に答えてください。",
-    "番組に関する情報以外は「番組情報に含まれていません」と伝えてください。",
-  ].join("\n");
+  return createSingleProgramPromptBase(companyInfo, program, { detailed: false });
 }
 
-/** システムプロンプトを生成（全番組） */
+/** システムプロンプトを生成（全番組・簡易版） */
 export function createAllProgramsPrompt(): string {
-  const programTexts = programs.map(programToPromptText);
-
-  return [
-    companyToPromptText(companyInfo),
-    "",
-    "# レギュラー番組一覧（13本）",
-    "",
-    ...programTexts,
-    "",
-    "---",
-    "",
-    "上記の番組情報を基に、ユーザーの質問に答えてください。",
-    "番組に関する情報以外は「番組情報に含まれていません」と伝えてください。",
-  ].join("\n");
+  return createAllProgramsPromptBase(companyInfo, programs, { detailed: false });
 }
 
 /** システムプロンプトを生成（番組ID指定、allで全番組） */
@@ -257,4 +210,13 @@ export function createSystemPrompt(programId: string = "all"): string {
     return createAllProgramsPrompt();
   }
   return createSingleProgramPrompt(programId);
+}
+
+/** 複合システムプロンプトを生成（番組情報 + 機能固有の指示） */
+export function createCompositeSystemPrompt(
+  programId: string = "all",
+  featurePrompt?: string,
+): string {
+  const basePrompt = createSystemPrompt(programId);
+  return createCompositePrompt(basePrompt, featurePrompt);
 }

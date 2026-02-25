@@ -61,6 +61,7 @@
 │  │  ├─ types.ts          ← 型定義（LLMProvider, LLMMessage等）          │   │
 │  │  ├─ config.ts         ← プロバイダー設定（価格、制限等）               │   │
 │  │  ├─ factory.ts        ← LLMクライアント生成ファクトリ                 │   │
+│  │  ├─ prompt-builder.ts ← システムプロンプト構築（featureId対応）        │   │
 │  │  └─ langchain/        ← LangChain実装                               │   │
 │  │      ├─ adapter.ts    ← LangChainアダプター                          │   │
 │  │      ├─ factory.ts    ← モデル生成                                   │   │
@@ -373,6 +374,7 @@
 | `lib/llm/types.ts` | LLM関連の型定義 | - |
 | `lib/llm/config.ts` | プロバイダー設定 | `lib/llm/types.ts` |
 | `lib/llm/factory.ts` | LLMクライアント生成 | `lib/llm/langchain/adapter.ts` |
+| `lib/llm/prompt-builder.ts` | システムプロンプト構築（featureId対応） | `lib/knowledge/programs.ts`, `lib/prompts/db/crud.ts` |
 | `lib/llm/langchain/adapter.ts` | LangChainアダプター | `@langchain/core` |
 | `lib/llm/langchain/factory.ts` | LangChainモデル生成 | `@langchain/openai`等 |
 | `lib/llm/langchain/chains/streaming.ts` | ストリーミング処理 | `lib/llm/langchain/factory.ts` |
@@ -381,7 +383,7 @@
 
 | ファイル | 役割 | 依存先 |
 |---------|------|--------|
-| `app/api/llm/stream/route.ts` | LLMストリーミングAPI | `lib/llm/langchain/factory.ts` |
+| `app/api/llm/stream/route.ts` | LLMストリーミングAPI | `lib/llm/prompt-builder.ts` |
 | `app/api/chat/feature/route.ts` | チャット履歴CRUD API | `lib/prisma.ts` |
 | `app/api/drive/files/route.ts` | Google Drive連携API | `lib/google/drive.ts` |
 
@@ -403,7 +405,16 @@
 | `hooks/useFileUpload.ts` | ファイルアップロード | - |
 | `hooks/useGoogleDrive.ts` | Google Drive連携 | `app/api/drive/files` |
 
-### 7.8 プロンプト管理
+### 7.8 ナレッジ層（番組情報）
+
+| ファイル | 役割 | 依存先 |
+|---------|------|--------|
+| `lib/knowledge/system-prompt.ts` | システムプロンプト生成の共通ロジック | `lib/knowledge/types.ts` |
+| `lib/knowledge/programs.ts` | 詳細版番組データ（13本） | `lib/knowledge/system-prompt.ts` |
+| `lib/knowledge/programs-simple.ts` | 簡易版番組データ | `lib/knowledge/system-prompt.ts` |
+| `lib/knowledge/types.ts` | ナレッジ関連の型定義 | - |
+
+### 7.9 プロンプト管理
 
 | ファイル | 役割 | 依存先 |
 |---------|------|--------|

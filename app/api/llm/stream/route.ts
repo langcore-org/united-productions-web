@@ -16,10 +16,10 @@
 import type { NextRequest } from "next/server";
 import { z } from "zod";
 import { requireAuth } from "@/lib/api/auth";
-import { createSystemPrompt } from "@/lib/knowledge/programs";
 import { GrokClient } from "@/lib/llm/clients/grok";
 import { DEFAULT_PROVIDER } from "@/lib/llm/config";
 import { isValidProvider } from "@/lib/llm/factory";
+import { buildSystemPrompt, isValidFeatureId } from "@/lib/llm/prompt-builder";
 import type { LLMMessage, LLMProvider, SSEEvent } from "@/lib/llm/types";
 import { createClientLogger } from "@/lib/logger";
 
@@ -37,6 +37,8 @@ const streamRequestSchema = z.object({
   provider: z.string().optional(),
   temperature: z.number().min(0).max(2).optional(),
   maxTokens: z.number().positive().optional(),
+  /** 機能ID（例: research-cast, proposal, general-chat） */
+  featureId: z.string().optional(),
   /** 番組ID（"all"または特定の番組ID） */
   programId: z.string().optional(),
 });
@@ -79,7 +81,7 @@ export async function POST(request: NextRequest): Promise<Response> {
       );
     }
 
-    const { messages, provider: requestedProvider, programId } = validationResult.data;
+    const { messages, provider: requestedProvider, featureId, programId } = validationResult.data;
 
     // プロバイダーの決定
     let provider: LLMProvider;
@@ -95,7 +97,12 @@ export async function POST(request: NextRequest): Promise<Response> {
       provider = DEFAULT_PROVIDER;
     }
 
-    logger.info(`[${requestId}] Using provider: ${provider}`);
+    // 機能IDの検証（ログ出力用）
+    if (featureId && !isValidFeatureId(featureId)) {
+      logger.warn(`[${requestId}] Unknown featureId: ${featureId}`);
+    }
+
+    logger.info(`[${requestId}] Using provider: ${provider}, feature: ${featureId || "default"}`);
 
     if (!provider.startsWith("grok-")) {
       return new Response(
@@ -107,8 +114,8 @@ export async function POST(request: NextRequest): Promise<Response> {
       );
     }
 
-    // システムプロンプトを生成（番組選択対応）
-    const systemPrompt = createSystemPrompt(programId ?? "all");
+    // システムプロンプトを構築（番組情報 + 機能固有の指示）
+    const systemPrompt = await buildSystemPrompt(programId ?? "all", featureId);
 
     // メッセージにシステムプロンプトを追加
     const messagesWithSystem: LLMMessage[] = [

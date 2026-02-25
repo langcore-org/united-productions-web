@@ -2,7 +2,7 @@
 
 > **システム全体の変更追跡と影響範囲管理**
 > 
-> **最終更新**: 2026-02-20 13:16
+> **最終更新**: 2026-02-24 12:00
 
 ---
 
@@ -40,6 +40,47 @@
 - PR/Issue番号
 - 関連ドキュメント
 ```
+
+---
+
+## 2026-02-24
+
+### [アーキテクチャ] システムプロンプト生成の共通化
+
+**変更内容:**
+- `lib/knowledge/system-prompt.ts` を新規作成
+  - プロンプト生成の共通ロジックを集約
+  - `programs.ts` と `programs-simple.ts` の重複を排除
+  - `companyToPromptText()`, `programToPromptTextSimple()`, `programToPromptTextDetailed()`
+  - `createSingleProgramPromptBase()`, `createAllProgramsPromptBase()`, `createCompositeSystemPrompt()`
+- `lib/llm/prompt-builder.ts` を新規作成
+  - API用のプロンプト構築ロジックを共通化
+  - `FEATURE_TO_PROMPT_KEY` マッピングで機能IDとプロンプトキーを紐付け
+  - `buildSystemPrompt()` で番組情報と機能固有の指示を結合
+- `app/api/llm/stream/route.ts` を修正
+  - `featureId` パラメータを追加
+  - 機能に応じたプロンプト切り替えを実装
+- 番組情報プロンプトの制約を緩和
+  - 「番組に関する情報以外は『番組情報に含まれていません』」を削除
+  - 「前提知識として保持し、適切に回答」に変更
+
+**影響範囲:**
+- `lib/knowledge/programs.ts` - 共通化された関数を使用するように変更
+- `lib/knowledge/programs-simple.ts` - 共通化された関数を使用するように変更
+- `app/api/llm/stream/route.ts` - `prompt-builder.ts` を使用
+- `lib/api/llm-client.ts` - `featureId` パラメータを追加
+- `hooks/useLLMStream/index.ts` - `featureId` を受け取れるように変更
+- `components/ui/FeatureChat.tsx` - `featureId` を送信するように変更
+
+**移行作業:**
+- DBプロンプトの更新（ツール使用指示を追加）
+  ```bash
+  npx prisma db execute --file scripts/update-research-prompts.sql
+  ```
+
+**関連:**
+- ドキュメント: `docs/specs/api-integration/system-prompt-management.md`
+- ドキュメント: `docs/specs/architecture/code-structure-overview.md`
 
 ---
 

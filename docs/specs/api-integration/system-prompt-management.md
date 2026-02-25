@@ -2,7 +2,7 @@
 
 > **DB管理・バージョン履歴・管理画面の設計方針**
 >
-> **最終更新**: 2026-02-22 00:17
+> **最終更新**: 2026-02-24 12:00
 
 ---
 
@@ -13,8 +13,31 @@
 ```
 lib/prompts/
 ├── index.ts           # 統合エクスポート（DBファーストのフォールバック構成）
-├── db.ts              # DB取得ユーティリティ + DEFAULT_PROMPTS（シードデータ）
+├── constants/         # プロンプト定数
+│   ├── base.ts        # エージェント基本プロンプト
+│   ├── keys.ts        # プロンプトキー定数
+│   └── prompts.ts     # デフォルトプロンプト（フォールバック用）
+├── db/                # DB操作
+│   ├── crud.ts        # CRUD操作
+│   ├── index.ts       # 統合エクスポート
+│   ├── seed.ts        # シードデータ投入
+│   ├── types.ts       # 型定義
+│   ├── version.ts     # バージョン管理
+│   └── versions.ts    # バージョン履歴操作
 └── (廃止予定)         # 個別プロンプトファイルは段階的に廃止
+
+lib/knowledge/
+├── system-prompt.ts   # システムプロンプト生成の共通ロジック（NEW）
+├── programs.ts        # 詳細版番組データ（system-prompt.tsを使用）
+├── programs-simple.ts # 簡易版番組データ（system-prompt.tsを使用）
+└── ...
+
+lib/llm/
+├── prompt-builder.ts  # API用プロンプト構築（NEW）
+├── types.ts           # LLM型定義
+├── config.ts          # プロバイダー設定
+├── factory.ts         # LLMクライアント生成
+└── ...
 ```
 
 `SystemPrompt` テーブルはすでに存在し、DB管理の基盤はある。
@@ -28,8 +51,66 @@ lib/prompts/
 | SystemPromptVersionテーブル | ✅ 実装済み |
 | DB取得ユーティリティ | ✅ 実装済み |
 | シードデータ | ✅ 実装済み |
+| システムプロンプト生成の共通化 | ✅ 実装済み（lib/knowledge/system-prompt.ts） |
+| API用プロンプトビルダー | ✅ 実装済み（lib/llm/prompt-builder.ts） |
 | 管理API | 📝 実装中 |
 | 管理UI | 📝 実装中 |
+
+---
+
+## システムプロンプト生成アーキテクチャ
+
+### 概要
+
+システムプロンプトは以下の階層構造で構築されます：
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    複合システムプロンプト                      │
+│              （番組情報 + 機能固有の指示）                      │
+├─────────────────────────────────────────────────────────────┤
+│  ┌───────────────────────────────────────────────────────┐  │
+│  │  番組情報レイヤー（背景知識）                           │  │
+│  │  - 会社概要                                           │  │
+│  │  - レギュラー番組一覧（13本）                          │  │
+│  │  - 番組詳細情報（放送時間、出演者、コーナー等）          │  │
+│  └───────────────────────────────────────────────────────┘  │
+├─────────────────────────────────────────────────────────────┤
+│  ┌───────────────────────────────────────────────────────┐  │
+│  │  機能固有レイヤー（DBから動的取得）                      │  │
+│  │  - RESEARCH_CAST: 出演者リサーチ指示 + ツール使用指示    │  │
+│  │  - RESEARCH_LOCATION: 場所リサーチ指示 + ツール使用指示  │  │
+│  │  - PROPOSAL: 企画立案指示                              │  │
+│  │  - ...                                                │  │
+│  └───────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### ファイル構成と責務
+
+| ファイル | 責務 | 使用場所 |
+|---------|------|---------|
+| `lib/knowledge/system-prompt.ts` | プロンプト生成の共通ロジック | `programs.ts`, `programs-simple.ts` |
+| `lib/knowledge/programs.ts` | 詳細版番組データ + プロンプト生成 | APIルート、チャット機能 |
+| `lib/knowledge/programs-simple.ts` | 簡易版番組データ + プロンプト生成 | （必要に応じて） |
+| `lib/llm/prompt-builder.ts` | API用プロンプト構築（featureId対応） | `app/api/llm/stream/route.ts` |
+| `lib/prompts/db/crud.ts` | DBからプロンプトを取得 | `prompt-builder.ts` |
+
+### 機能IDとプロンプトキーのマッピング
+
+```typescript
+// lib/llm/prompt-builder.ts
+const FEATURE_TO_PROMPT_KEY: Record<string, string> = {
+  "general-chat": "GENERAL_CHAT",
+  "research-cast": "RESEARCH_CAST",
+  "research-location": "RESEARCH_LOCATION",
+  "research-info": "RESEARCH_INFO",
+  "research-evidence": "RESEARCH_EVIDENCE",
+  "minutes": "MINUTES",
+  "proposal": "PROPOSAL",
+  "na-script": "TRANSCRIPT",
+};
+```
 
 ---
 
@@ -114,8 +195,6 @@ erDiagram
 
 ## API 設計
 
-すべて `/api/admin/prompts/` 配下。管理者権限（`ADMIN` ロール）のみアクセス可。
-
 ### エンドポイント一覧
 
 | メソッド | パス | 概要 |
@@ -127,51 +206,19 @@ erDiagram
 | `GET` | `/api/admin/prompts/[key]/history/[version]` | 特定バージョンの内容取得 |
 | `POST` | `/api/admin/prompts/[key]/restore` | 指定バージョンに復元 |
 
-### リクエスト/レスポンス例
+### ストリーミングAPIのリクエスト形式
 
-#### `PUT /api/admin/prompts/MINUTES`
-```json
-// Request
+```typescript
+// POST /api/llm/stream
 {
-  "content": "## 議事録作成\n...",
-  "changeNote": "出力形式を追記"
-}
-
-// Response
-{
-  "key": "MINUTES",
-  "version": 3,
-  "content": "## 議事録作成\n...",
-  "updatedAt": "2026-02-22T00:00:00Z"
+  messages: LLMMessage[];
+  provider?: string;        // "grok-4-1-fast" 等
+  featureId?: string;       // "research-cast", "proposal" 等
+  programId?: string;       // "all" または特定の番組ID
 }
 ```
 
-#### `GET /api/admin/prompts/MINUTES/history`
-```json
-{
-  "versions": [
-    { "version": 3, "changedBy": "user@example.com", "changeNote": "出力形式を追記", "createdAt": "..." },
-    { "version": 2, "changedBy": "user@example.com", "changeNote": "役割定義を修正", "createdAt": "..." },
-    { "version": 1, "changedBy": null, "changeNote": "初期シード", "createdAt": "..." }
-  ]
-}
-```
-
-#### `POST /api/admin/prompts/MINUTES/restore`
-```json
-// Request
-{ 
-  "version": 1, 
-  "changeNote": "v1に戻す（v2,3の変更が本番に影響したため）" 
-}
-
-// Response
-{ 
-  "key": "MINUTES", 
-  "version": 4, 
-  "restoredFrom": 1 
-}
-```
+`featureId` を指定すると、対応するDBプロンプトと番組情報を結合したシステムプロンプトが使用されます。
 
 ---
 
@@ -245,26 +292,50 @@ erDiagram
 - [x] 既存プロンプトへのバージョン1レコード自動作成
 - [x] `lib/prompts/db.ts` の更新処理にバージョン記録ロジック追加
 
-### Phase 2: 管理 API 📝 実装中
+### Phase 2: システムプロンプト生成の共通化 ✅ 完了
+
+- [x] `lib/knowledge/system-prompt.ts` の作成
+  - [x] `companyToPromptText()` - 会社概要のテキスト変換
+  - [x] `programToPromptTextSimple()` - 簡易版番組情報変換
+  - [x] `programToPromptTextDetailed()` - 詳細版番組情報変換
+  - [x] `createSystemPromptFooter()` - システムプロンプトのフッター
+  - [x] `createSingleProgramPromptBase()` - 単一番組プロンプト生成
+  - [x] `createAllProgramsPromptBase()` - 全番組プロンプト生成
+  - [x] `createCompositeSystemPrompt()` - 複合プロンプト生成
+- [x] `lib/knowledge/programs.ts` のリファクタリング
+- [x] `lib/knowledge/programs-simple.ts` のリファクタリング
+
+### Phase 3: API用プロンプトビルダー ✅ 完了
+
+- [x] `lib/llm/prompt-builder.ts` の作成
+  - [x] `FEATURE_TO_PROMPT_KEY` - 機能IDとプロンプトキーのマッピング
+  - [x] `getPromptKeyForFeature()` - 機能IDからプロンプトキーを取得
+  - [x] `isValidFeatureId()` - 機能IDの検証
+  - [x] `getValidFeatureIds()` - 有効な機能ID一覧を取得
+  - [x] `buildSystemPrompt()` - システムプロンプトを構築
+  - [x] `buildSystemPromptSync()` - 同期版（フォールバック用）
+- [x] `app/api/llm/stream/route.ts` の修正（featureId対応）
+
+### Phase 4: 管理 API 📝 実装中
 
 - [ ] `/api/admin/prompts/` 配下のエンドポイント実装
 - [ ] 管理者権限ガード
 - [ ] 更新・復元 API のバージョニングロジック実装
 
-### Phase 3: 管理 UI 📝 実装中
+### Phase 5: 管理 UI 📝 実装中
 
 - [ ] `/admin/prompts` 一覧ページ
 - [ ] `/admin/prompts/[key]` 編集ページ
 - [ ] `/admin/prompts/[key]/history` 履歴ページ
 - [ ] 復元確認モーダル
 
-### Phase 4: コードプロンプトの廃止（将来）
+### Phase 6: コードプロンプトの廃止（将来）
 
 - [ ] DB シードが正常に動作していることを確認
 - [ ] ランタイムフォールバックコードを「DB 取得失敗時はエラーを返す」に変更
 - [ ] `lib/prompts/` 内の個別ファイルを削除
 
-> Phase 4 は Phase 1〜3 が安定稼働してから実施する。
+> Phase 6 は Phase 1〜5 が安定稼働してから実施する。
 
 ---
 
@@ -272,7 +343,7 @@ erDiagram
 
 ### プロンプトのシード（初期データ）
 
-- `lib/prompts/db.ts` の `DEFAULT_PROMPTS` は引き続きシード専用として残す
+- `lib/prompts/constants/prompts.ts` の `DEFAULT_PROMPTS` は引き続きシード専用として残す
 - `seedPrompts()` は「テーブルが空の場合のみ実行」の現行ロジックを維持
 - シード時に `version = 1` の `SystemPromptVersion` レコードも同時作成する
 
@@ -286,6 +357,19 @@ erDiagram
 - 不要に古い履歴を保持し続けることへの対応は当面不要（テキストデータのため容量は軽い）
 - 将来的に必要なら「直近 N バージョン保持」ポリシーを別途設ける
 
+### 新機能追加時の手順
+
+新しい機能（例: `research-vtuber`）を追加する場合：
+
+1. `lib/llm/prompt-builder.ts` の `FEATURE_TO_PROMPT_KEY` に追加：
+   ```typescript
+   "research-vtuber": "RESEARCH_VTUBER",
+   ```
+
+2. DBにプロンプトを登録（`RESEARCH_VTUBER` キー）
+
+3. 完了 - 他のコード変更は不要
+
 ---
 
 ## 関連ファイル・ドキュメント
@@ -296,5 +380,7 @@ erDiagram
 | プロンプト設計方針 | [prompt-engineering.md](./prompt-engineering.md) |
 | 認証・認可 | [authentication.md](./authentication.md) |
 | Prisma スキーマ | `prisma/schema.prisma` |
-| DB ユーティリティ | `lib/prompts/db.ts` |
+| DB ユーティリティ | `lib/prompts/db/crud.ts` |
+| システムプロンプト生成 | `lib/knowledge/system-prompt.ts` |
+| API用プロンプトビルダー | `lib/llm/prompt-builder.ts` |
 | 管理画面 | `app/admin/prompts/` |
