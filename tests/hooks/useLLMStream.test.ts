@@ -6,8 +6,8 @@
  * @created 2026-02-25
  */
 
-import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
-import { renderHook, act, waitFor } from "@testing-library/react";
+import { act, renderHook, waitFor } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useLLMStream } from "@/hooks/useLLMStream";
 
 // =============================================================================
@@ -71,15 +71,16 @@ describe("useLLMStream", () => {
       );
 
       // モック: フォローアップAPI（遅延応答）
-      mockFetch.mockImplementation(() =>
-        new Promise((resolve) => {
-          setTimeout(() => {
-            resolve({
-              ok: true,
-              json: () => Promise.resolve({ questions: ["質問1", "質問2"] }),
-            });
-          }, 1000); // 1秒遅延
-        }),
+      mockFetch.mockImplementation(
+        () =>
+          new Promise((resolve) => {
+            setTimeout(() => {
+              resolve({
+                ok: true,
+                json: () => Promise.resolve({ questions: ["質問1", "質問2"] }),
+              });
+            }, 1000); // 1秒遅延
+          }),
       );
 
       const { result } = renderHook(() => useLLMStream());
@@ -258,10 +259,7 @@ describe("useLLMStream", () => {
 
     it("キャンセル時、isComplete が true になる", async () => {
       mockStreamLLMResponse.mockReturnValue(
-        createMockStream([
-          { type: "start" },
-          { type: "content", delta: "部分的" },
-        ])(),
+        createMockStream([{ type: "start" }, { type: "content", delta: "部分的" }])(),
       );
 
       const { result } = renderHook(() => useLLMStream());

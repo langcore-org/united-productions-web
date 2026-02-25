@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
 import { FileText, MessageSquare, Upload } from "lucide-react";
-import { FileUpload } from "@/components/ui/FileUpload";
-import { Button } from "@/components/ui/button";
 import dynamic from "next/dynamic";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { FileUpload } from "@/components/ui/FileUpload";
 
 // FeatureChatを動的インポート
 const FeatureChat = dynamic(
@@ -53,9 +53,7 @@ export default function MinutesPage() {
               <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-purple-100 mb-4">
                 <FileText className="w-8 h-8 text-purple-600" />
               </div>
-              <h1 className="text-2xl font-bold text-gray-900 mb-2">
-                議事録作成
-              </h1>
+              <h1 className="text-2xl font-bold text-gray-900 mb-2">議事録作成</h1>
               <p className="text-gray-500">
                 Zoomの文字起こしファイルから、きれいな議事録を自動作成します
               </p>
@@ -72,7 +70,9 @@ export default function MinutesPage() {
                 accept={{
                   "text/plain": [".txt"],
                   "text/vtt": [".vtt"],
-                  "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [".docx"],
+                  "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [
+                    ".docx",
+                  ],
                 }}
                 maxSize={10 * 1024 * 1024} // 10MB
                 enableGoogleDrive={true}
@@ -81,21 +81,23 @@ export default function MinutesPage() {
 
             {/* 対応形式の説明 */}
             <div className="bg-gray-50 rounded-xl p-4 mb-8">
-              <h3 className="text-sm font-medium text-gray-900 mb-2">
-                対応しているファイル形式
-              </h3>
+              <h3 className="text-sm font-medium text-gray-900 mb-2">対応しているファイル形式</h3>
               <ul className="text-sm text-gray-600 space-y-1">
-                <li>• <strong>.vtt</strong> - Zoomのクラウド録画文字起こし</li>
-                <li>• <strong>.txt</strong> - Zoomのフルトランスクリプト</li>
-                <li>• <strong>.docx</strong> - Word文書（文字起こしテキスト）</li>
+                <li>
+                  • <strong>.vtt</strong> - Zoomのクラウド録画文字起こし
+                </li>
+                <li>
+                  • <strong>.txt</strong> - Zoomのフルトランスクリプト
+                </li>
+                <li>
+                  • <strong>.docx</strong> - Word文書（文字起こしテキスト）
+                </li>
               </ul>
             </div>
 
             {/* 使い方セクション */}
             <div className="border-t border-gray-200 pt-8">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">
-                使い方
-              </h2>
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">使い方</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                 <div className="flex gap-3">
                   <div className="flex-shrink-0 w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 font-semibold text-sm">
@@ -103,7 +105,9 @@ export default function MinutesPage() {
                   </div>
                   <div>
                     <p className="text-sm font-medium text-gray-900">ファイルをアップロード</p>
-                    <p className="text-sm text-gray-500">Zoomの文字起こしファイル（.vttまたは.txt）を選択</p>
+                    <p className="text-sm text-gray-500">
+                      Zoomの文字起こしファイル（.vttまたは.txt）を選択
+                    </p>
                   </div>
                 </div>
                 <div className="flex gap-3">
@@ -130,11 +134,12 @@ export default function MinutesPage() {
                   </div>
                   <div>
                     <p className="text-sm font-medium text-gray-900">コピーして使用</p>
-                    <p className="text-sm text-gray-500">完成した議事録をコピーして文書として保存</p>
+                    <p className="text-sm text-gray-500">
+                      完成した議事録をコピーして文書として保存
+                    </p>
                   </div>
                 </div>
               </div>
-
             </div>
           </div>
         </div>

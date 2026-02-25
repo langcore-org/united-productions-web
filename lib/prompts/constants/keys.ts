@@ -36,7 +36,7 @@ export type PromptKey = keyof typeof PROMPT_KEYS;
 export const PROMPT_CATEGORIES = {
   general: "一般",
   minutes: "議事録",
-  transcript: "文字起こし",
+  transcript: "起こし・NA",
   research: "リサーチ",
   document: "ドキュメント",
 } as const;

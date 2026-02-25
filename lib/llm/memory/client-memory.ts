@@ -152,8 +152,11 @@ export class ClientMemory {
         }),
       });
 
+      // Responseのbodyは一度しか読めないので、cloneしてから読み込む
+      const responseClone = response.clone();
+
       if (!response.ok) {
-        const error = await response.json().catch(() => ({ error: "Unknown error" }));
+        const error = await responseClone.json().catch(() => ({ error: "Unknown error" }));
         throw new Error(error.error || `HTTP ${response.status}`);
       }
 
