@@ -4,7 +4,7 @@
  * @created 2026-02-24
  */
 
-import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // 環境変数モック
 const originalEnv = process.env;
@@ -123,9 +123,9 @@ describe("GrokClient", () => {
     it("API エラーの場合は例外をスロー", async () => {
       const client = new GrokClient("grok-4-1-fast-reasoning");
 
-      const mockFetch = vi.spyOn(global, "fetch").mockResolvedValue(
-        new Response("Internal Server Error", { status: 500 }),
-      );
+      const mockFetch = vi
+        .spyOn(global, "fetch")
+        .mockResolvedValue(new Response("Internal Server Error", { status: 500 }));
 
       const messages = [{ role: "user" as const, content: "Hello" }];
 

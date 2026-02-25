@@ -3,23 +3,15 @@
  *
  * POST /api/llm/stream
  * Server-Sent Events形式でストリーミングレスポンスを返すエンドポイント
- * GrokClient（xAI Responses API）を直接使用
- *
- * SSEイベント形式（新形式）:
- *   data: {"type": "start"}
- *   data: {"type": "tool_call", "id": "...", "name": "web_search", "displayName": "Web検索", "status": "running"}
- *   data: {"type": "tool_call", "id": "...", "name": "web_search", "displayName": "Web検索", "status": "completed"}
- *   data: {"type": "content", "delta": "回答の一部..."}
- *   data: {"type": "done", "usage": {"inputTokens": ..., "outputTokens": ..., "cost": ..., "toolCalls": {...}}}
  */
 
 import type { NextRequest } from "next/server";
 import { z } from "zod";
 import { requireAuth } from "@/lib/api/auth";
+import { buildSystemPrompt } from "@/lib/prompts/system-prompt";
 import { GrokClient } from "@/lib/llm/clients/grok";
 import { DEFAULT_PROVIDER } from "@/lib/llm/config";
 import { isValidProvider } from "@/lib/llm/factory";
-import { buildSystemPrompt, isValidFeatureId } from "@/lib/llm/prompt-builder";
 import type { LLMMessage, LLMProvider, SSEEvent } from "@/lib/llm/types";
 import { createClientLogger } from "@/lib/logger";
 
@@ -31,15 +23,13 @@ const streamRequestSchema = z.object({
       z.object({
         role: z.enum(["user", "assistant", "system"]),
         content: z.string().min(1),
-      }),
+      })
     )
     .min(1),
   provider: z.string().optional(),
   temperature: z.number().min(0).max(2).optional(),
   maxTokens: z.number().positive().optional(),
-  /** 機能ID（例: research-cast, proposal, general-chat） */
   featureId: z.string().optional(),
-  /** 番組ID（"all"または特定の番組ID） */
   programId: z.string().optional(),
 });
 
@@ -52,7 +42,7 @@ export async function POST(request: NextRequest): Promise<Response> {
   try {
     logger.info(`[${requestId}] Stream request started (dev=${isDev})`);
 
-    // 認証チェック（開発環境ではスキップ）
+    // 認証チェック
     let authResult: { user: { id: string }; userId: string } | Response | null = null;
     if (isDev) {
       authResult = { user: { id: "dev-user" }, userId: "dev-user" };
@@ -72,18 +62,16 @@ export async function POST(request: NextRequest): Promise<Response> {
       return new Response(
         JSON.stringify({
           error: "Invalid request",
-          message: validationResult.error.issues
-            .map((e) => `${e.path.join(".")}: ${e.message}`)
-            .join(", "),
+          message: validationResult.error.issues.map((e) => `${e.path.join(".")}: ${e.message}`).join(", "),
           requestId,
         }),
-        { status: 400, headers: { "Content-Type": "application/json" } },
+        { status: 400, headers: { "Content-Type": "application/json" } }
       );
     }
 
     const { messages, provider: requestedProvider, featureId, programId } = validationResult.data;
 
-    // プロバイダーの決定
+    // プロバイダー決定
     let provider: LLMProvider;
     if (requestedProvider) {
       if (!isValidProvider(requestedProvider)) {
@@ -97,11 +85,6 @@ export async function POST(request: NextRequest): Promise<Response> {
       provider = DEFAULT_PROVIDER;
     }
 
-    // 機能IDの検証（ログ出力用）
-    if (featureId && !isValidFeatureId(featureId)) {
-      logger.warn(`[${requestId}] Unknown featureId: ${featureId}`);
-    }
-
     logger.info(`[${requestId}] Using provider: ${provider}, feature: ${featureId || "default"}`);
 
     if (!provider.startsWith("grok-")) {
@@ -110,14 +93,13 @@ export async function POST(request: NextRequest): Promise<Response> {
           error: `Provider "${provider}" is not supported for streaming`,
           requestId,
         }),
-        { status: 400, headers: { "Content-Type": "application/json" } },
+        { status: 400, headers: { "Content-Type": "application/json" } }
       );
     }
 
-    // システムプロンプトを構築（番組情報 + 機能固有の指示）
+    // システムプロンプトを構築（一元管理関数を使用）
     const systemPrompt = await buildSystemPrompt(programId ?? "all", featureId);
 
-    // メッセージにシステムプロンプトを追加
     const messagesWithSystem: LLMMessage[] = [
       { role: "system", content: systemPrompt },
       ...messages.filter((m) => m.role !== "system"),
@@ -131,7 +113,6 @@ export async function POST(request: NextRequest): Promise<Response> {
         try {
           for await (const event of client.streamWithUsage(messagesWithSystem)) {
             controller.enqueue(encoder.encode(`data: ${JSON.stringify(event)}\n\n`));
-            // done または error イベントの後はストリームを閉じる
             if (event.type === "done" || event.type === "error") {
               controller.close();
               return;

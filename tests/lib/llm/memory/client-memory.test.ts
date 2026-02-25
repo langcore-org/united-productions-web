@@ -4,7 +4,7 @@
  * @created 2026-02-24
  */
 
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ClientMemory } from "@/lib/llm/memory/client-memory";
 
 describe("ClientMemory", () => {
@@ -114,17 +114,17 @@ describe("ClientMemory", () => {
 
       const memory = new ClientMemory(mockProvider, {
         tokenThreshold: 100, // 低めに設定
-        maxRecentTurns: 2,   // 直近2ターン（4メッセージ）を保持
+        maxRecentTurns: 2, // 直近2ターン（4メッセージ）を保持
       });
 
       // 100トークン = 400文字（1文字 = 0.25トークン）
       // maxRecentTurns=2 の場合、要約対象は直近4メッセージを除くメッセージ
       // なので最低5メッセージ必要
-      await memory.addMessage({ role: "user", content: "U1".repeat(100) });     // 25トークン
+      await memory.addMessage({ role: "user", content: "U1".repeat(100) }); // 25トークン
       await memory.addMessage({ role: "assistant", content: "A1".repeat(100) }); // 25トークン = 50
-      await memory.addMessage({ role: "user", content: "U2".repeat(100) });     // 25トークン = 75
+      await memory.addMessage({ role: "user", content: "U2".repeat(100) }); // 25トークン = 75
       await memory.addMessage({ role: "assistant", content: "A2".repeat(100) }); // 25トークン = 100
-      await memory.addMessage({ role: "user", content: "U3".repeat(100) });     // 25トークン = 125 > 100
+      await memory.addMessage({ role: "user", content: "U3".repeat(100) }); // 25トークン = 125 > 100
 
       // 要約APIが呼ばれたことを確認
       expect(mockFetch).toHaveBeenCalledWith(
@@ -159,7 +159,7 @@ describe("ClientMemory", () => {
 
       // エラーがスローされないことを確認
       expect(mockFetch).toHaveBeenCalled();
-      
+
       // 要約は作成されない
       const status = memory.getStatus();
       expect(status.hasSummary).toBe(false);
@@ -188,7 +188,7 @@ describe("ClientMemory", () => {
 
       // エラーがスローされないことを確認
       expect(mockFetch).toHaveBeenCalled();
-      
+
       const status = memory.getStatus();
       expect(status.hasSummary).toBe(false);
     });
@@ -216,7 +216,7 @@ describe("ClientMemory", () => {
       await memory.addMessage({ role: "assistant", content: "A3".repeat(100) });
 
       const context = memory.getContext();
-      
+
       // 要約 + 直近4メッセージ
       expect(context.messages).toHaveLength(5);
       expect(context.messages[0].role).toBe("system");

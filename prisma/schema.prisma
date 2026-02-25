@@ -327,3 +327,18 @@ model SystemPromptVersion {
   @@index([promptId, version])
   @@index([promptId, createdAt])
 }
+
+// 機能とプロンプトのマッピング
+model FeaturePrompt {
+  id          String   @id @default(cuid())
+  featureId   String   @unique // 機能ID（例: research-cast, proposal）
+  promptKey   String            // 紐付くプロンプトキー（例: RESEARCH_CAST）
+  description String?           // 説明
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([featureId])
+  @@index([promptKey])
+  @@index([isActive])
+}

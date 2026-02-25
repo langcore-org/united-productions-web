@@ -1,7 +1,7 @@
 /**
  * United Productions レギュラー番組データ（詳細版）
  *
- * 網羅的な番組情報をTypeScriptとして管理
+ * データのみを提供（プロンプト生成は lib/prompts/system-prompt.ts で行う）
  */
 
 import {
@@ -22,13 +22,6 @@ import {
   programTalksurvivor,
   programYakai,
 } from "./programs-detailed-data-2";
-import {
-  companyToPromptText,
-  createAllProgramsPromptBase,
-  createCompositeSystemPrompt as createCompositePrompt,
-  createSingleProgramPromptBase,
-  programToPromptTextDetailed,
-} from "./system-prompt";
 import type { CompanyInfo, KnowledgeBase, ProgramInfo, ProgramOption } from "./types";
 
 // 会社概要（詳細版）
@@ -78,42 +71,4 @@ export const ALL_PROGRAMS_OPTION: ProgramOption = {
 /** 番組IDで番組情報を取得 */
 export function getProgramById(id: string): ProgramInfo | undefined {
   return programs.find((p) => p.id === id);
-}
-
-/** 番組情報をプロンプト用テキストに変換（詳細版） */
-export function programToPromptText(program: ProgramInfo): string {
-  return programToPromptTextDetailed(program);
-}
-
-/** 会社概要をプロンプト用テキストに変換（詳細版） */
-export function companyToPromptTextFn(company: CompanyInfo): string {
-  return companyToPromptText(company);
-}
-
-/** システムプロンプトを生成（単一番組・詳細版） */
-export function createSingleProgramPrompt(programId: string): string {
-  const program = getProgramById(programId);
-  return createSingleProgramPromptBase(companyInfo, program, { detailed: true });
-}
-
-/** システムプロンプトを生成（全番組・詳細版） */
-export function createAllProgramsPrompt(): string {
-  return createAllProgramsPromptBase(companyInfo, programs, { detailed: true });
-}
-
-/** システムプロンプトを生成（番組ID指定、allで全番組） */
-export function createSystemPrompt(programId: string = "all"): string {
-  if (programId === "all") {
-    return createAllProgramsPrompt();
-  }
-  return createSingleProgramPrompt(programId);
-}
-
-/** 複合システムプロンプトを生成（番組情報 + 機能固有の指示） */
-export function createCompositeSystemPrompt(
-  programId: string = "all",
-  featurePrompt?: string,
-): string {
-  const basePrompt = createSystemPrompt(programId);
-  return createCompositePrompt(basePrompt, featurePrompt);
 }
