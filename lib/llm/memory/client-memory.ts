@@ -5,27 +5,19 @@
  * 要約が必要な場合は /api/llm/summarize APIを呼び出す
  *
  * @created 2026-02-24
+ * @updated 2026-02-25 動的圧縮率を追加、共通型を使用
  */
 
 import type { LLMMessage, LLMProvider } from "../types";
+import type {
+  BaseMemoryOptions,
+  CompressionRateEntry,
+  MemoryContext,
+} from "./types";
+import { DEFAULT_COMPRESSION_RATES } from "./types";
 
-export interface ClientMemoryOptions {
-  /** 要約開始閾値（トークン数）。デフォルト: 100000（100K） */
-  tokenThreshold?: number;
-  /** 直近保持するターン数（user+assistant = 1ターン）。デフォルト: 10 */
-  maxRecentTurns?: number;
-}
-
-export interface MemoryContext {
-  /** API送信用メッセージ */
-  messages: LLMMessage[];
-  /** 要約文（あれば） */
-  summary?: string;
-  /** 直近ターン数 */
-  recentTurns: number;
-  /** 推定トークン数 */
-  estimatedTokens: number;
-}
+export type { CompressionRateEntry, MemoryContext };
+export interface ClientMemoryOptions extends BaseMemoryOptions {}
 
 export interface SummarizationEvent {
   /** 一意のID */
@@ -40,6 +32,8 @@ export interface SummarizationEvent {
   error?: string;
 }
 
+
+
 /**
  * クライアントサイド用 Memory クラス
  *
@@ -48,6 +42,8 @@ export interface SummarizationEvent {
 export class ClientMemory {
   private tokenThreshold: number;
   private maxRecentTurns: number;
+  private compressionRates: CompressionRateEntry[];
+  private maxSummaryTokens: number;
 
   private summary = "";
   private recentMessages: LLMMessage[] = [];
@@ -60,6 +56,8 @@ export class ClientMemory {
     this.provider = provider;
     this.tokenThreshold = options.tokenThreshold ?? 100_000;
     this.maxRecentTurns = options.maxRecentTurns ?? 10;
+    this.compressionRates = options.compressionRates ?? DEFAULT_COMPRESSION_RATES;
+    this.maxSummaryTokens = options.maxSummaryTokens ?? 20_000;
   }
 
   /**
@@ -106,6 +104,27 @@ export class ClientMemory {
   }
 
   /**
+   * 圧縮率を計算
+   */
+  private calculateCompressionRate(tokensToSummarize: number): number {
+    for (const entry of this.compressionRates) {
+      if (tokensToSummarize <= entry.threshold) {
+        return entry.rate;
+      }
+    }
+    return this.compressionRates[this.compressionRates.length - 1].rate;
+  }
+
+  /**
+   * 目標要約トークン数を計算
+   */
+  private calculateTargetSummaryTokens(tokensToSummarize: number): number {
+    const rate = this.calculateCompressionRate(tokensToSummarize);
+    const targetTokens = Math.floor(tokensToSummarize * rate);
+    return Math.min(targetTokens, this.maxSummaryTokens);
+  }
+
+  /**
    * 要約を更新（API経由）
    */
   private async updateSummary(): Promise<void> {
@@ -113,6 +132,10 @@ export class ClientMemory {
     const messagesToSummarize = this.recentMessages.slice(0, -keepCount);
 
     if (messagesToSummarize.length === 0) return;
+
+    // 動的圧縮率を適用
+    const tokensToSummarize = this.estimateTokens(messagesToSummarize);
+    const targetTokens = this.calculateTargetSummaryTokens(tokensToSummarize);
 
     // 要約イベントを作成（running状態）
     const eventId = `summarization_${Date.now()}`;
@@ -130,6 +153,8 @@ export class ClientMemory {
         body: JSON.stringify({
           messages: messagesToSummarize,
           provider: this.provider,
+          targetTokens, // 動的圧縮率で計算した目標トークン数
+          existingSummary: this.summary || undefined, // 既存の要約（文脈情報）
         }),
       });
 

@@ -3,12 +3,7 @@
 import dynamic from "next/dynamic";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useState } from "react";
-import {
-  AGENTS,
-  getAgentById,
-  isProposalAgent,
-  updateProposalSystemPrompt,
-} from "@/lib/chat/agents";
+import { AGENTS, getAgentById } from "@/lib/chat/agents";
 
 // FeatureChatを動的インポート
 const FeatureChat = dynamic(
@@ -47,23 +42,7 @@ function ChatPageContent() {
       try {
         const selectedAgent = getAgentById(agentId as Parameters<typeof getAgentById>[0]);
         setAgent(selectedAgent);
-
-        if (isProposalAgent(selectedAgent.id)) {
-          const response = await fetch("/api/settings/program");
-          if (response.ok) {
-            const data = await response.json();
-            const updatedAgent = updateProposalSystemPrompt(
-              selectedAgent,
-              data.programInfo || "",
-              data.pastProposals || "",
-            );
-            setSystemPrompt(updatedAgent.systemPrompt);
-          } else {
-            setSystemPrompt(selectedAgent.systemPrompt);
-          }
-        } else {
-          setSystemPrompt(selectedAgent.systemPrompt);
-        }
+        setSystemPrompt(selectedAgent.systemPrompt);
       } catch (error) {
         console.error("Failed to load agent:", error);
         setAgent(AGENTS[0]);

@@ -100,8 +100,21 @@ export async function POST(request: NextRequest): Promise<Response> {
     }
 
     // システムプロンプトを構築（一元管理関数を使用）
-    const systemPrompt = await buildSystemPrompt(programId ?? "all", featureId);
+    const baseSystemPrompt = await buildSystemPrompt(programId ?? "all", featureId);
 
+    // ClientMemoryからの要約メッセージを検出・統合
+    // ClientMemoryは閾値超過時に「これまでの会話の要約：」というsystemメッセージを付与する
+    const summaryPrefix = "これまでの会話の要約";
+    const summaryMessage = messages.find(
+      (m) => m.role === "system" && m.content.startsWith(summaryPrefix),
+    );
+
+    // 基本プロンプトと要約を統合（要約がある場合のみ）
+    const systemPrompt = summaryMessage
+      ? `${baseSystemPrompt}\n\n---\n\n${summaryMessage.content}`
+      : baseSystemPrompt;
+
+    // 最終的なメッセージ配列（ClientMemoryの要約メッセージは除外済み）
     const messagesWithSystem: LLMMessage[] = [
       { role: "system", content: systemPrompt },
       ...messages.filter((m) => m.role !== "system"),

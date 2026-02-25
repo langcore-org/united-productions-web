@@ -42,22 +42,6 @@ function getDefaultPromptContent(key: string): string {
   return prompt?.content || "";
 }
 
-/** プロポーザル用システムプロンプトを生成（動的） */
-function getProposalSystemPrompt(programInfo: string, pastProposals: string): string {
-  const basePrompt = getDefaultPromptContent(PROMPT_KEYS.PROPOSAL);
-  if (!programInfo && !pastProposals) {
-    return basePrompt;
-  }
-
-  return `${basePrompt}
-
-## 番組情報
-${programInfo || "（未設定）"}
-
-## 過去の企画案
-${pastProposals || "（未設定）"}`;
-}
-
 /** 各機能の設定マップ */
 export const chatFeatureConfigs: Record<ChatFeatureId, ChatFeatureConfig> = {
   "general-chat": {
@@ -173,11 +157,11 @@ export const chatFeatureConfigs: Record<ChatFeatureId, ChatFeatureConfig> = {
   proposal: {
     featureId: "proposal",
     title: "新企画立案",
-    systemPrompt: getProposalSystemPrompt("", ""), // デフォルト値、動的に上書き可能
+    systemPrompt: getDefaultPromptContent(PROMPT_KEYS.PROPOSAL),
     placeholder: "企画の方向性・テーマ・条件を入力してください（例：感動系、20代向け、ロケ企画）",
     outputFormat: "markdown",
     icon: "Lightbulb",
-    description: "番組情報を基に新企画を提案",
+    description: "新企画を提案",
     promptKey: PROMPT_KEYS.PROPOSAL,
     promptSuggestions: [
       { id: "1", text: "この企画をより具体的に詳細化してください" },
@@ -230,35 +214,7 @@ export function getResearchFeatures(): ChatFeatureConfig[] {
   ];
 }
 
-/** 動的プロンプトが必要な機能かチェック */
-export function requiresDynamicPrompt(featureId: ChatFeatureId): boolean {
-  return featureId === "proposal";
-}
-
 /** 機能IDが有効かチェック */
 export function isValidFeatureId(id: string): id is ChatFeatureId {
   return id in chatFeatureConfigs;
-}
-
-/** チャット設定のシステムプロンプトを更新（プロポーザル用） */
-export function updateChatConfigSystemPrompt(
-  config: ChatFeatureConfig,
-  programInfo: string,
-  pastProposals: string,
-): ChatFeatureConfig {
-  if (config.featureId !== "proposal") return config;
-
-  const basePrompt = getDefaultPromptContent(PROMPT_KEYS.PROPOSAL);
-  const updatedPrompt = `${basePrompt}
-
-## 番組情報
-${programInfo || "（未設定）"}
-
-## 過去の企画案
-${pastProposals || "（未設定）"}`;
-
-  return {
-    ...config,
-    systemPrompt: updatedPrompt,
-  };
 }

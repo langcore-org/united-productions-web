@@ -5,7 +5,12 @@
  * ClientはこのAPIを経由して要約機能を利用
  *
  * POST /api/llm/summarize
- * Body: { messages: LLMMessage[], provider: LLMProvider }
+ * Body: {
+ *   messages: LLMMessage[],
+ *   provider: LLMProvider,
+ *   targetTokens?: number,
+ *   existingSummary?: string
+ * }
  * Response: { summary: string }
  */
 
@@ -17,6 +22,8 @@ import type { LLMMessage, LLMProvider } from "@/lib/llm/types";
 interface SummarizeRequest {
   messages: LLMMessage[];
   provider: LLMProvider;
+  targetTokens?: number;
+  existingSummary?: string;
 }
 
 interface SummarizeResponse {
@@ -25,6 +32,33 @@ interface SummarizeResponse {
 
 interface ErrorResponse {
   error: string;
+}
+
+/**
+ * 要約用プロンプトを構築
+ */
+function buildSummaryPrompt(
+  messages: LLMMessage[],
+  targetChars: number,
+  existingSummary?: string,
+): string {
+  const conversation = messages
+    .map((m) => `${m.role}: ${m.content.substring(0, 500)}`)
+    .join("\n");
+
+  const summaryContext = existingSummary
+    ? `【これまでの要約】\n${existingSummary}\n\n`
+    : "";
+
+  return `
+以下の会話を${targetChars}文字以内で要約してください。
+重要な事実、結論、未解決事項を優先して含めてください。
+
+${summaryContext}【会話】
+${conversation}
+
+【新しい要約】（${targetChars}文字以内）
+`.trim();
 }
 
 /**
@@ -37,7 +71,7 @@ export async function POST(req: Request): Promise<NextResponse<SummarizeResponse
 
   try {
     const body = (await req.json()) as SummarizeRequest;
-    const { messages, provider } = body;
+    const { messages, provider, targetTokens, existingSummary } = body;
 
     // バリデーション
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
@@ -54,9 +88,15 @@ export async function POST(req: Request): Promise<NextResponse<SummarizeResponse
       );
     }
 
+    // 目標文字数を計算
+    const targetChars = targetTokens ? Math.floor(targetTokens / 0.25) : undefined;
+
+    // プロンプトを構築
+    const prompt = buildSummaryPrompt(messages, targetChars ?? 2000, existingSummary);
+
     // GrokClientをサーバーサイドでインスタンス化
     const client = new GrokClient(provider);
-    const summary = await client.summarize(messages);
+    const summary = await client.summarizeWithPrompt(prompt);
 
     return NextResponse.json<SummarizeResponse>({ summary });
   } catch (error) {

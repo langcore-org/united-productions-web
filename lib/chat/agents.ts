@@ -40,22 +40,6 @@ function getDefaultPromptContent(key: string): string {
   return prompt?.content || "";
 }
 
-/** プロポーザル用システムプロンプトを生成（動的） */
-function getProposalSystemPrompt(programInfo: string, pastProposals: string): string {
-  const basePrompt = getDefaultPromptContent(PROMPT_KEYS.PROPOSAL);
-  if (!programInfo && !pastProposals) {
-    return basePrompt;
-  }
-
-  return `${basePrompt}
-
-## 番組情報
-${programInfo || "（未設定）"}
-
-## 過去の企画案
-${pastProposals || "（未設定）"}`;
-}
-
 /** 全てのAgent定義 */
 export const AGENTS: Agent[] = [
   {
@@ -134,9 +118,9 @@ export const AGENTS: Agent[] = [
   {
     id: "proposal",
     name: "新企画立案",
-    description: "番組情報を基に新しい企画案を提案",
+    description: "新しい企画案を提案",
     icon: "Lightbulb",
-    systemPrompt: getProposalSystemPrompt("", ""),
+    systemPrompt: getDefaultPromptContent(PROMPT_KEYS.PROPOSAL),
     placeholder: "企画の方向性・テーマ・条件を入力してください",
     outputFormat: "markdown",
     category: "document",
@@ -144,8 +128,8 @@ export const AGENTS: Agent[] = [
     promptKey: PROMPT_KEYS.PROPOSAL,
     suggestions: [
       "若年層向けの新しい企画を考えて",
-      "過去の企画をアレンジした新案を出して",
       "季節に合った特番企画を提案して",
+      "低予算で実現できる企画を考えて",
     ],
     enableProgramSelector: true,
   },
@@ -197,23 +181,4 @@ export function getDocumentAgents(): Agent[] {
 /** 一般系のAgent */
 export function getGeneralAgents(): Agent[] {
   return getAgentsByCategory("general");
-}
-
-/** プロポーザルのAgentかチェック（動的プロンプトが必要） */
-export function isProposalAgent(agentId: AgentId): boolean {
-  return agentId === "proposal";
-}
-
-/** プロポーザルのシステムプロンプトを更新（動的プログラム情報を反映） */
-export function updateProposalSystemPrompt(
-  agent: Agent,
-  programInfo: string,
-  pastProposals: string,
-): Agent {
-  if (agent.id !== "proposal") return agent;
-
-  return {
-    ...agent,
-    systemPrompt: getProposalSystemPrompt(programInfo, pastProposals),
-  };
 }

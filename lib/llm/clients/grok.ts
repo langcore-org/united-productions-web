@@ -375,16 +375,21 @@ export class GrokClient implements LLMClient {
    * 会話履歴の要約を生成
    *
    * @param messages - 要約対象のメッセージ配列
+   * @param targetTokens - 目標トークン数（圧縮率に基づく）
    * @returns 要約テキスト
    */
-  async summarize(messages: LLMMessage[]): Promise<string> {
-    logger.info("Starting summarization", { messageCount: messages.length });
+  async summarize(messages: LLMMessage[], targetTokens?: number): Promise<string> {
+    logger.info("Starting summarization", { messageCount: messages.length, targetTokens });
+
+    // 目標文字数を計算（1トークン ≈ 0.25文字）
+    const targetChars = targetTokens ? Math.floor(targetTokens / 0.25) : undefined;
 
     const summaryPrompt: LLMMessage[] = [
       {
         role: "system",
-        content:
-          "あなたは会話の要約専門家です。与えられた会話履歴を簡潔に要約してください。重要なポイント、決定事項、文脈を保持しつつ、できるだけ短くまとめてください。",
+        content: targetChars
+          ? `あなたは会話の要約専門家です。与えられた会話履歴を簡潔に要約してください。重要なポイント、決定事項、文脈を保持しつつ、${targetChars}文字以内にまとめてください。`
+          : "あなたは会話の要約専門家です。与えられた会話履歴を簡潔に要約してください。重要なポイント、決定事項、文脈を保持しつつ、できるだけ短くまとめてください。",
       },
       {
         role: "user",
@@ -397,6 +402,35 @@ export class GrokClient implements LLMClient {
     const response = await this.chat(summaryPrompt);
     logger.info("Summarization completed", {
       inputMessages: messages.length,
+      summaryLength: response.content.length,
+      targetTokens,
+    });
+
+    return response.content;
+  }
+
+  /**
+   * カスタムプロンプトで要約を生成
+   *
+   * @param prompt - カスタムプロンプト文字列
+   * @returns 要約テキスト
+   */
+  async summarizeWithPrompt(prompt: string): Promise<string> {
+    logger.info("Starting summarization with custom prompt");
+
+    const summaryPrompt: LLMMessage[] = [
+      {
+        role: "system",
+        content: "あなたは会話の要約専門家です。",
+      },
+      {
+        role: "user",
+        content: prompt,
+      },
+    ];
+
+    const response = await this.chat(summaryPrompt);
+    logger.info("Summarization completed", {
       summaryLength: response.content.length,
     });
 

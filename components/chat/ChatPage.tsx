@@ -2,11 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
-import {
-  type ChatFeatureId,
-  getChatConfig,
-  updateChatConfigSystemPrompt,
-} from "@/lib/chat/chat-config";
+import { type ChatFeatureId, getChatConfig } from "@/lib/chat/chat-config";
 
 // FeatureChatを動的インポート
 const FeatureChat = dynamic(
@@ -36,27 +32,8 @@ export function ChatPage({ featureId }: ChatPageProps) {
 
       try {
         const baseConfig = getChatConfig(featureId);
-
-        // プロポーザルの場合は動的プロンプトを取得
-        if (featureId === "proposal") {
-          const response = await fetch("/api/settings/program");
-          if (response.ok) {
-            const data = await response.json();
-            const updatedConfig = updateChatConfigSystemPrompt(
-              baseConfig,
-              data.programInfo || "",
-              data.pastProposals || "",
-            );
-            setConfig(updatedConfig);
-            setSystemPrompt(updatedConfig.systemPrompt);
-          } else {
-            setConfig(baseConfig);
-            setSystemPrompt(baseConfig.systemPrompt);
-          }
-        } else {
-          setConfig(baseConfig);
-          setSystemPrompt(baseConfig.systemPrompt);
-        }
+        setConfig(baseConfig);
+        setSystemPrompt(baseConfig.systemPrompt);
       } catch (error) {
         console.error("Failed to load config:", error);
         const fallbackConfig = getChatConfig(featureId);

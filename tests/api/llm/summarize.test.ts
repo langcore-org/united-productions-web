@@ -20,6 +20,7 @@ vi.mock("@/lib/api/auth", () => ({
 vi.mock("@/lib/llm/clients/grok", () => ({
   GrokClient: class MockGrokClient {
     summarize = mockSummarize;
+    summarizeWithPrompt = mockSummarize;
   },
 }));
 
@@ -68,10 +69,9 @@ describe("POST /api/llm/summarize", () => {
 
     const data = await response.json();
     expect(data.summary).toBe("要約結果");
-    expect(mockSummarize).toHaveBeenCalledWith([
-      { role: "user", content: "Hello" },
-      { role: "assistant", content: "Hi" },
-    ]);
+    expect(mockSummarize).toHaveBeenCalledWith(
+      expect.stringContaining("【会話】"),
+    );
   });
 
   it("メッセージが空の場合は400を返す", async () => {
