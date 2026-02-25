@@ -18,32 +18,33 @@
 ## アーキテクチャ図
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#e1f5fe', 'primaryTextColor': '#01579b', 'primaryBorderColor': '#0288d1', 'lineColor': '#0288d1', 'secondaryColor': '#fff3e0', 'tertiaryColor': '#e8f5e9', 'background': '#fafafa'}}}%%
 flowchart TB
-    subgraph Client["クライアント"]
-        A[FeatureChat.tsx<br/>ユーザー入力 + featureId + programId]
+    subgraph Client["🖥️ クライアント"]
+        A[FeatureChat.tsx]
     end
 
-    subgraph Hooks["カスタムフック"]
+    subgraph Hooks["⚡ カスタムフック"]
         B[useLLMStream.ts]
     end
 
-    subgraph APIClient["APIクライアント"]
-        C[llm-client.ts<br/>POST /api/llm/stream]
+    subgraph APIClient["📡 APIクライアント"]
+        C[llm-client.ts]
     end
 
-    subgraph APIRoute["APIルート"]
+    subgraph APIRoute["🔧 APIルート"]
         D[stream/route.ts]
         E[buildSystemPrompt]
     end
 
-    subgraph PromptBuilder["プロンプト構築"]
+    subgraph PromptBuilder["📝 プロンプト構築"]
         F[lib/prompts/system-prompt.ts]
-        G[番組情報データ<br/>直接定義]
-        H[DB: FeaturePrompt]
-        I[DB: SystemPrompt]
+        G[(番組情報データ)]
+        H[(DB: FeaturePrompt)]
+        I[(DB: SystemPrompt)]
     end
 
-    subgraph LLM["LLM"]
+    subgraph LLM["🤖 LLM"]
         J[Grok API]
     end
 
@@ -68,12 +69,13 @@ flowchart TB
 ### 1. クライアントからAPIへ
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#e1f5fe', 'primaryTextColor': '#01579b', 'primaryBorderColor': '#0288d1', 'lineColor': '#0288d1', 'secondaryColor': '#fff3e0', 'tertiaryColor': '#e8f5e9', 'actorBkgColor': '#e1f5fe', 'actorTextColor': '#01579b', 'actorLineColor': '#0288d1', 'background': '#fafafa'}}}%%
 sequenceDiagram
-    actor User as ユーザー
-    participant FC as FeatureChat.tsx
-    participant Hook as useLLMStream
-    participant Client as llm-client.ts
-    participant API as /api/llm/stream
+    actor User as 👤 ユーザー
+    participant FC as 🖥️ FeatureChat.tsx
+    participant Hook as ⚡ useLLMStream
+    participant Client as 📡 llm-client.ts
+    participant API as 🔧 /api/llm/stream
 
     User->>FC: バラエティ企画に合う若手俳優を探して
     FC->>Hook: startStream(messages, provider, featureId, programId)
@@ -98,11 +100,12 @@ sequenceDiagram
 ### 2. APIルートでのプロンプト生成
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#e1f5fe', 'primaryTextColor': '#01579b', 'primaryBorderColor': '#0288d1', 'lineColor': '#0288d1', 'secondaryColor': '#fff3e0', 'tertiaryColor': '#e8f5e9', 'actorBkgColor': '#e1f5fe', 'actorTextColor': '#01579b', 'actorLineColor': '#0288d1', 'background': '#fafafa'}}}%%
 sequenceDiagram
-    participant API as stream/route.ts
-    participant SP as system-prompt.ts
-    participant DB1 as FeaturePrompt<br/>テーブル
-    participant DB2 as SystemPrompt<br/>テーブル
+    participant API as 🔧 stream/route.ts
+    participant SP as 📝 system-prompt.ts
+    participant DB1 as 🗄️ FeaturePrompt
+    participant DB2 as 🗄️ SystemPrompt
 
     API->>SP: buildSystemPrompt("shikujiri", "research-cast")
 
@@ -126,11 +129,18 @@ sequenceDiagram
 ### 3. 生成されるプロンプト構造
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#e1f5fe', 'primaryTextColor': '#01579b', 'primaryBorderColor': '#0288d1', 'lineColor': '#0288d1', 'secondaryColor': '#fff3e0', 'tertiaryColor': '#e8f5e9', 'background': '#fafafa'}}}%%
 graph LR
-    A[会社概要<br/>~300文字] -->|結合| C[システムプロンプト<br/>~2000文字]
-    B[番組情報<br/>~500文字] -->|結合| C
-    D[セパレータ<br/>---] -->|結合| C
-    E[機能プロンプト<br/>~1200文字] -->|結合| C
+    A[🏢 会社概要<br/>~300文字] -->|結合| C[📝 システムプロンプト<br/>~2000文字]
+    B[📺 番組情報<br/>~500文字] -->|結合| C
+    D[➖ セパレータ<br/>---] -->|結合| C
+    E[⚙️ 機能プロンプト<br/>~1200文字] -->|結合| C
+
+    style A fill:#e1f5fe,stroke:#0288d1,stroke-width:2px,color:#01579b
+    style B fill:#fff3e0,stroke:#f57c00,stroke-width:2px,color:#e65100
+    style D fill:#f5f5f5,stroke:#757575,stroke-width:2px,color:#424242
+    style E fill:#e8f5e9,stroke:#388e3c,stroke-width:2px,color:#1b5e20
+    style C fill:#fce4ec,stroke:#c2185b,stroke-width:3px,color:#880e4f
 ```
 
 **実際のプロンプト構成**:
@@ -176,23 +186,24 @@ graph LR
 ## データフロー図
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#e1f5fe', 'primaryTextColor': '#01579b', 'primaryBorderColor': '#0288d1', 'lineColor': '#0288d1', 'secondaryColor': '#fff3e0', 'tertiaryColor': '#e8f5e9', 'background': '#fafafa'}}}%%
 flowchart LR
-    subgraph DataSources["データソース"]
+    subgraph DataSources["📦 データソース"]
         direction TB
-        Code[コード内データ<br/>lib/prompts/system-prompt.ts]
-        DB1[(FeaturePrompt<br/>マッピングテーブル)]
-        DB2[(SystemPrompt<br/>プロンプトテーブル)]
+        Code[💾 コード内データ]
+        DB1[(🗄️ FeaturePrompt)]
+        DB2[(🗄️ SystemPrompt)]
     end
 
-    subgraph BuildProcess["構築プロセス"]
+    subgraph BuildProcess["🔧 構築プロセス"]
         direction TB
-        B1[buildProgramPrompt<br/>番組情報部分]
-        B2[getPromptByFeatureId<br/>機能プロンプト取得]
-        B3[結合<br/>セパレータ挿入]
+        B1[📝 buildProgramPrompt]
+        B2[🔍 getPromptByFeatureId]
+        B3[🔗 結合]
     end
 
-    subgraph Output["出力"]
-        O[システムプロンプト<br/>LLMへ送信]
+    subgraph Output["📤 出力"]
+        O[✨ システムプロンプト]
     end
 
     Code --> B1
@@ -201,6 +212,14 @@ flowchart LR
     B1 --> B3
     B2 --> B3
     B3 --> O
+
+    style Code fill:#e1f5fe,stroke:#0288d1,stroke-width:2px,color:#01579b
+    style DB1 fill:#fff3e0,stroke:#f57c00,stroke-width:2px,color:#e65100
+    style DB2 fill:#fff3e0,stroke:#f57c00,stroke-width:2px,color:#e65100
+    style B1 fill:#e8f5e9,stroke:#388e3c,stroke-width:2px,color:#1b5e20
+    style B2 fill:#e8f5e9,stroke:#388e3c,stroke-width:2px,color:#1b5e20
+    style B3 fill:#fce4ec,stroke:#c2185b,stroke-width:2px,color:#880e4f
+    style O fill:#f3e5f5,stroke:#7b1fa2,stroke-width:3px,color:#4a148c
 ```
 
 ---
@@ -229,24 +248,25 @@ prisma/schema.prisma
 ## 新機能追加フロー
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#e1f5fe', 'primaryTextColor': '#01579b', 'primaryBorderColor': '#0288d1', 'lineColor': '#0288d1', 'secondaryColor': '#fff3e0', 'tertiaryColor': '#e8f5e9', 'actorBkgColor': '#e1f5fe', 'actorTextColor': '#01579b', 'actorLineColor': '#0288d1', 'background': '#fafafa'}}}%%
 sequenceDiagram
-    actor Admin as 管理者
-    participant DB as データベース
-    participant API as APIルート
-    participant User as ユーザー
+    actor Admin as 👨‍💼 管理者
+    participant DB as 🗄️ データベース
+    participant API as 🔧 APIルート
+    participant User as 👤 ユーザー
 
     Admin->>DB: INSERT SystemPrompt(key, content)
     Note over Admin,DB: key: 'RESEARCH_VTUBER'
     Admin->>DB: INSERT FeaturePrompt(featureId, promptKey)
     Note over Admin,DB: featureId: 'research-vtuber'
-    DB-->>Admin: 完了
+    DB-->>Admin: ✅ 完了
 
-    Note over Admin,User: コード変更・デプロイ不要
+    Note over Admin,User: 🚀 コード変更・デプロイ不要
 
     User->>API: featureId: 'research-vtuber'
     API->>DB: 新しいプロンプトを取得
-    DB-->>API: VTuberリサーチ用プロンプト
-    API-->>User: 応答
+    DB-->>API: 🎯 VTuberリサーチ用プロンプト
+    API-->>User: ✅ 応答
 ```
 
 **手順**:
@@ -282,18 +302,29 @@ sequenceDiagram
 ## エラーハンドリング
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#e1f5fe', 'primaryTextColor': '#01579b', 'primaryBorderColor': '#0288d1', 'lineColor': '#0288d1', 'secondaryColor': '#fff3e0', 'tertiaryColor': '#e8f5e9', 'background': '#fafafa'}}}%%
 flowchart TD
-    A[buildSystemPrompt呼び出し] --> B{featureIdあり?}
-    B -->|No| C[番組情報のみ返却]
-    B -->|Yes| D[DB: FeaturePrompt検索]
-    D --> E{見つかる?}
-    E -->|No| C
-    E -->|Yes| F[DB: SystemPrompt検索]
-    F --> G{見つかる?}
-    G -->|No| C
-    G -->|Yes| H[結合して返却]
-    C --> I[正常応答]
+    A([🔧 buildSystemPrompt呼び出し]) --> B{📋 featureIdあり?}
+    B -->|❌ No| C[📺 番組情報のみ返却]
+    B -->|✅ Yes| D[🗄️ DB: FeaturePrompt検索]
+    D --> E{🔍 見つかる?}
+    E -->|❌ No| C
+    E -->|✅ Yes| F[🗄️ DB: SystemPrompt検索]
+    F --> G{🔍 見つかる?}
+    G -->|❌ No| C
+    G -->|✅ Yes| H[🔗 結合して返却]
+    C --> I([✅ 正常応答])
     H --> I
+
+    style A fill:#e1f5fe,stroke:#0288d1,stroke-width:2px,color:#01579b
+    style B fill:#fff3e0,stroke:#f57c00,stroke-width:2px,color:#e65100
+    style C fill:#e8f5e9,stroke:#388e3c,stroke-width:2px,color:#1b5e20
+    style D fill:#fff3e0,stroke:#f57c00,stroke-width:2px,color:#e65100
+    style E fill:#fff3e0,stroke:#f57c00,stroke-width:2px,color:#e65100
+    style F fill:#fff3e0,stroke:#f57c00,stroke-width:2px,color:#e65100
+    style G fill:#fff3e0,stroke:#f57c00,stroke-width:2px,color:#e65100
+    style H fill:#fce4ec,stroke:#c2185b,stroke-width:2px,color:#880e4f
+    style I fill:#f3e5f5,stroke:#7b1fa2,stroke-width:3px,color:#4a148c
 ```
 
 **フォールバック動作**:
