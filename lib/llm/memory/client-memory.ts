@@ -9,11 +9,7 @@
  */
 
 import type { LLMMessage, LLMProvider } from "../types";
-import type {
-  BaseMemoryOptions,
-  CompressionRateEntry,
-  MemoryContext,
-} from "./types";
+import type { BaseMemoryOptions, CompressionRateEntry, MemoryContext } from "./types";
 import { DEFAULT_COMPRESSION_RATES } from "./types";
 
 export type { CompressionRateEntry, MemoryContext };
@@ -31,8 +27,6 @@ export interface SummarizationEvent {
   /** エラーメッセージ（失敗時） */
   error?: string;
 }
-
-
 
 /**
  * クライアントサイド用 Memory クラス

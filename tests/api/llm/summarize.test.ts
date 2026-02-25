@@ -69,9 +69,7 @@ describe("POST /api/llm/summarize", () => {
 
     const data = await response.json();
     expect(data.summary).toBe("要約結果");
-    expect(mockSummarize).toHaveBeenCalledWith(
-      expect.stringContaining("【会話】"),
-    );
+    expect(mockSummarize).toHaveBeenCalledWith(expect.stringContaining("【会話】"));
   });
 
   it("メッセージが空の場合は400を返す", async () => {

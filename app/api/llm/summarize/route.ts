@@ -42,13 +42,9 @@ function buildSummaryPrompt(
   targetChars: number,
   existingSummary?: string,
 ): string {
-  const conversation = messages
-    .map((m) => `${m.role}: ${m.content.substring(0, 500)}`)
-    .join("\n");
+  const conversation = messages.map((m) => `${m.role}: ${m.content.substring(0, 500)}`).join("\n");
 
-  const summaryContext = existingSummary
-    ? `【これまでの要約】\n${existingSummary}\n\n`
-    : "";
+  const summaryContext = existingSummary ? `【これまでの要約】\n${existingSummary}\n\n` : "";
 
   return `
 以下の会話を${targetChars}文字以内で要約してください。

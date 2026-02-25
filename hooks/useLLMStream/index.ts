@@ -177,8 +177,8 @@ export function useLLMStream(options: UseLLMStreamOptions = {}) {
             case "done":
               setUsage(event.usage);
               setIsComplete(true);
-              // ストリーミング完了後、フォローアップ質問を生成
-              generateFollowUp();
+              // ストリーミング完了後、フォローアップ質問を生成（非同期で実行）
+              void generateFollowUp();
               break;
 
             case "error":

@@ -6,7 +6,7 @@
  * @created 2026-02-25
  */
 
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { LLMMessage } from "@/lib/llm/types";
 
 // =============================================================================
@@ -89,10 +89,7 @@ describe("統合ロジックの基本動作", () => {
         { role: "user", content: "質問2" },
       ];
 
-      const { messagesWithSystem } = integrateSummaryIntoSystemPrompt(
-        MOCK_BASE_PROMPT,
-        messages,
-      );
+      const { messagesWithSystem } = integrateSummaryIntoSystemPrompt(MOCK_BASE_PROMPT, messages);
 
       expect(messagesWithSystem).toHaveLength(4);
       expect(messagesWithSystem[1].content).toBe("質問1");
@@ -122,10 +119,7 @@ describe("統合ロジックの基本動作", () => {
         { role: "assistant", content: "回答" },
       ];
 
-      const { messagesWithSystem } = integrateSummaryIntoSystemPrompt(
-        MOCK_BASE_PROMPT,
-        messages,
-      );
+      const { messagesWithSystem } = integrateSummaryIntoSystemPrompt(MOCK_BASE_PROMPT, messages);
 
       expect(messagesWithSystem).toHaveLength(3);
       expect(messagesWithSystem.filter((m) => m.role === "system")).toHaveLength(1);
@@ -303,10 +297,7 @@ describe("エッジケース", () => {
       messages.push({ role: "assistant", content: `回答${i + 1}` });
     }
 
-    const { messagesWithSystem } = integrateSummaryIntoSystemPrompt(
-      MOCK_BASE_PROMPT,
-      messages,
-    );
+    const { messagesWithSystem } = integrateSummaryIntoSystemPrompt(MOCK_BASE_PROMPT, messages);
 
     expect(messagesWithSystem).toHaveLength(101); // system + 100 messages
     expect(messagesWithSystem[0].role).toBe("system");
@@ -347,10 +338,7 @@ describe("レスポンス形式の検証", () => {
       { role: "user", content: "予算は？" },
     ];
 
-    const { messagesWithSystem } = integrateSummaryIntoSystemPrompt(
-      MOCK_BASE_PROMPT,
-      messages,
-    );
+    const { messagesWithSystem } = integrateSummaryIntoSystemPrompt(MOCK_BASE_PROMPT, messages);
 
     // 構造の検証
     expect(messagesWithSystem).toEqual([
@@ -372,10 +360,7 @@ describe("レスポンス形式の検証", () => {
       { role: "user", content: "テスト" },
     ];
 
-    const { messagesWithSystem } = integrateSummaryIntoSystemPrompt(
-      MOCK_BASE_PROMPT,
-      messages,
-    );
+    const { messagesWithSystem } = integrateSummaryIntoSystemPrompt(MOCK_BASE_PROMPT, messages);
 
     const serialized = JSON.stringify(messagesWithSystem);
     const deserialized: LLMMessage[] = JSON.parse(serialized);
