@@ -2,12 +2,13 @@
 
 > **永続的に更新し続けるドキュメント群**
 > 
-> **最終更新**: 2026-02-23 20:30
+> **最終更新**: 2026-02-25 12:30
 
 ## 最近の更新
 
 | 日時 | 内容 |
 |------|------|
+| 2026-02-25 | [システムプロンプト生成フロー](./api-integration/system-prompt-generation.md) - 新規作成（FeaturePromptテーブル追加＆一元化） |
 | 2026-02-23 | [フレームワーク・ツール導入検討書](../plans/current/framework-tool-evaluation.md) - Biome, Lefthook, Knip, Renovate, Bundle Analyzer導入完了 |
 
 ## 更新ルール
@@ -28,11 +29,12 @@ specs/
 │   ├── data-flow.md             # データフロー
 │   └── state-management.md      # 状態管理
 │
-├── api-integration/             # API・外部連携（6ファイル）
+├── api-integration/             # API・外部連携（7ファイル）
 │   ├── api-specification.md     # REST API定義
 │   ├── database-schema.md       # DBスキーマ設計
 │   ├── llm-integration.md       # LLM統合
 │   ├── prompt-engineering.md    # プロンプト設計
+│   ├── system-prompt-generation.md  # システムプロンプト生成フロー
 │   ├── authentication.md        # 認証・認可
 │   └── external-services.md     # 外部サービス連携
 │

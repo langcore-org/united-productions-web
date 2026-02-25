@@ -8,12 +8,12 @@
 import type { NextRequest } from "next/server";
 import { z } from "zod";
 import { requireAuth } from "@/lib/api/auth";
-import { buildSystemPrompt } from "@/lib/prompts/system-prompt";
 import { GrokClient } from "@/lib/llm/clients/grok";
 import { DEFAULT_PROVIDER } from "@/lib/llm/config";
 import { isValidProvider } from "@/lib/llm/factory";
 import type { LLMMessage, LLMProvider, SSEEvent } from "@/lib/llm/types";
 import { createClientLogger } from "@/lib/logger";
+import { buildSystemPrompt } from "@/lib/prompts/system-prompt";
 
 const logger = createClientLogger("StreamAPI");
 
@@ -23,7 +23,7 @@ const streamRequestSchema = z.object({
       z.object({
         role: z.enum(["user", "assistant", "system"]),
         content: z.string().min(1),
-      })
+      }),
     )
     .min(1),
   provider: z.string().optional(),
@@ -62,10 +62,12 @@ export async function POST(request: NextRequest): Promise<Response> {
       return new Response(
         JSON.stringify({
           error: "Invalid request",
-          message: validationResult.error.issues.map((e) => `${e.path.join(".")}: ${e.message}`).join(", "),
+          message: validationResult.error.issues
+            .map((e) => `${e.path.join(".")}: ${e.message}`)
+            .join(", "),
           requestId,
         }),
-        { status: 400, headers: { "Content-Type": "application/json" } }
+        { status: 400, headers: { "Content-Type": "application/json" } },
       );
     }
 
@@ -93,7 +95,7 @@ export async function POST(request: NextRequest): Promise<Response> {
           error: `Provider "${provider}" is not supported for streaming`,
           requestId,
         }),
-        { status: 400, headers: { "Content-Type": "application/json" } }
+        { status: 400, headers: { "Content-Type": "application/json" } },
       );
     }
 
