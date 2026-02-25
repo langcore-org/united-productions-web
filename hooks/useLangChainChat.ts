@@ -11,7 +11,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { type ToolCallInfo, useLLMStream } from "@/hooks/useLLMStream";
+import { type SummarizationEvent, type ToolCallInfo, useLLMStream } from "@/hooks/useLLMStream";
 import type { LLMProvider } from "@/lib/llm/types";
 
 export interface ChatMessage {
@@ -33,6 +33,7 @@ export interface UseLangChainChatReturn {
   isLoading: boolean;
   error: string | null;
   toolCalls: ToolCallInfo[];
+  summarizationEvents: SummarizationEvent[];
   streamingContent: string;
   isComplete: boolean;
   setInput: (input: string) => void;
@@ -54,7 +55,7 @@ export function useLangChainChat(options: UseLangChainChatOptions = {}): UseLang
   const [input, setInput] = useState("");
 
   // useLLMStream に全ストリーム処理を委譲
-  const { content, isComplete, error, toolCalls, startStream, cancelStream, resetStream } =
+  const { content, isComplete, error, toolCalls, summarizationEvents, startStream, cancelStream, resetStream } =
     useLLMStream();
 
   const isLoading = !isComplete;
@@ -160,6 +161,7 @@ export function useLangChainChat(options: UseLangChainChatOptions = {}): UseLang
     isLoading,
     error,
     toolCalls,
+    summarizationEvents,
     streamingContent: content,
     isComplete,
     setInput,

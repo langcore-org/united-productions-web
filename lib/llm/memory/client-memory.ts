@@ -27,6 +27,19 @@ export interface MemoryContext {
   estimatedTokens: number;
 }
 
+export interface SummarizationEvent {
+  /** 一意のID */
+  id: string;
+  /** 表示名 */
+  displayName: string;
+  /** 状態 */
+  status: "running" | "completed" | "error";
+  /** 要約対象のメッセージ数 */
+  targetMessageCount: number;
+  /** エラーメッセージ（失敗時） */
+  error?: string;
+}
+
 /**
  * クライアントサイド用 Memory クラス
  *
@@ -40,6 +53,8 @@ export class ClientMemory {
   private recentMessages: LLMMessage[] = [];
   private allMessages: LLMMessage[] = [];
   private provider: LLMProvider;
+  private currentSummarization: SummarizationEvent | null = null;
+  private summarizationHistory: SummarizationEvent[] = [];
 
   constructor(provider: LLMProvider, options: ClientMemoryOptions = {}) {
     this.provider = provider;
@@ -99,6 +114,15 @@ export class ClientMemory {
 
     if (messagesToSummarize.length === 0) return;
 
+    // 要約イベントを作成（running状態）
+    const eventId = `summarization_${Date.now()}`;
+    this.currentSummarization = {
+      id: eventId,
+      displayName: "文脈を要約中",
+      status: "running",
+      targetMessageCount: messagesToSummarize.length,
+    };
+
     try {
       const response = await fetch("/api/llm/summarize", {
         method: "POST",
@@ -118,9 +142,24 @@ export class ClientMemory {
 
       // 要約を累積
       this.summary = this.summary ? `${this.summary}\n${newSummary}` : newSummary;
+
+      // 要約完了（completed状態）
+      if (this.currentSummarization) {
+        this.currentSummarization.status = "completed";
+        this.currentSummarization.displayName = `文脈を要約しました（${messagesToSummarize.length}件）`;
+        this.summarizationHistory.push({ ...this.currentSummarization });
+        this.currentSummarization = null;
+      }
     } catch (error) {
       console.error("[ClientMemory] Failed to update summary:", error);
-      // 要約失敗時はそのまま続行（古い要約を保持）
+      // 要約失敗（error状態）
+      if (this.currentSummarization) {
+        this.currentSummarization.status = "error";
+        this.currentSummarization.displayName = "文脈の要約に失敗";
+        this.currentSummarization.error = error instanceof Error ? error.message : "Unknown error";
+        this.summarizationHistory.push({ ...this.currentSummarization });
+        this.currentSummarization = null;
+      }
     }
   }
 
@@ -196,7 +235,21 @@ export class ClientMemory {
       hasSummary: !!this.summary,
       summaryLength: this.summary.length,
       estimatedTokens: this.estimateTokens(this.allMessages),
-      isSummarizing: this.estimateTokens(this.allMessages) > this.tokenThreshold,
+      isSummarizing: !!this.currentSummarization,
     };
+  }
+
+  /**
+   * 現在の要約イベントを取得
+   */
+  getCurrentSummarization(): SummarizationEvent | null {
+    return this.currentSummarization;
+  }
+
+  /**
+   * 要約イベント履歴を取得
+   */
+  getSummarizationHistory(): SummarizationEvent[] {
+    return [...this.summarizationHistory];
   }
 }

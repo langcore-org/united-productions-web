@@ -12,9 +12,9 @@ import { useCallback, useRef, useState } from "react";
 import { LLMApiError, streamLLMResponse } from "@/lib/api/llm-client";
 import { ClientMemory } from "@/lib/llm/memory/client-memory";
 import type { LLMMessage, LLMProvider } from "@/lib/llm/types";
-import type { FollowUpInfo, ToolCallInfo, UsageInfo } from "./types";
+import type { FollowUpInfo, SummarizationEvent, ToolCallInfo, UsageInfo } from "./types";
 
-export type { FollowUpInfo, UsageInfo, ToolCallInfo };
+export type { FollowUpInfo, SummarizationEvent, UsageInfo, ToolCallInfo };
 
 export interface UseLLMStreamOptions {
   /** 要約開始閾値（トークン数）。デフォルト: 100000 */
@@ -34,6 +34,7 @@ export function useLLMStream(options: UseLLMStreamOptions = {}) {
   const [error, setError] = useState<string | null>(null);
   const [usage, setUsage] = useState<UsageInfo | null>(null);
   const [toolCalls, setToolCalls] = useState<ToolCallInfo[]>([]);
+  const [summarizationEvents, setSummarizationEvents] = useState<SummarizationEvent[]>([]);
   const [followUp, setFollowUp] = useState<FollowUpInfo>({
     questions: [],
     isLoading: false,
@@ -96,9 +97,14 @@ export function useLLMStream(options: UseLLMStreamOptions = {}) {
       // Memoryを初期化し、メッセージをロード
       const memory = getOrCreateMemory(provider);
       memory.clear(); // 新しい会話のためにクリア
+      setSummarizationEvents([]); // 要約イベントをリセット
 
       // ClientMemoryは内部でAPI経由で要約を実行
       await memory.addMessages(messages);
+
+      // 要約イベントを取得
+      const history = memory.getSummarizationHistory();
+      setSummarizationEvents(history);
 
       // 適切なコンテキストを取得（要約済み or 全履歴）
       const context = memory.getContext();
@@ -210,6 +216,7 @@ export function useLLMStream(options: UseLLMStreamOptions = {}) {
     setError(null);
     setUsage(null);
     setToolCalls([]);
+    setSummarizationEvents([]);
     setFollowUp({ questions: [], isLoading: false, error: null });
     // Memoryもクリア
     memoryRef.current?.clear();
@@ -230,6 +237,7 @@ export function useLLMStream(options: UseLLMStreamOptions = {}) {
     error,
     usage,
     toolCalls,
+    summarizationEvents,
     followUp,
     startStream,
     cancelStream,

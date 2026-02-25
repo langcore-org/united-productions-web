@@ -4,7 +4,7 @@
  * @created 2026-02-22 11:50
  */
 
-import type { ToolCallInfo } from "@/hooks/useLLMStream";
+import type { SummarizationEvent, ToolCallInfo } from "@/hooks/useLLMStream";
 import type { LLMProvider } from "@/lib/llm/types";
 
 // レガシー表示コンポーネント用のローカル型定義
@@ -26,6 +26,7 @@ export interface ThinkingStepInfo {
 export interface StreamingStepsProps {
   content: string;
   toolCalls: ToolCallInfo[];
+  summarizationEvents: SummarizationEvent[];
   usage: {
     inputTokens: number;
     outputTokens: number;
@@ -77,5 +78,10 @@ export interface ErrorMessageProps {
 }
 
 export interface ThinkingPlaceholderMessageProps {
+  provider: LLMProvider | string;
+}
+
+export interface SummarizationMessageProps {
+  event: SummarizationEvent;
   provider: LLMProvider | string;
 }

@@ -32,3 +32,19 @@ export interface FollowUpInfo {
   isLoading: boolean;
   error: string | null;
 }
+
+/**
+ * 要約イベント情報（ツール呼び出しと同様の時系列表示）
+ */
+export interface SummarizationEvent {
+  /** 一意のID */
+  id: string;
+  /** 表示名 */
+  displayName: string;
+  /** 状態 */
+  status: "running" | "completed" | "error";
+  /** 要約対象のメッセージ数 */
+  targetMessageCount: number;
+  /** エラーメッセージ（失敗時） */
+  error?: string;
+}

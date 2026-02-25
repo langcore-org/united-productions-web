@@ -139,6 +139,13 @@ describe("ClientMemory", () => {
       const status = memory.getStatus();
       expect(status.hasSummary).toBe(true);
       expect(memory.getSummary()).toBe("要約テスト");
+
+      // 要約イベント履歴を確認
+      const history = memory.getSummarizationHistory();
+      expect(history).toHaveLength(1);
+      expect(history[0].status).toBe("completed");
+      expect(history[0].displayName).toContain("要約しました");
+      expect(history[0].targetMessageCount).toBe(1); // 5メッセージ - 4保持 = 1要約対象
     });
 
     it("要約APIが失敗しても続行する", async () => {
@@ -163,6 +170,12 @@ describe("ClientMemory", () => {
       // 要約は作成されない
       const status = memory.getStatus();
       expect(status.hasSummary).toBe(false);
+
+      // エラーイベントが履歴に追加される
+      const history = memory.getSummarizationHistory();
+      expect(history).toHaveLength(1);
+      expect(history[0].status).toBe("error");
+      expect(history[0].displayName).toContain("要約に失敗");
     });
 
     it("要約APIがエラーレスポンスを返しても続行する", async () => {

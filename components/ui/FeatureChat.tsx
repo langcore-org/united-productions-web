@@ -79,7 +79,7 @@ export function FeatureChat({
   const [isUserScrolling, setIsUserScrolling] = useState(false);
   const userScrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const { content, isComplete, error, usage, toolCalls, followUp, startStream, resetStream } =
+  const { content, isComplete, error, usage, toolCalls, summarizationEvents, followUp, startStream, resetStream } =
     useLLMStream();
 
   const { currentChatId, setCurrentChatId, isLoadingHistory, loadConversation, saveConversation } =
@@ -309,6 +309,7 @@ export function FeatureChat({
               <StreamingSteps
                 content={content}
                 toolCalls={toolCalls}
+                summarizationEvents={summarizationEvents}
                 usage={usage}
                 provider={provider}
                 isComplete={isComplete}

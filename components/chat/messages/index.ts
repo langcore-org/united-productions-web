@@ -9,6 +9,7 @@ export type { ErrorMessageProps } from "./ErrorMessage";
 export { ErrorMessage } from "./ErrorMessage";
 export { LegacyThinkingMessage } from "./LegacyThinkingMessage";
 export { NewThinkingStepMessage } from "./NewThinkingStepMessage";
+export { SummarizationMessage } from "./SummarizationMessage";
 export { ThinkingPlaceholderMessage } from "./ThinkingPlaceholderMessage";
 export { ThinkingStepMessage } from "./ThinkingStepMessage";
 export { ToolCallMessage } from "./ToolCallMessage";
