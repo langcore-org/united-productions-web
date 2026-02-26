@@ -67,8 +67,7 @@ describe("プロンプトDBユーティリティ", () => {
 
       expect(result).toBe("テストプロンプト内容");
       expect(mockPrisma.systemPrompt.findUnique).toHaveBeenCalledWith({
-        where: { key: "TEST_KEY", isActive: true },
-        select: { content: true },
+        where: { key: "TEST_KEY" },
       });
     });
 
