@@ -143,7 +143,10 @@ export function Header({ className, onMenuClick, showMobileMenu }: HeaderProps) 
                   )}
                 </div>
                 <div className="px-4 py-2 border-t border-[#2a2a35]">
-                  <button type="button" className="w-full text-center text-xs text-gray-500 hover:text-gray-300 py-1">
+                  <button
+                    type="button"
+                    className="w-full text-center text-xs text-gray-500 hover:text-gray-300 py-1"
+                  >
                     すべての通知を表示
                   </button>
                 </div>

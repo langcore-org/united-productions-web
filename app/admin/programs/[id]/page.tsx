@@ -256,7 +256,10 @@ export default function ProgramDetailPage() {
                       <span className="text-sm text-gray-500 block">詳細スケジュール</span>
                       <div className="mt-2 space-y-2">
                         {program.scheduleDetail.map((s) => (
-                          <div key={`${s.day}-${s.startTime}`} className="text-sm bg-gray-50 p-2 rounded">
+                          <div
+                            key={`${s.day}-${s.startTime}`}
+                            className="text-sm bg-gray-50 p-2 rounded"
+                          >
                             <span className="font-medium">{s.day}</span> {s.startTime}〜{s.endTime}
                             {s.note && <span className="text-gray-500 ml-2">({s.note})</span>}
                           </div>

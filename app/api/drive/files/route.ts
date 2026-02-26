@@ -66,11 +66,13 @@ function sanitizeFilename(filename: string): string {
  */
 function sanitizeDriveQuery(query: string): string {
   // 制御文字を除去
-  return query
-    // biome-ignore lint/suspicious/noControlCharactersInRegex: 正規表現の文字クラス範囲指定
-    .replace(/[\x00-\x1F\x7F]/g, "") // 制御文字
-    .replace(/[<>]/g, "") // HTMLタグ
-    .substring(0, 100); // 長さ制限
+  return (
+    query
+      // biome-ignore lint/suspicious/noControlCharactersInRegex: 正規表現の文字クラス範囲指定
+      .replace(/[\x00-\x1F\x7F]/g, "") // 制御文字
+      .replace(/[<>]/g, "") // HTMLタグ
+      .substring(0, 100)
+  ); // 長さ制限
 }
 
 /**

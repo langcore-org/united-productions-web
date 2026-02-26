@@ -47,7 +47,9 @@ export function ChatInputArea({
   return (
     <div className="border-t border-gray-200 px-6 py-4 bg-white">
       {inputLabel && (
-        <label htmlFor="chat-input" className="block text-sm font-medium text-gray-600 mb-2">{inputLabel}</label>
+        <label htmlFor="chat-input" className="block text-sm font-medium text-gray-600 mb-2">
+          {inputLabel}
+        </label>
       )}
 
       {attachedFiles.length > 0 && (

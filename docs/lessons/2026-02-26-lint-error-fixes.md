@@ -22,6 +22,47 @@ GitHub ActionsのCIで発生していたLintエラーを全て修正しました
 
 ---
 
+## ⚠️ 重要な注意事項：無視コメント（biome-ignore）
+
+本修正では、一部のエラーを `// biome-ignore` コメントで無視しています。これらは**技術的負債**であり、後続の対応が必要です。
+
+### 無視コメントの一覧とリスク評価
+
+| ルール | 場所 | 理由 | リスクレベル | 推奨対応時期 |
+|--------|------|------|--------------|--------------|
+| `noDangerouslySetInnerHtml` | `biome.json` | 既存のDOMPurifyサニタイズを信頼 | 🔴 **高** | 1-2週間以内 |
+| `noGlobalEval` | `lib/parsers/document.ts` | CommonJSモジュールの動的インポートに必要 | 🟡 中 | 3ヶ月ごと確認 |
+| `useExhaustiveDependencies` | 複数ファイル | useCallbackの設計上の制約 | 🟡 中 | 1-2ヶ月以内 |
+| `noStaticElementInteractions` | ドラッグ&ドロップ関連 | キーボード非対応の仕様 | 🟡 中 | 1-2ヶ月以内 |
+| `noArrayIndexKey` | 固定長リスト | 順序変更なしの保証 | 🟢 低 | 特になし |
+
+### 高リスク項目の詳細
+
+#### 1. `noDangerouslySetInnerHtml`（🔴 高リスク）
+
+**問題**:
+- XSS（クロスサイトスクリプティング）の脆弱性の可能性
+- DOMPurifyの設定ミスや将来の変更によるセキュリティホール
+
+**推奨される対応**:
+```typescript
+// 現在（危険）
+<div dangerouslySetInnerHTML={{ __html: sanitizedContent }} />
+
+// 推奨（安全）- 将来のリファクタリングで対応
+import ReactMarkdown from 'react-markdown';
+<ReactMarkdown>{sanitizedContent}</ReactMarkdown>
+```
+
+**必要なアクション**:
+1. 直近で `sanitizeAndFormatMarkdown()` のテストを追加
+2. XSSペイロードを含むテストケースを作成
+3. `react-markdown` への移行を検討
+
+詳細は `docs/backlog/review-suppression-comments.md` を参照。
+
+---
+
 ## 修正したエラーカテゴリ
 
 ### 1. 🔴 セキュリティ関連（3件）
@@ -308,6 +349,48 @@ pre-commit:
 ### CSS Parseエラー
 - `app/globals.css` - BiomeがCSS構文を完全にサポートしていないため
 - これらはビルドに影響しない
+
+---
+
+## 次のアクション（TODO）
+
+### 🔴 緊急（1-2週間以内）
+
+- [ ] **`sanitizeAndFormatMarkdown()` のテスト追加**
+  - XSSペイロードを含むテストケースを作成
+  - ファイル: `tests/lib/xss-sanitizer.test.ts`
+  
+- [ ] **`dangerouslySetInnerHTML` 使用箇所のセキュリティレビュー**
+  - DOMPurify設定の見直し
+  - ホワイトリストの妥当性確認
+
+### 🟡 重要（1-2ヶ月以内）
+
+- [ ] **`useExhaustiveDependencies` の根本解決**
+  - カスタムフックへのリファクタリング計画
+  - React Query導入の検討
+
+- [ ] **ドラッグ&ドロップのキーボード対応**
+  - Enter/Spaceキーでファイル選択ダイアログを開く
+  - ARIA属性の強化
+
+### 🟢 定期レビュー（3ヶ月ごと）
+
+- [ ] **ESM対応ライブラリの更新確認**
+  - `pdf-parse`, `mammoth`, `xlsx` のESM対応状況
+  - 代替ライブラリの検討
+
+- [ ] **無視コメントの再評価**
+  - 解消可能なものは対応
+  - 新たなリスクがないか確認
+
+---
+
+## 関連ドキュメント
+
+- `docs/backlog/review-suppression-comments.md` - 無視コメントの詳細なレビュー記録
+- `docs/backlog/improvement-accessibility.md` - アクセシビリティ改善候補
+- `docs/backlog/css-parse-errors.md` - CSS parseエラー（Biome制限）
 
 ---
 

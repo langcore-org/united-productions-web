@@ -158,7 +158,11 @@ export function GoogleDrivePicker({ onSelect, onCancel, accept }: GoogleDrivePic
             <FolderOpen className="w-5 h-5 text-black" />
             <h3 className="font-semibold text-gray-900">Google Driveから選択</h3>
           </div>
-          <button type="button" onClick={onCancel} className="p-1 rounded-lg hover:bg-gray-100 text-gray-500">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="p-1 rounded-lg hover:bg-gray-100 text-gray-500"
+          >
             <X className="w-4 h-4" />
           </button>
         </div>
