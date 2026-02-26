@@ -12,6 +12,7 @@
 現在、ユーザーはツール使用中「Web検索を実行中」のような簡易表示しか見られない。以下の情報を**リアルタイム**で表示することで、AIがどの情報源に基づいて回答を生成しているかを理解できるようにする。
 
 ```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': { 'primaryColor': '#4a90d9', 'primaryTextColor': '#fff', 'primaryBorderColor': '#4a90d9', 'lineColor': '#666', 'secondaryColor': '#006100', 'tertiaryColor': '#fff'}}}%%
 sequenceDiagram
     actor User
     participant AI
@@ -52,6 +53,7 @@ sequenceDiagram
 ### 実装ステップ一覧
 
 ```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': { 'primaryColor': '#4a90d9', 'primaryTextColor': '#fff', 'primaryBorderColor': '#4a90d9', 'lineColor': '#888', 'secondaryColor': '#2d3748', 'tertiaryColor': '#1a202c'}}}%%
 flowchart LR
     A[Step 1<br/>型追加] --> B[Step 2<br/>GrokClient修正]
     B --> C[Step 3<br/>UI表示]
