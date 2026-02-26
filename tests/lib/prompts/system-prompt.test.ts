@@ -22,7 +22,7 @@ describe("buildProgramPrompt", () => {
   it("全番組のプロンプトを構築できる", () => {
     const prompt = buildProgramPrompt("all");
 
-    expect(prompt).toContain("United Productions");
+    expect(prompt).toContain("レギュラー番組一覧");
     expect(prompt).toContain("マツコの知らない世界");
     expect(prompt).toContain("しくじり先生");
     expect(prompt).toContain("前提知識として保持");
@@ -31,7 +31,7 @@ describe("buildProgramPrompt", () => {
   it("特定番組のプロンプトを構築できる", () => {
     const prompt = buildProgramPrompt("shikujiri");
 
-    expect(prompt).toContain("United Productions");
+    expect(prompt).toContain("レギュラー番組一覧");
     expect(prompt).toContain("しくじり先生 俺みたいになるな!!");
     expect(prompt).toContain("ギャル曽根");
     expect(prompt).not.toContain("マツコの知らない世界");
@@ -49,7 +49,7 @@ describe("buildSystemPrompt", () => {
   it("featureIdなしで番組情報のみのプロンプトを構築", async () => {
     const prompt = await buildSystemPrompt("shikujiri");
 
-    expect(prompt).toContain("United Productions");
+    expect(prompt).toContain("レギュラー番組一覧");
     expect(prompt).toContain("しくじり先生");
     expect(prompt).toContain("前提知識として保持");
     expect(prompt).not.toContain("機能固有の指示");
@@ -73,7 +73,7 @@ describe("buildSystemPrompt", () => {
 
     const prompt = await buildSystemPrompt("shikujiri", "research-cast");
 
-    expect(prompt).toContain("United Productions");
+    expect(prompt).toContain("レギュラー番組一覧");
     expect(prompt).toContain("しくじり先生");
     expect(prompt).toContain("機能固有の指示");
     expect(prompt).toContain("出演者リサーチ");
@@ -84,7 +84,7 @@ describe("buildSystemPrompt", () => {
 
     const prompt = await buildSystemPrompt("shikujiri", "non-existent");
 
-    expect(prompt).toContain("United Productions");
+    expect(prompt).toContain("レギュラー番組一覧");
     expect(prompt).not.toContain("機能固有の指示");
   });
 

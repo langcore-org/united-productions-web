@@ -14,7 +14,7 @@ async function test() {
   console.log("----------------------------------------");
   const prompt1 = await buildSystemPrompt("shikujiri");
   console.log("Length:", prompt1.length);
-  console.log("Contains 'United Productions':", prompt1.includes("United Productions"));
+  console.log("Contains 'レギュラー番組一覧':", prompt1.includes("レギュラー番組一覧"));
   console.log("Contains 'しくじり先生':", prompt1.includes("しくじり先生"));
   console.log("Contains '機能固有の指示':", prompt1.includes("機能固有の指示"));
   console.log("\n");
@@ -25,7 +25,7 @@ async function test() {
   try {
     const prompt2 = await buildSystemPrompt("shikujiri", "research-cast");
     console.log("Length:", prompt2.length);
-    console.log("Contains 'United Productions':", prompt2.includes("United Productions"));
+    console.log("Contains 'レギュラー番組一覧':", prompt2.includes("レギュラー番組一覧"));
     console.log("Contains 'しくじり先生':", prompt2.includes("しくじり先生"));
     console.log("Contains '機能固有の指示':", prompt2.includes("機能固有の指示"));
 

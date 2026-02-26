@@ -5,7 +5,6 @@
  */
 
 import {
-  companyInfoDetailed,
   programAchikochi,
   programKamaigachi,
   programKaneo,
@@ -22,10 +21,7 @@ import {
   programTalksurvivor,
   programYakai,
 } from "./programs-detailed-data-2";
-import type { CompanyInfo, KnowledgeBase, ProgramInfo, ProgramOption } from "./types";
-
-// 会社概要（詳細版）
-export const companyInfo: CompanyInfo = companyInfoDetailed;
+import type { KnowledgeBase, ProgramInfo, ProgramOption } from "./types";
 
 // 13番組の詳細データ
 export const programs: ProgramInfo[] = [
@@ -46,7 +42,6 @@ export const programs: ProgramInfo[] = [
 
 /** ナレッジベース全体 */
 export const knowledgeBase: KnowledgeBase = {
-  company: companyInfo,
   programs: programs,
   updatedAt: "2026-02-24",
   updatedBy: "AI Assistant",

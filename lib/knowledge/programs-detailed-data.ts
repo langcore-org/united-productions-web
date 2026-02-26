@@ -2,35 +2,7 @@
  * United Productions レギュラー番組データ（詳細版・データ部分）
  */
 
-import type { CompanyInfo, ProgramInfo } from "./types";
-
-export const companyInfoDetailed: CompanyInfo = {
-  name: "株式会社UNITED PRODUCTIONS（ユナイテッドプロダクションズ）",
-  nameEn: "UNITED PRODUCTIONS, Inc.",
-  founded: "2016年10月3日",
-  origin: "2008年9月3日（フーリンラージとして創業）",
-  location: "〒150-0011 東京都渋谷区東3-16-3",
-  representative: "代表取締役社長 森田篤",
-  employees: "420名（2025年4月1日現在）",
-  capital: "1,000万円",
-  revenue: "71.2億円（2024年度実績、子会社含む）",
-  mission: "日本一のコンテンツサプライヤーになる",
-  vision: "映像制作業界において、最も信頼され、最も選ばれるパートナーとなる",
-  philosophy: "「大好きな、あの番組を作りたい」という情熱を大切にする",
-  businessActivities: [
-    "テレビ番組制作（バラエティ、ドラマ、ドキュメンタリー等）",
-    "映画・CM・MV制作",
-    "デジタルコンテンツ・SNS動画制作",
-    "ラジオ番組制作",
-    "アーティスト・キャラクターグッズ制作",
-    "労働者派遣事業",
-    "映画配給事業（2025年4月開始、KeyHolder Pictures）",
-  ],
-  parentCompany: "株式会社KeyHolder（東証スタンダード上場、証券コード4712）100%子会社",
-  subsidiaries: ["TOKYO ROCK STUDIO（コンテンツスタジオ）"],
-  website: "https://united-p.co.jp/",
-  social: [{ platform: "Instagram", url: "@unitedproductions.inc" }],
-};
+import type { ProgramInfo } from "./types";
 
 // マツコの知らない世界
 export const programMatsuko: ProgramInfo = {

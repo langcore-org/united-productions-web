@@ -33,12 +33,7 @@ function integrateSummaryIntoSystemPrompt(
 }
 
 // モック用の基本システムプロンプト
-const MOCK_BASE_PROMPT = `# United Productions 会社概要
-
-## 基本情報
-- 社名: 株式会社UNITED PRODUCTIONS
-
-## 機能固有の指示
+const MOCK_BASE_PROMPT = `## 機能固有の指示
 
 ## 出演者リサーチ
 あなたは出演者リサーチ専門家です。`;

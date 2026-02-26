@@ -173,48 +173,8 @@ export interface ProgramInfo {
   category?: string;
 }
 
-/** 会社概要 */
-export interface CompanyInfo {
-  /** 社名 */
-  name: string;
-  /** 社名（英語） */
-  nameEn?: string;
-  /** 設立 */
-  founded: string;
-  /** 創業（源流） */
-  origin?: string;
-  /** 所在地 */
-  location: string;
-  /** 代表者 */
-  representative: string;
-  /** 従業員数 */
-  employees: string;
-  /** 資本金 */
-  capital: string;
-  /** 売上高 */
-  revenue?: string;
-  /** ミッション */
-  mission: string;
-  /** ビジョン */
-  vision?: string;
-  /** 企業理念 */
-  philosophy?: string;
-  /** 事業内容 */
-  businessActivities?: string[];
-  /** 親会社 */
-  parentCompany?: string;
-  /** 関連会社 */
-  subsidiaries?: string[];
-  /** 公式HP */
-  website?: string;
-  /** SNS */
-  social?: SocialInfo[];
-}
-
 /** ナレッジベース全体 */
 export interface KnowledgeBase {
-  /** 会社概要 */
-  company: CompanyInfo;
   /** レギュラー番組一覧 */
   programs: ProgramInfo[];
   /** 更新日 */

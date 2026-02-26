@@ -125,7 +125,7 @@ sequenceDiagram
     Note over SP: 【段階1】初期状態<br/>入力: programId="shikujiri", featureId="research-cast"
 
     SP->>SP: buildProgramPrompt("shikujiri")
-    Note over SP: 【段階2】番組情報部分構築完了<br/>┌─ 会社概要 (~300文字)<br/>├─ しくじり先生番組情報 (~200文字)<br/>└─ フッター<br/>合計: ~800文字
+    Note over SP: 【段階2】番組情報部分構築完了<br/>├─ しくじり先生番組情報 (~200文字)<br/>└─ フッター<br/>合計: ~500文字
 
     SP->>DB1: SELECT * FROM FeaturePrompt<br/>WHERE featureId = 'research-cast'<br/>AND isActive = true
     DB1-->>SP: promptKey: 'RESEARCH_CAST'
@@ -154,8 +154,7 @@ sequenceDiagram
 ```mermaid
 %%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#e1f5fe', 'primaryTextColor': '#01579b', 'primaryBorderColor': '#0288d1', 'lineColor': '#0288d1', 'secondaryColor': '#fff3e0', 'tertiaryColor': '#e8f5e9', 'background': '#fafafa'}}}%%
 graph LR
-    A[🏢 会社概要<br/>~300文字] -->|結合| C[📝 システムプロンプト<br/>~2000文字]
-    B[📺 番組情報<br/>~500文字] -->|結合| C
+    A[📺 番組情報<br/>~500文字] -->|結合| C[📝 システムプロンプト<br/>~1700文字]
     D[➖ セパレータ<br/>---] -->|結合| C
     E[⚙️ 機能プロンプト<br/>~1200文字] -->|結合| C
 
@@ -170,25 +169,17 @@ graph LR
 
 | 段階 | 内容 | サイズ |
 |-----|------|--------|
-| **1. 会社概要** | United Productionsの基本情報 | ~300文字 |
-| **2. 番組情報** | 選択された番組の詳細 | ~200文字 |
+| **1. 番組情報** | 選択された番組の詳細 | ~200文字 |
 | **3. フッター** | 「前提知識として保持」等の指示 | ~100文字 |
 | **4. セパレータ** | `---` | - |
 | **5. 機能見出し** | `## 機能固有の指示` | - |
 | **6. 機能プロンプト** | 役割定義 + ツール使用指示 | ~1200文字 |
-| **合計** | システムプロンプト全体 | ~2000文字 |
+| **合計** | システムプロンプト全体 | ~1700文字 |
 
 **実際のプロンプト構成**（抜粋）:
 
 ```markdown
-# United Productions 会社概要
-
-## 基本情報
-- 社名: 株式会社UNITED PRODUCTIONS...
-- 設立: 2016年10月3日
-...
-
----
+# レギュラー番組一覧（13本）
 
 ## しくじり先生 俺みたいになるな!!
 
@@ -266,9 +257,7 @@ flowchart LR
 ```
 lib/prompts/
 ├── system-prompt.ts      # 一元管理ファイル
-│   ├── COMPANY_INFO      # 会社概要データ
 │   ├── PROGRAMS          # 番組情報データ（13本）
-│   ├── formatCompany()   # フォーマット関数
 │   ├── formatProgram()   # フォーマット関数
 │   ├── getPromptByFeatureId()  # DB取得
 │   └── buildSystemPrompt()     # 公開API
@@ -326,34 +315,9 @@ promptKey: "RESEARCH_CAST"
 - 中立的な立場で複数の候補を提示する
 ```
 
-**生成されるシステムプロンプト**（約2,100文字）:
+**生成されるシステムプロンプト**（約1,800文字）:
 
 ```markdown
-# United Productions 会社概要
-
-## 基本情報
-- 社名: 株式会社UNITED PRODUCTIONS（ユナイテッドプロダクションズ）
-- 社名（英語）: United Productions Co., Ltd.
-- 設立: 2016年10月3日（源流：2008年創業のフーリンラージ）
-- 所在地: 東京都渋谷区東3-16-3
-- 代表者: 代表取締役社長 森田篤
-- 従業員数: 420名（2025年4月1日現在）
-- 資本金: 1,000万円
-- 売上高: 100億円（2024年度）
-- ミッション: 日本一のコンテンツサプライヤーになる
-- ビジョン: 世界中の人々に感動と笑いを届ける
-- 企業理念: クリエイティビティと実行力で、新しいエンターテイメントを創造する
-- 親会社: フジテレビジョン（連結子会社）
-
-## 事業内容
-- テレビ番組の企画・制作
-- 映像コンテンツの制作
-- イベント・プロモーションの企画・運営
-- タレント・クリエイターのマネジメント
-- デジタルコンテンツの制作・配信
-
-- 公式HP: https://united-productions.co.jp
-
 # レギュラー番組一覧（13本）
 
 ## マツコの知らない世界
@@ -440,12 +404,12 @@ promptKey: "PROPOSAL"
 - 倫理的・法的に問題のない内容
 ```
 
-**生成されるシステムプロンプト**（約2,200文字）:
+**生成されるシステムプロンプト**（約1,900文字）:
 
 ```markdown
-# United Productions 会社概要
+# レギュラー番組一覧（13本）
 ...
-（会社概要 + 13本の番組情報：約900文字）
+（13本の番組情報：約600文字）
 
 ---
 
@@ -469,15 +433,9 @@ promptKey: "PROPOSAL"
 
 **リクエスト**: `buildSystemPrompt("all")`（featureIdなし）
 
-**生成されるシステムプロンプト**（約900文字）:
+**生成されるシステムプロンプト**（約600文字）:
 
 ```markdown
-# United Productions 会社概要
-
-## 基本情報
-- 社名: 株式会社UNITED PRODUCTIONS...
-...
-
 # レギュラー番組一覧（13本）
 
 ## マツコの知らない世界
@@ -501,10 +459,10 @@ promptKey: "PROPOSAL"
 
 | ケース | 構成 | おおよその文字数 |
 |--------|------|----------------|
-| 番組情報のみ | 会社概要 + 13本番組 | ~900文字 |
-| 出演者リサーチ | 番組情報 + 機能プロンプト | ~2,100文字 |
-| 新企画立案 | 番組情報 + 機能プロンプト | ~2,200文字 |
-| 議事録作成 | 番組情報 + 機能プロンプト | ~2,000文字 |
+| 番組情報のみ | 13本番組 | ~600文字 |
+| 出演者リサーチ | 番組情報 + 機能プロンプト | ~1,800文字 |
+| 新企画立案 | 番組情報 + 機能プロンプト | ~1,900文字 |
+| 議事録作成 | 番組情報 + 機能プロンプト | ~1,700文字 |
 
 **注**: 実際の文字数はDBのcontent内容により変動します。
 
@@ -618,7 +576,7 @@ flowchart TD
 ```
 【競合状態（修正前）】
 messages: [
-  { role: "system", content: "会社概要+番組情報+機能プロンプト" },  ← buildSystemPrompt
+  { role: "system", content: "番組情報+機能プロンプト" },  ← buildSystemPrompt
   { role: "system", content: "これまでの会話の要約：..." },           ← ClientMemory
   { role: "user", content: "..." },
   ...
@@ -662,9 +620,7 @@ messages: [
   { 
     role: "system", 
     content: `
-## 会社概要
-...
-## 番組情報
+## 番組一覧
 ...
 ## 機能固有の指示
 ...

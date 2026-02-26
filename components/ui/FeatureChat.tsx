@@ -319,8 +319,7 @@ export function FeatureChat({
 
             {/* ストリーミング中または完了後（ツール・要約情報がある場合）は StreamingSteps を表示 */}
             {(isPending ||
-              (isComplete &&
-                (toolCalls.length > 0 || summarizationEvents.length > 0))) && (
+              (isComplete && (toolCalls.length > 0 || summarizationEvents.length > 0))) && (
               <StreamingSteps
                 content={content}
                 toolCalls={toolCalls}
