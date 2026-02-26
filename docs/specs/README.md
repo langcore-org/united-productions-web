@@ -2,13 +2,14 @@
 
 > **永続的に更新し続けるドキュメント群**
 > 
-> **最終更新**: 2026-02-26 22:00
+> **最終更新**: 2026-02-26 22:15
 
 ## 最近の更新
 
 | 日時 | 内容 |
 |------|------|
 | 2026-02-26 | [xAI Responses API 仕様](./api-integration/xai-responses-api-spec.md) - xAI API調査結果を追加（ツール実行結果の構造を記録） |
+| 2026-02-26 | [ストリーミングイベント仕様（Legacy）](../archive/2026-02-26-streaming-events-legacy.md) - LangChain時代の仕様をアーカイブ |
 | 2026-02-25 | [システムプロンプト生成フロー](./api-integration/system-prompt-generation.md) - 新規作成（FeaturePromptテーブル追加＆一元化） |
 | 2026-02-23 | [フレームワーク・ツール導入検討書](../plans/current/framework-tool-evaluation.md) - Biome, Lefthook, Knip, Renovate, Bundle Analyzer導入完了 |
 
@@ -30,7 +31,7 @@ specs/
 │   ├── data-flow.md             # データフロー
 │   └── state-management.md      # 状態管理
 │
-├── api-integration/             # API・外部連携（8ファイル）
+├── api-integration/             # API・外部連携（7ファイル）
 │   ├── api-specification.md     # REST API定義
 │   ├── database-schema.md       # DBスキーマ設計
 │   ├── llm-integration.md       # LLM統合

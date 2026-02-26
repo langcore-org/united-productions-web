@@ -1,10 +1,21 @@
-# ストリーミングイベント仕様
+# ストリーミングイベント仕様（Legacy）
 
-> **LLMストリーミング時のイベント定義とデータフロー**
+> **⚠️ アーカイブ済み: このドキュメントは過去の仕様です**
 > 
-> **最終更新**: 2026-02-23 22:00
-> 
-> **注意**: 現在はLangChainを使用せず、xAI Responses APIを直接利用。詳細は [xAI Responses API 仕様](./xai-responses-api-spec.md) を参照。
+> **アーカイブ日**: 2026-02-26  
+> **最終更新**: 2026-02-23 22:00  
+> **対象期間**: LangChain使用時（~2026-02-26）
+>
+> **現在の仕様**: [xAI Responses API 仕様](../specs/api-integration/xai-responses-api-spec.md)  
+> **理由**: LangChainからxAI Responses API直接呼び出しに移行したため
+
+---
+
+## 概要（旧仕様）
+
+LangChainのAgent/Tool機能を活用し、AIの思考プロセスをリアルタイムで可視化する仕様。
+
+**現在は使用されていません。参考情報としてのみ保持。**
 
 ---
 

@@ -11,6 +11,7 @@ const logger = createClientLogger("InvestigateTool");
 
 // 環境変数を直接読み込み
 import { readFileSync } from "fs";
+
 const envContent = readFileSync(".env.local", "utf-8");
 const apiKeyMatch = envContent.match(/XAI_API_KEY=(.+)/);
 const API_KEY = apiKeyMatch ? apiKeyMatch[1].trim() : process.env.XAI_API_KEY;
@@ -31,7 +32,7 @@ interface XAIStreamEvent {
       status?: string;
       name?: string;
       input?: string;
-      result?: unknown;  // ← 調査対象
+      result?: unknown; // ← 調査対象
       call_id?: string;
       content?: Array<{
         type: string;
@@ -60,7 +61,7 @@ interface XAIStreamEvent {
     status: string;
     name?: string;
     input?: string;
-    result?: unknown;  // ← 調査対象
+    result?: unknown; // ← 調査対象
     call_id?: string;
   };
   usage?: {
@@ -80,14 +81,11 @@ async function streamWithCapture(): Promise<void> {
     input: [
       {
         role: "user",
-        content: "OpenAI GPT-5について最新情報を検索して"
-      }
+        content: "OpenAI GPT-5について最新情報を検索して",
+      },
     ],
     stream: true,
-    tools: [
-      { type: "web_search" },
-      { type: "x_search" }
-    ]
+    tools: [{ type: "web_search" }, { type: "x_search" }],
   };
 
   logger.info("Starting API request", { model: requestBody.model });
@@ -219,7 +217,7 @@ async function streamWithCapture(): Promise<void> {
   console.log("\n\n=== Investigation Report ===\n");
 
   const toolCallEvents = capturedEvents.filter(
-    e => e.type === "response.output_item.done" && e.item?.type?.includes("_call")
+    (e) => e.type === "response.output_item.done" && e.item?.type?.includes("_call"),
   );
 
   console.log(`Total events captured: ${capturedEvents.length}`);
@@ -238,15 +236,22 @@ async function streamWithCapture(): Promise<void> {
   // レスポンス全体の構造を保存
   const fs = await import("fs");
   const outputPath = "/tmp/xai_tool_investigation.json";
-  fs.writeFileSync(outputPath, JSON.stringify({
-    timestamp: new Date().toISOString(),
-    events: capturedEvents,
-    summary: {
-      totalEvents: capturedEvents.length,
-      toolCalls: toolCallEvents.length,
-      contentLength: contentBuffer.length
-    }
-  }, null, 2));
+  fs.writeFileSync(
+    outputPath,
+    JSON.stringify(
+      {
+        timestamp: new Date().toISOString(),
+        events: capturedEvents,
+        summary: {
+          totalEvents: capturedEvents.length,
+          toolCalls: toolCallEvents.length,
+          contentLength: contentBuffer.length,
+        },
+      },
+      null,
+      2,
+    ),
+  );
 
   console.log(`\n📁 Full capture saved to: ${outputPath}`);
 }
