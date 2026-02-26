@@ -99,11 +99,11 @@
 
 | 日付 | イベント | 担当 | 備考 |
 |------|----------|------|------|
-| 3/2（月） | 社内朝礼ローンチ宣言 | 島田 | [スクリーンショット提供必要](./design/screenshot-for-company-announcement.md) |
+| 3/2（月） | 社内朝礼ローンチ宣言 | 島田 | スクリーンショット提供済み |
 | 3/5（木） | [週次進捗報告会](./development/weekly-progress-meeting-20260305.md) | 浅野 | オンライン |
-| 3/12（木）11:00 | [現場非公開テスト](./testing/field-test-preparation-20260312.md) | 全員 | 詳細はリンク先 |
+| 3/12（木）11:00 | [現場非公開テスト](./testing/field-test-preparation-20260312.md) | 全員 | 佐久間さん調整中 |
 | 3月下旬 | [デザイン最終調整](./design/design-final-adjustment.md) | 全員 | 詳細はリンク先 |
-| 3/30週 | [正式リリース](./release/official-release-20260330.md) | 浅野 | 詳細はリンク先 |
+| 3/31（火） | [正式リリース](./release/official-release-20260330.md) | 浅野 | 3/31展開に仮置き |
 
 ---
 
