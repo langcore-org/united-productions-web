@@ -88,7 +88,14 @@ export async function GET(request: NextRequest): Promise<Response> {
         content: m.content,
         timestamp: m.createdAt,
         llmProvider: chat.llmProvider,
-        toolCalls: (m.toolCallsJson as Array<{ id: string; name: string; displayName: string; status: string; input?: string }>) ?? undefined,
+        toolCalls:
+          (m.toolCallsJson as Array<{
+            id: string;
+            name: string;
+            displayName: string;
+            status: string;
+            input?: string;
+          }>) ?? undefined,
         citations: (m.citationsJson as Array<{ url: string; title: string }>) ?? undefined,
         usage:
           m.inputTokens != null
