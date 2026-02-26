@@ -15,6 +15,27 @@ interface CitationsListProps {
   citations: Citation[];
 }
 
+/**
+ * URLを短縮表示する（長すぎる場合は省略）
+ */
+function formatUrl(url: string, maxLength = 50): string {
+  if (url.length <= maxLength) return url;
+  // 先頭30文字 + ... + 末尾10文字
+  return `${url.slice(0, 30)}...${url.slice(-10)}`;
+}
+
+/**
+ * 表示テキストを取得（titleが無効な場合はURLを使用）
+ */
+function getDisplayText(citation: Citation): string {
+  // titleが存在し、数字だけでなく、かつ空でない場合はtitleを使用
+  if (citation.title && citation.title.trim() && !/^\d+$/.test(citation.title.trim())) {
+    return citation.title;
+  }
+  // それ以外はURLを短縮して表示
+  return formatUrl(citation.url);
+}
+
 export function CitationsList({ citations }: CitationsListProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -48,9 +69,9 @@ export function CitationsList({ citations }: CitationsListProps) {
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-xs text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1 break-all"
-                  title={citation.title}
+                  title={citation.url}
                 >
-                  {citation.title || citation.url}
+                  {getDisplayText(citation)}
                   <ExternalLink className="w-3 h-3 flex-shrink-0" />
                 </a>
               </li>
