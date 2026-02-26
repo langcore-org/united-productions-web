@@ -336,10 +336,9 @@ EOF
 
 ### 8.1 浅野宏耀
 
-- [ ] **プロンプトチューニングスキル作成** → `.claude/skills/prompt-tuning/SKILL.md`（2/27完了）
 - [ ] [SNS統合のための有料ツール統合検証](./development/sns-paid-tool-verification.md)
-- [ ] [プロンプトの磨き込み（ハード実施）- 出演者リサーチ](./development/prompt-tuning-performer-research.md)（スキル使用）
-- [ ] [プロンプトの磨き込み（ハード実施）- エビデンスリサーチ](./development/prompt-tuning-evidence-research.md)（スキル使用）
+- [ ] [プロンプトの磨き込み（ハード実施）- 出演者リサーチ](./development/prompt-tuning-performer-research.md)
+- [ ] [プロンプトの磨き込み（ハード実施）- エビデンスリサーチ](./development/prompt-tuning-evidence-research.md)
 - [ ] [新規企画立案機能の移植（過去アプリのプロンプト流用）](./development/new-project-planning-porting.md)
 - [ ] [番組情報の事前インプット拡充](./development/program-info-input-expansion.md)
 - [ ] [ナレーション原稿作成の優先度を下げ、他機能を優先](../backlog/features/narration-script-creation.md)
@@ -364,14 +363,13 @@ EOF
 
 ### 3月実装タスク（今すぐやる）
 
-#### 開発タスク（14件）
+#### 開発タスク（13件）
 | ドキュメント | 期限 | 優先度 |
 |--------------|------|--------|
 | [SNS有料ツール統合検証](./development/sns-paid-tool-verification.md) | 3/5 | 🔴 高 |
 | [YouTube/Instagramリサーチ統合（3月実装）](./development/youtube-instagram-research-implementation.md) | 3/19 | 🟡 中〜高（検証結果次第） |
-| [プロンプトチューニングスキル作成](file:///home/koyomaru/agent1/.claude/skills/prompt-tuning/SKILL.md) | 2/27 | 🔴 高（先行） |
-| [出演者リサーチプロンプト磨き込み](./development/prompt-tuning-performer-research.md) | 3/12 | 🔴 高（スキル使用） |
-| [エビデンスリサーチプロンプト磨き込み](./development/prompt-tuning-evidence-research.md) | 3/12 | 🔴 高（スキル使用） |
+| [出演者リサーチプロンプト磨き込み](./development/prompt-tuning-performer-research.md) | 3/12 | 🔴 高 |
+| [エビデンスリサーチプロンプト磨き込み](./development/prompt-tuning-evidence-research.md) | 3/12 | 🔴 高 |
 | [新規企画立案機能の移植](./development/new-project-planning-porting.md) | 3/12 | 🔴 高 |
 | [番組情報の事前インプット拡充](./development/program-info-input-expansion.md) | 3/19 | 🟡 中 |
 | [議事録作成機能のファイルアップロード対応](./development/meeting-minutes-file-upload.md) | 3/12 | 🔴 高 |
