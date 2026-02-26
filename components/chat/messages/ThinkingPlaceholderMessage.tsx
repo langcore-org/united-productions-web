@@ -2,12 +2,28 @@
  * 思考プレースホルダーメッセージコンポーネント
  *
  * @created 2026-02-22 11:50
+ * @updated 2026-02-27 showHeaderオプションを追加
  */
 
 import { Loader2, Sparkles } from "lucide-react";
 import type { ThinkingPlaceholderMessageProps } from "../types";
 
-export function ThinkingPlaceholderMessage({ provider }: ThinkingPlaceholderMessageProps) {
+export function ThinkingPlaceholderMessage({ provider, showHeader = true }: ThinkingPlaceholderMessageProps) {
+  const messageContent = (
+    <div className="relative px-4 py-3 text-sm leading-relaxed rounded-2xl bg-purple-50 text-purple-900 border border-purple-200 rounded-tl-sm">
+      <div className="flex items-center gap-2">
+        <Loader2 className="w-4 h-4 animate-spin" />
+        <span className="text-purple-700">回答を準備しています</span>
+      </div>
+    </div>
+  );
+
+  // ヘッダーなし
+  if (!showHeader) {
+    return messageContent;
+  }
+
+  // ヘッダーあり
   return (
     <div className="flex gap-4 px-4 py-2">
       <div className="flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center bg-gradient-to-br from-purple-500 to-purple-700 shadow-lg">
@@ -24,12 +40,7 @@ export function ThinkingPlaceholderMessage({ provider }: ThinkingPlaceholderMess
             考え中...
           </span>
         </div>
-        <div className="relative px-4 py-3 text-sm leading-relaxed rounded-2xl bg-purple-50 text-purple-900 border border-purple-200 rounded-tl-sm">
-          <div className="flex items-center gap-2">
-            <Loader2 className="w-4 h-4 animate-spin" />
-            <span className="text-purple-700">回答を準備しています</span>
-          </div>
-        </div>
+        {messageContent}
       </div>
     </div>
   );

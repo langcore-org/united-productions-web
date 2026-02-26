@@ -2,15 +2,29 @@
  * エラーメッセージコンポーネント
  *
  * @created 2026-02-23
+ * @updated 2026-02-27 showHeaderオプションを追加
  */
 
 import { XCircle } from "lucide-react";
+import type { ErrorMessageProps } from "../types";
 
-export interface ErrorMessageProps {
-  error: string;
-}
+export function ErrorMessage({ error, showHeader = true }: ErrorMessageProps) {
+  const messageContent = (
+    <div className="relative px-4 py-3 text-sm leading-relaxed rounded-2xl bg-red-50 text-red-800 border border-red-200 rounded-tl-sm">
+      <div className="flex items-center gap-2 mb-1">
+        <XCircle className="w-4 h-4 text-red-600" />
+        <span className="font-medium">エラーが発生しました</span>
+      </div>
+      <p className="text-red-700/80 whitespace-pre-wrap">{error}</p>
+    </div>
+  );
 
-export function ErrorMessage({ error }: ErrorMessageProps) {
+  // ヘッダーなし
+  if (!showHeader) {
+    return messageContent;
+  }
+
+  // ヘッダーあり
   return (
     <div className="flex gap-4 px-4 py-2">
       <div className="flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center bg-red-100 border border-red-200">
@@ -20,13 +34,7 @@ export function ErrorMessage({ error }: ErrorMessageProps) {
         <div className="flex items-center gap-2 mb-1.5">
           <span className="text-sm font-medium text-red-600">エラー</span>
         </div>
-        <div className="relative px-4 py-3 text-sm leading-relaxed rounded-2xl bg-red-50 text-red-800 border border-red-200 rounded-tl-sm">
-          <div className="flex items-center gap-2 mb-1">
-            <XCircle className="w-4 h-4 text-red-600" />
-            <span className="font-medium">エラーが発生しました</span>
-          </div>
-          <p className="text-red-700/80 whitespace-pre-wrap">{error}</p>
-        </div>
+        {messageContent}
       </div>
     </div>
   );

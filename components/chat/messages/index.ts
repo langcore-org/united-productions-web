@@ -7,7 +7,7 @@
 export type { Citation } from "./CitationsList";
 export { CitationsList } from "./CitationsList";
 export { ContentMessage } from "./ContentMessage";
-export type { ErrorMessageProps } from "./ErrorMessage";
+export type { ErrorMessageProps } from "../types";
 export { ErrorMessage } from "./ErrorMessage";
 export { LegacyThinkingMessage } from "./LegacyThinkingMessage";
 export { NewThinkingStepMessage } from "./NewThinkingStepMessage";

@@ -2,7 +2,7 @@
 
 import { Bot, Check, ChevronDown, ChevronUp, Copy, User } from "lucide-react";
 import { memo, useState } from "react";
-import { PROVIDER_LABELS } from "@/lib/llm/constants";
+
 import type { LLMProvider } from "@/lib/llm/types";
 import { cn } from "@/lib/utils";
 import { MarkdownRenderer } from "./MarkdownRenderer";
@@ -65,11 +65,6 @@ export const MessageBubble = memo(function MessageBubble({
           className={cn("flex items-center gap-2 mb-1.5", isUser ? "flex-row-reverse" : "flex-row")}
         >
           <span className="text-sm font-medium text-gray-700">{isUser ? "あなた" : "Teddy"}</span>
-          {llmProvider && !isUser && (
-            <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 border border-gray-200">
-              {PROVIDER_LABELS[llmProvider]}
-            </span>
-          )}
         </div>
 
         {/* Message Bubble */}

@@ -329,6 +329,7 @@ export function FeatureChat({
               <StreamingSteps
                 content={content}
                 toolCalls={toolCalls}
+                citations={citations}
                 summarizationEvents={summarizationEvents}
                 usage={usage}
                 provider={provider}
