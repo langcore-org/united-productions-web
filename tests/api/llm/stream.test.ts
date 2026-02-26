@@ -287,7 +287,7 @@ describe("エッジケース", () => {
     const messages: LLMMessage[] = [
       {
         role: "system",
-        content: `これまでの会話の要約：\n` + "- 項目\n".repeat(20),
+        content: `これまでの会話の要約：\n${"- 項目\n".repeat(20)}`,
       },
     ];
 

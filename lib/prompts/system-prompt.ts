@@ -12,29 +12,6 @@ import { prisma } from "@/lib/prisma";
 // データ（直接定義）
 // =============================================================================
 
-const COMPANY_INFO = {
-  name: "株式会社UNITED PRODUCTIONS（ユナイテッドプロダクションズ）",
-  nameEn: "United Productions Co., Ltd.",
-  founded: "2016年10月3日（源流：2008年創業のフーリンラージ）",
-  location: "東京都渋谷区東3-16-3",
-  representative: "代表取締役社長 森田篤",
-  employees: "420名（2025年4月1日現在）",
-  capital: "1,000万円",
-  revenue: "100億円（2024年度）",
-  mission: "日本一のコンテンツサプライヤーになる",
-  vision: "世界中の人々に感動と笑いを届ける",
-  philosophy: "クリエイティビティと実行力で、新しいエンターテイメントを創造する",
-  parentCompany: "フジテレビジョン（連結子会社）",
-  businessActivities: [
-    "テレビ番組の企画・制作",
-    "映像コンテンツの制作",
-    "イベント・プロモーションの企画・運営",
-    "タレント・クリエイターのマネジメント",
-    "デジタルコンテンツの制作・配信",
-  ],
-  website: "https://united-productions.co.jp",
-};
-
 const PROGRAMS = [
   {
     id: "matsuko",
@@ -172,32 +149,6 @@ const PROGRAMS = [
 // フォーマット関数
 // =============================================================================
 
-function formatCompany(): string {
-  const lines = [
-    "# United Productions 会社概要",
-    "",
-    "## 基本情報",
-    `- 社名: ${COMPANY_INFO.name}`,
-    `- 社名（英語）: ${COMPANY_INFO.nameEn}`,
-    `- 設立: ${COMPANY_INFO.founded}`,
-    `- 所在地: ${COMPANY_INFO.location}`,
-    `- 代表者: ${COMPANY_INFO.representative}`,
-    `- 従業員数: ${COMPANY_INFO.employees}`,
-    `- 資本金: ${COMPANY_INFO.capital}`,
-    `- 売上高: ${COMPANY_INFO.revenue}`,
-    `- ミッション: ${COMPANY_INFO.mission}`,
-    `- ビジョン: ${COMPANY_INFO.vision}`,
-    `- 企業理念: ${COMPANY_INFO.philosophy}`,
-    `- 親会社: ${COMPANY_INFO.parentCompany}`,
-    "",
-    "## 事業内容",
-    ...COMPANY_INFO.businessActivities.map((a) => `- ${a}`),
-    "",
-    `- 公式HP: ${COMPANY_INFO.website}`,
-  ];
-  return lines.join("\n");
-}
-
 function formatProgram(program: (typeof PROGRAMS)[0]): string {
   const lines = [
     `## ${program.name}`,
@@ -267,7 +218,7 @@ export async function buildSystemPrompt(
   featureId?: string,
 ): Promise<string> {
   // 1. 番組情報部分を構築
-  const baseParts = [formatCompany(), ""];
+  const baseParts: string[] = [];
 
   if (programId === "all") {
     baseParts.push(formatAllPrograms());
@@ -298,7 +249,7 @@ export async function buildSystemPrompt(
  * DBアクセスが不要な場合に使用
  */
 export function buildProgramPrompt(programId: string = "all"): string {
-  const parts = [formatCompany(), ""];
+  const parts: string[] = [];
 
   if (programId === "all") {
     parts.push(formatAllPrograms());

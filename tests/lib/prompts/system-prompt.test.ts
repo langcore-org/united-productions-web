@@ -62,14 +62,14 @@ describe("buildSystemPrompt", () => {
       featureId: "research-cast",
       promptKey: "RESEARCH_CAST",
       isActive: true,
-    } as any);
+    } as unknown);
 
     vi.mocked(prisma.systemPrompt.findUnique).mockResolvedValue({
       id: "sp-1",
       key: "RESEARCH_CAST",
       content: "## 出演者リサーチ\n\nあなたは出演者リサーチ専門家です。",
       isActive: true,
-    } as any);
+    } as unknown);
 
     const prompt = await buildSystemPrompt("shikujiri", "research-cast");
 

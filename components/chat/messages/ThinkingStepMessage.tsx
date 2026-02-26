@@ -9,9 +9,8 @@ import type { ThinkingStepMessageProps } from "../types";
 
 export function ThinkingStepMessage({
   step,
-  provider,
+  provider: _provider,
   isActive,
-  _stepNumber,
 }: ThinkingStepMessageProps) {
   return (
     <div className="flex gap-4 px-4 py-2">
@@ -26,7 +25,7 @@ export function ThinkingStepMessage({
         <div className="flex items-center gap-2 mb-1.5">
           <span className="text-sm font-medium text-gray-600">Teddy</span>
           <span className="text-[10px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 border border-gray-200">
-            {provider}
+            {_provider}
           </span>
           {isActive && (
             <span className="flex items-center gap-1.5 text-xs text-gray-600">

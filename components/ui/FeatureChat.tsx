@@ -53,7 +53,7 @@ export interface FeatureChatProps {
 export function FeatureChat({
   featureId,
   title,
-  _systemPrompt,
+  systemPrompt: _systemPrompt,
   placeholder = "メッセージを入力...",
   inputLabel,
   outputFormat = "markdown",

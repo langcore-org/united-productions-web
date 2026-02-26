@@ -2,6 +2,7 @@
  * API使用量追跡ユーティリティ
  */
 
+import type { Prisma, LLMProvider as PrismaLLMProvider } from "@prisma/client";
 import { PROVIDER_CONFIG } from "@/lib/llm/config";
 import type { LLMProvider } from "@/lib/llm/types";
 import { prisma } from "@/lib/prisma";
@@ -11,7 +12,7 @@ interface UsageData {
   provider: LLMProvider;
   inputTokens: number;
   outputTokens: number;
-  metadata?: Record<string, unknown>;
+  metadata?: Prisma.InputJsonValue;
 }
 
 // アプリのProvider型をPrismaのenum形式に変換
@@ -52,7 +53,7 @@ export async function trackUsage(data: UsageData): Promise<void> {
     await prisma.usageLog.create({
       data: {
         userId: data.userId,
-        provider: toPrismaProvider(data.provider) as unknown as string,
+        provider: toPrismaProvider(data.provider) as unknown as PrismaLLMProvider,
         inputTokens: data.inputTokens,
         outputTokens: data.outputTokens,
         cost: totalCost,
@@ -70,31 +71,48 @@ export async function trackUsage(data: UsageData): Promise<void> {
 /**
  * レスポンスからトークン数を抽出（各プロバイダー対応）
  */
+interface TokenUsageResponse {
+  usage?: {
+    prompt_tokens?: number;
+    inputTokens?: number;
+    completion_tokens?: number;
+    outputTokens?: number;
+    input_tokens?: number;
+    output_tokens?: number;
+  };
+  usageMetadata?: {
+    promptTokenCount?: number;
+    candidatesTokenCount?: number;
+  };
+}
+
 export function extractTokenUsage(response: unknown): {
   inputTokens: number;
   outputTokens: number;
 } {
+  const r = response as TokenUsageResponse;
+
   // OpenAI / Grok 形式
-  if (response?.usage) {
+  if (r?.usage) {
     return {
-      inputTokens: response.usage.prompt_tokens || response.usage.inputTokens || 0,
-      outputTokens: response.usage.completion_tokens || response.usage.outputTokens || 0,
+      inputTokens: r.usage.prompt_tokens || r.usage.inputTokens || 0,
+      outputTokens: r.usage.completion_tokens || r.usage.outputTokens || 0,
     };
   }
 
   // Gemini 形式
-  if (response?.usageMetadata) {
+  if (r?.usageMetadata) {
     return {
-      inputTokens: response.usageMetadata.promptTokenCount || 0,
-      outputTokens: response.usageMetadata.candidatesTokenCount || 0,
+      inputTokens: r.usageMetadata.promptTokenCount || 0,
+      outputTokens: r.usageMetadata.candidatesTokenCount || 0,
     };
   }
 
   // Claude 形式
-  if (response?.usage) {
+  if (r?.usage) {
     return {
-      inputTokens: response.usage.input_tokens || 0,
-      outputTokens: response.usage.output_tokens || 0,
+      inputTokens: r.usage.input_tokens || 0,
+      outputTokens: r.usage.output_tokens || 0,
     };
   }
 

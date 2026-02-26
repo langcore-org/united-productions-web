@@ -5,6 +5,7 @@
  * フロントエンドから使用量を記録
  */
 
+import type { Prisma } from "@prisma/client";
 import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { requireAuth } from "@/lib/api/auth";
@@ -15,7 +16,7 @@ const usageSchema = z.object({
   provider: z.string(),
   inputTokens: z.number().min(0),
   outputTokens: z.number().min(0),
-  metadata: z.object({}).passthrough().optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
 /**
@@ -52,7 +53,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       provider: provider as LLMProvider,
       inputTokens,
       outputTokens,
-      metadata,
+      metadata: metadata as Prisma.InputJsonValue,
     });
 
     return NextResponse.json({ success: true });
