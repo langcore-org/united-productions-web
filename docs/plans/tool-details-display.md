@@ -965,8 +965,313 @@ describe("ツール詳細表示", () => {
 
 ---
 
+## DB設計
+
+### 現状の問題
+
+現在の `ResearchMessage` モデルにはツール使用情報が保存されない：
+
+```prisma
+model ResearchMessage {
+  id        String       @id @default(uuid())
+  chatId    String
+  role      String       // USER | ASSISTANT | SYSTEM
+  content   String       @db.Text
+  thinking  String?      @db.Text
+  createdAt DateTime     @default(now())
+  // ❌ toolCalls, citations, usage がない
+}
+```
+
+### 設計方針
+
+#### 案A: Jsonカラムで保存（推奨 - Phase 3以降）
+
+メッセージごとにツール使用情報をJsonで保存。シンプルで実装が容易。
+
+```prisma
+model ResearchMessage {
+  id        String       @id @default(uuid())
+  chatId    String
+  role      String       // USER | ASSISTANT | SYSTEM
+  content   String       @db.Text
+  thinking  String?      @db.Text
+  
+  // ツール使用情報（JSONで保存）
+  toolCalls Json?        // ToolCallInfo[]
+  usage     Json?        // UsageInfo（トークン数、コスト）
+  
+  createdAt DateTime     @default(now())
+
+  @@index([chatId, createdAt])
+}
+```
+
+**メリット**:
+- シンプル、既存コードの変更が最小限
+- フロントエンドの型と一致
+- クエリが容易
+
+**デメリット**:
+- Json内のフィールドで検索が困難
+- 正規化されていない
+
+**保存データ例**:
+```json
+{
+  "toolCalls": [
+    {
+      "id": "ws_xxx",
+      "name": "web_search",
+      "displayName": "Web検索",
+      "status": "completed",
+      "input": "OpenAI GPT-5 最新情報",
+      "result": {
+        "query": "OpenAI GPT-5 最新情報",
+        "citations": [
+          { "url": "https://openai.com/...", "title": "1" }
+        ]
+      }
+    }
+  ],
+  "usage": {
+    "inputTokens": 11716,
+    "outputTokens": 2393,
+    "cost": 0.229637
+  }
+}
+```
+
+#### 案B: 独立テーブルで保存（将来的検討）
+
+ツール呼び出しを独立したテーブルで管理。正規化され、詳細な集計が可能。
+
+```prisma
+model ResearchMessage {
+  id          String       @id @default(uuid())
+  chatId      String
+  role        String
+  content     String       @db.Text
+  thinking    String?      @db.Text
+  
+  // リレーション
+  toolCalls   ToolCall[]
+  
+  createdAt   DateTime     @default(now())
+}
+
+model ToolCall {
+  id              String           @id @default(uuid())
+  messageId       String
+  message         ResearchMessage  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  
+  // ツール情報
+  toolType        String           // web_search | x_search | code_execution
+  displayName     String
+  status          String           // running | completed | failed
+  input           String?          @db.Text  // 検索クエリなど
+  
+  // 結果
+  citations       ToolCitation[]
+  
+  createdAt       DateTime         @default(now())
+  
+  @@index([messageId])
+  @@index([toolType])
+}
+
+model ToolCitation {
+  id          String   @id @default(uuid())
+  toolCallId  String
+  toolCall    ToolCall @relation(fields: [toolCallId], references: [id], onDelete: Cascade)
+  
+  url         String
+  title       String
+  
+  @@index([toolCallId])
+}
+```
+
+**メリット**:
+- 正規化されている
+- ツール使用状況の集計クエリが可能（「Web検索は月間何回？」など）
+- citationsの検索が可能
+
+**デメリット**:
+- 実装が複雑
+- JOINが増えてパフォーマンスに影響
+
+### 推奨: Phase 3で案A（Json）を実装
+
+**理由**:
+1. シンプルさを優先（既存コードの変更が最小限）
+2. フロントエンドの型と一致（変換ロジックが不要）
+3. 将来必要になったら案Bに移行可能
+
+### 実装ステップ
+
+#### Step 1: スキーマ変更
+
+```prisma
+// prisma/schema.prisma
+model ResearchMessage {
+  id        String       @id @default(uuid())
+  chatId    String
+  role      String       // USER | ASSISTANT | SYSTEM
+  content   String       @db.Text
+  thinking  String?      @db.Text
+  
+  // Phase 3: 追加
+  toolCalls Json?
+  usage     Json?
+  
+  createdAt DateTime     @default(now())
+
+  @@index([chatId, createdAt])
+}
+```
+
+#### Step 2: マイグレーション
+
+```bash
+npx prisma migrate dev --name add_tool_calls_to_message
+```
+
+#### Step 3: APIの修正
+
+```typescript
+// app/api/chat/feature/route.ts
+
+// POST: メッセージ保存時に toolCalls/usage を含める
+const saveRequestSchema = z.object({
+  chatId: z.string().optional(),
+  featureId: z.string(),
+  messages: z.array(
+    z.object({
+      id: z.string(),
+      role: z.enum(["user", "assistant"]),
+      content: z.string(),
+      timestamp: z.string().or(z.date()).optional(),
+      llmProvider: z.string().optional(),
+      // Phase 3: 追加
+      toolCalls: z.array(z.object({
+        id: z.string(),
+        name: z.string(),
+        displayName: z.string(),
+        status: z.enum(["running", "completed"]),
+        input: z.string().optional(),
+        result: z.object({
+          query: z.string(),
+          citations: z.array(z.object({
+            url: z.string(),
+            title: z.string(),
+          })).optional(),
+        }).optional(),
+      })).optional(),
+      usage: z.object({
+        inputTokens: z.number(),
+        outputTokens: z.number(),
+        cost: z.number(),
+      }).optional(),
+    }),
+  ),
+});
+
+// メッセージ保存時に toolCalls/usage を含める
+await prisma.researchMessage.createMany({
+  data: messages.map((msg) => ({
+    chatId: chat.id,
+    role: msg.role.toUpperCase(),
+    content: msg.content,
+    toolCalls: msg.toolCalls || null,  // ← 追加
+    usage: msg.usage || null,          // ← 追加
+  })),
+});
+```
+
+#### Step 4: useConversationSave の修正
+
+```typescript
+// hooks/useConversationSave.ts
+
+const saveConversation = useCallback(
+  async (updatedMessages: Message[], chatId: string | undefined) => {
+    try {
+      const response = await fetch("/api/chat/feature", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          chatId,
+          featureId,
+          messages: updatedMessages.map((msg) => ({
+            ...msg,
+            // Phase 3: toolCalls/usage を含める
+            toolCalls: msg.toolCalls,
+            usage: msg.usage,
+          })),
+        }),
+      });
+      // ...
+    } catch (err) {
+      // ...
+    }
+  },
+  [featureId, onChatCreated]
+);
+```
+
+#### Step 5: Message 型の拡張
+
+```typescript
+// components/ui/FeatureChat.tsx
+
+export interface Message {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  timestamp: Date;
+  llmProvider?: LLMProvider;
+  // Phase 3: 追加
+  toolCalls?: ToolCallInfo[];
+  usage?: {
+    inputTokens: number;
+    outputTokens: number;
+    cost: number;
+  };
+}
+```
+
+### データフロー（永続化含む）
+
+```
+1. ストリーミング中
+   ├─ useLLMStream: toolCalls, citations を収集
+   └─ StreamingSteps: リアルタイム表示
+
+2. ストリーミング完了
+   ├─ FeatureChat: assistantMessage を作成（toolCalls/usage を含む）
+   ├─ setMessages: 状態更新
+   └─ saveConversation: API経由でDB保存
+
+3. ページリロード時
+   ├─ loadConversation: DBから履歴を取得
+   ├─ toolCalls/usage を含めた Message[] を復元
+   └─ MessageBubble: 過去のツール使用履歴を表示
+```
+
+### エッジケース
+
+| ケース | 対応 |
+|-------|------|
+| 旧データ（toolCallsなし） | `undefined` として処理、表示は既存動作 |
+| toolCalls が大きすぎる | JSONカラムの制限（PostgreSQLは1GB）内に収まる |
+| マイグレーション失敗 | 別マイグレーションとして分離、段階的適用 |
+
+---
+
 ## 関連ドキュメント
 
 - [xAI Responses API 仕様](../specs/api-integration/xai-responses-api-spec.md)
 - [ストリーミングイベント仕様（Legacy）](../archive/2026-02-26-streaming-events-legacy.md)
+- [DBスキーマ設計](../specs/api-integration/database-schema.md)
 - `scripts/investigate-tool-response.ts`
