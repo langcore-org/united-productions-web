@@ -1,10 +1,11 @@
 # {タイトル}
 
-> **カテゴリ**: {architecture|technology|process|communication}  
+> **カテゴリ**: {アーキテクチャ|フレームワーク・ライブラリ|パフォーマンス|開発運用|調査・分析}  
 > **発生日**: YYYY-MM-DD  
 > **記録日**: YYYY-MM-DD  
 > **関連コミット**: `abc1234`  
-> **関連ファイル**: `path/to/file.ts`, `docs/plans/xxx.md`
+> **関連ファイル**: `path/to/file.ts`  
+> **移動元**: `docs/plans/xxx.md`（計画書から変換した場合）
 
 ---
 

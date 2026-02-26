@@ -159,7 +159,8 @@ plans/ の計画書を随時更新（実装状況を記録）
     ↓ 保留タスク・イシュー発見 → backlog/ に記録
 
 【実装完了後】
-plans/ の計画書を archive/YYYY-MM-DD-*.md に移動
+教訓・知見を抽出 → lessons/ に移動（または新規作成）
+    ↓ 単純な完了報告のみ → archive/YYYY-MM-DD-*.md に移動
 ```
 
 | ステータス | 場所 | 操作 |
@@ -167,7 +168,8 @@ plans/ の計画書を archive/YYYY-MM-DD-*.md に移動
 | 検討・調査中 | `backlog/` | 継続検討 or `plans/` へ移動 |
 | **実装前計画** | `plans/` | 実装開始前に作成 |
 | **実装中** | `plans/` | **実装と並行して進捗を更新** |
-| 完了 | `archive/YYYY-MM-DD-*.md` | 参照のみ、更新禁止 |
+| 完了（教訓あり） | `lessons/YYYY-MM-DD-*.md` | 知見として蓄積 |
+| 完了（報告のみ） | `archive/YYYY-MM-DD-*.md` | 参照のみ、更新禁止 |
 | 優先度低下 | `archive/YYYY-MM-DD-*.md` | 参照のみ |
 
 ### plans/ の運用ルール
@@ -182,8 +184,16 @@ plans/ の計画書を archive/YYYY-MM-DD-*.md に移動
 - 保留タスク・イシューは `backlog/` に記録し、計画書からリンク
 
 **実装完了後:**
-- 計画書を `archive/YYYY-MM-DD-元のファイル名.md` に移動
+- **教訓・知見が得られた場合**:
+  - 計画書を `lessons/YYYY-MM-DD-タイトル.md` に変換・移動
+  - 「背景・結果・教訓・推奨事項」を明記（[lessons/template.md](./lessons/template.md) 参照）
+  - `lessons/README.md` に一覧追加
+- **単純な完了報告のみの場合**:
+  - 計画書を `archive/YYYY-MM-DD-元のファイル名.md` に移動
 - 未対応の保留タスクがあれば `backlog/` に残す
+
+**判断基準**: 「3ヶ月後の自分が同じ状況で、これを知っていれば異なる判断をするか？」
+→ Yes なら `lessons/`、No なら `archive/`
 
 ### 情報の信頼順位
 
