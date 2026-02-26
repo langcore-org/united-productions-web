@@ -13,27 +13,31 @@
 
 ### 理想的なユーザー体験
 
-```
-[T+0.0s] ユーザー: "OpenAI GPT-5について最新情報を検索して"
-
-[T+0.5s] 🤖 AI: 考え中...
-
-[T+1.2s] 🔍 Web検索 開始
-         └─ 検索クエリを決定中...
-
-[T+1.8s] 🔍 Web検索 実行中
-         └─ クエリ: "OpenAI GPT-5 最新情報 リリース日"
-
-[T+2.5s] 🐦 X検索 実行中
-         └─ クエリ: "GPT-5 from:OpenAI"
-
-[T+3.2s] 🔍 Web検索 完了 ✓
-         └─ クエリ: "OpenAI GPT-5 最新情報 リリース日"
-         └─ 18件のソースを確認
-
-[T+4.1s] 🤖 AI: 回答生成中...
-         └─ OpenAIのGPT-5は、2025年8月7日に正式リリースされました...
-         └─ [1] [2] [3] ...（引用をリアルタイム表示）
+```mermaid
+sequenceDiagram
+    actor User
+    participant AI
+    participant WebSearch
+    participant XSearch
+    
+    User->>AI: "OpenAI GPT-5について最新情報を検索して"
+    
+    Note over AI: [T+0.5s] 考え中...
+    
+    AI->>WebSearch: [T+1.2s] 開始
+    Note over WebSearch: 検索クエリを決定中...
+    
+    AI->>WebSearch: [T+1.8s] 実行中
+    Note over WebSearch: クエリ: "OpenAI GPT-5 最新情報 リリース日"
+    
+    AI->>XSearch: [T+2.5s] 実行中
+    Note over XSearch: クエリ: "GPT-5 from:OpenAI"
+    
+    WebSearch-->>AI: [T+3.2s] 完了 ✓
+    Note over WebSearch: 18件のソースを確認
+    
+    AI-->>User: [T+4.1s] 回答生成中...
+    Note over AI: OpenAIのGPT-5は、2025年8月7日に...<br/>引用 [1] [2] [3] ...をリアルタイム表示
 ```
 
 ---
@@ -57,29 +61,33 @@
 
 #### 📡 イベントフローと取得可能な情報
 
-```
-1. response.output_item.added (web_search_call)
-   └─ item.action.query: "" (初期値は空)
-   
-   【UI表示】"Web検索 開始"
-
-2. response.output_item.done (web_search_call)
-   └─ item.action.query: "実際の検索クエリ" ✅
-   └─ item.action.sources: [] (常に空) ❌
-   
-   【UI表示】"Web検索: {クエリ}"
-
-3. response.output_item.done (x_search custom_tool_call)
-   └─ item.input: "{\"query\":\"...\"}" ✅
-   
-   【UI表示】"X検索: {クエリ}"
-
-4. response.output_item.done (message)
-   └─ item.content[0].annotations: [
-        { type: "url_citation", url: "...", title: "..." } ✅
-      ]
-   
-   【UI表示】"参照ソース: {N件}"
+```mermaid
+flowchart TD
+    subgraph Events ["xAI API Events"]
+        E1["1. response.output_item.added<br/>web_search_call"]
+        E2["2. response.output_item.done<br/>web_search_call"]
+        E3["3. response.output_item.done<br/>x_search custom_tool_call"]
+        E4["4. response.output_item.done<br/>message"]
+    end
+    
+    subgraph Data ["取得データ"]
+        D1["item.action.query: ''<br/>（初期値は空）"]
+        D2["item.action.query: '実際のクエリ' ✅<br/>item.action.sources: [] ❌"]
+        D3["item.input: '{query: ...}' ✅"]
+        D4["content[0].annotations:<br/>url_citation[] ✅"]
+    end
+    
+    subgraph UI ["UI表示"]
+        U1["🔍 Web検索 開始"]
+        U2["🔍 Web検索: {クエリ}"]
+        U3["🐦 X検索: {クエリ}"]
+        U4["📄 参照ソース: {N件}"]
+    end
+    
+    E1 --> D1 --> U1
+    E2 --> D2 --> U2
+    E3 --> D3 --> U3
+    E4 --> D4 --> U4
 ```
 
 ---
@@ -320,30 +328,30 @@ export function WebSearchDetails({ query, citations }: WebSearchDetailsProps) {
 
 ### Web検索の表示タイムライン
 
-```
-[実行中]
-┌─────────────────────────────┐
-│ 🔍 Web検索                   │
-│    └─ 検索クエリ: "GPT-5..." │ ← クエリ確定後に表示
-└─────────────────────────────┘
-
-[完了]
-┌─────────────────────────────┐
-│ ✓ Web検索                    │
-│    ├─ 検索クエリ: "GPT-5..." │
-│    └─ 参照ソース (18件) ▼    │ ← クリックで展開
-└─────────────────────────────┘
-
-[展開時]
-┌─────────────────────────────┐
-│ ✓ Web検索                    │
-│    ├─ 検索クエリ: "GPT-5..." │
-│    ├─ 参照ソース (18件) ▲    │
-│    │  [1] openai.com/...    │
-│    │  [2] cbsnews.com/...   │
-│    │  [3] cnbc.com/...      │
-│    │  ...                    │
-└─────────────────────────────┘
+```mermaid
+stateDiagram-v2
+    [*] --> Running: ツール開始
+    
+    Running: 🔍 Web検索（実行中）
+    Running: └─ 検索クエリ: "GPT-5..."
+    
+    Running --> Completed: 完了
+    
+    Completed: ✓ Web検索（完了）
+    Completed: ├─ 検索クエリ: "GPT-5..."
+    Completed: └─ 参照ソース (18件) ▼
+    
+    Completed --> Expanded: クリック
+    
+    Expanded: ✓ Web検索（展開）
+    Expanded: ├─ 検索クエリ: "GPT-5..."
+    Expanded: ├─ 参照ソース (18件) ▲
+    Expanded: │  [1] openai.com/...
+    Expanded: │  [2] cbsnews.com/...
+    Expanded: │  [3] cnbc.com/...
+    Expanded: │  ...
+    
+    Expanded --> Completed: クリック
 ```
 
 ---
@@ -413,66 +421,83 @@ export function WebSearchDetails({ query, citations }: WebSearchDetailsProps) {
 
 ### システムアーキテクチャ
 
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│ Client (Browser)                                                            │
-│  ┌─────────────────────┐     ┌─────────────────────┐                       │
-│  │ FeatureChat         │────→│ useLLMStream        │                       │
-│  │ (UI表示)            │←────│ (状態管理)          │                       │
-│  └─────────────────────┘     └──────────┬──────────┘                       │
-│                                         │                                   │
-│  ┌──────────────────────────────────────┼─────────────────────┐            │
-│  │ components/chat/messages             │                     │            │
-│  │  ┌─────────────────┐  ┌──────────────┴──────────┐         │            │
-│  │  │ ToolCallMessage │←─│ ToolCallInfo[]          │         │            │
-│  │  │ - input (query) │  │ - id, name, status      │         │            │
-│  │  │ - result        │  │ - result.citations[]    │         │            │
-│  │  └─────────────────┘  └─────────────────────────┘         │            │
-│  └───────────────────────────────────────────────────────────┘            │
-└─────────────────────────────────────────────────────────────────────────────┘
-                                      │ SSE
-                                      ↓
-┌─────────────────────────────────────────────────────────────────────────────┐
-│ Server (Next.js)                                                            │
-│  ┌─────────────────────────────────────────────────────────────────────┐   │
-│  │ POST /api/llm/stream                                                │   │
-│  │  ┌─────────────────┐     ┌─────────────────┐     ┌───────────────┐ │   │
-│  │  │ GrokClient      │────→│ xAI API         │────→│ SSE Stream    │ │   │
-│  │  │                 │     │                 │     │               │ │   │
-│  │  │ 1. リクエスト    │     │ 1. ツール実行    │     │ 1. 生イベント  │ │   │
-│  │  │ 2. イベント変換  │←────│ 2. ストリーム    │     │ 2. パース      │ │   │
-│  │  │ 3. SSE送信      │     │                 │     │               │ │   │
-│  │  └─────────────────┘     └─────────────────┘     └───────────────┘ │   │
-│  └─────────────────────────────────────────────────────────────────────┘   │
-└─────────────────────────────────────────────────────────────────────────────┘
+```mermaid
+graph TB
+    subgraph Client["🖥️ Client (Browser)"]
+        direction TB
+        
+        subgraph Components["Components"]
+            FC[FeatureChat<br/>UI表示]
+            Hook[useLLMStream<br/>状態管理]
+        end
+        
+        subgraph Messages["Messages"]
+            TCM[ToolCallMessage]
+            TC[(ToolCallInfo)]
+        end
+        
+        FC <-->|setState| Hook
+        Hook -->|render| TCM
+        TC -->|data| TCM
+    end
+    
+    subgraph Server["🖥️ Server (Next.js)"]
+        direction TB
+        
+        API[POST /api/llm/stream]
+        
+        subgraph Flow["Processing Flow"]
+            GC[GrokClient]
+            XAI[xAI API]
+            SSE[SSE Stream]
+        end
+        
+        API --> GC
+        GC -->|1. Request| XAI
+        XAI -->|2. Stream| GC
+        GC -->|3. Parse| SSE
+    end
+    
+    Client <-->|SSE| Server
 ```
 
 ### データフロー（シーケンス図）
 
-```
-User    FeatureChat    useLLMStream    GrokClient    xAI API
- │           │              │              │            │
- │──prompt──→│              │              │            │
- │           │──startStream→│              │            │
- │           │              │──request────→│───────────→│
- │           │              │              │            │
- │           │              │←──tool_start─┤←───────────│
- │           │←─addToolCall─│              │            │
- │           │              │              │            │
- │           │              │←──tool_input─┤←───────────│
- │           │←─updateInput─│              │            │
- │           │              │              │            │
- │           │              │←──citations──┤←───────────│
- │           │←─updateCitations─────────────│            │
- │           │              │              │            │
- │           │              │←──content────┤←───────────│
- │           │←─updateContent───────────────│            │
- │           │              │              │            │
- │           │              │←──done───────┤            │
- │           │←─finalizeToolCalls───────────│            │
- │           │              │              │            │
- │←─display result──────────│              │            │
- │           │              │              │            │
+```mermaid
+sequenceDiagram
+    actor User
+    participant FC as FeatureChat
+    participant Hook as useLLMStream
+    participant GC as GrokClient
+    participant XAI as xAI API
+    
+    User->>FC: prompt
+    FC->>Hook: startStream()
+    Hook->>GC: request
+    GC->>XAI: HTTP POST
+    
+    loop Streaming Events
+        XAI-->>GC: tool_start event
+        GC-->>Hook: tool_call (running)
+        Hook-->>FC: addToolCall()
+        
+        XAI-->>GC: tool_input event
+        GC-->>Hook: tool_call with input
+        Hook-->>FC: updateInput()
+        
+        XAI-->>GC: citations
+        GC-->>Hook: message.annotations
+        Hook-->>FC: updateCitations()
+        
+        XAI-->>GC: content delta
+        GC-->>Hook: content event
+        Hook-->>FC: updateContent()
+    end
+    
+    XAI-->>GC: done
+    GC-->>Hook: done event
+    Hook-->>FC: finalizeToolCalls()
+    FC-->>User: display result
 ```
 
 ### 型定義詳細
@@ -1345,33 +1370,60 @@ export async function POST(request: NextRequest): Promise<Response> {
 
 ### データフロー（永続化含む）
 
-```
-1. ストリーミング中（リアルタイム）
-   ├─ xAI API → GrokClient → SSE
-   ├─ useLLMStream: toolCalls を state に保存
-   └─ StreamingSteps: リアルタイム表示
-
-2. ストリーミング完了
-   ├─ FeatureChat
-   │   ├─ assistantMessage を作成
-   │   ├─ toolCalls/usage を含める
-   │   └─ setMessages で状態更新
-   │
-   └─ saveConversation
-       ├─ POST /api/chat/feature
-       ├─ Prisma Transaction
-       │   ├─ ResearchMessage 作成
-       │   ├─ ToolCall 作成（複数）
-       │   ├─ ToolCitation 作成（複数）
-       │   └─ LLMUsage 作成
-       └─ DB保存完了
-
-3. ページリロード時
-   ├─ loadConversation
-   │   ├─ GET /api/chat/feature?chatId=xxx
-   │   ├─ Prisma include で関連テーブルを取得
-   │   └─ フロントエンド用に変換
-   │
+```mermaid
+flowchart TB
+    subgraph Phase1["1. ストリーミング中（リアルタイム）"]
+        direction TB
+        XAI1[xAI API]
+        GC1[GrokClient]
+        Hook1[useLLMStream]
+        UI1[StreamingSteps]
+        
+        XAI1 -->|events| GC1 -->|SSE| Hook1 -->|state| UI1
+    end
+    
+    subgraph Phase2["2. ストリーミング完了"]
+        direction TB
+        
+        subgraph Frontend["Frontend"]
+            FC[FeatureChat]
+            SM[setMessages]
+            SC[saveConversation]
+        end
+        
+        subgraph API["API Route"]
+            POST[POST /api/chat/feature]
+        end
+        
+        subgraph DB["Database Transaction"]
+            direction TB
+            RM[ResearchMessage]
+            TC[ToolCall]
+            TCI[ToolCitation]
+            LU[LLMUsage]
+            
+            RM --> TC --> TCI
+            RM --> LU
+        end
+        
+        FC -->|create message| SM -->|call| SC -->|HTTP| POST -->|Prisma| RM
+    end
+    
+    subgraph Phase3["3. ページリロード時"]
+        direction TB
+        
+        subgraph Restore["データ復元"]
+            GET[GET /api/chat/feature]
+            INC[Prisma include]
+            CONV[フロントエンド変換]
+            MB[MessageBubble]
+            TCM[ToolCallMessage]
+            
+            GET --> INC --> CONV --> MB --> TCM
+        end
+    end
+    
+    Phase1 --> Phase2 --> Phase3
    └─ 表示
        ├─ MessageBubble: 本文表示
        └─ ToolCallMessage: ツール履歴表示（DBから復元）
