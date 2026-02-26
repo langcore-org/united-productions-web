@@ -85,8 +85,8 @@ export function StreamingSteps({
       {/* エラーメッセージ */}
       {error && <ErrorMessage error={error} />}
 
-      {/* メインコンテンツ */}
-      {(content || (isComplete && !content)) && (
+      {/* メインコンテンツ - 完了後は MessageBubble が表示するので非表示 */}
+      {content && !isComplete && (
         <ContentMessage
           content={content}
           provider={provider}
