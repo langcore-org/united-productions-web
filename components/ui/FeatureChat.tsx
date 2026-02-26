@@ -53,7 +53,7 @@ export interface FeatureChatProps {
 export function FeatureChat({
   featureId,
   title,
-  systemPrompt,
+  _systemPrompt,
   placeholder = "メッセージを入力...",
   inputLabel,
   outputFormat = "markdown",
@@ -222,6 +222,7 @@ export function FeatureChat({
   const lastAssistantMessage = [...messages].reverse().find((m) => m.role === "assistant");
   const hasMessages = messages.length > 0;
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: handleSuggestionClickは安定
   const handleSuggestionClick = useCallback(
     async (suggestionText: string) => {
       if (isPending || !suggestionText.trim()) return;
@@ -238,6 +239,7 @@ export function FeatureChat({
         return newMessages;
       });
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [isPending, provider, startStream, buildStreamMessages, selectedProgramId],
   );
 
@@ -282,9 +284,10 @@ export function FeatureChat({
               <div className="mt-8 w-full max-w-lg">
                 <p className="text-xs text-gray-400 mb-3">例:</p>
                 <div className="flex flex-wrap justify-center gap-2">
-                  {suggestions.map((suggestion, index) => (
+                  {suggestions.map((suggestion) => (
                     <button
-                      key={index}
+                      type="button"
+                      key={suggestion}
                       onClick={() => handleSuggestionClick(suggestion)}
                       className="px-4 py-2 text-sm text-gray-600 bg-gray-50 hover:bg-gray-100 border border-gray-200 hover:border-gray-300 rounded-full transition-all duration-200"
                     >

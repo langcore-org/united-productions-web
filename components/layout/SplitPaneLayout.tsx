@@ -91,6 +91,7 @@ export function SplitPaneLayout({
       </div>
 
       {/* Resizer */}
+      {/* biome-ignore lint/a11y/noStaticElementInteractions: リサイズハンドルはmousedownのみ対応 */}
       <div
         className={cn(
           "w-1 bg-white/10 hover:bg-black/50 cursor-col-resize transition-colors relative",

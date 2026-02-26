@@ -84,6 +84,7 @@ export const MessageBubble = memo(function MessageBubble({
           {/* Copy Button (Assistant only) */}
           {!isUser && (
             <button
+              type="button"
               onClick={handleCopy}
               className="absolute top-2 right-2 p-1.5 rounded-md bg-gray-100/80 text-gray-500 
                          opacity-0 group-hover:opacity-100 hover:text-gray-700 hover:bg-gray-200 
@@ -138,6 +139,7 @@ export const MessageBubble = memo(function MessageBubble({
         {thinkingContent && !isThinking && (
           <div className="mt-2 w-full">
             <button
+              type="button"
               onClick={() => setShowThinking(!showThinking)}
               className="flex items-center gap-1.5 text-xs text-gray-600 hover:text-gray-800 transition-colors"
             >

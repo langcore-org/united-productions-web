@@ -95,8 +95,9 @@ export function SubStep({ subStep, onClick, isActive = false, className }: SubSt
       )}
     >
       {/* メイン行 */}
-      <div
-        className="flex items-center gap-2 px-3 py-2"
+      <button
+        type="button"
+        className="flex items-center gap-2 px-3 py-2 w-full text-left"
         onClick={() => {
           if (hasDetail) {
             setIsExpanded(!isExpanded);
@@ -139,7 +140,7 @@ export function SubStep({ subStep, onClick, isActive = false, className }: SubSt
             {isExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
           </div>
         )}
-      </div>
+      </button>
 
       {/* 詳細展開 */}
       {isExpanded && hasDetail && (

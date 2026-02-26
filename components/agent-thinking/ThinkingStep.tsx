@@ -133,6 +133,7 @@ export function ThinkingStep({
     >
       {/* ヘッダー（クリックで展開/折りたたみ） */}
       <button
+        type="button"
         onClick={() => setIsExpanded(!isExpanded)}
         className={cn(
           "w-full flex items-center gap-3 px-4 py-3 text-left",

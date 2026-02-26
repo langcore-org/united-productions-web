@@ -11,7 +11,7 @@ export function ThinkingStepMessage({
   step,
   provider,
   isActive,
-  stepNumber,
+  _stepNumber,
 }: ThinkingStepMessageProps) {
   return (
     <div className="flex gap-4 px-4 py-2">

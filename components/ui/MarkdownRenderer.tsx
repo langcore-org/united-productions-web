@@ -23,9 +23,11 @@ export const MarkdownRenderer = memo(function MarkdownRenderer({
         remarkPlugins={[remarkGfm]}
         components={{
           // コードブロック
+          // biome-ignore lint/suspicious/noExplicitAny: ReactMarkdown componentsの型定義
           code({ node, inline, className, children, ...props }: any) {
             const match = /language-(\w+)/.exec(className || "");
             const language = match ? match[1] : "";
+            // biome-ignore lint/correctness/useHookAtTopLevel: ReactMarkdown components内で使用
             const [copied, setCopied] = useState(false);
 
             const handleCopy = async () => {
@@ -43,6 +45,7 @@ export const MarkdownRenderer = memo(function MarkdownRenderer({
                       {language.toUpperCase()}
                     </span>
                     <button
+                      type="button"
                       onClick={handleCopy}
                       className="flex items-center gap-1.5 px-2 py-1 rounded text-xs text-gray-400 hover:text-white hover:bg-[#3e3e42] transition-all"
                     >
@@ -142,6 +145,7 @@ export const MarkdownRenderer = memo(function MarkdownRenderer({
           li({ children, node }) {
             // 子要素が段落の場合はインライン表示にする
             const hasParagraph = node?.children?.some(
+              // biome-ignore lint/suspicious/noExplicitAny: ReactMarkdown node型
               (child: any) => child.type === "element" && child.tagName === "p",
             );
 

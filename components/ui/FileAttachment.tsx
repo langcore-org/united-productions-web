@@ -125,6 +125,7 @@ export function FileAttachment({
         onFilesChange([...files, ...newFiles]);
       }
     },
+    // biome-ignore lint/correctness/useExhaustiveDependencies: 依存関係は安定
     [files, onFilesChange, maxFiles, disabled, processFile, validateFile],
   );
 
@@ -165,6 +166,7 @@ export function FileAttachment({
     <div className={cn("space-y-2", className)}>
       {/* Drag Overlay */}
       {isDragging && (
+        // biome-ignore lint/a11y/noStaticElementInteractions: ドラッグオーバーレイはdivで実装
         <div
           className="fixed inset-0 z-50 bg-gray-700/10 backdrop-blur-sm flex items-center justify-center"
           onDragLeave={handleDragLeave}
@@ -194,6 +196,7 @@ export function FileAttachment({
                   <span className="text-[10px] text-gray-500">{formatFileSize(file.size)}</span>
                 </div>
                 <button
+                  type="button"
                   onClick={() => removeFile(file.id)}
                   className="p-1 rounded hover:bg-gray-200 text-gray-500 hover:text-red-500 transition-colors"
                 >

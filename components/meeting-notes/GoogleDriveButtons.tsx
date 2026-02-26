@@ -34,6 +34,7 @@ export function DriveUploadButton({ content, filename, onSuccess }: DriveUploadB
 
   return (
     <button
+      type="button"
       onClick={handleUpload}
       disabled={isLoading || !content}
       className={cn(
@@ -79,6 +80,7 @@ export function DriveFileSelectButton({ onSelect, accept }: DriveFileSelectButto
   return (
     <>
       <button
+        type="button"
         onClick={() => setShowPicker(true)}
         disabled={isLoading}
         className={cn(

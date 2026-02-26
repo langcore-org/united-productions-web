@@ -527,7 +527,6 @@ export default function MeetingNotesPage() {
 
               {/* Content */}
               <div className="p-6">
-                {/* biome-ignore lint/security/noDangerouslySetInnerHtml: DOMPurifyでサニタイズ済み */}
                 <div
                   className="text-gray-800 leading-relaxed whitespace-pre-wrap font-mono text-sm"
                   dangerouslySetInnerHTML={{

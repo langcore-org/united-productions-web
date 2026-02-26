@@ -25,6 +25,7 @@ export function PromptSuggestions({
     <div className={cn("space-y-2", className)}>
       {suggestions.map((suggestion) => (
         <button
+          type="button"
           key={suggestion.id}
           onClick={() => onSuggestionClick(suggestion.text)}
           className={cn(

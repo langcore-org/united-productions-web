@@ -121,11 +121,12 @@ export function FileUploadChat({
             </div>
 
             {/* File Upload Button */}
-            <div
+            <button
+              type="button"
               className={cn(
-                "border-2 border-dashed border-white/10 rounded-xl p-8",
+                "w-full border-2 border-dashed border-white/10 rounded-xl p-8",
                 "hover:border-gray-500 hover:bg-white/[0.02]",
-                "transition-colors cursor-pointer text-center",
+                "transition-colors text-center",
               )}
               onClick={() => fileInputRef.current?.click()}
             >
@@ -139,7 +140,7 @@ export function FileUploadChat({
                 className="hidden"
                 onChange={handleFileSelect}
               />
-            </div>
+            </button>
 
             {/* Divider */}
             <div className="flex items-center gap-4 py-4">
@@ -164,6 +165,7 @@ export function FileUploadChat({
                 )}
               />
               <button
+                type="button"
                 onClick={handleTextSubmit}
                 disabled={!text.trim() || isGenerating}
                 className={cn(
@@ -256,6 +258,7 @@ export function FileUploadChat({
               rows={1}
             />
             <button
+              type="button"
               onClick={handleChatSubmit}
               disabled={!chatInput.trim() || isGenerating}
               className={cn(

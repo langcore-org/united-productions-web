@@ -219,7 +219,7 @@ export function FeatureButtons({
   );
 
   return (
-    <div className={containerClasses} role="group" aria-label="Feature buttons">
+    <fieldset className={cn(containerClasses, "border-0 p-0 m-0")} aria-label="Feature buttons">
       {buttons.map((button) => (
         <FeatureButtonItem
           key={button.id}
@@ -229,7 +229,7 @@ export function FeatureButtons({
           className={buttonClassName}
         />
       ))}
-    </div>
+    </fieldset>
   );
 }
 
@@ -246,6 +246,7 @@ export const presetButtons = {
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
+        aria-label="DeepSearch Icon"
       >
         <circle cx="11" cy="11" r="8" />
         <path d="m21 21-4.3-4.3" />
@@ -268,6 +269,7 @@ export const presetButtons = {
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
+        aria-label="Imagine Icon"
       >
         <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
         <path d="M5 3v4" />
@@ -291,6 +293,7 @@ export const presetButtons = {
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
+        aria-label="News Icon"
       >
         <path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2" />
         <path d="M18 14h-8" />
@@ -312,6 +315,7 @@ export const presetButtons = {
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
+        aria-label="Voice Chat Icon"
       >
         <path d="M12 2v10" />
         <path d="M18 8v6a6 6 0 0 1-12 0V8" />
@@ -333,6 +337,7 @@ export const presetButtons = {
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
+        aria-label="Minutes Icon"
       >
         <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />
         <path d="M14 2v4a2 2 0 0 0 2 2h4" />
@@ -355,6 +360,7 @@ export const presetButtons = {
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
+        aria-label="Transcription Icon"
       >
         <path d="M12 2v10" />
         <path d="M18 8v6a6 6 0 0 1-12 0V8" />

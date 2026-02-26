@@ -25,6 +25,7 @@ export default function SignInPage() {
               viewBox="0 0 32 32"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
+              aria-label="Teddy Logo"
             >
               <circle cx="8" cy="8" r="4" fill="#8B4513" />
               <circle cx="24" cy="8" r="4" fill="#8B4513" />
@@ -53,6 +54,7 @@ export default function SignInPage() {
           </p>
 
           <button
+            type="button"
             onClick={handleSignIn}
             disabled={isLoading}
             className={cn(

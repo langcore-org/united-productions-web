@@ -30,6 +30,7 @@ export function ErrorBoundary({ error, reset, context }: ErrorBoundaryProps) {
         {error.message || "予期しないエラーが発生しました。もう一度お試しください。"}
       </p>
       <button
+        type="button"
         onClick={reset}
         className="flex items-center gap-2 px-5 py-2.5 bg-black text-white rounded-xl hover:bg-gray-800 transition-colors font-medium"
       >

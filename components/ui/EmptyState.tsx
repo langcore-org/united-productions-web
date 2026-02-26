@@ -53,9 +53,10 @@ export function EmptyState({
                   {suggestionLabel}
                 </p>
                 <div className="flex flex-wrap justify-center gap-2">
-                  {suggestions.map((suggestion, index) => (
+                  {suggestions.map((suggestion) => (
                     <button
-                      key={index}
+                      type="button"
+                      key={suggestion}
                       onClick={() => onSuggestionClick?.(suggestion)}
                       className="px-4 py-2 text-sm text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-gray-300 transition-colors"
                     >
@@ -70,9 +71,10 @@ export function EmptyState({
                   <Sparkles className="w-3.5 h-3.5" />
                   <span>{suggestionLabel}</span>
                 </div>
-                {suggestions.map((suggestion, index) => (
+                {suggestions.map((suggestion) => (
                   <button
-                    key={index}
+                    type="button"
+                    key={suggestion}
                     onClick={() => onSuggestionClick?.(suggestion)}
                     className="w-full flex items-center gap-3 p-3 rounded-xl bg-white border border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-all text-left group"
                   >

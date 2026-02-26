@@ -17,6 +17,7 @@ import {
   Search,
   X,
 } from "lucide-react";
+import Image from "next/image";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import type { SearchResultItem, SubStep } from "@/types/agent-thinking";
@@ -53,10 +54,11 @@ export function SearchResultCard({ result, onClick, className }: SearchResultCar
     : result.source || "Unknown";
 
   return (
-    <div
+    <button
+      type="button"
       onClick={handleClick}
       className={cn(
-        "group p-3 rounded-lg border cursor-pointer",
+        "group p-3 rounded-lg border cursor-pointer text-left w-full",
         "bg-white border-gray-200 hover:border-gray-300 hover:bg-gray-50",
         "transition-all duration-200",
         className,
@@ -65,13 +67,15 @@ export function SearchResultCard({ result, onClick, className }: SearchResultCar
       {/* ヘッダー：ファビコン + ドメイン */}
       <div className="flex items-center gap-2 mb-2">
         {result.favicon ? (
-          <img
+          <Image
             src={result.favicon}
             alt=""
+            width={16}
+            height={16}
             className="w-4 h-4 rounded"
-            onError={(e) => {
+            unoptimized
+            onError={() => {
               // ファビコン読み込み失敗時はグローブアイコン
-              (e.target as HTMLImageElement).style.display = "none";
             }}
           />
         ) : (
@@ -93,7 +97,7 @@ export function SearchResultCard({ result, onClick, className }: SearchResultCar
         <ExternalLink className="w-3 h-3" />
         <span className="text-xs">新しいタブで開く</span>
       </div>
-    </div>
+    </button>
   );
 }
 
@@ -158,6 +162,7 @@ export function ComputerPanel({
         </div>
 
         <button
+          type="button"
           onClick={onClose}
           className="p-2 rounded-lg hover:bg-gray-200 text-gray-500 transition-colors"
           aria-label="閉じる"
@@ -242,6 +247,7 @@ export function ComputerPanelToggle({
 }: ComputerPanelToggleProps) {
   return (
     <button
+      type="button"
       onClick={onClick}
       className={cn(
         "fixed right-4 bottom-4 z-40",

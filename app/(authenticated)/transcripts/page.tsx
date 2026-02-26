@@ -532,7 +532,6 @@ Premiere Proの書き起こしテキストを、放送用のNA原稿形式に整
             </div>
             <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-xl shadow-black/20">
               <div className="prose prose-invert max-w-none p-6">
-                {/* biome-ignore lint/security/noDangerouslySetInnerHtml: formatResultでサニタイズ済み */}
                 <div
                   className="text-gray-800 leading-relaxed whitespace-pre-wrap"
                   dangerouslySetInnerHTML={{

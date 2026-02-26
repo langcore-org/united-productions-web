@@ -375,8 +375,7 @@ export const DriveSearchQueries = {
   /** Googleスプレッドシート */
   allGoogleSheets: "mimeType = 'application/vnd.google-apps.spreadsheet' and trashed = false",
   /** 最近更新されたファイル（過去7日間） */
-  recentlyModified:
-    "modifiedTime > '${new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()}' and trashed = false",
+  recentlyModified: `modifiedTime > '${new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()}' and trashed = false`,
   /** 共有ファイル */
   sharedFiles: "sharedWithMe = true and trashed = false",
   /** スター付きファイル */

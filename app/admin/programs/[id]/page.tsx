@@ -171,7 +171,11 @@ export default function ProgramDetailPage() {
         <div className="flex items-center gap-2 text-sm text-gray-500 mb-4">
           <span>管理画面</span>
           <ChevronLeft className="w-4 h-4 rotate-180" />
-          <button type="button" onClick={() => router.push("/admin/programs")} className="hover:text-gray-900">
+          <button
+            type="button"
+            onClick={() => router.push("/admin/programs")}
+            className="hover:text-gray-900"
+          >
             番組情報管理
           </button>
           <ChevronLeft className="w-4 h-4 rotate-180" />
@@ -251,8 +255,8 @@ export default function ProgramDetailPage() {
                     <div>
                       <span className="text-sm text-gray-500 block">詳細スケジュール</span>
                       <div className="mt-2 space-y-2">
-                        {program.scheduleDetail.map((s, i) => (
-                          <div key={i} className="text-sm bg-gray-50 p-2 rounded">
+                        {program.scheduleDetail.map((s) => (
+                          <div key={`${s.day}-${s.startTime}`} className="text-sm bg-gray-50 p-2 rounded">
                             <span className="font-medium">{s.day}</span> {s.startTime}〜{s.endTime}
                             {s.note && <span className="text-gray-500 ml-2">({s.note})</span>}
                           </div>
@@ -323,8 +327,8 @@ export default function ProgramDetailPage() {
                     <div>
                       <span className="text-sm text-gray-500 block">レギュラー出演者</span>
                       <ul className="mt-2 space-y-1">
-                        {program.regularCast.map((cast, i) => (
-                          <li key={i} className="text-sm">
+                        {program.regularCast.map((cast) => (
+                          <li key={cast} className="text-sm">
                             • {cast}
                           </li>
                         ))}
@@ -364,8 +368,8 @@ export default function ProgramDetailPage() {
                     <div>
                       <span className="text-sm text-gray-500 block">プロデューサー</span>
                       <ul className="mt-2 space-y-1">
-                        {program.producers.map((producer, i) => (
-                          <li key={i} className="text-sm">
+                        {program.producers.map((producer) => (
+                          <li key={producer} className="text-sm">
                             • {producer}
                           </li>
                         ))}
@@ -376,8 +380,8 @@ export default function ProgramDetailPage() {
                     <div>
                       <span className="text-sm text-gray-500 block">スタッフ</span>
                       <ul className="mt-2 space-y-1">
-                        {program.staff.map((s, i) => (
-                          <li key={i} className="text-sm">
+                        {program.staff.map((s) => (
+                          <li key={`${s.role}-${s.name}`} className="text-sm">
                             • {s.role}: {s.name}
                             {s.affiliation && (
                               <span className="text-gray-500">（{s.affiliation}）</span>
@@ -404,8 +408,8 @@ export default function ProgramDetailPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {program.corners.map((corner, i) => (
-                      <div key={i} className="bg-gray-50 p-4 rounded-lg">
+                    {program.corners.map((corner) => (
+                      <div key={corner.name} className="bg-gray-50 p-4 rounded-lg">
                         <div className="flex items-center gap-2 mb-2">
                           <span className="font-medium">{corner.name}</span>
                           {corner.popularity === "high" && (
@@ -463,8 +467,8 @@ export default function ProgramDetailPage() {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-3">
-                      {program.ratings.map((rating, i) => (
-                        <div key={i} className="bg-gray-50 p-3 rounded">
+                      {program.ratings.map((rating) => (
+                        <div key={rating.period} className="bg-gray-50 p-3 rounded">
                           <div className="font-medium">{rating.period}</div>
                           <div className="text-sm text-gray-600">
                             {rating.average && `平均: ${rating.average}`}
@@ -490,8 +494,8 @@ export default function ProgramDetailPage() {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-2">
-                      {program.awards.map((award, i) => (
-                        <div key={i} className="flex items-start gap-3">
+                      {program.awards.map((award) => (
+                        <div key={`${award.year}-${award.name}`} className="flex items-start gap-3">
                           <Badge variant="outline">{award.year}年</Badge>
                           <div>
                             <span className="font-medium">{award.name}</span>
@@ -516,8 +520,8 @@ export default function ProgramDetailPage() {
                   </CardHeader>
                   <CardContent>
                     <ul className="space-y-2">
-                      {program.achievements.map((achievement, i) => (
-                        <li key={i} className="flex items-start gap-2">
+                      {program.achievements.map((achievement) => (
+                        <li key={achievement} className="flex items-start gap-2">
                           <span className="text-amber-500 mt-1">•</span>
                           <span>{achievement}</span>
                         </li>
@@ -542,9 +546,9 @@ export default function ProgramDetailPage() {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-2">
-                      {program.social.map((s, i) => (
+                      {program.social.map((s) => (
                         <div
-                          key={i}
+                          key={s.platform}
                           className="flex items-center justify-between bg-gray-50 p-3 rounded"
                         >
                           <span className="font-medium">{s.platform}</span>
@@ -567,8 +571,8 @@ export default function ProgramDetailPage() {
                   </CardHeader>
                   <CardContent>
                     <ul className="space-y-2">
-                      {program.productionCooperation.map((coop, i) => (
-                        <li key={i} className="flex items-center gap-2">
+                      {program.productionCooperation.map((coop) => (
+                        <li key={coop} className="flex items-center gap-2">
                           <span className="text-gray-500">•</span>
                           {coop}
                         </li>
@@ -588,8 +592,8 @@ export default function ProgramDetailPage() {
                   </CardHeader>
                   <CardContent>
                     <ul className="space-y-2">
-                      {program.relatedPrograms.map((related, i) => (
-                        <li key={i} className="flex items-center gap-2">
+                      {program.relatedPrograms.map((related) => (
+                        <li key={related} className="flex items-center gap-2">
                           <span className="text-gray-500">•</span>
                           {related}
                         </li>
@@ -609,8 +613,8 @@ export default function ProgramDetailPage() {
                   </CardHeader>
                   <CardContent>
                     <ul className="space-y-2">
-                      {program.spinoffs.map((spinoff, i) => (
-                        <li key={i} className="flex items-center gap-2">
+                      {program.spinoffs.map((spinoff) => (
+                        <li key={spinoff} className="flex items-center gap-2">
                           <span className="text-gray-500">•</span>
                           {spinoff}
                         </li>
@@ -630,8 +634,8 @@ export default function ProgramDetailPage() {
                   </CardHeader>
                   <CardContent>
                     <ul className="space-y-2">
-                      {program.pastSpecials.map((special, i) => (
-                        <li key={i} className="flex items-center gap-2">
+                      {program.pastSpecials.map((special) => (
+                        <li key={special} className="flex items-center gap-2">
                           <span className="text-gray-500">•</span>
                           {special}
                         </li>

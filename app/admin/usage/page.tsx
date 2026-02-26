@@ -450,7 +450,10 @@ export default function UsagePage() {
                             paddingAngle={2}
                           >
                             {stats.byProvider.map((entry, index) => (
-                              <Cell key={`provider-${entry.provider}`} fill={COLORS[index % COLORS.length]} />
+                              <Cell
+                                key={`provider-${entry.provider}`}
+                                fill={COLORS[index % COLORS.length]}
+                              />
                             ))}
                           </Pie>
                           <Tooltip

@@ -20,6 +20,7 @@ export function TeddyIcon({ className, size = 32, variant = "default" }: TeddyIc
       fill={fillColor}
       xmlns="http://www.w3.org/2000/svg"
       className={cn("", className)}
+      aria-label="Teddy Icon"
     >
       {/* 左耳 - ぷっくり丸みを帯びた耳 */}
       <circle cx="7" cy="7" r="4.5" fill={variant === "filled" ? "currentColor" : "#6b7280"} />

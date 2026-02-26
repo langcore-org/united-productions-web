@@ -60,7 +60,9 @@ ${conversation}
 /**
  * POST /api/llm/summarize
  */
-export async function POST(req: NextRequest): Promise<NextResponse<SummarizeResponse | ErrorResponse>> {
+export async function POST(
+  req: NextRequest,
+): Promise<NextResponse<SummarizeResponse | ErrorResponse>> {
   // 認証チェック
   const authResult = await requireAuth(req);
   if (authResult instanceof NextResponse) {

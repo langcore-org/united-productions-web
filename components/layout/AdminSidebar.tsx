@@ -233,6 +233,7 @@ export function AdminSidebar({ className, onCollapseChange }: AdminSidebarProps)
 
         {/* 展開/縮小ボタン */}
         <button
+          type="button"
           onClick={toggleCollapse}
           className={cn(
             "flex items-center rounded-xl transition-all duration-200 ease-out group",

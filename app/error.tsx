@@ -3,7 +3,7 @@
 import { AlertCircle, RefreshCcw } from "lucide-react";
 import { useEffect } from "react";
 
-export default function Error({
+export default function ErrorPage({
   error,
   reset,
 }: {
@@ -27,6 +27,7 @@ export default function Error({
         <p className="text-gray-500 mb-6">{error.message || "予期しないエラーが発生しました。"}</p>
 
         <button
+          type="button"
           onClick={reset}
           className="flex items-center justify-center gap-2 w-full px-6 py-3 rounded-xl bg-black text-white font-medium hover:bg-gray-800 transition-all duration-200"
         >

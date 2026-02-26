@@ -56,6 +56,7 @@ export interface ParsedDocument {
 export async function parsePDF(buffer: Buffer): Promise<ParsedDocument> {
   try {
     // pdf-parseは動的インポート（サーバーサイドのみ）
+    // biome-ignore lint/security/noGlobalEval: 動的インポートに必要
     const pdfParseModule = await eval('import("pdf-parse")');
     const pdfParse = pdfParseModule as unknown as PDFParseModule;
     const result = await pdfParse.default(buffer);
@@ -82,6 +83,7 @@ export async function parsePDF(buffer: Buffer): Promise<ParsedDocument> {
 export async function parseWord(buffer: Buffer): Promise<ParsedDocument> {
   try {
     // mammothを使用してWordファイルを解析
+    // biome-ignore lint/security/noGlobalEval: 動的インポートに必要
     const mammothModule = await eval('import("mammoth")');
     const mammoth = mammothModule as unknown as MammothModule;
     const result = await mammoth.extractRawText({ buffer });
@@ -105,6 +107,7 @@ export async function parseWord(buffer: Buffer): Promise<ParsedDocument> {
 export async function parseExcel(buffer: Buffer): Promise<ParsedDocument> {
   try {
     // xlsxを使用してExcelファイルを解析
+    // biome-ignore lint/security/noGlobalEval: 動的インポートに必要
     const xlsxModule = await eval('import("xlsx")');
     const XLSX = xlsxModule as unknown as XLSXModule;
     const workbook = XLSX.read(buffer, { type: "buffer" });

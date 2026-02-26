@@ -11,7 +11,7 @@ interface UsageData {
   provider: LLMProvider;
   inputTokens: number;
   outputTokens: number;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 // アプリのProvider型をPrismaのenum形式に変換
@@ -52,7 +52,7 @@ export async function trackUsage(data: UsageData): Promise<void> {
     await prisma.usageLog.create({
       data: {
         userId: data.userId,
-        provider: toPrismaProvider(data.provider) as any,
+        provider: toPrismaProvider(data.provider) as unknown as string,
         inputTokens: data.inputTokens,
         outputTokens: data.outputTokens,
         cost: totalCost,
@@ -70,7 +70,7 @@ export async function trackUsage(data: UsageData): Promise<void> {
 /**
  * レスポンスからトークン数を抽出（各プロバイダー対応）
  */
-export function extractTokenUsage(response: any): {
+export function extractTokenUsage(response: unknown): {
   inputTokens: number;
   outputTokens: number;
 } {

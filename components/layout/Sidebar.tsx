@@ -275,6 +275,7 @@ export function Sidebar({ className, onCollapseChange }: SidebarProps) {
         )}
       >
         <button
+          type="button"
           onClick={() => signOut({ callbackUrl: "/auth/signin" })}
           className={cn(
             "flex items-center rounded-xl transition-all duration-200 ease-out group w-full",
@@ -291,6 +292,7 @@ export function Sidebar({ className, onCollapseChange }: SidebarProps) {
 
         {/* 展開/縮小ボタン */}
         <button
+          type="button"
           onClick={toggleCollapse}
           className={cn(
             "flex items-center rounded-xl transition-all duration-200 ease-out group",

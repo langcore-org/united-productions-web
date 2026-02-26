@@ -52,6 +52,7 @@ export function Header({ className, onMenuClick, showMobileMenu }: HeaderProps) 
       <div className="flex items-center gap-4">
         {/* Mobile Menu Button */}
         <button
+          type="button"
           onClick={onMenuClick}
           className="lg:hidden p-2 rounded-lg text-gray-400 hover:bg-[#1a1a24] hover:text-gray-200"
         >
@@ -67,6 +68,7 @@ export function Header({ className, onMenuClick, showMobileMenu }: HeaderProps) 
         {/* Notifications */}
         <div className="relative">
           <button
+            type="button"
             onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
             className={cn(
               "relative p-2 rounded-lg",
@@ -85,7 +87,12 @@ export function Header({ className, onMenuClick, showMobileMenu }: HeaderProps) 
           {/* Notifications Dropdown */}
           {isNotificationsOpen && (
             <>
-              <div className="fixed inset-0 z-40" onClick={() => setIsNotificationsOpen(false)} />
+              <button
+                type="button"
+                className="fixed inset-0 z-40 bg-transparent"
+                onClick={() => setIsNotificationsOpen(false)}
+                aria-label="通知を閉じる"
+              />
               <div
                 className={cn(
                   "absolute right-0 top-full mt-2 z-50",
@@ -96,7 +103,7 @@ export function Header({ className, onMenuClick, showMobileMenu }: HeaderProps) 
               >
                 <div className="flex items-center justify-between px-4 py-3 border-b border-[#2a2a35]">
                   <span className="text-sm font-semibold text-white">通知</span>
-                  <button className="text-xs text-gray-400 hover:underline">
+                  <button type="button" className="text-xs text-gray-400 hover:underline">
                     すべて既読にする
                   </button>
                 </div>
@@ -108,6 +115,7 @@ export function Header({ className, onMenuClick, showMobileMenu }: HeaderProps) 
                   ) : (
                     notifications.map((notification) => (
                       <button
+                        type="button"
                         key={notification.id}
                         className={cn(
                           "w-full px-4 py-3 text-left",
@@ -135,7 +143,7 @@ export function Header({ className, onMenuClick, showMobileMenu }: HeaderProps) 
                   )}
                 </div>
                 <div className="px-4 py-2 border-t border-[#2a2a35]">
-                  <button className="w-full text-center text-xs text-gray-500 hover:text-gray-300 py-1">
+                  <button type="button" className="w-full text-center text-xs text-gray-500 hover:text-gray-300 py-1">
                     すべての通知を表示
                   </button>
                 </div>
@@ -146,6 +154,7 @@ export function Header({ className, onMenuClick, showMobileMenu }: HeaderProps) 
 
         {/* User Menu */}
         <button
+          type="button"
           className={cn(
             "flex items-center gap-2 p-1.5 pr-3 rounded-lg",
             "hover:bg-[#1a1a24] transition-colors duration-200",

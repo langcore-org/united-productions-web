@@ -7,6 +7,7 @@
  * DELETE /api/chat/feature?chatId=xxx      → 特定チャット削除
  */
 
+import type { ResearchChat } from "@prisma/client";
 import type { NextRequest } from "next/server";
 import { z } from "zod";
 import { requireAuth } from "@/lib/api/auth";
@@ -188,7 +189,7 @@ export async function POST(request: NextRequest): Promise<Response> {
 
     const firstUserMessage = messages.find((m) => m.role === "user");
 
-    let chat;
+    let chat: ResearchChat | null;
     let isNewChat = false;
 
     if (chatId) {

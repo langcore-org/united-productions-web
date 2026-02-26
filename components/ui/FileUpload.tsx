@@ -120,6 +120,7 @@ export function FileUpload({
         handleFile(file);
       }
     },
+    // biome-ignore lint/correctness/useExhaustiveDependencies: handleFileは安定
     [handleFile],
   );
 
@@ -130,6 +131,7 @@ export function FileUpload({
         handleFile(file);
       }
     },
+    // biome-ignore lint/correctness/useExhaustiveDependencies: handleFileは安定
     [handleFile],
   );
 
@@ -171,6 +173,7 @@ export function FileUpload({
   return (
     <div className={cn("space-y-4", className)}>
       {/* アップロードエリア */}
+      {/* biome-ignore lint/a11y/noStaticElementInteractions: ドラッグ&ドロップエリアはdivで実装 */}
       <div
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}

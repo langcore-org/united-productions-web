@@ -47,7 +47,7 @@ export function ChatInputArea({
   return (
     <div className="border-t border-gray-200 px-6 py-4 bg-white">
       {inputLabel && (
-        <label className="block text-sm font-medium text-gray-600 mb-2">{inputLabel}</label>
+        <label htmlFor="chat-input" className="block text-sm font-medium text-gray-600 mb-2">{inputLabel}</label>
       )}
 
       {attachedFiles.length > 0 && (
@@ -59,6 +59,7 @@ export function ChatInputArea({
             >
               <span className="text-xs text-gray-700 max-w-[150px] truncate">{file.name}</span>
               <button
+                type="button"
                 onClick={() => onFilesChange(attachedFiles.filter((f) => f.id !== file.id))}
                 className="p-0.5 rounded hover:bg-gray-200 text-gray-500 hover:text-red-500"
               >
@@ -72,6 +73,7 @@ export function ChatInputArea({
       <div className="flex gap-3 items-end">
         <div className="flex-1 relative">
           <Textarea
+            id="chat-input"
             ref={textareaRef}
             value={input}
             onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => onInputChange(e.target.value)}

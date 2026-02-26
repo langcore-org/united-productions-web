@@ -66,7 +66,7 @@ const ProviderIcon = memo(function ProviderIcon({ category, className }: Provide
   switch (category) {
     case "google":
       return (
-        <svg {...iconProps} viewBox="0 0 24 24" fill="currentColor">
+        <svg {...iconProps} viewBox="0 0 24 24" fill="currentColor" aria-label="Google Icon">
           <path
             d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
             fill="#6B7280"
@@ -155,6 +155,7 @@ export const LLMSelector = memo(function LLMSelector({
     <div ref={dropdownRef} className={cn("relative", className)}>
       {/* Trigger Button */}
       <button
+        type="button"
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
           "group flex items-center gap-2.5 px-4 py-2.5 rounded-xl",
@@ -251,6 +252,7 @@ export const LLMSelector = memo(function LLMSelector({
 
                     return (
                       <button
+                        type="button"
                         key={provider.id}
                         onClick={() => handleProviderSelect(provider.id)}
                         className={cn(
@@ -311,6 +313,7 @@ export const LLMSelector = memo(function LLMSelector({
                               viewBox="0 0 24 24"
                               stroke="currentColor"
                               strokeWidth={3}
+                              aria-label="Selected"
                             >
                               <path
                                 strokeLinecap="round"

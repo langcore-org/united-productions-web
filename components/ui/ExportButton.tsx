@@ -113,6 +113,7 @@ export function ExportButton({
     <div ref={dropdownRef} className={cn("relative inline-block", className)}>
       {/* メインボタン */}
       <button
+        type="button"
         onClick={() => setIsOpen(!isOpen)}
         disabled={isExporting}
         className={cn(
@@ -138,7 +139,12 @@ export function ExportButton({
       {isOpen && (
         <>
           {/* オーバーレイ */}
-          <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
+          <button
+            type="button"
+            className="fixed inset-0 z-40 bg-transparent"
+            onClick={() => setIsOpen(false)}
+            aria-label="メニューを閉じる"
+          />
 
           {/* メニュー */}
           <div
@@ -162,6 +168,7 @@ export function ExportButton({
             <div className="p-1">
               {exportOptions.map((option) => (
                 <button
+                  type="button"
                   key={option.id}
                   onClick={() => handleExport(option.id)}
                   className={cn(
@@ -256,6 +263,7 @@ export function SimpleExportButton({
 
   return (
     <button
+      type="button"
       onClick={handleExport}
       disabled={isExporting}
       className={cn(

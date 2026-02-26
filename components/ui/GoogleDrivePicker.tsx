@@ -158,7 +158,7 @@ export function GoogleDrivePicker({ onSelect, onCancel, accept }: GoogleDrivePic
             <FolderOpen className="w-5 h-5 text-black" />
             <h3 className="font-semibold text-gray-900">Google Driveから選択</h3>
           </div>
-          <button onClick={onCancel} className="p-1 rounded-lg hover:bg-gray-100 text-gray-500">
+          <button type="button" onClick={onCancel} className="p-1 rounded-lg hover:bg-gray-100 text-gray-500">
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -199,6 +199,7 @@ export function GoogleDrivePicker({ onSelect, onCancel, accept }: GoogleDrivePic
             <div className="divide-y divide-gray-100">
               {filteredFiles.map((file) => (
                 <button
+                  type="button"
                   key={file.id}
                   onClick={() => setSelectedFile(file)}
                   className={cn(
@@ -227,12 +228,14 @@ export function GoogleDrivePicker({ onSelect, onCancel, accept }: GoogleDrivePic
           <span className="text-xs text-gray-500">{filteredFiles.length} 件のファイル</span>
           <div className="flex items-center gap-2">
             <button
+              type="button"
               onClick={onCancel}
               className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900 transition-colors"
             >
               キャンセル
             </button>
             <button
+              type="button"
               onClick={handleSelect}
               disabled={!selectedFile || isDownloading}
               className={cn(

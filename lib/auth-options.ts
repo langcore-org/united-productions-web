@@ -44,10 +44,14 @@ function _getNextAuthUrl(): string {
  * - 通常環境: GoogleProviderのみ
  * - Preview環境: GoogleProvider + CredentialsProvider（E2Eテスト用）
  */
+if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
+  throw new Error("Missing Google OAuth credentials");
+}
+
 const providers: AuthOptions["providers"] = [
   GoogleProvider({
-    clientId: process.env.GOOGLE_CLIENT_ID!,
-    clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+    clientId: process.env.GOOGLE_CLIENT_ID,
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
     authorization: {
       params: {
         scope: [

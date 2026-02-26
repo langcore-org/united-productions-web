@@ -215,6 +215,7 @@ export function AttachmentMenu({ isOpen, onClose, onSelect, triggerRef }: Attach
 
             {/* メニュー項目 */}
             <button
+              type="button"
               onClick={() => handleItemClick(item.id, item.hasSubmenu)}
               className={cn(
                 "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg",
@@ -264,6 +265,7 @@ export function AttachmentMenu({ isOpen, onClose, onSelect, triggerRef }: Attach
               >
                 {item.submenuItems.map((subItem) => (
                   <button
+                    type="button"
                     key={subItem.id}
                     onClick={() => handleSubmenuItemClick(subItem.id)}
                     className={cn(
@@ -285,6 +287,7 @@ export function AttachmentMenu({ isOpen, onClose, onSelect, triggerRef }: Attach
                   </button>
                 ))}
                 <button
+                  type="button"
                   onClick={() => onSelect("recent-more")}
                   className={cn(
                     "w-full flex items-center gap-2.5 px-3 py-2 rounded-lg",
