@@ -212,6 +212,152 @@ describe("useLLMStream", () => {
     });
   });
 
+  describe("StreamPhase と isPending", () => {
+    it("初期状態は phase=idle, isPending=false, isComplete=true", () => {
+      const { result } = renderHook(() => useLLMStream());
+
+      expect(result.current.phase).toBe("idle");
+      expect(result.current.isPending).toBe(false);
+      expect(result.current.isComplete).toBe(true);
+    });
+
+    it("正常完了後は phase=complete, isPending=false", async () => {
+      mockStreamLLMResponse.mockReturnValue(
+        createMockStream([
+          { type: "start" },
+          { type: "content", delta: "回答" },
+          { type: "done", usage: { inputTokens: 100, outputTokens: 50 } },
+        ])(),
+      );
+
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({ questions: [] }),
+      });
+
+      const { result } = renderHook(() => useLLMStream());
+
+      await act(async () => {
+        await result.current.startStream(
+          [{ role: "user", content: "テスト" }],
+          "grok-4-1-fast-reasoning",
+        );
+      });
+
+      expect(result.current.phase).toBe("complete");
+      expect(result.current.isPending).toBe(false);
+      expect(result.current.isComplete).toBe(true);
+    });
+
+    it("エラー時は phase=error, isPending=false", async () => {
+      mockStreamLLMResponse.mockReturnValue(
+        createMockStream([
+          { type: "start" },
+          { type: "error", message: "LLM error" },
+        ])(),
+      );
+
+      const { result } = renderHook(() => useLLMStream());
+
+      await act(async () => {
+        await result.current.startStream(
+          [{ role: "user", content: "テスト" }],
+          "grok-4-1-fast-reasoning",
+        );
+      });
+
+      expect(result.current.phase).toBe("error");
+      expect(result.current.isPending).toBe(false);
+      expect(result.current.isComplete).toBe(true);
+      expect(result.current.error).toBe("LLM error");
+    });
+
+    it("キャンセル時は phase=cancelled, isPending=false", async () => {
+      mockStreamLLMResponse.mockReturnValue(
+        createMockStream([{ type: "start" }, { type: "content", delta: "部分的" }])(),
+      );
+
+      const { result } = renderHook(() => useLLMStream());
+
+      act(() => {
+        result.current.startStream(
+          [{ role: "user", content: "テスト" }],
+          "grok-4-1-fast-reasoning",
+        );
+      });
+
+      act(() => {
+        result.current.cancelStream();
+      });
+
+      expect(result.current.phase).toBe("cancelled");
+      expect(result.current.isPending).toBe(false);
+      expect(result.current.isComplete).toBe(true);
+    });
+
+    it("resetStream 後は phase=idle に戻る", async () => {
+      mockStreamLLMResponse.mockReturnValue(
+        createMockStream([
+          { type: "start" },
+          { type: "content", delta: "回答" },
+          { type: "done", usage: { inputTokens: 100, outputTokens: 50 } },
+        ])(),
+      );
+
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({ questions: [] }),
+      });
+
+      const { result } = renderHook(() => useLLMStream());
+
+      await act(async () => {
+        await result.current.startStream(
+          [{ role: "user", content: "テスト" }],
+          "grok-4-1-fast-reasoning",
+        );
+      });
+
+      expect(result.current.phase).toBe("complete");
+
+      act(() => {
+        result.current.resetStream();
+      });
+
+      expect(result.current.phase).toBe("idle");
+      expect(result.current.isPending).toBe(false);
+    });
+
+    it("isPending と isComplete は常に逆の値を持つ", async () => {
+      mockStreamLLMResponse.mockReturnValue(
+        createMockStream([
+          { type: "start" },
+          { type: "done", usage: { inputTokens: 10, outputTokens: 5 } },
+        ])(),
+      );
+
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({ questions: [] }),
+      });
+
+      const { result } = renderHook(() => useLLMStream());
+
+      // 初期状態
+      expect(result.current.isPending).toBe(!result.current.isComplete);
+
+      await act(async () => {
+        await result.current.startStream(
+          [{ role: "user", content: "テスト" }],
+          "grok-4-1-fast-reasoning",
+        );
+      });
+
+      // 完了後
+      expect(result.current.isPending).toBe(!result.current.isComplete);
+    });
+  });
+
   describe("基本動作", () => {
     it("ストリーム開始時、content がリセットされる", async () => {
       mockStreamLLMResponse.mockReturnValue(

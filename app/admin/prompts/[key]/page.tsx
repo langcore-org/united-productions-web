@@ -13,7 +13,7 @@ import {
   User,
 } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -72,11 +72,7 @@ export default function AdminPromptDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [hasChanges, setHasChanges] = useState(false);
 
-  useEffect(() => {
-    loadPrompt();
-  }, [loadPrompt]);
-
-  const loadPrompt = async () => {
+  const loadPrompt = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
@@ -96,7 +92,11 @@ export default function AdminPromptDetailPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [key]);
+
+  useEffect(() => {
+    loadPrompt();
+  }, [loadPrompt]);
 
   const handleContentChange = (newContent: string) => {
     setContent(newContent);
@@ -358,9 +358,10 @@ export default function AdminPromptDetailPage() {
               <CardContent>
                 <div className="space-y-3">
                   {(prompt.versions || []).slice(0, 5).map((version) => (
-                    <div
+                    <button
                       key={version.id}
-                      className="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 cursor-pointer"
+                      type="button"
+                      className="w-full flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 text-left"
                       onClick={() =>
                         router.push(
                           `/admin/prompts/${encodeURIComponent(key)}/history/${version.version}`,
@@ -376,7 +377,7 @@ export default function AdminPromptDetailPage() {
                         )}
                       </div>
                       <span className="text-xs text-gray-400">{formatDate(version.createdAt)}</span>
-                    </div>
+                    </button>
                   ))}
                 </div>
               </CardContent>

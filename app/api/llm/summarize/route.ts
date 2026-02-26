@@ -14,7 +14,7 @@
  * Response: { summary: string }
  */
 
-import { NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/api/auth";
 import { GrokClient } from "@/lib/llm/clients/grok";
 import type { LLMMessage, LLMProvider } from "@/lib/llm/types";
@@ -60,10 +60,12 @@ ${conversation}
 /**
  * POST /api/llm/summarize
  */
-export async function POST(req: Request): Promise<NextResponse<SummarizeResponse | ErrorResponse>> {
+export async function POST(req: NextRequest): Promise<NextResponse<SummarizeResponse | ErrorResponse>> {
   // 認証チェック
-  const authError = await requireAuth();
-  if (authError) return authError;
+  const authResult = await requireAuth(req);
+  if (authResult instanceof NextResponse) {
+    return authResult as NextResponse<ErrorResponse>;
+  }
 
   try {
     const body = (await req.json()) as SummarizeRequest;

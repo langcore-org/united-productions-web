@@ -9,23 +9,22 @@
  */
 
 import type { LLMMessage, LLMProvider } from "../types";
-import type { BaseMemoryOptions, CompressionRateEntry, MemoryContext } from "./types";
+import type {
+  BaseMemoryOptions,
+  CompressionRateEntry,
+  MemoryContext,
+  SummarizationEvent,
+} from "./types";
 import { DEFAULT_COMPRESSION_RATES } from "./types";
 
-export type { CompressionRateEntry, MemoryContext };
-export interface ClientMemoryOptions extends BaseMemoryOptions {}
+export type { CompressionRateEntry, MemoryContext, SummarizationEvent };
 
-export interface SummarizationEvent {
-  /** 一意のID */
-  id: string;
-  /** 表示名 */
-  displayName: string;
-  /** 状態 */
-  status: "running" | "completed" | "error";
-  /** 要約対象のメッセージ数 */
-  targetMessageCount: number;
-  /** エラーメッセージ（失敗時） */
-  error?: string;
+export interface ClientMemoryOptions extends BaseMemoryOptions {
+  /**
+   * 要約イベントが更新された時に呼ばれるコールバック
+   * running → completed/error の遷移をリアルタイムで通知する
+   */
+  onSummarizationUpdate?: (event: SummarizationEvent) => void;
 }
 
 /**
@@ -45,6 +44,7 @@ export class ClientMemory {
   private provider: LLMProvider;
   private currentSummarization: SummarizationEvent | null = null;
   private summarizationHistory: SummarizationEvent[] = [];
+  private onSummarizationUpdate?: (event: SummarizationEvent) => void;
 
   constructor(provider: LLMProvider, options: ClientMemoryOptions = {}) {
     this.provider = provider;
@@ -52,6 +52,7 @@ export class ClientMemory {
     this.maxRecentTurns = options.maxRecentTurns ?? 10;
     this.compressionRates = options.compressionRates ?? DEFAULT_COMPRESSION_RATES;
     this.maxSummaryTokens = options.maxSummaryTokens ?? 20_000;
+    this.onSummarizationUpdate = options.onSummarizationUpdate;
   }
 
   /**
@@ -139,6 +140,7 @@ export class ClientMemory {
       status: "running",
       targetMessageCount: messagesToSummarize.length,
     };
+    this.onSummarizationUpdate?.({ ...this.currentSummarization });
 
     try {
       const response = await fetch("/api/llm/summarize", {
@@ -170,6 +172,7 @@ export class ClientMemory {
         this.currentSummarization.status = "completed";
         this.currentSummarization.displayName = `文脈を要約しました（${messagesToSummarize.length}件）`;
         this.summarizationHistory.push({ ...this.currentSummarization });
+        this.onSummarizationUpdate?.({ ...this.currentSummarization });
         this.currentSummarization = null;
       }
     } catch (error) {
@@ -180,6 +183,7 @@ export class ClientMemory {
         this.currentSummarization.displayName = "文脈の要約に失敗";
         this.currentSummarization.error = error instanceof Error ? error.message : "Unknown error";
         this.summarizationHistory.push({ ...this.currentSummarization });
+        this.onSummarizationUpdate?.({ ...this.currentSummarization });
         this.currentSummarization = null;
       }
     }

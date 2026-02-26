@@ -1,6 +1,6 @@
 "use client";
 
-import { FileText, MessageSquare, Upload } from "lucide-react";
+import { FileText, Upload } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -20,32 +20,25 @@ const FeatureChat = dynamic(
 );
 
 export default function MinutesPage() {
-  const [uploadedText, setUploadedText] = useState<string>("");
+  const [_uploadedText, setUploadedText] = useState<string>("");
   const [showChat, setShowChat] = useState(false);
-  const [showHelpChat, setShowHelpChat] = useState(false);
 
   // ファイルアップロード後の処理
-  const handleFileUpload = (text: string, filename: string) => {
+  const handleFileUpload = (text: string, _filename: string) => {
     setUploadedText(text);
     setShowChat(true);
-  };
-
-  // 使い方チャットを表示
-  const handleShowHelp = () => {
-    setShowHelpChat(true);
   };
 
   // 新規アップロード（リセット）
   const handleReset = () => {
     setUploadedText("");
     setShowChat(false);
-    setShowHelpChat(false);
   };
 
   return (
     <div className="h-full flex flex-col">
       {/* メインコンテンツ */}
-      {!showChat && !showHelpChat ? (
+      {!showChat ? (
         <div className="flex-1 overflow-y-auto">
           <div className="max-w-3xl mx-auto px-6 py-8">
             {/* ヘッダー */}
@@ -141,47 +134,6 @@ export default function MinutesPage() {
                 </div>
               </div>
             </div>
-          </div>
-        </div>
-      ) : showHelpChat ? (
-        /* 使い方チャット */
-        <div className="flex-1 flex flex-col">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 bg-white">
-            <h2 className="font-semibold text-gray-900">使い方ガイド</h2>
-            <Button variant="ghost" size="sm" onClick={handleReset}>
-              戻る
-            </Button>
-          </div>
-          <div className="flex-1 overflow-hidden">
-            <FeatureChat
-              featureId="minutes-help"
-              title="使い方ガイド"
-              systemPrompt={`あなたは議事録作成機能の使い方を説明するガイドです。
-
-## 議事録作成機能の概要
-Zoomの文字起こしファイル（VTTまたはTXT）から、きれいな議事録を自動作成します。
-
-## 主な機能
-1. ファイルアップロード（ドラッグ＆ドロップ対応）
-2. Google Driveからの選択
-3. 自動で決定事項・TODOを抽出
-4. 整形された議事録を出力
-
-## 対応ファイル形式
-- .vtt - Zoomのクラウド録画文字起こし
-- .txt - Zoomのフルトランスクリプト
-- .docx - Word文書
-
-## Zoom文字起こしの取得方法
-1. Zoom会議をクラウド録画する
-2. 会議終了後30分程度待つ（文字起こし生成に時間がかかる）
-3. Zoom WebポータルからVTTファイルをダウンロード
-4. または、会議中に「文字起こしを保存」でTXTファイルを取得
-
-ユーザーの質問に丁寧に答えてください。`}
-              placeholder="使い方について質問してください"
-              outputFormat="markdown"
-            />
           </div>
         </div>
       ) : (

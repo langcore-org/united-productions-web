@@ -362,6 +362,7 @@ Premiere Proの書き起こしテキストを、放送用のNA原稿形式に整
             </h2>
             {transcript && (
               <button
+                type="button"
                 onClick={() => setTranscript("")}
                 className="text-xs text-gray-500 hover:text-gray-300 transition-colors px-3 py-1.5 rounded-lg hover:bg-gray-100"
               >
@@ -393,9 +394,10 @@ Premiere Proの書き起こしテキストを、放送用のNA原稿形式に整
                   "Premiere Pro書き起こしをNA原稿にして",
                   "話者を判定して整形して",
                   "フィラーを除去して原稿にして",
-                ].map((suggestion, index) => (
+                ].map((suggestion) => (
                   <button
-                    key={index}
+                    type="button"
+                    key={`suggestion-${suggestion}`}
                     onClick={() => setTranscript(suggestion)}
                     className="px-3 py-1.5 text-xs text-gray-600 bg-gray-50 hover:bg-gray-100 border border-gray-200 hover:border-gray-300 rounded-full transition-all duration-200"
                   >
@@ -432,6 +434,7 @@ Premiere Proの書き起こしテキストを、放送用のNA原稿形式に整
         <div className="flex justify-center mb-12">
           {status === "streaming" ? (
             <button
+              type="button"
               onClick={handleCancel}
               className={cn(
                 "flex items-center gap-3 px-8 py-4 rounded-xl font-medium transition-all duration-200",
@@ -443,6 +446,7 @@ Premiere Proの書き起こしテキストを、放送用のNA原稿形式に整
             </button>
           ) : (
             <button
+              type="button"
               onClick={handleProcess}
               disabled={!transcript.trim()}
               className={cn(
@@ -494,6 +498,7 @@ Premiere Proの書き起こしテキストを、放送用のNA原稿形式に整
               </div>
               <div className="flex items-center gap-2">
                 <button
+                  type="button"
                   onClick={handleCopy}
                   disabled={!result}
                   className={cn(
@@ -516,6 +521,7 @@ Premiere Proの書き起こしテキストを、放送用のNA原稿形式に整
                   )}
                 </button>
                 <button
+                  type="button"
                   onClick={handleReset}
                   className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm bg-gray-100 text-gray-600 hover:text-gray-800 hover:bg-gray-200 transition-all duration-200 border border-transparent"
                 >
@@ -526,6 +532,7 @@ Premiere Proの書き起こしテキストを、放送用のNA原稿形式に整
             </div>
             <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-xl shadow-black/20">
               <div className="prose prose-invert max-w-none p-6">
+                {/* biome-ignore lint/security/noDangerouslySetInnerHtml: formatResultでサニタイズ済み */}
                 <div
                   className="text-gray-800 leading-relaxed whitespace-pre-wrap"
                   dangerouslySetInnerHTML={{

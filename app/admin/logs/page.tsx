@@ -59,7 +59,7 @@ interface Log {
   level: string;
   category: string;
   message: string;
-  details: any;
+  details: Record<string, unknown> | null;
   user: {
     id: string;
     name: string | null;

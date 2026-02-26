@@ -6,15 +6,16 @@
  * ClientMemory統合版（サーバーサイドGrokClient非依存）
  *
  * @updated 2026-02-24: GrokClient直接依存を削除し、ClientMemory経由で要約
+ * @updated 2026-02-26: StreamPhase enum導入・onSummarizationUpdateコールバックで要約状態をリアルタイム反映
  */
 
 import { useCallback, useRef, useState } from "react";
 import { LLMApiError, streamLLMResponse } from "@/lib/api/llm-client";
 import { ClientMemory } from "@/lib/llm/memory/client-memory";
 import type { LLMMessage, LLMProvider } from "@/lib/llm/types";
-import type { FollowUpInfo, SummarizationEvent, ToolCallInfo, UsageInfo } from "./types";
+import type { FollowUpInfo, StreamPhase, SummarizationEvent, ToolCallInfo, UsageInfo } from "./types";
 
-export type { FollowUpInfo, SummarizationEvent, UsageInfo, ToolCallInfo };
+export type { FollowUpInfo, StreamPhase, SummarizationEvent, UsageInfo, ToolCallInfo };
 
 export interface UseLLMStreamOptions {
   /** 要約開始閾値（トークン数）。デフォルト: 100000 */
@@ -30,8 +31,7 @@ export function useLLMStream(options: UseLLMStreamOptions = {}) {
   const { tokenThreshold = 100_000, maxRecentTurns = 10 } = options;
 
   const [content, setContent] = useState("");
-  const [isComplete, setIsComplete] = useState(true);
-  const [isPending, setIsPending] = useState(false);
+  const [phase, setPhase] = useState<StreamPhase>("idle");
   const [error, setError] = useState<string | null>(null);
   const [usage, setUsage] = useState<UsageInfo | null>(null);
   const [toolCalls, setToolCalls] = useState<ToolCallInfo[]>([]);
@@ -41,6 +41,12 @@ export function useLLMStream(options: UseLLMStreamOptions = {}) {
     isLoading: false,
     error: null,
   });
+
+  // phase から派生する互換プロパティ
+  // - isPending: UI が「処理中」を表示すべき状態か
+  // - isComplete: UI が「完了後」の表示（フォローアップ等）をすべき状態か
+  const isPending = phase === "preparing" || phase === "streaming";
+  const isComplete = !isPending;
 
   const abortControllerRef = useRef<AbortController | null>(null);
   const memoryRef = useRef<ClientMemory | null>(null);
@@ -54,21 +60,38 @@ export function useLLMStream(options: UseLLMStreamOptions = {}) {
   }, []);
 
   /**
+   * SummarizationEvent を upsert するヘルパー
+   * ClientMemory のコールバックから呼ばれる
+   */
+  const upsertSummarizationEvent = useCallback((event: SummarizationEvent) => {
+    setSummarizationEvents((prev) => {
+      const existing = prev.findIndex((e) => e.id === event.id);
+      if (existing >= 0) {
+        const updated = [...prev];
+        updated[existing] = event;
+        return updated;
+      }
+      return [...prev, event];
+    });
+  }, []);
+
+  /**
    * Memoryを初期化または取得
+   * プロバイダーが変わった場合は新規作成し、コールバックを設定する
    */
   const getOrCreateMemory = useCallback(
     (provider: LLMProvider) => {
-      // プロバイダーが変わった場合は新規作成
       if (!memoryRef.current || providerRef.current !== provider) {
         providerRef.current = provider;
         memoryRef.current = new ClientMemory(provider, {
           tokenThreshold,
           maxRecentTurns,
+          onSummarizationUpdate: upsertSummarizationEvent,
         });
       }
       return memoryRef.current;
     },
-    [tokenThreshold, maxRecentTurns],
+    [tokenThreshold, maxRecentTurns, upsertSummarizationEvent],
   );
 
   /**
@@ -86,27 +109,23 @@ export function useLLMStream(options: UseLLMStreamOptions = {}) {
     ): Promise<void> => {
       cleanup();
 
-      setIsPending(true);
+      // preparing フェーズに移行（React は次の機会に再レンダリングできる）
+      setPhase("preparing");
       setContent("");
-      setIsComplete(false);
       setError(null);
       setUsage(null);
       setToolCalls([]);
+      setSummarizationEvents([]);
       setFollowUp({ questions: [], isLoading: false, error: null });
 
       abortControllerRef.current = new AbortController();
 
       // Memoryを初期化し、メッセージをロード
+      // onSummarizationUpdate コールバック経由で要約の running/completed/error がリアルタイム反映される
       const memory = getOrCreateMemory(provider);
-      memory.clear(); // 新しい会話のためにクリア
-      setSummarizationEvents([]); // 要約イベントをリセット
+      memory.clear();
 
-      // ClientMemoryは内部でAPI経由で要約を実行
       await memory.addMessages(messages);
-
-      // 要約イベントを取得
-      const history = memory.getSummarizationHistory();
-      setSummarizationEvents(history);
 
       // 適切なコンテキストを取得（要約済み or 全履歴）
       const context = memory.getContext();
@@ -150,7 +169,8 @@ export function useLLMStream(options: UseLLMStreamOptions = {}) {
         )) {
           switch (event.type) {
             case "start":
-              // ストリーム開始 - 何もしない
+              // LLM がレスポンスを生成し始めた = streaming フェーズへ
+              setPhase("streaming");
               break;
 
             case "content":
@@ -178,8 +198,7 @@ export function useLLMStream(options: UseLLMStreamOptions = {}) {
 
             case "done":
               setUsage(event.usage);
-              setIsComplete(true);
-              setIsPending(false);
+              setPhase("complete");
               // ストリーミング完了後、フォローアップ質問を生成（非同期で実行）
               void generateFollowUp();
               break;
@@ -188,10 +207,9 @@ export function useLLMStream(options: UseLLMStreamOptions = {}) {
               throw new Error(event.message);
           }
         }
-        setIsComplete(true);
       } catch (err) {
         if (err instanceof Error && err.name === "AbortError") {
-          setIsComplete(true);
+          setPhase("cancelled");
         } else {
           const errorMessage =
             err instanceof LLMApiError
@@ -200,7 +218,7 @@ export function useLLMStream(options: UseLLMStreamOptions = {}) {
                 ? err.message
                 : "予期しないエラーが発生しました";
           setError(errorMessage);
-          setIsComplete(true);
+          setPhase("error");
         }
       }
     },
@@ -209,14 +227,13 @@ export function useLLMStream(options: UseLLMStreamOptions = {}) {
 
   const cancelStream = useCallback(() => {
     cleanup();
-    setIsComplete(true);
+    setPhase("cancelled");
   }, [cleanup]);
 
   const resetStream = useCallback(() => {
     cleanup();
+    setPhase("idle");
     setContent("");
-    setIsComplete(true);
-    setIsPending(false);
     setError(null);
     setUsage(null);
     setToolCalls([]);
@@ -237,6 +254,7 @@ export function useLLMStream(options: UseLLMStreamOptions = {}) {
 
   return {
     content,
+    phase,
     isComplete,
     isPending,
     error,

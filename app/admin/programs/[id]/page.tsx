@@ -16,7 +16,7 @@ import {
   Users,
 } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -101,11 +101,7 @@ export default function ProgramDetailPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchProgram();
-  }, [fetchProgram]);
-
-  const fetchProgram = async () => {
+  const fetchProgram = useCallback(async () => {
     try {
       setIsLoading(true);
       const response = await fetch(`/api/admin/programs?id=${programId}`);
@@ -119,7 +115,11 @@ export default function ProgramDetailPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [programId]);
+
+  useEffect(() => {
+    fetchProgram();
+  }, [fetchProgram]);
 
   const getStationColor = (station: string): string => {
     if (station.includes("TBS")) return "bg-blue-100 text-blue-800";
@@ -171,7 +171,7 @@ export default function ProgramDetailPage() {
         <div className="flex items-center gap-2 text-sm text-gray-500 mb-4">
           <span>管理画面</span>
           <ChevronLeft className="w-4 h-4 rotate-180" />
-          <button onClick={() => router.push("/admin/programs")} className="hover:text-gray-900">
+          <button type="button" onClick={() => router.push("/admin/programs")} className="hover:text-gray-900">
             番組情報管理
           </button>
           <ChevronLeft className="w-4 h-4 rotate-180" />
@@ -244,12 +244,12 @@ export default function ProgramDetailPage() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
-                    <label className="text-sm text-gray-500">放送時間</label>
+                    <span className="text-sm text-gray-500 block">放送時間</span>
                     <p className="font-medium">{program.schedule}</p>
                   </div>
                   {program.scheduleDetail && program.scheduleDetail.length > 0 && (
                     <div>
-                      <label className="text-sm text-gray-500">詳細スケジュール</label>
+                      <span className="text-sm text-gray-500 block">詳細スケジュール</span>
                       <div className="mt-2 space-y-2">
                         {program.scheduleDetail.map((s, i) => (
                           <div key={i} className="text-sm bg-gray-50 p-2 rounded">
@@ -262,7 +262,7 @@ export default function ProgramDetailPage() {
                   )}
                   {program.timeSlot && (
                     <div>
-                      <label className="text-sm text-gray-500">放送枠</label>
+                      <span className="text-sm text-gray-500 block">放送枠</span>
                       <p>{program.timeSlot}</p>
                     </div>
                   )}
@@ -278,24 +278,24 @@ export default function ProgramDetailPage() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
-                    <label className="text-sm text-gray-500">番組内容</label>
+                    <span className="text-sm text-gray-500 block">番組内容</span>
                     <p className="mt-1">{program.description}</p>
                   </div>
                   {program.concept && (
                     <div>
-                      <label className="text-sm text-gray-500">コンセプト</label>
+                      <span className="text-sm text-gray-500 block">コンセプト</span>
                       <p className="mt-1">{program.concept}</p>
                     </div>
                   )}
                   {program.targetAudience && (
                     <div>
-                      <label className="text-sm text-gray-500">ターゲット層</label>
+                      <span className="text-sm text-gray-500 block">ターゲット層</span>
                       <p className="mt-1">{program.targetAudience}</p>
                     </div>
                   )}
                   {program.format && (
                     <div>
-                      <label className="text-sm text-gray-500">形式</label>
+                      <span className="text-sm text-gray-500 block">形式</span>
                       <p className="mt-1">{program.format}</p>
                     </div>
                   )}
@@ -316,12 +316,12 @@ export default function ProgramDetailPage() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
-                    <label className="text-sm text-gray-500">MC/メイン</label>
+                    <span className="text-sm text-gray-500 block">MC/メイン</span>
                     <p className="font-medium">{program.cast}</p>
                   </div>
                   {program.regularCast && program.regularCast.length > 0 && (
                     <div>
-                      <label className="text-sm text-gray-500">レギュラー出演者</label>
+                      <span className="text-sm text-gray-500 block">レギュラー出演者</span>
                       <ul className="mt-2 space-y-1">
                         {program.regularCast.map((cast, i) => (
                           <li key={i} className="text-sm">
@@ -333,13 +333,13 @@ export default function ProgramDetailPage() {
                   )}
                   {program.narrator && (
                     <div>
-                      <label className="text-sm text-gray-500">ナレーター</label>
+                      <span className="text-sm text-gray-500 block">ナレーター</span>
                       <p>{program.narrator}</p>
                     </div>
                   )}
                   {program.announcer && (
                     <div>
-                      <label className="text-sm text-gray-500">進行アナウンサー</label>
+                      <span className="text-sm text-gray-500 block">進行アナウンサー</span>
                       <p>{program.announcer}</p>
                     </div>
                   )}
@@ -356,13 +356,13 @@ export default function ProgramDetailPage() {
                 <CardContent className="space-y-4">
                   {program.chiefDirector && (
                     <div>
-                      <label className="text-sm text-gray-500">総合演出</label>
+                      <span className="text-sm text-gray-500 block">総合演出</span>
                       <p className="font-medium">{program.chiefDirector}</p>
                     </div>
                   )}
                   {program.producers && program.producers.length > 0 && (
                     <div>
-                      <label className="text-sm text-gray-500">プロデューサー</label>
+                      <span className="text-sm text-gray-500 block">プロデューサー</span>
                       <ul className="mt-2 space-y-1">
                         {program.producers.map((producer, i) => (
                           <li key={i} className="text-sm">
@@ -374,7 +374,7 @@ export default function ProgramDetailPage() {
                   )}
                   {program.staff && program.staff.length > 0 && (
                     <div>
-                      <label className="text-sm text-gray-500">スタッフ</label>
+                      <span className="text-sm text-gray-500 block">スタッフ</span>
                       <ul className="mt-2 space-y-1">
                         {program.staff.map((s, i) => (
                           <li key={i} className="text-sm">
@@ -434,19 +434,19 @@ export default function ProgramDetailPage() {
                 <CardContent className="space-y-4">
                   {program.startDateText && (
                     <div>
-                      <label className="text-sm text-gray-500">開始</label>
+                      <span className="text-sm text-gray-500 block">開始</span>
                       <p className="font-medium">{program.startDateText}</p>
                     </div>
                   )}
                   {program.totalEpisodes && (
                     <div>
-                      <label className="text-sm text-gray-500">累計放送回数</label>
+                      <span className="text-sm text-gray-500 block">累計放送回数</span>
                       <p className="font-medium">{program.totalEpisodes}</p>
                     </div>
                   )}
                   {program.broadcastHistory && (
                     <div>
-                      <label className="text-sm text-gray-500">経緯</label>
+                      <span className="text-sm text-gray-500 block">経緯</span>
                       <p className="mt-1">{program.broadcastHistory}</p>
                     </div>
                   )}

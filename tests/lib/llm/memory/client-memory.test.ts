@@ -238,6 +238,126 @@ describe("ClientMemory", () => {
     });
   });
 
+  describe("onSummarizationUpdate コールバック", () => {
+    it("要約開始時に running イベントが通知される", async () => {
+      const events: Array<{ status: string; displayName: string }> = [];
+      const onSummarizationUpdate = vi.fn((event) => {
+        events.push({ status: event.status, displayName: event.displayName });
+      });
+
+      const mockFetch = vi.fn().mockResolvedValue(
+        new Response(JSON.stringify({ summary: "要約テスト" }), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        }),
+      );
+      global.fetch = mockFetch;
+
+      const memory = new ClientMemory(mockProvider, {
+        tokenThreshold: 100,
+        maxRecentTurns: 2,
+        onSummarizationUpdate,
+      });
+
+      await memory.addMessage({ role: "user", content: "U1".repeat(100) });
+      await memory.addMessage({ role: "assistant", content: "A1".repeat(100) });
+      await memory.addMessage({ role: "user", content: "U2".repeat(100) });
+      await memory.addMessage({ role: "assistant", content: "A2".repeat(100) });
+      await memory.addMessage({ role: "user", content: "U3".repeat(100) });
+
+      // running → completed の順でコールバックが呼ばれる
+      expect(onSummarizationUpdate).toHaveBeenCalledTimes(2);
+      expect(events[0].status).toBe("running");
+      expect(events[0].displayName).toBe("文脈を要約中");
+      expect(events[1].status).toBe("completed");
+      expect(events[1].displayName).toContain("要約しました");
+    });
+
+    it("要約失敗時に error イベントが通知される", async () => {
+      const events: Array<{ status: string }> = [];
+      const onSummarizationUpdate = vi.fn((event) => {
+        events.push({ status: event.status });
+      });
+
+      const mockFetch = vi.fn().mockRejectedValue(new Error("Network error"));
+      global.fetch = mockFetch;
+
+      const memory = new ClientMemory(mockProvider, {
+        tokenThreshold: 100,
+        maxRecentTurns: 2,
+        onSummarizationUpdate,
+      });
+
+      await memory.addMessage({ role: "user", content: "U1".repeat(100) });
+      await memory.addMessage({ role: "assistant", content: "A1".repeat(100) });
+      await memory.addMessage({ role: "user", content: "U2".repeat(100) });
+      await memory.addMessage({ role: "assistant", content: "A2".repeat(100) });
+      await memory.addMessage({ role: "user", content: "U3".repeat(100) });
+
+      // running → error の順でコールバックが呼ばれる
+      expect(onSummarizationUpdate).toHaveBeenCalledTimes(2);
+      expect(events[0].status).toBe("running");
+      expect(events[1].status).toBe("error");
+    });
+
+    it("コールバック未指定でもエラーなく動作する", async () => {
+      const mockFetch = vi.fn().mockResolvedValue(
+        new Response(JSON.stringify({ summary: "要約" }), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        }),
+      );
+      global.fetch = mockFetch;
+
+      const memory = new ClientMemory(mockProvider, {
+        tokenThreshold: 100,
+        maxRecentTurns: 2,
+        // onSummarizationUpdate を指定しない
+      });
+
+      await expect(
+        (async () => {
+          await memory.addMessage({ role: "user", content: "U1".repeat(100) });
+          await memory.addMessage({ role: "assistant", content: "A1".repeat(100) });
+          await memory.addMessage({ role: "user", content: "U2".repeat(100) });
+          await memory.addMessage({ role: "assistant", content: "A2".repeat(100) });
+          await memory.addMessage({ role: "user", content: "U3".repeat(100) });
+        })(),
+      ).resolves.toBeUndefined();
+    });
+
+    it("イベントは同一IDで running → completed の2回通知される", async () => {
+      const receivedIds: string[] = [];
+      const onSummarizationUpdate = vi.fn((event) => {
+        receivedIds.push(event.id);
+      });
+
+      const mockFetch = vi.fn().mockResolvedValue(
+        new Response(JSON.stringify({ summary: "要約" }), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        }),
+      );
+      global.fetch = mockFetch;
+
+      const memory = new ClientMemory(mockProvider, {
+        tokenThreshold: 100,
+        maxRecentTurns: 2,
+        onSummarizationUpdate,
+      });
+
+      await memory.addMessage({ role: "user", content: "U1".repeat(100) });
+      await memory.addMessage({ role: "assistant", content: "A1".repeat(100) });
+      await memory.addMessage({ role: "user", content: "U2".repeat(100) });
+      await memory.addMessage({ role: "assistant", content: "A2".repeat(100) });
+      await memory.addMessage({ role: "user", content: "U3".repeat(100) });
+
+      // 同一IDが2回通知される（upsert で更新できるように）
+      expect(receivedIds).toHaveLength(2);
+      expect(receivedIds[0]).toBe(receivedIds[1]);
+    });
+  });
+
   describe("クリア機能", () => {
     it("クリア後は空の状態になる", async () => {
       const memory = new ClientMemory(mockProvider);

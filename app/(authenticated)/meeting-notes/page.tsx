@@ -231,7 +231,10 @@ export default function MeetingNotesPage() {
     }
   };
 
-  const currentTemplate = templates.find((t) => t.id === selectedTemplate)!;
+  const currentTemplate = templates.find((t) => t.id === selectedTemplate);
+  if (!currentTemplate) {
+    return null;
+  }
 
   return (
     <div>
@@ -266,6 +269,7 @@ export default function MeetingNotesPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {templates.map((template) => (
               <button
+                type="button"
                 key={template.id}
                 onClick={() => setSelectedTemplate(template.id)}
                 className={cn(
@@ -325,6 +329,7 @@ export default function MeetingNotesPage() {
             </h2>
             {transcript && (
               <button
+                type="button"
                 onClick={() => setTranscript("")}
                 className="text-xs text-gray-500 hover:text-gray-700 transition-colors"
               >
@@ -356,9 +361,10 @@ export default function MeetingNotesPage() {
                       "TODOリストを作成して",
                     ]
                   : ["面談の内容を整理して", "出演意向をまとめて", "フォローアップ事項を抽出して"]
-                ).map((suggestion, index) => (
+                ).map((suggestion) => (
                   <button
-                    key={index}
+                    type="button"
+                    key={`suggestion-${suggestion}`}
                     onClick={() => setTranscript(suggestion)}
                     className="px-3 py-1.5 text-xs text-gray-600 bg-gray-50 hover:bg-gray-100 border border-gray-200 hover:border-gray-300 rounded-full transition-all duration-200"
                   >
@@ -397,6 +403,7 @@ export default function MeetingNotesPage() {
         <div className="flex justify-center mb-12">
           {status === "streaming" ? (
             <button
+              type="button"
               onClick={handleCancel}
               className={cn(
                 "flex items-center gap-3 px-8 py-4 rounded-xl font-medium transition-all duration-200",
@@ -408,6 +415,7 @@ export default function MeetingNotesPage() {
             </button>
           ) : (
             <button
+              type="button"
               onClick={handleProcess}
               disabled={!transcript.trim()}
               className={cn(
@@ -456,6 +464,7 @@ export default function MeetingNotesPage() {
               </div>
               <div className="flex items-center gap-2">
                 <button
+                  type="button"
                   onClick={handleCopy}
                   disabled={!result}
                   className={cn(
@@ -482,6 +491,7 @@ export default function MeetingNotesPage() {
                   filename={`meeting-notes-${new Date().toISOString().split("T")[0]}.md`}
                 />
                 <button
+                  type="button"
                   onClick={handleDownload}
                   disabled={!result}
                   className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm bg-gray-100 text-gray-600 hover:text-black hover:bg-gray-200 transition-all duration-200 disabled:opacity-50 border border-transparent hover:border-gray-300"
@@ -490,6 +500,7 @@ export default function MeetingNotesPage() {
                   Markdown保存
                 </button>
                 <button
+                  type="button"
                   onClick={handleReset}
                   className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm bg-gray-100 text-gray-600 hover:text-black hover:bg-gray-200 transition-all duration-200 border border-transparent hover:border-gray-300"
                 >
@@ -516,6 +527,7 @@ export default function MeetingNotesPage() {
 
               {/* Content */}
               <div className="p-6">
+                {/* biome-ignore lint/security/noDangerouslySetInnerHtml: DOMPurifyでサニタイズ済み */}
                 <div
                   className="text-gray-800 leading-relaxed whitespace-pre-wrap font-mono text-sm"
                   dangerouslySetInnerHTML={{

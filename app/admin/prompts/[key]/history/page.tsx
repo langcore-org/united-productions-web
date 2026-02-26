@@ -12,7 +12,7 @@ import {
   User,
 } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -50,11 +50,7 @@ export default function AdminPromptHistoryPage() {
   const [restoreSuccess, setRestoreSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadHistory();
-  }, [loadHistory]);
-
-  const loadHistory = async () => {
+  const loadHistory = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
@@ -78,7 +74,11 @@ export default function AdminPromptHistoryPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [key]);
+
+  useEffect(() => {
+    loadHistory();
+  }, [loadHistory]);
 
   const handleRestore = async () => {
     if (!restoreTarget) return;
@@ -280,8 +280,11 @@ export default function AdminPromptHistoryPage() {
 
             <div className="space-y-4 py-4">
               <div>
-                <label className="text-sm font-medium">復元理由（任意）</label>
+                <label htmlFor="restore-note" className="text-sm font-medium">
+                  復元理由（任意）
+                </label>
                 <Textarea
+                  id="restore-note"
                   value={restoreNote}
                   onChange={(e) => setRestoreNote(e.target.value)}
                   placeholder="復元の理由やメモを入力..."

@@ -15,6 +15,7 @@ import {
   UserCircle,
   Users,
 } from "lucide-react";
+import Image from "next/image";
 import { useCallback, useEffect, useState } from "react";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { Badge } from "@/components/ui/badge";
@@ -223,10 +224,13 @@ export default function AdminUsersPage() {
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
                         {user.image ? (
-                          <img
+                          <Image
                             src={user.image}
                             alt={user.name || ""}
+                            width={48}
+                            height={48}
                             className="w-full h-full object-cover"
+                            unoptimized
                           />
                         ) : (
                           <User className="w-6 h-6 text-gray-400" />

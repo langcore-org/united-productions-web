@@ -163,14 +163,14 @@ export default function UsagePage() {
 
   useEffect(() => {
     fetchData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // biome-ignore lint/correctness/useExhaustiveDependencies: fetchDataはuseCallbackで安定
   }, [fetchData]);
 
   // 自動更新（30秒ごと）
   useEffect(() => {
     const interval = setInterval(fetchData, 30000);
     return () => clearInterval(interval);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // biome-ignore lint/correctness/useExhaustiveDependencies: fetchDataはuseCallbackで安定
   }, [fetchData]);
 
   // 金額フォーマット
@@ -449,8 +449,8 @@ export default function UsagePage() {
                             outerRadius={100}
                             paddingAngle={2}
                           >
-                            {stats.byProvider.map((_entry, index) => (
-                              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                            {stats.byProvider.map((entry, index) => (
+                              <Cell key={`provider-${entry.provider}`} fill={COLORS[index % COLORS.length]} />
                             ))}
                           </Pie>
                           <Tooltip
@@ -531,9 +531,9 @@ export default function UsagePage() {
                               outerRadius={100}
                               paddingAngle={2}
                             >
-                              {stats.byTool.map((_entry, index) => (
+                              {stats.byTool.map((entry, index) => (
                                 <Cell
-                                  key={`cell-${index}`}
+                                  key={`tool-${entry.toolName}`}
                                   fill={
                                     Object.values(TOOL_COLORS)[
                                       index % Object.values(TOOL_COLORS).length

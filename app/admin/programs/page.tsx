@@ -2,7 +2,7 @@
 
 import { ChevronRight, ExternalLink, Search, Tv } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -45,15 +45,7 @@ export default function ProgramsAdminPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [stationFilter, setStationFilter] = useState<string>("all");
 
-  useEffect(() => {
-    fetchPrograms();
-  }, [fetchPrograms]);
-
-  useEffect(() => {
-    filterPrograms();
-  }, [filterPrograms]);
-
-  const fetchPrograms = async () => {
+  const fetchPrograms = useCallback(async () => {
     try {
       setIsLoading(true);
       const response = await fetch("/api/admin/programs");
@@ -68,9 +60,9 @@ export default function ProgramsAdminPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  const filterPrograms = () => {
+  const filterPrograms = useCallback(() => {
     let filtered = [...programs];
 
     // 検索フィルタ
@@ -90,7 +82,15 @@ export default function ProgramsAdminPage() {
     }
 
     setFilteredPrograms(filtered);
-  };
+  }, [programs, searchQuery, stationFilter]);
+
+  useEffect(() => {
+    fetchPrograms();
+  }, [fetchPrograms]);
+
+  useEffect(() => {
+    filterPrograms();
+  }, [filterPrograms]);
 
   const getStationColor = (station: string): string => {
     if (station.includes("TBS")) return "bg-blue-100 text-blue-800";

@@ -18,7 +18,8 @@ export default function Loading() {
         {/* Template Selector */}
         <div className="flex gap-4">
           {Array.from({ length: 2 }).map((_, i) => (
-            <div key={i} className="w-32 h-10 bg-white/10 rounded-lg animate-pulse" />
+            // biome-ignore lint/suspicious/noArrayIndexKey: 固定長のスケルトンローダーで順序は変更されない
+            <div key={`template-${i}`} className="w-32 h-10 bg-white/10 rounded-lg animate-pulse" />
           ))}
         </div>
 

@@ -8,19 +8,10 @@
  * 古いログを削除
  */
 
-import type { LogCategory, LogLevel } from "@prisma/client";
+import type { LogCategory, LogLevel, Prisma } from "@prisma/client";
 import { type NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/api/auth";
 import { prisma } from "@/lib/prisma";
-
-interface LogFilters {
-  level?: LogLevel;
-  category?: LogCategory;
-  userId?: string;
-  search?: string;
-  startDate?: string;
-  endDate?: string;
-}
 
 /**
  * GET /api/admin/logs
@@ -64,7 +55,7 @@ export async function GET(request: NextRequest) {
     const sortOrder = searchParams.get("sortOrder") || "desc";
 
     // WHERE句構築
-    const where: any = {};
+    const where: Prisma.AppLogWhereInput = {};
 
     if (level) where.level = level;
     if (category) where.category = category;
@@ -84,8 +75,9 @@ export async function GET(request: NextRequest) {
     }
 
     // ソート順序
-    const orderBy: any = {};
-    orderBy[sortBy] = sortOrder;
+    const orderBy: Prisma.AppLogOrderByWithRelationInput = {
+      [sortBy]: sortOrder,
+    };
 
     // ログ取得
     const [logs, totalCount, levelCounts, categoryCounts] = await Promise.all([

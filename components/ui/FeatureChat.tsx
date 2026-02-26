@@ -219,13 +219,12 @@ export function FeatureChat({
     }
   };
 
-  const isStreaming = isPending;
   const lastAssistantMessage = [...messages].reverse().find((m) => m.role === "assistant");
   const hasMessages = messages.length > 0;
 
   const handleSuggestionClick = useCallback(
     async (suggestionText: string) => {
-      if (isStreaming || !suggestionText.trim()) return;
+      if (isPending || !suggestionText.trim()) return;
       const userMessage: Message = {
         id: Date.now().toString(),
         role: "user",
@@ -239,7 +238,7 @@ export function FeatureChat({
         return newMessages;
       });
     },
-    [isStreaming, provider, startStream, buildStreamMessages, selectedProgramId],
+    [isPending, provider, startStream, buildStreamMessages, selectedProgramId],
   );
 
   return (
@@ -369,7 +368,7 @@ export function FeatureChat({
         onInputChange={setInput}
         attachedFiles={attachedFiles}
         onFilesChange={setAttachedFiles}
-        isStreaming={!!isStreaming}
+        isStreaming={isPending}
         inputLabel={inputLabel}
         placeholder={placeholder}
         enableFileAttachment={enableFileAttachment}
