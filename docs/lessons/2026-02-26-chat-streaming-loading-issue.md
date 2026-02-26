@@ -242,3 +242,181 @@ startStreaming();
 4. 長い会話履歴がある場合は「文脈を要約中」が表示されることを確認
 5. ツール使用時はツール名が表示されることを確認
 6. 応答が返ってきたらコンテンツが正常に表示されることを確認
+
+---
+
+## 追加リファクタリング（2026-02-26）
+
+初期修正の設計レビューで以下の問題が見つかり、中長期的に理想的なコードへと改善した。
+
+### 発見された問題点
+
+#### 問題1: `isPending` のリセット漏れリスク
+
+初期修正では `isPending` と `isComplete` の **2つの独立したboolean** を手動で管理していた。
+
+```typescript
+// startStream 内の catch 処理（修正前）
+if (err instanceof Error && err.name === "AbortError") {
+  setIsComplete(true);
+  // setIsPending(false) ← 漏れると isPending が true のまま残る
+}
+```
+
+2つのステートが矛盾する「不可能な状態」（例: `isPending=true` かつ `isComplete=true`）が理論上あり得た。
+
+#### 問題2: 要約処理中の状態が UI に届かない
+
+`memory.addMessages(messages)` の中で要約処理が起きても、`SummarizationEvent` は処理完了後にまとめて取得されていた。`preparing` フェーズ中に「文脈を要約中...」をリアルタイム表示できていなかった。
+
+#### 問題3: `SummarizationEvent` 型の重複定義
+
+同じ interface が `client-memory.ts` と `hooks/useLLMStream/types.ts` の 2箇所に定義されていた。
+
+---
+
+### 実施した改善
+
+#### 改善1: `StreamPhase` による単一ステート管理（案1+案2）
+
+`isPending + isComplete` の2つのbooleanを廃止し、**単一の `StreamPhase` 型**に統一。
+
+```typescript
+// hooks/useLLMStream/types.ts
+export type StreamPhase =
+  | "idle"       // 初期状態・resetStream後
+  | "preparing"  // memory前処理中（要約処理など）、LLMリクエスト準備中
+  | "streaming"  // LLMからレスポンス受信中
+  | "complete"   // 正常完了
+  | "error"      // エラー終了
+  | "cancelled"; // キャンセル
+```
+
+`isPending` と `isComplete` は **computed value（派生値）** として算出するように変更：
+
+```typescript
+// hooks/useLLMStream/index.ts
+const [phase, setPhase] = useState<StreamPhase>("idle");
+
+const isPending = phase === "preparing" || phase === "streaming";
+const isComplete = !isPending;
+```
+
+これにより：
+- 「不可能な状態」が構造的に存在できなくなる
+- `error` や `cancelled` のパスで `setIsPending(false)` を忘れるバグが根本解消される
+- `resetStream` 後は必ず `"idle"` に戻ることが保証される
+
+ステート遷移図：
+```
+idle → preparing → streaming → complete
+                ↘ error
+                ↘ cancelled
+(complete/error/cancelled) → idle  （resetStream時）
+```
+
+#### 改善2: `onSummarizationUpdate` コールバック（案3）
+
+`ClientMemory` にコールバックオプションを追加し、要約処理の進捗を **リアルタイムで React ステートに反映**できるようにした。
+
+```typescript
+// lib/llm/memory/client-memory.ts
+export interface ClientMemoryOptions extends BaseMemoryOptions {
+  onSummarizationUpdate?: (event: SummarizationEvent) => void;
+}
+```
+
+`ClientMemory.updateSummary()` 内部で 3 タイミングにコールバックを呼び出す：
+
+| タイミング | `status` | `displayName` |
+|-----------|----------|--------------|
+| 要約API呼び出し直前 | `"running"` | `"文脈を要約中"` |
+| 要約完了後 | `"completed"` | `"文脈を要約しました（N件）"` |
+| 要約失敗時 | `"error"` | `"文脈の要約に失敗"` |
+
+`useLLMStream` フック側では、同一 ID のイベントを upsert する `upsertSummarizationEvent` ヘルパーを追加：
+
+```typescript
+const upsertSummarizationEvent = useCallback((event: SummarizationEvent) => {
+  setSummarizationEvents((prev) => {
+    const existing = prev.findIndex((e) => e.id === event.id);
+    if (existing >= 0) {
+      const updated = [...prev];
+      updated[existing] = event;
+      return updated;
+    }
+    return [...prev, event];
+  });
+}, []);
+```
+
+`running` → `completed` の遷移が**同一 ID で通知**されるため、UI 側で「更新」として扱え、「追加」の重複が生じない。
+
+#### 改善3: `SummarizationEvent` 型の正規化
+
+型の重複定義を解消。正規定義を `lib/llm/memory/types.ts` に移動し、各ファイルはそこから re-export する構成に統一した。
+
+```
+lib/llm/memory/types.ts   ← 正規定義
+    ↓
+lib/llm/memory/client-memory.ts  → import from ./types
+lib/llm/memory/index.ts          → re-export from ./types
+    ↓
+hooks/useLLMStream/types.ts  → re-export from @/lib/llm/memory/types
+    ↓
+components/chat/types.ts     → import from @/hooks/useLLMStream
+```
+
+#### 改善4: `isStreaming` エイリアスの削除
+
+`FeatureChat.tsx` 内の `const isStreaming = isPending;` という冗長なエイリアスを削除し、`isPending` を直接使用するよう変更。
+
+---
+
+### 変更ファイル一覧
+
+| ファイル | 変更内容 |
+|---------|---------|
+| `lib/llm/memory/types.ts` | `SummarizationEvent` 型を移動・正規定義 |
+| `lib/llm/memory/client-memory.ts` | `onSummarizationUpdate` コールバック追加 |
+| `lib/llm/memory/index.ts` | エクスポート元を `./types` に変更 |
+| `hooks/useLLMStream/types.ts` | `StreamPhase` 型追加、`SummarizationEvent` を re-export に変更 |
+| `hooks/useLLMStream/index.ts` | `phase: StreamPhase` による単一ステート管理、`upsertSummarizationEvent` 追加 |
+| `components/ui/FeatureChat.tsx` | `isStreaming` エイリアス削除、`isPending` 直接使用 |
+
+---
+
+### 追加したテスト
+
+**`tests/lib/llm/memory/client-memory.test.ts`**（4件追加）
+- `running` イベントが要約開始時に通知される
+- `error` イベントが要約失敗時に通知される
+- コールバック未指定でもエラーなく動作する
+- 同一 ID で `running` → `completed` の順に 2 回通知される（upsert 動作の保証）
+
+**`tests/hooks/useLLMStream.test.ts`**（6件追加）
+- 初期状態は `phase=idle, isPending=false, isComplete=true`
+- 正常完了後は `phase=complete, isPending=false`
+- エラー時は `phase=error, isPending=false`
+- キャンセル時は `phase=cancelled, isPending=false`
+- `resetStream` 後は `phase=idle` に戻る
+- `isPending === !isComplete` が常に成立する（不変条件テスト）
+
+全 32 テスト パス。
+
+---
+
+### 設計上の学び
+
+**「不可能な状態を型で表現できなくする」**
+
+複数の boolean ステートが矛盾する組み合わせをとれる設計は、バグの温床になる。
+Elm や Rust で一般的な **discriminated union（直和型）** パターンで状態を一元管理することで、不正な状態遷移をコンパイル時に防げる。
+
+**「副作用のある処理はコールバックで通知する」**
+
+`await` でブロックする処理（外部 API 呼び出しなど）の内部状態を呼び出し元に届けるには、**コールバック渡し** が効果的。Promise の解決を待つだけでは、処理中の細かい状態変化が伝わらない。
+
+**「型の正規定義は責任のある層に置く」**
+
+`SummarizationEvent` は `ClientMemory` が発行するイベントであり、その型の正規定義は memory 層（`lib/llm/memory/types.ts`）が持つべき。上位層（hooks, components）は re-export のみとし、定義の重複を避ける。
