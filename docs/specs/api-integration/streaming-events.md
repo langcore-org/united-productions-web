@@ -3,6 +3,8 @@
 > **LLMストリーミング時のイベント定義とデータフロー**
 > 
 > **最終更新**: 2026-02-23 22:00
+> 
+> **注意**: 現在はLangChainを使用せず、xAI Responses APIを直接利用。詳細は [xAI Responses API 仕様](./xai-responses-api-spec.md) を参照。
 
 ---
 
