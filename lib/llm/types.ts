@@ -47,6 +47,11 @@ export type SSEEvent =
         toolCalls: Record<string, number>;
       };
     }
+  | {
+      type: "citation";
+      url: string;
+      title: string;
+    }
   | { type: "error"; message: string };
 
 /**

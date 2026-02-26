@@ -55,8 +55,16 @@ export function useLangChainChat(options: UseLangChainChatOptions = {}): UseLang
   const [input, setInput] = useState("");
 
   // useLLMStream に全ストリーム処理を委譲
-  const { content, isComplete, error, toolCalls, summarizationEvents, startStream, cancelStream, resetStream } =
-    useLLMStream();
+  const {
+    content,
+    isComplete,
+    error,
+    toolCalls,
+    summarizationEvents,
+    startStream,
+    cancelStream,
+    resetStream,
+  } = useLLMStream();
 
   const isLoading = !isComplete;
   const pendingAssistantIdRef = useRef<string | null>(null);

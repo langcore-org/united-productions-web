@@ -108,6 +108,12 @@ interface XAIStreamEvent {
     name?: string;
     input?: string;
     call_id?: string;
+    action?: { type?: string; query?: string };
+  };
+  annotation?: {
+    type: string;
+    url?: string;
+    title?: string;
   };
 }
 
@@ -200,13 +206,29 @@ export class GrokClient implements LLMClient {
     const toolType = XAI_TOOL_TYPE_MAP[item.type];
     if (!toolType) return null;
 
+    let input: string | undefined;
+
+    // Web検索: action.query から抽出
+    if (item.action?.query) {
+      input = item.action.query;
+    }
+    // X検索等: input JSONから query を抽出
+    else if (item.input) {
+      try {
+        const parsed = JSON.parse(item.input);
+        input = parsed.query ?? item.input;
+      } catch {
+        input = item.input;
+      }
+    }
+
     return {
       type: "tool_call",
       id: item.id,
       name: toolType,
       displayName: TOOL_DISPLAY_NAMES[toolType],
       status,
-      ...(item.input ? { input: item.input } : {}),
+      ...(input ? { input } : {}),
     };
   }
 
@@ -288,6 +310,17 @@ export class GrokClient implements LLMClient {
       // ツール呼び出し完了
       if (event.type === "response.output_item.done" && event.item) {
         return this.parseToolCallEvent(event.item, "completed");
+      }
+
+      // 引用URL（Web検索結果）
+      if (event.type === "response.output_text.annotation.added" && event.annotation) {
+        if (event.annotation.type === "url_citation" && event.annotation.url) {
+          return {
+            type: "citation",
+            url: event.annotation.url,
+            title: event.annotation.title ?? "",
+          };
+        }
       }
 
       // 完了（usage含む）

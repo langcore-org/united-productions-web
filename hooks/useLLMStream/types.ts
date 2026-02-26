@@ -50,6 +50,14 @@ export interface ToolCallInfo {
 }
 
 /**
+ * 引用URL情報（Web検索結果）
+ */
+export interface CitationInfo {
+  url: string;
+  title: string;
+}
+
+/**
  * フォローアップ質問情報
  */
 export interface FollowUpInfo {

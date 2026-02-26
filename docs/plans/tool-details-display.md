@@ -1,117 +1,257 @@
-# ツール詳細表示機能 実装計画（テスト駆動）
+# ツール詳細表示・永続化 実装計画
 
-> **作成日**: 2026-02-26  
-> **Phase 1 完了日**: 2026-02-26  
-> **優先度**: Medium → High（リアルタイム体験向上のため）  
-> **関連**: ストリーミング表示改善、UX向上
+> **作成日**: 2026-02-26
+> **更新日**: 2026-02-26
+> **優先度**: High（リアルタイム体験向上 + データ永続化）
+> **関連**: [xAI Responses API 仕様](../specs/api-integration/xai-responses-api-spec.md)
 
 ---
 
-## 目標: リアルタイムで何が起きているかを可視化
+## 目標
 
-現在、ユーザーはツール使用中「Web検索を実行中」のような簡易表示しか見られない。以下の情報を**リアルタイム**で表示することで、AIがどの情報源に基づいて回答を生成しているかを理解できるようにする。
+ツール呼び出し情報（検索クエリ、引用URL、トークン使用量）を**リアルタイム表示**し、**DBに永続化**して、履歴復元時にも表示できるようにする。
 
 ```mermaid
-%%{init: {'theme': 'dark', 'themeVariables': { 'primaryColor': '#4a90d9', 'primaryTextColor': '#fff', 'primaryBorderColor': '#4a90d9', 'lineColor': '#666', 'secondaryColor': '#006100', 'tertiaryColor': '#fff'}}}%%
 sequenceDiagram
     actor User
     participant AI
     participant WebSearch
     participant XSearch
-    
+
     User->>AI: "OpenAI GPT-5について最新情報を検索して"
-    
-    Note over AI: [T+0.5s] 考え中...
-    
-    AI->>WebSearch: [T+1.2s] 開始
-    Note over WebSearch: 検索クエリを決定中...
-    
-    AI->>WebSearch: [T+1.8s] 実行中
-    Note over WebSearch: クエリ: "OpenAI GPT-5 最新情報 リリース日"
-    
-    AI->>XSearch: [T+2.5s] 実行中
-    Note over XSearch: クエリ: "GPT-5 from:OpenAI"
-    
-    WebSearch-->>AI: [T+3.2s] 完了 ✓
-    Note over WebSearch: 18件のソースを確認
-    
-    AI-->>User: [T+4.1s] 回答生成中...
-    Note over AI: OpenAIのGPT-5は、2025年8月7日に...<br/>引用 [1] [2] [3] ...をリアルタイム表示
+
+    Note over AI: 考え中...
+
+    AI->>WebSearch: 開始
+    Note over WebSearch: クエリ: "OpenAI GPT-5 latest news release date"
+
+    AI->>XSearch: 開始
+    Note over XSearch: クエリ: "(GPT-5) (from:OpenAI OR from:sama)"
+
+    WebSearch-->>AI: 完了 ✓
+    Note over WebSearch: 18件の引用URLを取得
+
+    XSearch-->>AI: 完了 ✓
+    Note over XSearch: 結果はAPI非公開（プライバシー保護）
+
+    AI-->>User: 回答をリアルタイム表示
+    Note over AI: 引用 [1] [2] [3] ... 付きで生成
 ```
 
 ---
 
-## 実装方針: 小さくテストしながら進める
+## 現状と課題
 
-### 基本ルール
+### 実装済み
 
-1. **1ステップ = 1コミット**: 各変更を独立したコミットとして記録
-2. **各ステップでビルド・テスト**: 必ず `npm run build` と手動テストを実行
-3. **問題があれば即座にロールバック**: `git revert` で前の状態に戻せるようにする
-4. **動作確認後に次へ**: 各ステップの「テスト項目」を全てクリアしてから次に進む
+| レイヤー | 状態 | 根拠 |
+|----------|------|------|
+| SSEEvent型に `input?` フィールド | 済 | `lib/llm/types.ts:37` |
+| GrokClientの `parseToolCallEvent` | 済（不完全） | `lib/llm/clients/grok.ts:196-211` |
+| ToolCallMessage UIの基本表示 | 済 | `components/chat/messages/ToolCallMessage.tsx` |
+| useLLMStreamでtoolCallsをstate管理 | 済 | `hooks/useLLMStream/index.ts:43` |
 
-### 実装ステップ一覧
+### 未実装（本プランで対応）
+
+| 課題 | 影響 |
+|------|------|
+| Web検索クエリが取得できていない | `XAIStreamEvent.item` の型に `action` がない。Web検索は `action.query` にクエリが入るが、現在の型では `item.input` しか見ていない |
+| X検索クエリがJSON文字列のまま | `input` が `{"query":"...","limit":10}` というJSON文字列。パースしてquery部分を抽出する必要がある |
+| 引用URL（citations）が未取得 | `response.output_text.annotation.added` イベントを処理していない |
+| DBにツール情報が保存されない | ResearchMessageに `content` と `thinking` しかない |
+| API routeがツール情報を送受信しない | saveRequestSchemaに `toolCalls` / `citations` / `usage` がない |
+| Message型にツール情報がない | FeatureChat.tsxの `Message` インターフェースが `content` のみ |
+| 履歴復元時にツール情報が失われる | ページリロードでtoolCalls/citations/usageが全て消える |
+
+---
+
+## DB設計
+
+### ResearchMessage への追加カラム
+
+```prisma
+model ResearchMessage {
+  id        String       @id @default(uuid())
+  chatId    String
+  chat      ResearchChat @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  role      String
+  content   String       @db.Text
+  thinking  String?      @db.Text
+
+  // usage（1:1 → カラム展開）
+  inputTokens   Int?
+  outputTokens  Int?
+  costUsd       Float?
+
+  // toolCalls・citations（1:N → Json）
+  toolCallsJson Json?
+  citationsJson Json?
+
+  createdAt DateTime @default(now())
+  @@index([chatId, createdAt])
+}
+```
+
+### 設計判断の理由
+
+- **usage → カラム**: 1メッセージにつき1セット。ほぼ全assistantメッセージにある。`WHERE costUsd > 0.1` のような直接クエリが書ける
+- **toolCalls → Json**: 1メッセージに0〜6件（可変長）。用途は保存→復元表示が主。JsonbならPostgresの関数で集計も可能
+- **citations → Json**: 同上。0〜18件以上（可変長）。用途は表示のみ
+
+### 具体的なデータ例
+
+調査スクリプト（`scripts/investigate-tool-response.ts`）の実データに基づく。
+
+**ユーザー入力**: `"OpenAI GPT-5について最新情報を検索して"`
+
+#### userメッセージ行
+
+| カラム | 値 |
+|--------|-----|
+| role | `USER` |
+| content | `OpenAI GPT-5について最新情報を検索して` |
+| inputTokens | `null` |
+| outputTokens | `null` |
+| costUsd | `null` |
+| toolCallsJson | `null` |
+| citationsJson | `null` |
+
+#### assistantメッセージ行
+
+| カラム | 値 |
+|--------|-----|
+| role | `ASSISTANT` |
+| content | `### OpenAI GPT-5の最新情報...（本文）` |
+| inputTokens | `11716` |
+| outputTokens | `2393` |
+| costUsd | `0.229637` |
+| toolCallsJson | 下記 |
+| citationsJson | 下記 |
+
+**toolCallsJson**:
+```json
+[
+  {
+    "id": "ws_xxxxx_call_001",
+    "name": "web_search",
+    "displayName": "Web検索",
+    "status": "completed",
+    "input": "OpenAI GPT-5 latest news release date"
+  },
+  {
+    "id": "ws_xxxxx_call_002",
+    "name": "web_search",
+    "displayName": "Web検索",
+    "status": "completed",
+    "input": "GPT-5 features capabilities benchmark"
+  },
+  {
+    "id": "ctc_xxxxx_xs_001",
+    "name": "x_search",
+    "displayName": "X検索",
+    "status": "completed",
+    "input": "(\"GPT-5\" OR \"GPT 5\") (from:OpenAI OR from:sama)"
+  },
+  {
+    "id": "ctc_xxxxx_xs_002",
+    "name": "x_search",
+    "displayName": "X検索",
+    "status": "completed",
+    "input": "OpenAI GPT-5 release updates"
+  }
+]
+```
+
+**citationsJson**（18件中抜粋）:
+```json
+[
+  { "url": "https://openai.com/index/introducing-gpt-5", "title": "1" },
+  { "url": "https://techcrunch.com/2025/08/07/openai-gpt-5/", "title": "2" },
+  { "url": "https://www.theverge.com/openai-gpt-5-release", "title": "3" }
+]
+```
+
+> **注**: `startIndex`/`endIndex` は保存しない。テキスト加工（マークダウン処理等）で位置がずれる可能性があるため、URLリストとして保持する。
+
+#### ツールなしの通常メッセージ
+
+| カラム | 値 |
+|--------|-----|
+| role | `ASSISTANT` |
+| content | `はい、他にも質問がありましたらお聞きください。` |
+| inputTokens | `1200` |
+| outputTokens | `45` |
+| costUsd | `0.001832` |
+| toolCallsJson | `null` |
+| citationsJson | `null` |
+
+---
+
+## X検索のcitationsについて
+
+xAI API調査（`docs/specs/api-integration/xai-responses-api-spec.md`）の結論：
+
+| ツール | citations取得 | 理由 |
+|--------|--------------|------|
+| **Web検索** | 可能 | `message.annotations` に `url_citation` として含まれる |
+| **X検索** | **不可** | プライバシー保護のため、APIレスポンスに結果が含まれない |
+
+X検索のcitationsは現時点ではAPIの制約で取得できない。将来xAI側が対応した場合に追加する。
+
+---
+
+## 実装ステップ
 
 ```mermaid
-%%{init: {'theme': 'dark', 'themeVariables': { 'primaryColor': '#4a90d9', 'primaryTextColor': '#fff', 'primaryBorderColor': '#4a90d9', 'lineColor': '#888', 'secondaryColor': '#2d3748', 'tertiaryColor': '#1a202c'}}}%%
 flowchart LR
-    A[Step 1<br/>型追加] --> B[Step 2<br/>GrokClient修正]
-    B --> C[Step 3<br/>UI表示]
+    A[Step 1<br/>クエリ抽出修正] --> B[Step 2<br/>Citations抽出]
+    B --> C[Step 3<br/>フロントcitations]
     C --> D[Step 4<br/>DBスキーマ]
-    D --> E[Step 5<br/>DB永続化]
-    E --> F[Step 6<br/>復元表示]
-    F --> G[Step 7<br/>引用表示]
-    
+    D --> E[Step 5<br/>API修正]
+    E --> F[Step 6-7<br/>保存・蓄積]
+    F --> G[Step 8<br/>履歴復元]
+    G --> H[Step 9<br/>Citations UI]
+
     style A fill:#e1f5fe
     style B fill:#e1f5fe
     style C fill:#e1f5fe
+    style D fill:#fff3e0
+    style E fill:#fff3e0
+    style F fill:#fff3e0
+    style G fill:#e8f5e9
+    style H fill:#e8f5e9
 ```
+
+各Stepで `npm run build` + `npx tsc --noEmit` + `npm run lint` を実行して確認。
+全Step完了後にユーザーが本番環境で動作確認する。
 
 ---
 
-## Step 1: 型定義の追加（15分）
-
-### 変更内容
-
-**対象**: `lib/llm/types.ts`
-
-```typescript
-// SSEEvent の tool_call に input を追加
-export type SSEEvent =
-  | { type: "start" }
-  | {
-      type: "tool_call";
-      id: string;
-      name: GrokToolType;
-      displayName: string;
-      status: "running" | "completed";
-      input?: string;  // ← 追加
-    }
-  // ... 他の型
-```
-
-### テスト項目
-
-- [ ] `npm run build` が成功する
-- [ ] TypeScriptエラーがない
-- [ ] `npx tsc --noEmit` で型チェックが通る
-
-### ロールバック方法
-
-```bash
-git revert HEAD
-```
-
----
-
-## Step 2: GrokClient の修正（30分）
-
-### 変更内容
+### Step 1: GrokClientのクエリ抽出修正
 
 **対象**: `lib/llm/clients/grok.ts`
 
+**問題**: `XAIStreamEvent.item` の型に `action` フィールドがない。Web検索は `item.action.query` にクエリが入るが、型定義が不足。
+
+**変更内容**:
+
+1. `XAIStreamEvent.item` の型に `action?: { type?: string; query?: string }` を追加
+2. `parseToolCallEvent` でWeb検索の場合 `item.action?.query` を抽出
+3. X検索の場合 `item.input`（JSON文字列）をパースして `query` を抽出
+
 ```typescript
-// parseToolCallEvent メソッドを修正
+// XAIStreamEvent.item の型修正
+item?: {
+  id: string;
+  type: string;
+  status: string;
+  name?: string;
+  input?: string;
+  call_id?: string;
+  action?: { type?: string; query?: string };  // 追加
+};
+
+// parseToolCallEvent の修正
 private parseToolCallEvent(
   item: NonNullable<XAIStreamEvent["item"]>,
   status: "running" | "completed",
@@ -119,602 +259,268 @@ private parseToolCallEvent(
   const toolType = XAI_TOOL_TYPE_MAP[item.type];
   if (!toolType) return null;
 
-  const baseEvent = {
-    type: "tool_call" as const,
+  let input: string | undefined;
+
+  // Web検索: action.query から抽出
+  if (item.action?.query) {
+    input = item.action.query;
+  }
+  // X検索: input JSONから query を抽出
+  else if (item.input) {
+    try {
+      const parsed = JSON.parse(item.input);
+      input = parsed.query ?? item.input;
+    } catch {
+      input = item.input;
+    }
+  }
+
+  return {
+    type: "tool_call",
     id: item.id,
     name: toolType,
     displayName: TOOL_DISPLAY_NAMES[toolType],
     status,
+    ...(input ? { input } : {}),
   };
-
-  // Web検索: action.query を抽出
-  if (item.type === "web_search_call" && item.action?.query) {
-    return {
-      ...baseEvent,
-      input: item.action.query,
-    };
-  }
-
-  // X検索: input をパース
-  if (item.type === "custom_tool_call" && item.input) {
-    try {
-      const inputData = JSON.parse(item.input);
-      return {
-        ...baseEvent,
-        input: inputData.query || item.input,
-      };
-    } catch {
-      return baseEvent;
-    }
-  }
-
-  return baseEvent;
 }
 ```
 
-### テスト項目
+---
 
-- [ ] `npm run build` が成功する
-- [ ] チャット画面を開いてメッセージを送信
-- [ ] ブラウザのDevToolsでConsoleを確認し、エラーがない
-- [ ] Networkタブで `/api/llm/stream` のレスポンスを確認
-  - `tool_call` イベントに `input` フィールドが含まれていることを確認
+### Step 2: Citations抽出の追加
 
-### デバッグ方法
+**対象**: `lib/llm/types.ts`, `lib/llm/clients/grok.ts`
+
+**問題**: `response.output_text.annotation.added` イベントを処理していないため、引用URLが取得できない。
+
+**変更内容**:
+
+1. SSEEvent型に `citation` イベントを追加
+2. `XAIStreamEvent` に `annotation` フィールドを追加
+3. `processEvent` で annotation イベントを処理
 
 ```typescript
-// 確認用ログ（一時的に追加）
-console.log("Tool call event:", {
-  type: item.type,
-  input: item.action?.query || item.input,
-  result: toolEvent,
-});
+// lib/llm/types.ts - SSEEvent に追加
+| {
+    type: "citation";
+    url: string;
+    title: string;
+  }
 ```
 
-### ロールバック方法
+```typescript
+// lib/llm/clients/grok.ts - XAIStreamEvent に追加
+annotation?: {
+  type: string;
+  url?: string;
+  title?: string;
+};
 
-```bash
-git revert HEAD
+// processEvent に追加
+if (event.type === "response.output_text.annotation.added" && event.annotation) {
+  if (event.annotation.type === "url_citation" && event.annotation.url) {
+    return {
+      type: "citation",
+      url: event.annotation.url,
+      title: event.annotation.title ?? "",
+    };
+  }
+}
 ```
 
 ---
 
-## Step 3: UI表示の追加（30分）
+### Step 3: フロントエンドのcitations対応
 
-### 変更内容
+**対象**: `hooks/useLLMStream/types.ts`, `hooks/useLLMStream/index.ts`
 
-**対象**: `components/chat/messages/ToolCallMessage.tsx`
+**変更内容**:
+
+1. `CitationInfo` 型を追加
+2. `useLLMStream` に `citations` state を追加
+3. `citation` イベント受信時に citations を蓄積
+4. `resetStream` で citations もリセット
 
 ```typescript
-// クエリ表示を追加（シンプルに）
-<div className="flex items-center gap-2">
-  {status === "running" ? (
-    <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
-  ) : (
-    <CheckCircle2 className="w-4 h-4 text-green-600" />
-  )}
-  <span className="font-medium">{config.label}</span>
-  
-  {toolCall.input && (
-    <code className="text-xs bg-blue-100/70 px-1.5 py-0.5 rounded text-blue-800 truncate max-w-[200px]">
-      {toolCall.input}
-    </code>
-  )}
-</div>
-```
-
-### テスト項目
-
-- [ ] `npm run build` が成功する
-- [ ] チャットでWeb検索を実行
-- [ ] **表示確認**: ツール実行中に検索クエリが表示される
-  - 例: "🔍 Web検索 `OpenAI GPT-5 最新情報`"
-- [ ] **表示確認**: X検索でもクエリが表示される
-- [ ] **レスポンシブ**: 長いクエリは切り詰めて表示される
-
-### 問題があれば確認
-
-```bash
-# フロントエンドのstateを確認
-cat components/chat/messages/ToolCallMessage.tsx | grep -A5 "toolCall.input"
-```
-
-### ロールバック方法
-
-```bash
-git revert HEAD
+// types.ts に追加
+export interface CitationInfo {
+  url: string;
+  title: string;
+}
 ```
 
 ---
 
-## Step 4: DBスキーマの追加（30分）
-
-### 変更内容
+### Step 4: DBスキーマ変更
 
 **対象**: `prisma/schema.prisma`
 
+**変更内容**: ResearchMessage に5カラム追加（全て nullable）
+
 ```prisma
-// 既存の ResearchMessage にリレーション追加
 model ResearchMessage {
-  id        String       @id @default(uuid())
-  chatId    String
-  role      String
-  content   String       @db.Text
-  thinking  String?      @db.Text
-  
-  // 新規: リレーション
-  toolCalls ToolCall[]
-  llmUsage  LLMUsage?
-  
-  createdAt DateTime     @default(now())
+  // ...既存フィールド...
 
-  @@index([chatId, createdAt])
-}
+  inputTokens   Int?
+  outputTokens  Int?
+  costUsd       Float?
+  toolCallsJson Json?
+  citationsJson Json?
 
-// 新規: ツール呼び出し履歴
-model ToolCall {
-  id              String   @id @default(uuid())
-  messageId       String
-  message         ResearchMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
-  
-  externalId      String?
-  toolType        String
-  name            String?
-  status          String
-  inputJson       Json?
-  inputQuery      String?  @db.Text
-  
-  createdAt       DateTime @default(now())
-  
-  @@index([messageId])
-}
-
-// 新規: LLM使用状況
-model LLMUsage {
-  id              String   @id @default(uuid())
-  messageId       String   @unique
-  message         ResearchMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
-  
-  inputTokens     Int
-  outputTokens    Int
-  totalTokens     Int
-  costUsd         Float
-  
-  createdAt       DateTime @default(now())
-  
-  @@index([messageId])
+  // ...既存インデックス...
 }
 ```
 
-### テスト項目
-
-- [ ] `npx prisma validate` が成功する
-- [ ] `npx prisma migrate dev --name add_tool_calls` が成功する
-- [ ] `npx prisma generate` が成功する
-- [ ] `npx prisma studio` で新しいテーブルが表示される
-
-### ロールバック方法
-
 ```bash
-# マイグレーションをリセット
-npx prisma migrate reset
-
-# またはマイグレーションファイルを削除
-git checkout prisma/migrations/xxx_add_tool_calls
+npx prisma migrate dev --name add_tool_details_and_usage
 ```
 
 ---
 
-## Step 5: DB永続化の実装（1時間）
+### Step 5: Message型の拡張とAPI route修正
 
-### 5.1: Message型の拡張（15分）
+**対象**: `components/ui/FeatureChat.tsx`, `app/api/chat/feature/route.ts`
 
-**対象**: `components/ui/FeatureChat.tsx`
+**変更内容**:
+
+1. `Message` インターフェースに `toolCalls`, `citations`, `usage` を追加
+2. `saveRequestSchema` を拡張
+3. POST: `createMany` で新カラムを保存
+4. GET: レスポンスに新カラムを含める
 
 ```typescript
+// FeatureChat.tsx
 export interface Message {
   id: string;
   role: "user" | "assistant";
   content: string;
   timestamp: Date;
   llmProvider?: LLMProvider;
-  // 追加
-  toolCalls?: {
+  toolCalls?: Array<{
     id: string;
     name: string;
     displayName: string;
     status: string;
     input?: string;
-  }[];
-  usage?: {
-    inputTokens: number;
-    outputTokens: number;
-    cost: number;
-  };
+  }>;
+  citations?: Array<{ url: string; title: string }>;
+  usage?: { inputTokens: number; outputTokens: number; cost: number };
 }
 ```
-
-### 5.2: API Routeの修正（30分）
-
-**対象**: `app/api/chat/feature/route.ts`
 
 ```typescript
-// POST: ツール呼び出し・Usageを保存
-export async function POST(request: NextRequest): Promise<Response> {
-  // ... バリデーション ...
-  
-  await prisma.$transaction(async (tx) => {
-    // メッセージ作成
-    const message = await tx.researchMessage.create({
-      data: {
-        chatId: chat.id,
-        role: msg.role.toUpperCase(),
-        content: msg.content,
-      },
-    });
-    
-    // toolCalls 保存
-    if (msg.toolCalls?.length > 0) {
-      await tx.toolCall.createMany({
-        data: msg.toolCalls.map(tc => ({
-          messageId: message.id,
-          toolType: tc.name + '_call',
-          status: tc.status,
-          inputQuery: tc.input,
-        }))
-      });
-    }
-    
-    // usage 保存
-    if (msg.usage) {
-      await tx.lLMUsage.create({
-        data: {
-          messageId: message.id,
-          inputTokens: msg.usage.inputTokens,
-          outputTokens: msg.usage.outputTokens,
-          totalTokens: msg.usage.inputTokens + msg.usage.outputTokens,
-          costUsd: msg.usage.cost,
-        }
-      });
-    }
-  });
-}
+// route.ts POST - createMany の data を修正
+data: messages.map((msg) => ({
+  chatId: chat.id,
+  role: msg.role.toUpperCase(),
+  content: msg.content,
+  inputTokens: msg.usage?.inputTokens ?? null,
+  outputTokens: msg.usage?.outputTokens ?? null,
+  costUsd: msg.usage?.cost ?? null,
+  toolCallsJson: msg.toolCalls?.length ? msg.toolCalls : undefined,
+  citationsJson: msg.citations?.length ? msg.citations : undefined,
+})),
+
+// route.ts GET - messages マッピングを修正
+const messages = chat.messages.map((m) => ({
+  id: m.id,
+  role: m.role.toLowerCase(),
+  content: m.content,
+  timestamp: m.createdAt,
+  llmProvider: chat.llmProvider,
+  toolCalls: m.toolCallsJson ?? undefined,
+  citations: m.citationsJson ?? undefined,
+  usage: m.inputTokens != null ? {
+    inputTokens: m.inputTokens,
+    outputTokens: m.outputTokens,
+    cost: m.costUsd,
+  } : undefined,
+})),
 ```
 
-### 5.3: useConversationSaveの修正（15分）
+---
+
+### Step 6: useConversationSaveの修正
 
 **対象**: `hooks/useConversationSave.ts`
 
-```typescript
-const saveConversation = useCallback(
-  async (updatedMessages: Message[], chatId: string | undefined) => {
-    const response = await fetch("/api/chat/feature", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        chatId,
-        featureId,
-        messages: updatedMessages.map((msg) => ({
-          ...msg,
-          toolCalls: msg.toolCalls,
-          usage: msg.usage,
-        })),
-      }),
-    });
-    // ...
-  },
-  [featureId, onChatCreated]
-);
+**変更内容**: `saveConversation` で toolCalls/citations/usage を送信する。
+
+現在の `body: JSON.stringify({ chatId, featureId, messages: updatedMessages })` で `Message` 型に追加したフィールドはそのまま送信される。`saveRequestSchema` の拡張（Step 5で対応済み）により受け入れ可能になる。
+
+---
+
+### Step 7: FeatureChatでのtoolCalls/citations/usage蓄積
+
+**対象**: `components/ui/FeatureChat.tsx`
+
+**変更内容**: ストリーム完了後に `useLLMStream` の `toolCalls`, `citations`, `usage` を `Message` に含めて保存する。
+
+現在の実装ではストリーム完了時に `content` のみでMessage を作成している。ここに `toolCalls`, `citations`, `usage` を追加する。
+
+---
+
+### Step 8: 履歴復元時のツール表示
+
+**対象**: `components/ui/FeatureChat.tsx` のメッセージ表示部分
+
+**変更内容**: 読み込んだ履歴メッセージに `toolCalls` がある場合、各メッセージの上に ToolCallMessage を表示する。
+
+---
+
+### Step 9: Citations UI（Web検索引用表示）
+
+**対象**: 新規 `components/chat/messages/CitationsList.tsx`
+
+**変更内容**: メッセージ末尾に引用URLリストを折りたたみ表示するコンポーネントを作成。
+
 ```
-
-### テスト項目
-
-- [ ] `npm run build` が成功する
-- [ ] チャットでメッセージを送信
-- [ ] Prisma Studioで確認
-  - [ ] `ToolCall` テーブルにレコードが追加されている
-  - [ ] `LLMUsage` テーブルにレコードが追加されている
-- [ ] コンソールにエラーがない
-
-### デバッグ方法
-
-```bash
-# Prisma Studioで確認
-npx prisma studio
-
-# またはDB直接確認
-npx prisma db execute --stdin <<EOF
-SELECT * FROM "ToolCall" ORDER BY "createdAt" DESC LIMIT 5;
-EOF
-```
-
-### ロールバック方法
-
-```bash
-git revert HEAD~2..HEAD  # 3コミット分（5.1-5.3）を戻す
+[メッセージ本文]
+▶ 参照ソース（18件）
+  [1] openai.com - Introducing GPT-5
+  [2] techcrunch.com - OpenAI GPT-5
+  ...
 ```
 
 ---
 
-## Step 6: 履歴復元表示（30分）
+## 検証方法
 
-### 6.1: API RouteのGET修正（15分）
+### 実装時（Claude実行）
 
-**対象**: `app/api/chat/feature/route.ts`
-
-```typescript
-// GET: ツール呼び出しを含めて返す
-export async function GET(request: NextRequest): Promise<Response> {
-  const chat = await prisma.researchChat.findFirst({
-    where: { id: chatId, userId },
-    include: {
-      messages: {
-        orderBy: { createdAt: "asc" },
-        include: {
-          toolCalls: true,
-          llmUsage: true,
-        }
-      },
-    },
-  });
-
-  const messages = chat.messages.map((m) => ({
-    id: m.id,
-    role: m.role.toLowerCase(),
-    content: m.content,
-    timestamp: m.createdAt,
-    llmProvider: chat.llmProvider,
-    toolCalls: m.toolCalls.map(tc => ({
-      id: tc.id,
-      name: tc.toolType.replace('_call', ''),
-      displayName: getToolDisplayName(tc.toolType),
-      status: tc.status,
-      input: tc.inputQuery,
-    })),
-    usage: m.llmUsage ? {
-      inputTokens: m.llmUsage.inputTokens,
-      outputTokens: m.llmUsage.outputTokens,
-      cost: m.llmUsage.costUsd,
-    } : null,
-  }));
-
-  return new Response(JSON.stringify({ messages }), {
-    headers: { "Content-Type": "application/json" },
-  });
-}
-```
-
-### 6.2: 動作確認（15分）
-
-### テスト項目
-
-- [ ] `npm run build` が成功する
-- [ ] チャットで会話を行う
-- [ ] ページをリロード
-- [ ] **確認**: 過去のツール使用履歴（クエリ）が表示される
-- [ ] **確認**: ツールアイコンの横にクエリが表示される
-
-### ロールバック方法
+各Stepのコード変更後に以下を実行：
 
 ```bash
-git revert HEAD
-```
-
----
-
-## Step 7: 引用URL表示（フル機能）（1-2時間）
-
-### 7.1: ToolCitationモデル追加（15分）
-
-**対象**: `prisma/schema.prisma`
-
-```prisma
-model ToolCitation {
-  id          String   @id @default(uuid())
-  toolCallId  String
-  toolCall    ToolCall @relation(fields: [toolCallId], references: [id], onDelete: Cascade)
-  
-  url         String   @db.Text
-  title       String?
-  domain      String?
-  
-  @@index([toolCallId])
-}
-
-// ToolCallにリレーション追加
-model ToolCall {
-  // ... 既存フィールド ...
-  citations   ToolCitation[]
-}
-```
-
-```bash
-npx prisma migrate dev --name add_citations
-```
-
-### 7.2: citations収集（30分）
-
-**対象**: `lib/llm/clients/grok.ts`
-
-```typescript
-// message イベントから citations を抽出
-private parseMessageCitations(item: any): Array<{url: string, title: string}> {
-  const citations: Array<{url: string, title: string}> = [];
-  
-  if (item.content) {
-    for (const content of item.content) {
-      if (content.annotations) {
-        for (const annotation of content.annotations) {
-          if (annotation.type === "url_citation") {
-            citations.push({
-              url: annotation.url,
-              title: annotation.title,
-            });
-          }
-        }
-      }
-    }
-  }
-  
-  return citations;
-}
-```
-
-### 7.3: WebSearchDetailsコンポーネント作成（30分）
-
-**対象**: `components/chat/messages/WebSearchDetails.tsx`
-
-```typescript
-"use client";
-
-import { useState } from "react";
-import { ChevronDown, ChevronUp, ExternalLink } from "lucide-react";
-
-interface WebSearchDetailsProps {
-  query: string;
-  citations: Array<{ url: string; title: string }>;
-}
-
-export function WebSearchDetails({ query, citations }: WebSearchDetailsProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
-  
-  if (citations.length === 0) {
-    return (
-      <div className="mt-2 text-xs text-blue-600/70">
-        検索: <span className="font-mono">{query}</span>
-      </div>
-    );
-  }
-  
-  return (
-    <div className="mt-2">
-      <div className="text-xs text-blue-700/80 mb-1">
-        <span className="font-medium">検索:</span>
-        <code className="ml-1.5 bg-blue-100/70 px-1.5 py-0.5 rounded text-blue-800">
-          {query}
-        </code>
-      </div>
-      
-      <button
-        onClick={() => setIsExpanded(!isExpanded)}
-        className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800"
-      >
-        {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-        <span>参照ソース ({citations.length}件)</span>
-      </button>
-      
-      {isExpanded && (
-        <div className="mt-1.5 space-y-1 max-h-40 overflow-y-auto">
-          {citations.map((citation, i) => (
-            <a
-              key={i}
-              href={citation.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-start gap-1.5 p-1.5 rounded bg-white/60 hover:bg-white/80 text-xs"
-            >
-              <span className="text-blue-500 font-medium shrink-0">[{i + 1}]</span>
-              <div className="min-w-0 flex-1">
-                <div className="text-blue-700 truncate hover:underline">
-                  {citation.title}
-                </div>
-                <div className="text-[10px] text-blue-400/80 truncate">
-                  {new URL(citation.url).hostname}
-                </div>
-              </div>
-              <ExternalLink className="w-3 h-3 text-blue-400 shrink-0" />
-            </a>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-```
-
-### 7.4: APIと保存ロジックの更新（15分）
-
-### テスト項目
-
-- [ ] `npm run build` が成功する
-- [ ] Web検索を実行
-- [ ] **表示確認**: 「参照ソース (N件) ▼」が表示される
-- [ ] **動作確認**: クリックで展開され、URLリストが表示される
-- [ ] **動作確認**: URLをクリックすると新規タブで開く
-- [ ] **永続化確認**: ページリロード後も引用URLが表示される
-
-### ロールバック方法
-
-```bash
-git revert HEAD~3..HEAD  # Step 7全体を戻す
-```
-
----
-
-## テストチェックリスト（総合）
-
-### 単体テスト実行
-
-```bash
-# 各ステップ後に実行
 npm run build
 npx tsc --noEmit
 npm run lint
-
-# 必要に応じて
-npm test -- --run
 ```
 
-### 手動テストシナリオ
+### 実装完了後（ユーザー確認）
 
-#### シナリオ1: 基本的なWeb検索
-1. チャットを開く
-2. "OpenAIについて教えて" と送信
-3. Web検索が実行されることを確認
-4. 検索クエリが表示されることを確認
-5. 回答が表示されることを確認
-6. ページをリロード
-7. 検索クエリが表示されたままであることを確認
+本番環境で以下を確認：
 
-#### シナリオ2: 複数ツール使用
-1. "GPT-5とClaudeの違いを教えて" と送信
-2. Web検索とX検索の両方が実行されることを確認
-3. 両方のクエリが表示されることを確認
-
-#### シナリオ3: エラーハンドリング
-1. ネットワークを切断してメッセージ送信
-2. エラーが適切に表示されることを確認
-3. ツール呼び出しが失敗してもアプリがクラッシュしないことを確認
+1. **基本動作**: チャットでWeb検索が発動するメッセージを送信し、クエリと引用URLが表示されるか
+2. **永続化**: ページリロード後もツール情報・引用・usage が復元されるか
+3. **既存データ**: 過去のチャット履歴が壊れていないか
+4. **エッジケース**: ツールなしの通常チャットが従来通り動作するか
 
 ---
 
 ## トラブルシューティング
 
-### よくある問題と対処
-
 | 問題 | 原因 | 対処 |
-|-----|------|------|
-| `input` が表示されない | GrokClientでinputが抽出されていない | DevToolsで `tool_call` イベントを確認 |
-| DB保存が失敗する | 型不一致 | PrismaスキーマとAPIの型を比較 |
-| 履歴が復元されない | GET APIでincludeを忘れている | `include: { toolCalls: true }` を確認 |
-| citationsが表示されない | parseMessageCitationsで抽出失敗 | console.logで中間結果を確認 |
-
-### 緊急時のロールバック
-
-```bash
-# 全変更を破棄して初期状態に戻す
-git stash
-git checkout main
-
-# または特定のステップまで戻す
-git log --oneline  # コミット履歴確認
-git reset --hard <commit-hash>
-```
+|------|------|------|
+| Web検索クエリが空 | `action.query` が `output_item.added` 時点では空、`done` で確定 | `done` イベントのみで `input` を更新 |
+| X検索inputがJSON文字列で表示 | パース漏れ | `parseToolCallEvent` の JSON.parse を確認 |
+| 既存チャットでマイグレーションエラー | nullable でないカラムを追加した | 全カラム nullable（`?`付き）であることを確認 |
+| リロード後にtoolCallsが表示されない | GET APIで `toolCallsJson` を返していない | route.ts GET のレスポンスマッピングを確認 |
 
 ---
 
 ## 関連ドキュメント
 
-- [xAI Responses API 仕様](../specs/api-integration/xai-responses-api-spec.md)
-- [DB設計詳細](./tool-details-display.md#db設計案b-独立テーブル)
-- `scripts/investigate-tool-response.ts`
+- [xAI Responses API 仕様](../specs/api-integration/xai-responses-api-spec.md) - ストリームイベントの実データ
+- [3月実装プラン](./implementation-plan-2026-03.md) - 全体スケジュール
+- [ストリーミング改善バックログ](../backlog/todo-featurechat-streaming-improvements.md) - 既知の課題

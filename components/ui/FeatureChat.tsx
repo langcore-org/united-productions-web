@@ -4,8 +4,9 @@ import { Loader2, MessageSquare } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { StreamingSteps } from "@/components/chat";
 import { FollowUpSuggestions } from "@/components/chat/FollowUpSuggestions";
+import { CitationsList } from "@/components/chat/messages/CitationsList";
+import { ToolCallMessage } from "@/components/chat/messages/ToolCallMessage";
 import { type PromptSuggestion, PromptSuggestions } from "@/components/chat/PromptSuggestions";
-
 import { useConversationSave } from "@/hooks/useConversationSave";
 import { useLLMStream } from "@/hooks/useLLMStream";
 import { DEFAULT_PROVIDER } from "@/lib/llm/config";
@@ -22,6 +23,15 @@ export interface Message {
   content: string;
   timestamp: Date;
   llmProvider?: LLMProvider;
+  toolCalls?: Array<{
+    id: string;
+    name: string;
+    displayName: string;
+    status: "running" | "completed";
+    input?: string;
+  }>;
+  citations?: Array<{ url: string; title: string }>;
+  usage?: { inputTokens: number; outputTokens: number; cost: number };
 }
 
 export interface FeatureChatProps {
@@ -86,6 +96,7 @@ export function FeatureChat({
     error,
     usage,
     toolCalls,
+    citations,
     summarizationEvents,
     followUp,
     startStream,
@@ -152,6 +163,11 @@ export function FeatureChat({
         content,
         timestamp: new Date(),
         llmProvider: provider,
+        toolCalls: toolCalls.length > 0 ? toolCalls : undefined,
+        citations: citations.length > 0 ? citations : undefined,
+        usage: usage
+          ? { inputTokens: usage.inputTokens, outputTokens: usage.outputTokens, cost: usage.cost }
+          : undefined,
       };
       setMessages((prev) => {
         const newMessages = [...prev, assistantMessage];
@@ -160,7 +176,17 @@ export function FeatureChat({
       });
       resetStream();
     }
-  }, [isComplete, content, currentChatId, provider, resetStream, saveConversation]);
+  }, [
+    isComplete,
+    content,
+    currentChatId,
+    provider,
+    toolCalls,
+    citations,
+    usage,
+    resetStream,
+    saveConversation,
+  ]);
 
   const buildStreamMessages = useCallback((userContent: string, history: Message[]) => {
     const conversationHistory = history.map((m) => ({ role: m.role, content: m.content }));
@@ -308,13 +334,34 @@ export function FeatureChat({
         ) : (
           <div className="py-4">
             {messages.map((message) => (
-              <MessageBubble
-                key={message.id}
-                role={message.role}
-                content={message.content}
-                timestamp={message.timestamp}
-                llmProvider={message.llmProvider}
-              />
+              <div key={message.id}>
+                {/* 履歴復元時: 保存されたツール呼び出しを表示 */}
+                {message.toolCalls?.map((tc) => (
+                  <ToolCallMessage
+                    key={tc.id}
+                    toolCall={{
+                      id: tc.id,
+                      name: tc.name,
+                      displayName: tc.displayName,
+                      status: tc.status === "completed" ? "completed" : "running",
+                      input: tc.input,
+                    }}
+                    status={tc.status === "completed" ? "completed" : "running"}
+                    provider={message.llmProvider ?? provider}
+                  />
+                ))}
+                <MessageBubble
+                  role={message.role}
+                  content={message.content}
+                  timestamp={message.timestamp}
+                  llmProvider={message.llmProvider}
+                />
+                {message.citations && message.citations.length > 0 && (
+                  <div className="px-4 max-w-3xl mx-auto">
+                    <CitationsList citations={message.citations} />
+                  </div>
+                )}
+              </div>
             ))}
 
             {/* ストリーミング中または完了後（ツール・要約情報がある場合）は StreamingSteps を表示 */}

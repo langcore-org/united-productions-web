@@ -4,6 +4,8 @@
  * @created 2026-02-22 11:50
  */
 
+export type { Citation } from "./CitationsList";
+export { CitationsList } from "./CitationsList";
 export { ContentMessage } from "./ContentMessage";
 export type { ErrorMessageProps } from "./ErrorMessage";
 export { ErrorMessage } from "./ErrorMessage";

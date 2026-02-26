@@ -162,6 +162,16 @@ model ResearchMessage {
   role      String       // USER | ASSISTANT | SYSTEM
   content   String       @db.Text
   thinking  String?      @db.Text
+
+  // usage（1:1 → カラム展開）
+  inputTokens   Int?
+  outputTokens  Int?
+  costUsd       Float?
+
+  // toolCalls・citations（1:N → Json）
+  toolCallsJson Json?
+  citationsJson Json?
+
   createdAt DateTime     @default(now())
 
   @@index([chatId, createdAt])

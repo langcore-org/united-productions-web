@@ -14,6 +14,7 @@ import { LLMApiError, streamLLMResponse } from "@/lib/api/llm-client";
 import { ClientMemory } from "@/lib/llm/memory/client-memory";
 import type { LLMMessage, LLMProvider } from "@/lib/llm/types";
 import type {
+  CitationInfo,
   FollowUpInfo,
   StreamPhase,
   SummarizationEvent,
@@ -21,7 +22,14 @@ import type {
   UsageInfo,
 } from "./types";
 
-export type { FollowUpInfo, StreamPhase, SummarizationEvent, UsageInfo, ToolCallInfo };
+export type {
+  CitationInfo,
+  FollowUpInfo,
+  StreamPhase,
+  SummarizationEvent,
+  UsageInfo,
+  ToolCallInfo,
+};
 
 export interface UseLLMStreamOptions {
   /** 要約開始閾値（トークン数）。デフォルト: 100000 */
@@ -41,6 +49,7 @@ export function useLLMStream(options: UseLLMStreamOptions = {}) {
   const [error, setError] = useState<string | null>(null);
   const [usage, setUsage] = useState<UsageInfo | null>(null);
   const [toolCalls, setToolCalls] = useState<ToolCallInfo[]>([]);
+  const [citations, setCitations] = useState<CitationInfo[]>([]);
   const [summarizationEvents, setSummarizationEvents] = useState<SummarizationEvent[]>([]);
   const [followUp, setFollowUp] = useState<FollowUpInfo>({
     questions: [],
@@ -121,6 +130,7 @@ export function useLLMStream(options: UseLLMStreamOptions = {}) {
       setError(null);
       setUsage(null);
       setToolCalls([]);
+      setCitations([]);
       setSummarizationEvents([]);
       setFollowUp({ questions: [], isLoading: false, error: null });
 
@@ -202,6 +212,14 @@ export function useLLMStream(options: UseLLMStreamOptions = {}) {
               });
               break;
 
+            case "citation":
+              setCitations((prev) => {
+                // 重複URL除外
+                if (prev.some((c) => c.url === event.url)) return prev;
+                return [...prev, { url: event.url, title: event.title }];
+              });
+              break;
+
             case "done":
               setUsage(event.usage);
               setPhase("complete");
@@ -243,6 +261,7 @@ export function useLLMStream(options: UseLLMStreamOptions = {}) {
     setError(null);
     setUsage(null);
     setToolCalls([]);
+    setCitations([]);
     setSummarizationEvents([]);
     setFollowUp({ questions: [], isLoading: false, error: null });
     // Memoryもクリア
@@ -266,6 +285,7 @@ export function useLLMStream(options: UseLLMStreamOptions = {}) {
     error,
     usage,
     toolCalls,
+    citations,
     summarizationEvents,
     followUp,
     startStream,

@@ -88,6 +88,16 @@ export async function GET(request: NextRequest): Promise<Response> {
         content: m.content,
         timestamp: m.createdAt,
         llmProvider: chat.llmProvider,
+        toolCalls: (m.toolCallsJson as Array<{ id: string; name: string; displayName: string; status: string; input?: string }>) ?? undefined,
+        citations: (m.citationsJson as Array<{ url: string; title: string }>) ?? undefined,
+        usage:
+          m.inputTokens != null
+            ? {
+                inputTokens: m.inputTokens,
+                outputTokens: m.outputTokens,
+                cost: m.costUsd,
+              }
+            : undefined,
       }));
 
       return new Response(JSON.stringify({ messages }), {
@@ -150,6 +160,25 @@ const saveRequestSchema = z.object({
       content: z.string(),
       timestamp: z.string().or(z.date()).optional(),
       llmProvider: z.string().optional(),
+      toolCalls: z
+        .array(
+          z.object({
+            id: z.string(),
+            name: z.string(),
+            displayName: z.string(),
+            status: z.string(),
+            input: z.string().optional(),
+          }),
+        )
+        .optional(),
+      citations: z.array(z.object({ url: z.string(), title: z.string() })).optional(),
+      usage: z
+        .object({
+          inputTokens: z.number(),
+          outputTokens: z.number(),
+          cost: z.number(),
+        })
+        .optional(),
     }),
   ),
 });
@@ -226,6 +255,11 @@ export async function POST(request: NextRequest): Promise<Response> {
           chatId: chat?.id,
           role: msg.role.toUpperCase(),
           content: msg.content,
+          inputTokens: msg.usage?.inputTokens ?? null,
+          outputTokens: msg.usage?.outputTokens ?? null,
+          costUsd: msg.usage?.cost ?? null,
+          toolCallsJson: msg.toolCalls?.length ? msg.toolCalls : undefined,
+          citationsJson: msg.citations?.length ? msg.citations : undefined,
         })),
       });
     }
