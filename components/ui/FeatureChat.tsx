@@ -1,7 +1,7 @@
 "use client";
 
 import { Loader2, MessageSquare } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { StreamingSteps } from "@/components/chat";
 import { FollowUpSuggestions } from "@/components/chat/FollowUpSuggestions";
 import { CitationsList } from "@/components/chat/messages/CitationsList";
@@ -84,10 +84,7 @@ export function FeatureChat({
   const [selectedProgramId, setSelectedProgramId] = useState<string>("all");
 
   const provider: LLMProvider = initialProvider;
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const messagesContainerRef = useRef<HTMLDivElement>(null);
-  const [isUserScrolling, setIsUserScrolling] = useState(false);
-  const userScrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
 
   const {
     content,
@@ -116,43 +113,6 @@ export function FeatureChat({
       setCurrentChatId(undefined);
     }
   }, [initialChatId, loadConversation, setCurrentChatId]);
-
-  // スクロール制御: ユーザーが手動スクロールした場合は自動スクロールを一時停止
-  useEffect(() => {
-    const container = messagesContainerRef.current;
-    if (!container) return;
-
-    const handleScroll = () => {
-      setIsUserScrolling(true);
-      if (userScrollTimeoutRef.current) {
-        clearTimeout(userScrollTimeoutRef.current);
-      }
-      // ユーザーが最下部に近い場合は自動スクロールを再有効化
-      const isNearBottom =
-        container.scrollHeight - container.scrollTop - container.clientHeight < 100;
-      if (isNearBottom) {
-        userScrollTimeoutRef.current = setTimeout(() => setIsUserScrolling(false), 500);
-      } else {
-        userScrollTimeoutRef.current = setTimeout(() => setIsUserScrolling(false), 3000);
-      }
-    };
-
-    container.addEventListener("scroll", handleScroll, { passive: true });
-    return () => {
-      container.removeEventListener("scroll", handleScroll);
-      if (userScrollTimeoutRef.current) {
-        clearTimeout(userScrollTimeoutRef.current);
-      }
-    };
-  }, []);
-
-  // メッセージ追加時に自動スクロール（ユーザーが手動スクロール中でない場合のみ）
-  // biome-ignore lint/correctness/useExhaustiveDependencies: messages.lengthは意図的な依存（メッセージ追加時にスクロール）
-  useEffect(() => {
-    if (!isUserScrolling) {
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }
-  }, [messages.length, isUserScrolling]);
 
   // ストリーミング完了時にメッセージを保存
   useEffect(() => {
@@ -287,7 +247,7 @@ export function FeatureChat({
       />
 
       {/* Messages */}
-      <div ref={messagesContainerRef} className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto">
         {isLoadingHistory ? (
           <div className="flex items-center justify-center h-full">
             <div className="flex items-center gap-3 text-gray-500">
@@ -410,7 +370,6 @@ export function FeatureChat({
               </div>
             )}
 
-            <div ref={messagesEndRef} />
           </div>
         )}
       </div>
