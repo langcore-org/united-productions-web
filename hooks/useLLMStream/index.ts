@@ -31,6 +31,7 @@ export function useLLMStream(options: UseLLMStreamOptions = {}) {
 
   const [content, setContent] = useState("");
   const [isComplete, setIsComplete] = useState(true);
+  const [isPending, setIsPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [usage, setUsage] = useState<UsageInfo | null>(null);
   const [toolCalls, setToolCalls] = useState<ToolCallInfo[]>([]);
@@ -85,6 +86,7 @@ export function useLLMStream(options: UseLLMStreamOptions = {}) {
     ): Promise<void> => {
       cleanup();
 
+      setIsPending(true);
       setContent("");
       setIsComplete(false);
       setError(null);
@@ -177,6 +179,7 @@ export function useLLMStream(options: UseLLMStreamOptions = {}) {
             case "done":
               setUsage(event.usage);
               setIsComplete(true);
+              setIsPending(false);
               // ストリーミング完了後、フォローアップ質問を生成（非同期で実行）
               void generateFollowUp();
               break;
@@ -213,6 +216,7 @@ export function useLLMStream(options: UseLLMStreamOptions = {}) {
     cleanup();
     setContent("");
     setIsComplete(true);
+    setIsPending(false);
     setError(null);
     setUsage(null);
     setToolCalls([]);
@@ -234,6 +238,7 @@ export function useLLMStream(options: UseLLMStreamOptions = {}) {
   return {
     content,
     isComplete,
+    isPending,
     error,
     usage,
     toolCalls,

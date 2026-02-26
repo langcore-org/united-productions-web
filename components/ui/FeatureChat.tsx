@@ -79,8 +79,18 @@ export function FeatureChat({
   const [isUserScrolling, setIsUserScrolling] = useState(false);
   const userScrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const { content, isComplete, error, usage, toolCalls, summarizationEvents, followUp, startStream, resetStream } =
-    useLLMStream();
+  const {
+    content,
+    isComplete,
+    isPending,
+    error,
+    usage,
+    toolCalls,
+    summarizationEvents,
+    followUp,
+    startStream,
+    resetStream,
+  } = useLLMStream();
 
   const { currentChatId, setCurrentChatId, isLoadingHistory, loadConversation, saveConversation } =
     useConversationSave({ featureId, initialChatId, onChatCreated });
@@ -209,7 +219,7 @@ export function FeatureChat({
     }
   };
 
-  const isStreaming = !isComplete && !!content;
+  const isStreaming = isPending;
   const lastAssistantMessage = [...messages].reverse().find((m) => m.role === "assistant");
   const hasMessages = messages.length > 0;
 
@@ -258,7 +268,7 @@ export function FeatureChat({
               <span className="text-sm">履歴を読み込み中...</span>
             </div>
           </div>
-        ) : !hasMessages && !isStreaming ? (
+        ) : !hasMessages && !isPending ? (
           <div className="flex flex-col items-center justify-center h-full text-center px-6">
             <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-gray-900/20 to-gray-600/10 flex items-center justify-center border border-gray-900/20 mb-4">
               <MessageSquare className="w-8 h-8 text-gray-900" />
@@ -305,7 +315,7 @@ export function FeatureChat({
               />
             ))}
 
-            {isStreaming && (
+            {isPending && (
               <StreamingSteps
                 content={content}
                 toolCalls={toolCalls}
@@ -317,7 +327,7 @@ export function FeatureChat({
             )}
 
             {/* フォローアップサジェスト（動的生成） */}
-            {!isStreaming && hasMessages && lastAssistantMessage && (
+            {!isPending && hasMessages && lastAssistantMessage && (
               <div className="px-4 py-4 max-w-3xl mx-auto">
                 <FollowUpSuggestions
                   suggestions={followUp.questions.map((q, i) => ({ id: String(i), text: q }))}
@@ -328,7 +338,7 @@ export function FeatureChat({
             )}
 
             {/* 固定プロンプトサジェスト（設定されている場合） */}
-            {!isStreaming &&
+            {!isPending &&
               hasMessages &&
               lastAssistantMessage &&
               promptSuggestions.length > 0 &&
