@@ -85,7 +85,6 @@ export function FeatureChat({
 
   const provider: LLMProvider = initialProvider;
 
-
   const {
     content,
     isComplete,
@@ -369,7 +368,6 @@ export function FeatureChat({
                 <p className="text-red-300/80">{error}</p>
               </div>
             )}
-
           </div>
         )}
       </div>

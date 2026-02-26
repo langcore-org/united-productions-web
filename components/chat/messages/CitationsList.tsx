@@ -25,21 +25,21 @@ function getDisplayText(citation: Citation): string {
     const pathname = url.pathname;
 
     // X/Twitterポスト
-    const xPostMatch = pathname.match(/^\/i\/status\/(\d+)$/) ||
-                       pathname.match(/^\/\w+\/status\/(\d+)$/);
-    if ((hostname === 'x.com' || hostname === 'twitter.com') && xPostMatch) {
+    const xPostMatch =
+      pathname.match(/^\/i\/status\/(\d+)$/) || pathname.match(/^\/\w+\/status\/(\d+)$/);
+    if ((hostname === "x.com" || hostname === "twitter.com") && xPostMatch) {
       return `X Post: ${xPostMatch[1]}`;
     }
 
     // X/Twitterユーザー
     const xUserMatch = pathname.match(/^\/i\/user\/(\d+)$/);
-    if ((hostname === 'x.com' || hostname === 'twitter.com') && xUserMatch) {
+    if ((hostname === "x.com" || hostname === "twitter.com") && xUserMatch) {
       return `X User: ${xUserMatch[1]}`;
     }
 
     // その他: ドメイン名を表示
     // www. プレフィックスは削除
-    const domain = hostname.replace(/^www\./, '');
+    const domain = hostname.replace(/^www\./, "");
     return domain;
   } catch {
     // URLパース失敗時は短縮表示

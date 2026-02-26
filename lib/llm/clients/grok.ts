@@ -109,6 +109,8 @@ interface XAIStreamEvent {
     input?: string;
     call_id?: string;
     action?: { type?: string; query?: string };
+    // Note: contentフィールドは使用していない（Inline annotationsを使用）
+    // 詳細: https://kimi.com/kimi-docs/backlog/research-xai-citations-behavior
   };
   annotation?: {
     type: string;
@@ -296,6 +298,9 @@ export class GrokClient implements LLMClient {
     const decoder = new TextDecoder();
     let buffer = "";
 
+    // citationsの重複を管理（調査結果: Inline annotations内で重複あり）
+    const seenCitationUrls = new Set<string>();
+
     const processEvent = (event: XAIStreamEvent): SSEEvent | null => {
       // テキストチャンク
       if (event.type === "response.output_text.delta" && event.delta) {
@@ -309,18 +314,28 @@ export class GrokClient implements LLMClient {
 
       // ツール呼び出し完了
       if (event.type === "response.output_item.done" && event.item) {
+        // Message annotationsは無視（Inline annotationsと同じデータのため）
+        // 調査結果: https://kimi.com/kimi-docs/backlog/research-xai-citations-behavior
         return this.parseToolCallEvent(event.item, "completed");
       }
 
-      // 引用URL（Web検索結果）
+      // 引用URL（Inline annotationsのみ使用）
+      // 調査結果: InlineとMessageは同じcitationsセットを返すため、Inlineのみで十分
       if (event.type === "response.output_text.annotation.added" && event.annotation) {
         if (event.annotation.type === "url_citation" && event.annotation.url) {
+          // 重複除去（同じURLが本文中で複数回参照される場合がある）
+          if (seenCitationUrls.has(event.annotation.url)) {
+            return null;
+          }
+          seenCitationUrls.add(event.annotation.url);
+
           return {
             type: "citation",
             url: event.annotation.url,
             title: event.annotation.title ?? "",
           };
         }
+        return null;
       }
 
       // 完了（usage含む）
