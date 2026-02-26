@@ -251,10 +251,7 @@ describe("useLLMStream", () => {
 
     it("エラー時は phase=error, isPending=false", async () => {
       mockStreamLLMResponse.mockReturnValue(
-        createMockStream([
-          { type: "start" },
-          { type: "error", message: "LLM error" },
-        ])(),
+        createMockStream([{ type: "start" }, { type: "error", message: "LLM error" }])(),
       );
 
       const { result } = renderHook(() => useLLMStream());

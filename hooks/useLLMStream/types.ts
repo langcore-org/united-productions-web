@@ -20,11 +20,11 @@ export type { SummarizationEvent };
  *   (complete/error/cancelled) → idle (resetStream時)
  */
 export type StreamPhase =
-  | "idle"       // 初期状態・resetStream後
-  | "preparing"  // memory前処理中（要約処理など）、LLMリクエスト準備中
-  | "streaming"  // LLMからレスポンス受信中
-  | "complete"   // 正常完了
-  | "error"      // エラー終了
+  | "idle" // 初期状態・resetStream後
+  | "preparing" // memory前処理中（要約処理など）、LLMリクエスト準備中
+  | "streaming" // LLMからレスポンス受信中
+  | "complete" // 正常完了
+  | "error" // エラー終了
   | "cancelled"; // キャンセル
 
 /**
