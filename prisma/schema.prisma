@@ -163,6 +163,9 @@ model ResearchMessage {
   content   String       @db.Text
   thinking  String?      @db.Text
 
+  // 使用モデル（メッセージ単位で記録）
+  llmProvider LLMProvider?
+
   // usage（1:1 → カラム展開）
   inputTokens   Int?
   outputTokens  Int?

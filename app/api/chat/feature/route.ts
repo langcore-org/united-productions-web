@@ -87,7 +87,7 @@ export async function GET(request: NextRequest): Promise<Response> {
         role: m.role.toLowerCase(),
         content: m.content,
         timestamp: m.createdAt,
-        llmProvider: chat.llmProvider,
+        llmProvider: m.llmProvider ?? chat.llmProvider,
         toolCalls:
           (m.toolCallsJson as Array<{
             id: string;
@@ -262,6 +262,7 @@ export async function POST(request: NextRequest): Promise<Response> {
           chatId: chat?.id,
           role: msg.role.toUpperCase(),
           content: msg.content,
+          llmProvider: msg.llmProvider ?? undefined,
           inputTokens: msg.usage?.inputTokens ?? null,
           outputTokens: msg.usage?.outputTokens ?? null,
           costUsd: msg.usage?.cost ?? null,
