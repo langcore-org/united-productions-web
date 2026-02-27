@@ -3,7 +3,7 @@
 import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 import { type ChatFeatureId, getChatConfig } from "@/lib/chat/chat-config";
-import { hasWelcomeMessage } from "@/lib/chat/welcome-messages";
+import { needsProgramSelection } from "@/lib/chat/welcome-messages";
 import { ProgramSelectionView } from "./ProgramSelectionView";
 
 // FeatureChatを動的インポート
@@ -62,8 +62,7 @@ export function ChatPage({ featureId, chatId, onChatCreated }: ChatPageProps) {
   }
 
   // 番組選択が必要な機能で、まだ番組が選択されていない場合は選択画面を表示
-  const needsProgramSelection = hasWelcomeMessage(featureId);
-  if (needsProgramSelection && selectedProgramId === null) {
+  if (needsProgramSelection(featureId) && selectedProgramId === null) {
     return (
       <ProgramSelectionView
         featureTitle={config.title}
