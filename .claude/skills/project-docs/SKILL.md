@@ -1,6 +1,6 @@
 ---
 name: project-docs
-description: Manage project documentation in docs/ directory. Use when working with backlog items, implementation plans, lessons learned, or documentation maintenance. Triggers include "backlogに追加", "計画書を作成", "学びを記録", "ドキュメント整理", or any docs/ related tasks.
+description: docs/ディレクトリのプロジェクトドキュメント管理。バックログ項目、実装計画、学びの記録、ドキュメントメンテナンスなどで使用。
 ---
 
 # Project Docs

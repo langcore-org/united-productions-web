@@ -1,6 +1,6 @@
 ---
 name: code-care
-description: Code quality and type safety management. Use when checking code health, fixing type issues, or managing database migrations. Triggers include "コード健全性チェック", "型エラーを修正", "as any を除去", "マイグレーション作成", or any code quality related tasks.
+description: コード品質と型安全性の管理。コード健全性チェック、型エラーの修正、as anyの除去、マイグレーション作成など、コード品質に関連するタスクで使用。
 ---
 
 # Code Care
