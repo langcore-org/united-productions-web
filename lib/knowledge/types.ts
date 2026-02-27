@@ -74,6 +74,32 @@ export interface SponsorInfo {
   slot?: string;
 }
 
+/** 個別放送回の情報 */
+export interface EpisodeInfo {
+  /** 回数（第X回） */
+  episodeNumber?: string;
+  /** 放送日（YYYY-MM-DD形式） */
+  broadcastDate: string;
+  /** 放送時間（その回固有の時間があれば） */
+  broadcastTime?: string;
+  /** タイトル/サブタイトル */
+  title?: string;
+  /** 内容概要 */
+  content: string;
+  /** 出演者・ゲスト（メインMC以外） */
+  guests: string[];
+  /** コーナー詳細 */
+  corners?: {
+    name: string;
+    description: string;
+    guests?: string[];
+  }[];
+  /** 視聴率（あれば） */
+  rating?: string;
+  /** 備考 */
+  notes?: string;
+}
+
 /** 番組情報（詳細版） */
 export interface ProgramInfo {
   /** 番組ID（URL-friendly） */
@@ -164,6 +190,9 @@ export interface ProgramInfo {
   spinoffs?: string[];
   /** 過去のSP */
   pastSpecials?: string[];
+
+  /** 直近の放送回詳細（最新5回程度） */
+  recentEpisodes?: EpisodeInfo[];
 
   /** キーワード・タグ */
   tags?: string[];
