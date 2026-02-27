@@ -11,7 +11,6 @@ export interface ProgramSelectionViewProps {
 
 export function ProgramSelectionView({
   featureTitle,
-  featureDescription,
   onSelect,
 }: ProgramSelectionViewProps) {
   // 全番組選択肢（全番組 + 各番組）
@@ -31,43 +30,40 @@ export function ProgramSelectionView({
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto">
-        <div className="max-w-3xl mx-auto px-6 py-12">
+        <div className="max-w-5xl mx-auto px-6 py-6">
           {/* Title Section */}
-          <div className="text-center mb-12">
-            <h2 className="text-2xl font-bold text-gray-900 mb-3">
+          <div className="text-center mb-6">
+            <h2 className="text-lg font-semibold text-gray-900">
               どの番組についてお調べしますか？
             </h2>
-            {featureDescription && (
-              <p className="text-gray-500">{featureDescription}</p>
-            )}
           </div>
 
-          {/* Program Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Program Grid - 3列レイアウト */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             {options.map((option) => (
               <button
                 key={option.value}
                 type="button"
                 onClick={() => onSelect(option.value)}
-                className="group flex items-center justify-between p-5 text-left bg-white border border-gray-200 rounded-xl hover:border-gray-400 hover:shadow-sm transition-all duration-200"
+                className="group flex items-center justify-between p-4 text-left bg-white border border-gray-200 rounded-xl hover:border-gray-400 hover:shadow-sm transition-all duration-200"
               >
                 <div className="flex-1 min-w-0">
-                  <div className="font-medium text-gray-900 group-hover:text-gray-700 mb-1">
+                  <div className="text-sm font-medium text-gray-900 group-hover:text-gray-700 mb-0.5 truncate">
                     {option.label}
                   </div>
                   {option.station && (
-                    <div className="text-sm text-gray-400">
+                    <div className="text-xs text-gray-400 truncate">
                       {option.station}
                       {option.genre && ` · ${option.genre}`}
                     </div>
                   )}
                   {option.value === "all" && (
-                    <div className="text-sm text-gray-400">
+                    <div className="text-xs text-gray-400">
                       番組を指定せずに検討
                     </div>
                   )}
                 </div>
-                <ArrowRight className="w-5 h-5 text-gray-300 group-hover:text-gray-500 flex-shrink-0 ml-3 transition-colors" />
+                <ArrowRight className="w-4 h-4 text-gray-300 group-hover:text-gray-500 flex-shrink-0 ml-2 transition-colors" />
               </button>
             ))}
           </div>
