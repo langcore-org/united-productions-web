@@ -33,7 +33,9 @@ export function ChatPage({ featureId, chatId, initialProgramId, onChatCreated }:
   const [isLoading, setIsLoading] = useState(true);
   // 番組選択状態（null = 未選択、string = 選択済み）
   // initialProgramId が指定されていればそれを初期値に
-  const [selectedProgramId, setSelectedProgramId] = useState<string | null>(initialProgramId ?? null);
+  const [selectedProgramId, setSelectedProgramId] = useState<string | null>(
+    initialProgramId ?? null,
+  );
 
   useEffect(() => {
     async function loadConfig() {
