@@ -11,6 +11,7 @@ export { ContentMessage } from "./ContentMessage";
 export { ErrorMessage } from "./ErrorMessage";
 export { LegacyThinkingMessage } from "./LegacyThinkingMessage";
 export { NewThinkingStepMessage } from "./NewThinkingStepMessage";
+export { SkeletonMessage } from "./SkeletonMessage";
 export { SummarizationMessage } from "./SummarizationMessage";
 export { ThinkingPlaceholderMessage } from "./ThinkingPlaceholderMessage";
 export { ThinkingStepMessage } from "./ThinkingStepMessage";

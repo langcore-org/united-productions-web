@@ -4,8 +4,8 @@
  */
 
 import { readFileSync } from "fs";
-import { fileURLToPath } from "url";
 import { dirname, join } from "path";
+import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -91,7 +91,7 @@ async function verifyWithXAI(program) {
   console.log(`番組: ${program.name}`);
   console.log(`${"=".repeat(60)}`);
 
-  const query = `${program.name} ${program.station} ${program.timeSlot} 放送回 最新 ${program.episodes.map(e => e.date.replace(/-/g, "/")).join(" ")}`;
+  const query = `${program.name} ${program.station} ${program.timeSlot} 放送回 最新 ${program.episodes.map((e) => e.date.replace(/-/g, "/")).join(" ")}`;
 
   const requestBody = {
     model: "grok-4-1-fast-reasoning",

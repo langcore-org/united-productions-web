@@ -5,11 +5,12 @@
  * @updated 2026-02-27 ヘッダーを1回だけ表示するように変更
  */
 
-import { Bot, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import {
   CitationsList,
   ContentMessage,
   ErrorMessage,
+
   SummarizationMessage,
   ThinkingPlaceholderMessage,
   ToolCallMessage,
@@ -24,6 +25,8 @@ export function StreamingSteps({
   usage,
   provider,
   isComplete,
+  phase,
+  connectionStatus,
   error,
 }: StreamingStepsProps) {
   // 重複を除去したツール呼び出し
@@ -56,8 +59,32 @@ export function StreamingSteps({
     !!content ||
     citations.length > 0;
 
+  // streaming中だがまだコンテンツがない場合（xAI処理待ち）
+  const isWaitingForResponse = phase === "streaming" && !hasAnyContent;
+
   return (
     <div className="space-y-3">
+      {/* streaming開始直後、コンテンツ到着前のスケルトン表示 */}
+      {isWaitingForResponse && <SkeletonMessage />}
+
+      {/* 接続ステータス表示（connecting/thinking/tool_executing/responding） */}
+      {connectionStatus?.status && !isComplete && (
+        <div className="flex gap-4 px-4 py-2">
+          <div className="flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center bg-gradient-to-br from-black to-gray-800 shadow-lg">
+            <Loader2 className="w-4 h-4 text-white animate-spin" />
+          </div>
+          <div className="flex-1 max-w-[85%]">
+            <div className="flex items-center gap-2 mb-1.5">
+              <span className="text-sm font-medium text-gray-600">Teddy</span>
+              <span className="flex items-center gap-1.5 text-xs text-gray-600">
+                <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse" />
+                {connectionStatus.message}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ヘッダー - Teddy + アイコン（1回だけ表示） */}
       {hasAnyContent && (
         <div className="flex gap-4 px-4 py-2">

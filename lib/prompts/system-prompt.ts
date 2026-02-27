@@ -190,6 +190,44 @@ function createFooter(): string {
 }
 
 // =============================================================================
+// キャッシュ
+// =============================================================================
+
+interface CacheEntry {
+  prompt: string;
+  expires: number;
+}
+
+const promptCache = new Map<string, CacheEntry>();
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5分
+
+function getCacheKey(programId: string, featureId?: string): string {
+  return `${programId}:${featureId || "default"}`;
+}
+
+function getCachedPrompt(programId: string, featureId?: string): string | null {
+  const key = getCacheKey(programId, featureId);
+  const entry = promptCache.get(key);
+
+  if (!entry) return null;
+
+  if (Date.now() > entry.expires) {
+    promptCache.delete(key);
+    return null;
+  }
+
+  return entry.prompt;
+}
+
+function setCachedPrompt(programId: string, featureId: string | undefined, prompt: string): void {
+  const key = getCacheKey(programId, featureId);
+  promptCache.set(key, {
+    prompt,
+    expires: Date.now() + CACHE_TTL_MS,
+  });
+}
+
+// =============================================================================
 // DB操作
 // =============================================================================
 
@@ -222,6 +260,15 @@ export async function buildSystemPrompt(
   programId: string = "all",
   featureId?: string,
 ): Promise<string> {
+  // キャッシュをチェック（開発環境・テスト環境以外）
+  const isDevOrTest = process.env.NODE_ENV === "development" || process.env.NODE_ENV === "test";
+  if (!isDevOrTest) {
+    const cached = getCachedPrompt(programId, featureId);
+    if (cached) {
+      return cached;
+    }
+  }
+
   // 1. 番組情報部分を構築
   const baseParts: string[] = [];
 
@@ -245,7 +292,14 @@ export async function buildSystemPrompt(
   const featurePrompt = await getPromptByFeatureId(featureId);
   if (!featurePrompt) return basePrompt;
 
-  return `${basePrompt}\n\n---\n\n## 機能固有の指示\n\n${featurePrompt}`;
+  const finalPrompt = `${basePrompt}\n\n---\n\n## 機能固有の指示\n\n${featurePrompt}`;
+
+  // キャッシュに保存（開発環境・テスト環境以外）
+  if (!isDevOrTest) {
+    setCachedPrompt(programId, featureId, finalPrompt);
+  }
+
+  return finalPrompt;
 }
 
 /**

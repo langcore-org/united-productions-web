@@ -1,12 +1,13 @@
 #!/usr/bin/env node
+
 /**
  * 放送回データ検証スクリプト
  * xAI APIを使用して各番組の直近5回分の放送回データを検証
  */
 
-import { fileURLToPath } from "url";
-import { dirname, join } from "path";
 import { readFileSync } from "fs";
+import { dirname, join } from "path";
+import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -93,21 +94,22 @@ async function verifyEpisodes(program) {
     console.log(`  ${i + 1}. ${ep.date} - ${ep.title}`);
   });
 
-  const query = `${program.name} ${program.station} 直近の放送回 2025年 2026年 ${program.episodes.map(e => e.title).join(" ")}`;
-  
+  const query = `${program.name} ${program.station} 直近の放送回 2025年 2026年 ${program.episodes.map((e) => e.title).join(" ")}`;
+
   try {
     const response = await fetch("https://api.x.ai/v1/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${apiKey}`,
+        Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
         model: "grok-2-latest",
         messages: [
           {
             role: "system",
-            content: "テレビ番組の放送回データを検証するアシスタントです。正確な情報を提供してください。"
+            content:
+              "テレビ番組の放送回データを検証するアシスタントです。正確な情報を提供してください。",
           },
           {
             role: "user",
@@ -122,8 +124,8 @@ ${program.episodes.map((ep, i) => `${i + 1}. ${ep.date} - ${ep.title}`).join("\n
 3. 見つからない放送回
 4. 追加すべき放送回
 
-現在の日付は2026年2月27日です。`
-          }
+現在の日付は2026年2月27日です。`,
+          },
         ],
         tools: [{ type: "web_search" }],
         tool_choice: "auto",
@@ -139,7 +141,7 @@ ${program.episodes.map((ep, i) => `${i + 1}. ${ep.date} - ${ep.title}`).join("\n
     console.log("\n【検証結果】");
     console.log(result);
     console.log("---");
-    
+
     return { program: program.name, result };
   } catch (error) {
     console.error(`Error verifying ${program.name}:`, error.message);
@@ -150,13 +152,13 @@ ${program.episodes.map((ep, i) => `${i + 1}. ${ep.date} - ${ep.title}`).join("\n
 async function main() {
   console.log("放送回データ検証を開始します...");
   console.log(`検証対象: ${programs.length}番組`);
-  
+
   for (const program of programs) {
     await verifyEpisodes(program);
     // APIレート制限を避けるため待機
-    await new Promise(resolve => setTimeout(resolve, 3000));
+    await new Promise((resolve) => setTimeout(resolve, 3000));
   }
-  
+
   console.log("\n検証完了");
 }
 

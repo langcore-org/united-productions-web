@@ -1,17 +1,17 @@
 #!/usr/bin/env node
 /**
  * 放送回データ収集支援スクリプト
- * 
+ *
  * このスクリプトは、公式サイトから放送回データを収集する際の
  * テンプレートと検証支援を提供します。
- * 
+ *
  * 使用方法:
  *   node scripts/collect-episodes-from-official.mjs
  */
 
-import { writeFileSync, readFileSync, existsSync, mkdirSync } from "fs";
-import { fileURLToPath } from "url";
-import { dirname, join } from "path";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -161,7 +161,7 @@ function generateTemplate(program) {
  */
 function generateAllTemplates() {
   const outputDir = join(rootDir, "docs", "verification", "collection-templates");
-  
+
   // ディレクトリがなければ作成
   if (!existsSync(outputDir)) {
     mkdirSync(outputDir, { recursive: true });

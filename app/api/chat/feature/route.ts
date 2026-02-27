@@ -166,7 +166,7 @@ const saveRequestSchema = z.object({
       role: z.enum(["user", "assistant"]),
       content: z.string(),
       timestamp: z.string().or(z.date()).optional(),
-      llmProvider: z.string().optional(),
+      llmProvider: z.enum(["GROK_4_1_FAST_REASONING", "GROK_4_0709"]).optional(),
       toolCalls: z
         .array(
           z.object({

@@ -10,7 +10,7 @@ import { createClientLogger } from "@/lib/logger";
 const logger = createClientLogger("InvestigateTool");
 
 // 環境変数を直接読み込み
-import { readFileSync } from "fs";
+import { readFileSync } from "node:fs";
 
 const envContent = readFileSync(".env.local", "utf-8");
 const apiKeyMatch = envContent.match(/XAI_API_KEY=(.+)/);

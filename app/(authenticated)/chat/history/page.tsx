@@ -10,7 +10,7 @@ import {
   Lightbulb,
   Loader2,
   MessageSquare,
-  Mic,
+
   Search,
   Shield,
   Trash2,

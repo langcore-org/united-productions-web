@@ -65,3 +65,21 @@ export interface FollowUpInfo {
   isLoading: boolean;
   error: string | null;
 }
+
+/**
+ * 接続ステータス（xAI APIとの通信状態）
+ */
+export interface ConnectionStatus {
+  status: "connecting" | "thinking" | "tool_executing" | "responding" | null;
+  message: string;
+}
+
+/**
+ * useLLMStream オプション
+ */
+export interface UseLLMStreamOptions {
+  /** 要約開始閾値（トークン数）。デフォルト: 100000 */
+  tokenThreshold?: number;
+  /** 直近保持するターン数。デフォルト: 10 */
+  maxRecentTurns?: number;
+}

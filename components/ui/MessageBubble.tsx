@@ -23,7 +23,7 @@ export const MessageBubble = memo(function MessageBubble({
   isThinking,
   thinkingContent,
   timestamp,
-  llmProvider,
+  _llmProvider,
   className,
 }: MessageBubbleProps) {
   const isUser = role === "user";

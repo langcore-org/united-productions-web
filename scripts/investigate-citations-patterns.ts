@@ -20,6 +20,7 @@ const BASE_URL = "https://api.x.ai/v1";
 
 interface XAIStreamEvent {
   type: string;
+  delta?: string;
   item?: {
     id: string;
     type: string;

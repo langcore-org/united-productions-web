@@ -5,7 +5,7 @@
  * @updated 2026-02-27 クリック展開機能を追加、showHeaderオプションを追加
  */
 
-import { Bot, CheckCircle2, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
+import { CheckCircle2, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { getToolConfig } from "@/lib/tools/config";
 import type { ToolCallMessageProps } from "../types";
@@ -52,7 +52,7 @@ export function ToolCallMessage({
       }}
       role={hasDetails ? "button" : undefined}
       tabIndex={hasDetails ? 0 : undefined}
-      aria-expanded={isExpanded}
+      aria-expanded={hasDetails ? isExpanded : undefined}
     >
       <div className="flex items-center gap-2">
         {status === "running" ? (

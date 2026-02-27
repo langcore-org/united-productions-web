@@ -52,7 +52,12 @@ export type SSEEvent =
       url: string;
       title: string;
     }
-  | { type: "error"; message: string };
+  | { type: "error"; message: string }
+  | {
+      type: "status";
+      status: "connecting" | "thinking" | "tool_executing" | "responding";
+      message?: string;
+    };
 
 /**
  * LLMプロバイダー定数配列

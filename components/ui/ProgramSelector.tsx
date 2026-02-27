@@ -30,9 +30,7 @@ export function ProgramSelector({ value, onChange, disabled }: ProgramSelectorPr
             <span className="flex items-center gap-2">
               <span className="truncate">{option.label}</span>
               {option.station && (
-                <span className="text-xs text-gray-400 whitespace-nowrap">
-                  ({option.station})
-                </span>
+                <span className="text-xs text-gray-400 whitespace-nowrap">({option.station})</span>
               )}
             </span>
           </SelectItem>

@@ -91,12 +91,14 @@ export function FeatureChat({
     content,
     isComplete,
     isPending,
+    phase,
     error,
     usage,
     toolCalls,
     citations,
     summarizationEvents,
     followUp,
+    connectionStatus,
     startStream,
     resetStream,
   } = useLLMStream();
@@ -368,6 +370,8 @@ export function FeatureChat({
                 usage={usage}
                 provider={provider}
                 isComplete={isComplete}
+                phase={phase}
+                connectionStatus={connectionStatus}
               />
             )}
 

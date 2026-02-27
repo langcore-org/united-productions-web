@@ -4,8 +4,8 @@
  */
 
 import { readFileSync } from "fs";
-import { fileURLToPath } from "url";
 import { dirname, join } from "path";
+import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -51,9 +51,15 @@ const programs = [
     station: "テレビ朝日",
     timeSlot: "月曜21:00",
     episodes: [
-      { date: "2026-02-19", title: "昭和の常識と令和の新常識 テストで学ぶ「これが今でしょ！」2時間SP" },
+      {
+        date: "2026-02-19",
+        title: "昭和の常識と令和の新常識 テストで学ぶ「これが今でしょ！」2時間SP",
+      },
       { date: "2026-01-29", title: '最新ゴールド検定SP〜なぜ今"金"がスゴいのか？' },
-      { date: "2026-01-08", title: "今こそ食べて欲しい みかんVSりんご 冬に気になる4大症状に…健康パワー対決SP" },
+      {
+        date: "2026-01-08",
+        title: "今こそ食べて欲しい みかんVSりんご 冬に気になる4大症状に…健康パワー対決SP",
+      },
       { date: "2025-11-20", title: "コーヒーVS紅茶！名医が教える最強の飲み方 2時間SP" },
       { date: "2025-10-16", title: "令和のたまごパワー最前線を探れ！『たまご』緊急取調SP 2025" },
     ],
@@ -89,7 +95,10 @@ const programs = [
     episodes: [
       { date: "2026-02-24", title: "【華大どんたく】モグライダー芝のご褒美ロケ、うなばら道中記" },
       { date: "2026-02-23", title: "【三遊亭好楽】千鳥ノブが大喜利に挑戦" },
-      { date: "2026-02-20", title: "【超豪華SP】とろサーモン久保田、マヂラブ野田、ハナコ秋山らが大集合！" },
+      {
+        date: "2026-02-20",
+        title: "【超豪華SP】とろサーモン久保田、マヂラブ野田、ハナコ秋山らが大集合！",
+      },
       { date: "2026-02-19", title: "【華大どんたく】かまいたち濱家、三四郎小宮と大喜利バトル" },
       { date: "2026-02-18", title: "【三遊亭好楽】春風亭昇太と古典落語の世界" },
     ],

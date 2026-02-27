@@ -279,6 +279,7 @@ export class GrokClient implements LLMClient {
     logger.info("Starting stream request", { messageCount: messages.length, model: this.model });
 
     yield { type: "start" };
+    yield { type: "status", status: "connecting", message: "xAI APIに接続中..." };
 
     const response = await this.fetchApi(this.buildRequestBody(messages, true));
 
@@ -300,6 +301,8 @@ export class GrokClient implements LLMClient {
 
     // citationsの重複を管理（調査結果: Inline annotations内で重複あり）
     const seenCitationUrls = new Set<string>();
+
+    let hasEmittedThinking = false;
 
     const processEvent = (event: XAIStreamEvent): SSEEvent | null => {
       // テキストチャンク
@@ -382,8 +385,30 @@ export class GrokClient implements LLMClient {
           if (data === "[DONE]") return;
 
           try {
-            const sseEvent = processEvent(JSON.parse(data) as XAIStreamEvent);
-            if (sseEvent) yield sseEvent;
+            const xaiEvent = JSON.parse(data) as XAIStreamEvent;
+
+            // 初回イベント受信時にthinkingステータスを発行
+            if (!hasEmittedThinking) {
+              hasEmittedThinking = true;
+              yield { type: "status", status: "thinking", message: "回答を考え中..." };
+            }
+
+            const sseEvent = processEvent(xaiEvent);
+            if (sseEvent) {
+              // ツール呼び出し開始時にtool_executingステータスを発行
+              if (sseEvent.type === "tool_call" && sseEvent.status === "running") {
+                yield {
+                  type: "status",
+                  status: "tool_executing",
+                  message: `${sseEvent.displayName}を実行中...`,
+                };
+              }
+              // コンテンツ受信時にrespondingステータスを発行
+              if (sseEvent.type === "content") {
+                yield { type: "status", status: "responding", message: "回答を生成中..." };
+              }
+              yield sseEvent;
+            }
           } catch {
             // malformed chunk は無視
           }

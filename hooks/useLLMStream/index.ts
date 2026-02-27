@@ -15,28 +15,25 @@ import { ClientMemory } from "@/lib/llm/memory/client-memory";
 import type { LLMMessage, LLMProvider } from "@/lib/llm/types";
 import type {
   CitationInfo,
+  ConnectionStatus,
   FollowUpInfo,
   StreamPhase,
   SummarizationEvent,
   ToolCallInfo,
   UsageInfo,
+  UseLLMStreamOptions,
 } from "./types";
 
 export type {
   CitationInfo,
+  ConnectionStatus,
   FollowUpInfo,
   StreamPhase,
   SummarizationEvent,
   UsageInfo,
   ToolCallInfo,
+  UseLLMStreamOptions,
 };
-
-export interface UseLLMStreamOptions {
-  /** 要約開始閾値（トークン数）。デフォルト: 100000 */
-  tokenThreshold?: number;
-  /** 直近保持するターン数。デフォルト: 10 */
-  maxRecentTurns?: number;
-}
 
 /**
  * useLLMStream Hook
@@ -55,6 +52,10 @@ export function useLLMStream(options: UseLLMStreamOptions = {}) {
     questions: [],
     isLoading: false,
     error: null,
+  });
+  const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>({
+    status: null,
+    message: "",
   });
 
   // phase から派生する互換プロパティ
@@ -133,6 +134,7 @@ export function useLLMStream(options: UseLLMStreamOptions = {}) {
       setCitations([]);
       setSummarizationEvents([]);
       setFollowUp({ questions: [], isLoading: false, error: null });
+      setConnectionStatus({ status: null, message: "" });
 
       abortControllerRef.current = new AbortController();
 
@@ -220,9 +222,17 @@ export function useLLMStream(options: UseLLMStreamOptions = {}) {
               });
               break;
 
+            case "status":
+              setConnectionStatus({
+                status: event.status,
+                message: event.message || "",
+              });
+              break;
+
             case "done":
               setUsage(event.usage);
               setPhase("complete");
+              setConnectionStatus({ status: null, message: "" });
               // ストリーミング完了後、フォローアップ質問を生成（非同期で実行）
               void generateFollowUp();
               break;
@@ -264,6 +274,7 @@ export function useLLMStream(options: UseLLMStreamOptions = {}) {
     setCitations([]);
     setSummarizationEvents([]);
     setFollowUp({ questions: [], isLoading: false, error: null });
+    setConnectionStatus({ status: null, message: "" });
     // Memoryもクリア
     memoryRef.current?.clear();
     memoryRef.current = null;
@@ -288,6 +299,7 @@ export function useLLMStream(options: UseLLMStreamOptions = {}) {
     citations,
     summarizationEvents,
     followUp,
+    connectionStatus,
     startStream,
     cancelStream,
     resetStream,

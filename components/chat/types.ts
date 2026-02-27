@@ -4,7 +4,13 @@
  * @created 2026-02-22 11:50
  */
 
-import type { CitationInfo, SummarizationEvent, ToolCallInfo } from "@/hooks/useLLMStream";
+import type {
+  CitationInfo,
+  ConnectionStatus,
+  StreamPhase,
+  SummarizationEvent,
+  ToolCallInfo,
+} from "@/hooks/useLLMStream";
 import type { LLMProvider } from "@/lib/llm/types";
 
 // レガシー表示コンポーネント用のローカル型定義
@@ -35,6 +41,8 @@ export interface StreamingStepsProps {
   } | null;
   provider: LLMProvider | string;
   isComplete: boolean;
+  phase: StreamPhase;
+  connectionStatus?: ConnectionStatus;
   error?: string | null;
 }
 

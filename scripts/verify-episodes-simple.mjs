@@ -1,11 +1,12 @@
 #!/usr/bin/env node
+
 /**
  * 放送回データ検証スクリプト（簡易版）
  */
 
-import { fileURLToPath } from "url";
-import { dirname, join } from "path";
 import { readFileSync } from "fs";
+import { dirname, join } from "path";
+import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -36,13 +37,13 @@ const programs = [
 
 async function verifyEpisodes(program) {
   console.log(`\n=== ${program.name} ===`);
-  
+
   try {
     const response = await fetch("https://api.x.ai/v1/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${apiKey}`,
+        Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
         model: "grok-2-latest",
@@ -52,10 +53,10 @@ async function verifyEpisodes(program) {
             content: `「${program.name}」${program.station}の2026年1月〜2月の放送回について教えてください。
 
 特に以下の日付・タイトルが正しいか確認してください：
-${program.episodes.map(e => `- ${e.date}: ${e.title}`).join("\n")}
+${program.episodes.map((e) => `- ${e.date}: ${e.title}`).join("\n")}
 
-簡潔に回答してください。`
-          }
+簡潔に回答してください。`,
+          },
         ],
       }),
     });
@@ -68,7 +69,7 @@ ${program.episodes.map(e => `- ${e.date}: ${e.title}`).join("\n")}
     const data = await response.json();
     const result = data.choices[0].message.content;
     console.log(result);
-    
+
     return { program: program.name, result };
   } catch (error) {
     console.error(`Error:`, error.message);
@@ -79,7 +80,7 @@ ${program.episodes.map(e => `- ${e.date}: ${e.title}`).join("\n")}
 async function main() {
   for (const program of programs) {
     await verifyEpisodes(program);
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    await new Promise((resolve) => setTimeout(resolve, 2000));
   }
 }
 

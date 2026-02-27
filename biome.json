@@ -1,7 +1,17 @@
 {
   "$schema": "https://biomejs.dev/schemas/2.4.4/schema.json",
   "files": {
-    "includes": ["app/**", "lib/**", "components/**", "tests/**", "types/**", "hooks/**", "prisma/**", "scripts/**", "config/**"]
+    "includes": [
+      "app/**",
+      "lib/**",
+      "components/**",
+      "tests/**",
+      "types/**",
+      "hooks/**",
+      "prisma/**",
+      "scripts/**",
+      "config/**"
+    ]
   },
   "assist": { "actions": { "source": { "organizeImports": "on" } } },
   "linter": {
