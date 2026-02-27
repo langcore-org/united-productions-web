@@ -81,7 +81,9 @@ Tier 3（参考のみ）:
 | スクリプト | 用途 |
 |------------|------|
 | `scripts/verify-episodes.mjs` | 放送回データ検証（xAI API使用） |
+| `scripts/verify-episodes-basic.mjs` | 簡易版検証スクリプト（実装例） |
 | `scripts/collect-from-official.mjs` | データ収集テンプレート生成 |
+| `scripts/disable-recent-episodes.mjs` | 緊急時対応 - recentEpisodesを一括無効化 |
 | `scripts/check-consistency.mjs` | データ整合性チェック |
 
 ## 緊急時対応フロー
