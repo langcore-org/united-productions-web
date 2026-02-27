@@ -88,7 +88,74 @@
 
 ---
 
-## 2. スクリプト過度依存の警告サイン
+## 2. 実例：複数機能の一括削除
+
+### 2026-02-27: research-location, research-info, na-script の削除
+
+**背景:**
+- 3機能ともSidebarには表示されていないが、実装は完了していた
+- 今後使用予定がないため完全削除を決定
+- DBデータも含めて完全に削除
+
+**削除対象:**
+```
+research-location（場所リサーチ）
+research-info（情報リサーチ）
+na-script（NA原稿作成）
+```
+
+**実行手順:**
+
+```bash
+# 1. 調査（audit-unused.mjs + エージェント詳細調査）
+node audit-unused.mjs --deep
+# → 4機能が「非表示だが使用中」として検出
+# → エージェントが各機能を調査し、3機能を削除対象と判断
+
+# 2. 個別にanalyze.mjsで詳細調査
+node analyze.mjs "research-location"
+node analyze.mjs "research-info"
+node analyze.mjs "na-script"
+
+# 3. コード修正
+# - lib/chat/chat-config.ts: 型定義・設定削除
+# - lib/chat/agents.ts: na-scriptのAgent定義削除
+# - lib/settings/db.ts: ツール設定削除
+# - app/page.tsx: na-scriptクイックアクセス削除
+# - app/(authenticated)/chat/history/page.tsx: フィルター削除
+# - components/layout/Sidebar.tsx: コメント削除
+
+# 4. ページ削除
+rm app/(authenticated)/agent/location/page.tsx
+rm app/(authenticated)/agent/info/page.tsx
+rm app/(authenticated)/na-script/page.tsx
+
+# 5. DB削除（Prismaスクリプト）
+node scripts/delete-features.mjs
+# → FeaturePrompt 3件削除
+# → SystemPrompt 4件削除（RESEARCH_LOCATION, RESEARCH_INFO, TRANSCRIPT, TRANSCRIPT_FORMAT）
+# → SystemPromptVersion 12件削除
+
+# 6. ドキュメントアーカイブ
+mv docs/specs/features/research-location.md docs/archive/features/
+mv docs/specs/features/research-info.md docs/archive/features/
+mv docs/plans/na-script.md docs/archive/features/
+
+# 7. 検証
+npx tsc --noEmit
+# → .next/types/validator.ts でエラー（削除したページを参照）
+rm -rf .next  # キャッシュ削除
+npx tsc --noEmit  # 再実行 → 成功
+```
+
+**学び:**
+- Next.jsは`.next`キャッシュに型情報を保持しているため、ページ削除後はキャッシュ削除が必要
+- DB削除はPrisma Clientを直接使用するスクリプトが最も確実
+- 複数機能を同時削除する場合は、1機能ずつコミットするか、まとめてコミットするかをユーザーと相談
+
+---
+
+## 3. スクリプト過度依存の警告サイン
 
 以下の状態になったら、スクリプトへの依存が強すぎる可能性：
 
@@ -110,9 +177,9 @@
 
 ---
 
-## 3. エラー対応・問題解決
+## 4. エラー対応・問題解決
 
-### 3.1 削除中にエラーが発生した場合
+### 4.1 削除中にエラーが発生した場合
 
 ```
 「⚠️ 削除中に問題が発生しました：
@@ -126,7 +193,7 @@ C) このステップをスキップ
 D) 削除を中断して全体を見直す」
 ```
 
-### 3.2 スクリプトが誤検出/検出漏れした場合
+### 4.2 スクリプトが誤検出/検出漏れした場合
 
 **誤検出（実際には存在しないのに検出）：**
 ```
@@ -152,7 +219,7 @@ D) 削除を中断して全体を見直す」
   C) 念のため目視確認 → ファイル一覧表示」
 ```
 
-### 3.3 スクリプトが失敗した場合のフォールバック
+### 4.3 スクリプトが失敗した場合のフォールバック
 
 ```
 「⚠️ スクリプトの実行に失敗しました：
@@ -174,7 +241,7 @@ B) スクリプトの修正を試みる
 C) 削除を中止」
 ```
 
-### 3.4 verifyで失敗した場合
+### 4.4 verifyで失敗した場合
 
 ```
 「❌ 削除確認で問題が検出されました：
@@ -189,9 +256,29 @@ C) 削除を中止」
 修正後、再度 verify を実行しますか？」
 ```
 
+### 4.5 Next.js 型チェックエラーの対処
+
+**現象:**
+```
+.next/types/validator.ts(71,39): error TS2307: 
+Cannot find module '../../app/(authenticated)/agent/info/page.js'
+```
+
+**原因:**
+Next.jsの型検証が`.next`キャッシュ内の古いページ情報を参照している
+
+**解決:**
+```bash
+# .next キャッシュを削除
+rm -rf .next
+
+# 再度型チェック
+npx tsc --noEmit
+```
+
 ---
 
-## 4. 人間の目視確認チェックリスト
+## 5. 人間の目視確認チェックリスト
 
 **スクリプトの結果に関わらず、人間が必ず目視確認すること：**
 
@@ -219,7 +306,7 @@ C) 削除を中止」
 
 ---
 
-## 5. 臨機応変対応の具体例
+## 6. 臨機応変対応の具体例
 
 | 状況 | スクリプト出力 | エージェントの対応 |
 |------|--------------|------------------|
@@ -228,14 +315,15 @@ C) 削除を中止」
 | **ユーザーデータあり** | `HAS_USER_DATA: YES` | 「過去のチャット履歴がN件あります。A)完全削除 B)アーカイブ C)統合 D)中止」 |
 | **自動修正可能** | `CAN_AUTOFIX: YES` | 「自動修正が可能です。実行しますか？」 |
 | **削除中に問題** | `verify.mjs` でエラー | 「問題が発生。A)自動修正 B)手動修正 C)スキップ D)ロールバック」 |
+| **Next.jsキャッシュエラー** | 型チェック失敗 | 「.nextキャッシュを削除して再実行します」 |
 
 ---
 
-## 6. スキルの継続的改善（オプション）
+## 7. スキルの継続的改善（オプション）
 
 このスキルは**使用パターンに基づいて継続的に改善**される。
 
-### 6.1 使用ログの記録（オプション）
+### 7.1 使用ログの記録（オプション）
 
 ```bash
 # 使用ログを記録（分析用）
@@ -246,7 +334,7 @@ echo "$(date '+%Y-%m-%d %H:%M:%S') [KEYWORD] [MODE] [RESULT]" >> .claude/skills/
 # 2026-02-27 15:00:00 langchain gradual failed
 ```
 
-### 6.2 パターン学習による改善
+### 7.2 パターン学習による改善
 
 **収集するデータ：**
 - どの機能が最も削除されたか
@@ -258,7 +346,7 @@ echo "$(date '+%Y-%m-%d %H:%M:%S') [KEYWORD] [MODE] [RESULT]" >> .claude/skills/
 使用 → ログ記録 → パターン分析 → スキル改善 → 再使用
 ```
 
-### 6.3 自動化レベルの進化
+### 7.3 自動化レベルの進化
 
 使用頻度と成功率に基づいて、自動化レベルを段階的に上げる：
 
@@ -269,7 +357,7 @@ echo "$(date '+%Y-%m-%d %H:%M:%S') [KEYWORD] [MODE] [RESULT]" >> .claude/skills/
 | **Level 3** | 同じ機能で10回成功 | 中リスクまで自動実行 |
 | **Level 4** | プロジェクト全体で50回成功 | テンプレート自動生成 |
 
-### 6.4 進化スクリプトの使用
+### 7.4 進化スクリプトの使用
 
 ```bash
 # 使用後にログを記録
@@ -294,7 +382,9 @@ node .claude/skills/feature-cleanup/scripts/evolve.mjs suggest na-script
 | 状況 | 参照先 |
 |------|--------|
 | Phase 4でユーザーへの提示文が必要 | dialog-templates.md |
-| 削除作業中にエラーが発生 | practical-guide.md の「3. エラー対応」 |
-| スクリプトが失敗した | practical-guide.md の「3.3 フォールバック」 |
-| 最終確認チェックリストが必要 | practical-guide.md の「4. 目視確認チェックリスト」 |
-| スキルの改善・カスタマイズ | practical-guide.md の「6. スキルの継続的改善」 |
+| 削除作業中にエラーが発生 | practical-guide.md の「4. エラー対応」 |
+| スクリプトが失敗した | practical-guide.md の「4.3 フォールバック」 |
+| Next.js型エラーが出た | practical-guide.md の「4.5 Next.js 型チェックエラー」 |
+| 最終確認チェックリストが必要 | practical-guide.md の「5. 目視確認チェックリスト」 |
+| スキルの改善・カスタマイズ | practical-guide.md の「7. スキルの継続的改善」 |
+| 複数機能削除の実例が知りたい | practical-guide.md の「2. 実例：複数機能の一括削除」 |
