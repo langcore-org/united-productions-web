@@ -13,7 +13,7 @@ import {
   SkeletonMessage,
   SummarizationMessage,
   ThinkingPlaceholderMessage,
-  ToolCallMessage,
+  ToolCallGroup,
 } from "./messages";
 import type { StreamingStepsProps } from "./types";
 
@@ -34,10 +34,23 @@ export function StreamingSteps({
     (call, index, self) => index === self.findIndex((c) => c.id === call.id),
   );
 
-  // 完了したツール呼び出し
-  const completedToolCalls = uniqueToolCalls.filter((call) => call.status === "completed");
-  // 実行中のツール呼び出し
-  const runningToolCalls = uniqueToolCalls.filter((call) => call.status === "running");
+  // ツール呼び出しをグループ化（同じツール名でグループ化）
+  const groupToolCalls = (calls: typeof uniqueToolCalls) => {
+    const groups = new Map<string, typeof uniqueToolCalls>();
+    for (const call of calls) {
+      const existing = groups.get(call.name) ?? [];
+      existing.push(call);
+      groups.set(call.name, existing);
+    }
+    return groups;
+  };
+
+  const completedToolGroups = groupToolCalls(
+    uniqueToolCalls.filter((call) => call.status === "completed")
+  );
+  const runningToolGroups = groupToolCalls(
+    uniqueToolCalls.filter((call) => call.status === "running")
+  );
 
   // 完了した要約イベント
   const completedSummarizations = summarizationEvents.filter((e) => e.status === "completed");
@@ -52,9 +65,9 @@ export function StreamingSteps({
   // ヘッダーを表示すべきか（1回目のみ）
   const hasAnyContent =
     completedSummarizations.length > 0 ||
-    completedToolCalls.length > 0 ||
+    completedToolGroups.size > 0 ||
     runningSummarizations.length > 0 ||
-    runningToolCalls.length > 0 ||
+    runningToolGroups.size > 0 ||
     errorSummarizations.length > 0 ||
     !!content ||
     citations.length > 0;
@@ -119,15 +132,13 @@ export function StreamingSteps({
                 />
               ))}
 
-              {/* 完了したツール呼び出し（ヘッダーなし） */}
-              {completedToolCalls.map((toolCall) => (
-                <ToolCallMessage
-                  key={toolCall.id}
-                  toolCall={toolCall}
-                  status="completed"
-                  provider={provider}
+              {/* 完了したツール呼び出し（グループ化） */}
+              {Array.from(completedToolGroups.entries()).map(([toolName, calls]) => (
+                <ToolCallGroup
+                  key={`completed-${toolName}`}
+                  toolName={toolName}
+                  toolCalls={calls}
                   citations={citations}
-                  showHeader={false}
                 />
               ))}
 
@@ -141,15 +152,13 @@ export function StreamingSteps({
                 />
               ))}
 
-              {/* 実行中のツール呼び出し（ヘッダーなし） */}
-              {runningToolCalls.map((toolCall) => (
-                <ToolCallMessage
-                  key={toolCall.id}
-                  toolCall={toolCall}
-                  status="running"
-                  provider={provider}
+              {/* 実行中のツール呼び出し（グループ化） */}
+              {Array.from(runningToolGroups.entries()).map(([toolName, calls]) => (
+                <ToolCallGroup
+                  key={`running-${toolName}`}
+                  toolName={toolName}
+                  toolCalls={calls}
                   citations={citations}
-                  showHeader={false}
                 />
               ))}
 
