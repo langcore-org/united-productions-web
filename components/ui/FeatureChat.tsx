@@ -129,7 +129,7 @@ export function FeatureChat({
     if (messages.length === 0) {
       // 番組名を取得（selectedProgramId が null の場合は「番組を指定しない」用のメッセージ）
       const programInfo = selectedProgramId ? getProgramById(selectedProgramId) : null;
-      const programName = programInfo?.name ?? "全番組";
+      const programName = programInfo?.name ?? "番組を指定せずにはじめる";
 
       const welcomeContent = getWelcomeMessage(featureId, programName);
 

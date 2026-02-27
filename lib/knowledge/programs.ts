@@ -55,10 +55,10 @@ export const programOptions: ProgramOption[] = programs.map((p) => ({
   genre: p.genre,
 }));
 
-/** 全番組選択オプション（デフォルト用） */
+/** 番組未指定選択オプション（デフォルト用） */
 export const ALL_PROGRAMS_OPTION: ProgramOption = {
   value: "all",
-  label: "全番組",
+  label: "番組を指定せずにはじめる",
   station: "",
   genre: "",
 };
