@@ -160,7 +160,7 @@ SKILL.md に追加: 「このスクリプトで確認できます」
 # 記録する場合: backlog/ にファイルを作成
 cat > "docs/backlog/todo-$(date +%s)-brief-description.md" << 'EOF'
 > **優先度**: ⏸️ 保留
-> **発見日": $(date +"%Y-%m-%d")
+> **発見日**: $(date +"%Y-%m-%d")
 > **関連ファイル": app/path/to/file.ts
 
 # TODO: タイトル

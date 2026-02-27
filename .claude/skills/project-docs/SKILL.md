@@ -143,10 +143,12 @@ node .claude/skills/project-docs/scripts/docs.js lesson record
 
 | ディレクトリ | 命名規則 | 例 |
 |-------------|---------|-----|
-| `backlog/` | `{type}-{timestamp}-{title}.md` | `todo-1234567890-error-handling.md` |
+| `backlog/` | `YYYY-MM-DD-{type}-{title}.md` | `2026-02-27-todo-error-handling.md` |
 | `plans/` | `{title}.md` | `meeting-upload-feature.md` |
 | `lessons/` | `YYYY-MM-DD-{title}.md` | `2026-02-26-chat-streaming-issue.md` |
 | `archive/` | `YYYY-MM-DD-{original}.md` | `2026-02-26-todo-xxx.md` |
+
+**重要**: `backlog/` のファイルは**必ず作成日を先頭に入れる**（`YYYY-MM-DD-` 形式）。これにより時系列でソート可能になり、古い項目の発見や優先度の判断が容易になる。
 
 ## 関連ドキュメント
 
