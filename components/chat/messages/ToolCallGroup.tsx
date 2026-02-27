@@ -8,8 +8,8 @@
 
 import { CheckCircle2, ChevronDown, ChevronUp, Loader2, Search } from "lucide-react";
 import { useState } from "react";
-import { getToolConfig } from "@/lib/tools/config";
 import type { ToolCallInfo } from "@/hooks/useLLMStream/types";
+import { getToolConfig } from "@/lib/tools/config";
 import type { Citation } from "./CitationsList";
 import { CitationsList } from "./CitationsList";
 

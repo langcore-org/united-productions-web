@@ -46,10 +46,10 @@ export function StreamingSteps({
   };
 
   const completedToolGroups = groupToolCalls(
-    uniqueToolCalls.filter((call) => call.status === "completed")
+    uniqueToolCalls.filter((call) => call.status === "completed"),
   );
   const runningToolGroups = groupToolCalls(
-    uniqueToolCalls.filter((call) => call.status === "running")
+    uniqueToolCalls.filter((call) => call.status === "running"),
   );
 
   // 完了した要約イベント
