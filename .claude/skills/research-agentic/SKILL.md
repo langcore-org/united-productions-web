@@ -1,221 +1,192 @@
 ---
 name: research-agentic
-description: Agentic research skill for iterative investigation and verification. Use when the user needs comprehensive research on a topic, wants to verify information accuracy/currency, needs multi-source fact-checking, or requires deep investigation with search-query-think loops. Triggers include "リサーチして", "調査して", "検証して", "最新情報を調べて", "詳しく調べて", or any research tasks requiring iterative verification.
+description: エージェンティックリサーチ。固定的な手順ではなく、臨機応変に深掘り・横展開しながら徹底調査を行う。包括的な調査、ファクトチェック、深い探究に使用。
 ---
 
-# Agentic Research Skill
+# エージェンティックリサーチ
 
-Iterative, self-correcting research workflow with verification loops.
+## 核心理念
 
-## Core Philosophy
-
-Research is not a single search. It is a loop:
+調査は**探索**である。地図を作りながら歩くようなもの。
 
 ```
-Search → Synthesize → Verify → (Gap found?) → Search again
+質問 → 収集 → 理解 → 「もっと知りたい」 → 深掘り/横展開
+          ↑                                    ↓
+          └──────── 新しい問いが生まれる ←─────┘
 ```
 
-Continue until confidence threshold is met.
+### 基本姿勢
 
-## Confidence Levels
+- **好奇心主導**: 「面白そう」「気になる」は立派な調査動機
+- **柔軟な軌道修正**: 予定を変更しても良い、より重要なものが見つかればそちらへ
+- **質 > 量**: 表面的な情報の羅列より、いくつかのことを深く理解する
+- **不確実性を受け入れる**: わからないことはわからないと正直に言う
+- **自分の理解を疑う**: 「本当にこれで合ってるか？」を常に自問
 
-| Level | Criteria | Action |
-|-------|----------|--------|
-| 🔴 Low | Single source, unverified claim | Must verify with 2+ independent sources |
-| 🟡 Medium | Multiple sources agree, but dated (>1yr) | Check for updates, verify with recent sources |
-| 🟢 High | Multiple recent sources (<6mo), cross-verified | Accept, note any minor discrepancies |
+## 調査の始め方
 
-## Research Workflow
+### まず最初に
 
-### Phase 1: Query Decomposition
+1. **ユーザーの質問を自分の言葉で言い換える**
+   - 何が知りたいのか、本当の意図は何か
+   - どの程度の深さ・広さが必要か推測
 
-Break complex queries into atomic research questions:
+2. **最初の検索を実行**
+   - 広く浅くでOK
+   - 全体像をつかむ
 
-```
-User: "What are the latest AI regulations in EU and their impact on startups?"
-↓
-Atoms:
-1. What is the current status of EU AI Act? (enforcement date, scope)
-2. What are the specific compliance requirements?
-3. Which startups are affected and how?
-4. What are industry reactions/latest changes?
-```
+3. **「これは何についての話か」を把握**
+   - キーワード、主要な関係者、文脈
+   - 自分の無知を特定する
 
-### Phase 2: Iterative Search Loop
+### 調査対象のタイプ（参考）
 
-For each atomic question:
+対象に応じて自然に異なる観点が浮かぶはず：
 
-```
-1. Search with targeted query
-2. Extract key claims/facts
-3. Assess confidence level
-4. If confidence < HIGH:
-   - Identify what needs verification
-   - Formulate verification query
-   - Repeat from 1
-5. If contradictions found:
-   - Note all perspectives
-   - Identify most authoritative/credible source
-   - Flag for user review
-```
+| タイプ | 自然に気になること |
+|--------|------------------|
+| **人物** | 経歴、転機、周囲との関係、評価の多様性 |
+| **組織** | 歴史、事業、人、競合、評判、変化 |
+| **技術** | 仕組み、用途、限界、競合、将来性 |
+| **出来事** | 経緯、背景、影響、当事者の違う見方 |
+| **作品** | 制作背景、評価、影響、文脈 |
 
-### Phase 3: Synthesis & Verification
+## 深掘りの判断
 
-Before finalizing:
+### 「ここをもっと調べるべき」信号
 
-```
-□ Each key claim has ≥2 sources OR is from authoritative primary source
-□ All quantitative data has source + retrieval date
-□ Contradictions are explicitly noted with source evaluation
-□ Information date is checked (stale? outdated?)
-□ No circular references (A cites B, B cites A)
-```
+- 矛盾している情報がある
+- 直感が「おかしい」と感じる
+- 根本的な「なぜ」がわからない
+- 専門用語が出てきた
+- 影響が大きそうな要素
+- ユーザーが特に関心を持ちそうなポイント
 
-## Tool Usage
+### 「ここはスキップできる」信号
 
-### Web Search
+- すでに複数の信頼できる情報源で確認できた
+- 本質的でない細部（電話番号など）
+- 調査目標から外れている
+- 同じような情報の繰り返し
 
-Use for:
-- Initial broad exploration
-- Finding primary sources
-- Cross-checking claims
-- Finding recent updates
+## 情報源の扱い
 
-Best practices:
-- Start with specific queries, not broad
-- Use site: filters for authoritative sources
-- Check publication dates in results
-- Follow citations to primary sources
+### 信頼度の直感（参考）
 
-### FetchURL
+| 高い | 公式発表、一次資料、査読付き論文、確立した報道機関 |
+| 中程度 | 専門メディア、専門家の分析、業界出版物 |
+| 注意が必要 | 要約サイト、SNS、匿名情報、古い情報 |
 
-Use for:
-- Reading full articles when summary insufficient
-- Extracting exact quotes
-- Verifying specific claims
-- Accessing official documentation
+### 検証の直感
 
-Best practices:
-- Check URL credibility before fetching
-- Note publication/last-updated dates
-- Extract relevant sections only
+- **「本当？」と思ったら**: 別の情報源で確認
+- **「確かな情報源は？」**: 公式サイト、プレスリリース、専門家の発言を探す
+- **「この人は何者？」**: 発信者の背景を調べる
+- **「いつの話？」**: 日付を確認、最新か、文脈に合うか
 
-### MCP Tools
+### 矛盾を見つけたら
 
-Use when available:
-- **Browser MCP**: For JavaScript-heavy sites, interactive content
-- **Search MCP**: For specialized search engines
-- **Database MCP**: For structured data queries
+1. 両方を記録
+2. どちらが信頼できそうか判断（情報源、日付、文脈）
+3. 判断できなければ「情報源によって異なる」と記載
+4. 必要ならユーザーに確認
 
-## Verification Patterns
+## 思考のフレームワーク（使い方を強制しない）
 
-### Pattern 1: Direct Verification
+必要に応じて使える思考ツール：
 
-```
-Claim: "X was announced on date Y"
-Verification: Search "X announced" + check official announcement
-```
+### 5W1H + So What
+- Who, What, When, Where, Why, How, そして「だから何か」
 
-### Pattern 2: Source Authority Check
+### 因果関係の追究
+- 「なぜそうなったか」を何度も問う
+- 「そうだからこうなった」の証拠はあるか
 
-```
-Hierarchy (highest to lowest):
-1. Primary source (official docs, press releases, research papers)
-2. Established news (Reuters, AP, Bloomberg)
-3. Industry publications (TechCrunch, Ars Technica)
-4. Aggregators/blogs (evaluate case by case)
-5. Social media (only for official accounts, verify handle)
-```
+### 文脈の把握
+- 歴史的文脈：当時の状況は？
+- 制度的文脈：どんなルールの中で？
+- 専門的文脈：業界の常識は？
 
-### Pattern 3: Temporal Verification
+### 反証の探索
+- 「もしかして逆のことも言える？」
+- 批判的な意見はないか
+- 自分の仮説を否定する証拠を探す
+
+## 出力のあり方
+
+### 基本
+
+- 自分が理解したことを、他人に説明する形で書く
+- 情報源は可能な限り明示（「〜によると」）
+- 不確実なことは「〜と報じられている」「〜の可能性がある」と書く
+
+### 構成（参考例、これに従う必要はない）
 
 ```
-For time-sensitive topics:
-1. Always check "last updated" or publication date
-2. Search with date filter (past year, past month)
-3. Check if sources are citing outdated information
-4. Note: "As of [date], ..." in findings
+## 概要
+[全体を2-3文で要約]
+
+## 主要な発見
+[重要だと思ったことを整理して記述]
+- 事実と出典
+- 疑問や矛盾（あれば）
+
+## 補足・深掘り
+[気になったことをさらに調べた結果]
+
+## わからないこと/次に調べるとしたら
+[残った疑問や、さらに深掘りできそうな方向]
 ```
 
-## Output Format
+## 調査を終える判断
 
-```markdown
-## Summary
-[2-3 sentence synthesis]
+### 終了のタイミング
 
-## Key Findings
+- 「もう新しい情報が出てこない」感覚
+- ユーザーの質問に十分答えられそう
+- 時間的制約
+- 10回以上検索しても進展がない
 
-### Finding 1: [Title]
-- **Claim**: [Clear statement]
-- **Sources**: [List with dates]
-- **Confidence**: 🟢/🟡/🔴
-- **Notes**: [Any caveats, contradictions]
+### 終了前に自問
 
-### Finding 2: ...
+- 「本当にこれで理解できたか？」
+- 「矛盾や不明点を無視していないか？」
+- 「自分の推測と確定事実を区別しているか？」
 
-## Gaps & Uncertainties
-- [What could not be verified]
-- [Areas needing further research]
+## 実例（参考）
 
-## Source Quality
-- Primary: [N sources]
-- Secondary verified: [N sources]
-- Needs verification: [N claims]
-
-## Last Updated
-[Current date]
-```
-
-## Red Flags (Stop & Verify)
-
-Stop and re-verify when:
-- [ ] Only one source makes a specific claim
-- [ ] Source is known aggregator without attribution
-- [ ] Dates don't match (article says X, but X happened later)
-- [ ] Numbers vary significantly across sources (>20%)
-- [ ] Claim contradicts common knowledge without explanation
-- [ ] Source is paywalled/opinion piece presented as fact
-
-## Iteration Triggers
-
-Continue research when:
-1. Confidence level is 🔴 or 🟡 for key claims
-2. Found contradiction between sources
-3. Information seems outdated (>1 year for fast-moving topics)
-4. Source chain leads to dead end or circular reference
-5. User asks follow-up requiring deeper investigation
-
-## Example Session
+### 例：人物調査
 
 ```
-User: "What's the latest on GPT-5?"
+ユーザー: "〇〇さんについて教えて"
 
-Research:
-1. Search "GPT-5 release date OpenAI"
-   → Claims: "coming 2024" (source: blog, date: 2023)
-   Confidence: 🔴 (old, single source)
+思考プロセス：
+1. 基本検索で経歴を把握
+   → 転職歴が多いことに気づく
+   → 「なぜ転職が多いのか」に興味を持つ
 
-2. Search "GPT-5 OpenAI 2024 2025 latest"
-   → Claims: "no official timeline" (source: Reuters, 2024-08)
-   Confidence: 🟡 (credible but need more)
+2. 転職の背景を調べる
+   → ある転職はスキャンダル関連と判明
+   → 「本当か？」→ 複数情報源で確認
+   → 確証が得られないため「報じられている」と表現
 
-3. Search site:openai.com "GPT-5" OR "next generation"
-   → No official announcement found
-   Confidence: 🟢 (verified absence of official info)
+3. 現在の活動に移る
+   → 最近のプロジェクトを確認
+   → 評判は？→ 専門家の評価と一般の評価が異なることに気づく
+   → 両方を記載
 
-4. Search "OpenAI next model roadmap 2024 2025"
-   → Claims: "o1 series released, GPT-5 not announced" (multiple sources)
-   Confidence: 🟢 (cross-verified)
-
-Synthesis: No GPT-5 announced. o1 series is current focus.
+4. レポート作成
+   → 転職の件は不確実なので慎重に言及
+   → 評価の多様性を強調
 ```
 
-## Advanced: Deep Research Mode
+## 最終的なアドバイス
 
-For complex topics requiring 5+ search iterations:
+- **決められた手順はない**。状況に応じて最適な道を選ぶ
+- **迷ったらユーザーに確認**しても良い
+- **「深く調べすぎたかも」と思ったら**、それは徹底できた証拠
+- **楽しむ**。面白いと思ったことは本当に面白いはず
 
-See [references/deep-research.md](references/deep-research.md) for:
-- Structured note-taking templates
-- Citation management
-- Handling contradictory evidence
-- Building research trees
+---
+
+**このスキルの使い方**: 参考にしつつ、自分の判断で臨機応変に動く
