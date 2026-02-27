@@ -8,12 +8,7 @@
 import { DEFAULT_PROMPTS, PROMPT_KEYS } from "@/lib/prompts";
 
 /** Agentの識別子 */
-export type AgentId =
-  | "general"
-  | "research-cast"
-  | "research-evidence"
-  | "minutes"
-  | "proposal";
+export type AgentId = "general" | "research-cast" | "research-evidence" | "minutes" | "proposal";
 
 /** Agent（専用チャット機能）の定義 */
 export interface Agent {

@@ -147,10 +147,7 @@ export function getAllChatFeatures(): ChatFeatureConfig[] {
 
 /** リサーチ機能のリストを取得 */
 export function getResearchFeatures(): ChatFeatureConfig[] {
-  return [
-    chatFeatureConfigs["research-cast"],
-    chatFeatureConfigs["research-evidence"],
-  ];
+  return [chatFeatureConfigs["research-cast"], chatFeatureConfigs["research-evidence"]];
 }
 
 /** 機能IDが有効かチェック */
