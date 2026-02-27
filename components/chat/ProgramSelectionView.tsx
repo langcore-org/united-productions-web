@@ -5,14 +5,10 @@ import { ALL_PROGRAMS_OPTION, programOptions } from "@/lib/knowledge/programs";
 
 export interface ProgramSelectionViewProps {
   featureTitle: string;
-  featureDescription?: string;
   onSelect: (programId: string) => void;
 }
 
-export function ProgramSelectionView({
-  featureTitle,
-  onSelect,
-}: ProgramSelectionViewProps) {
+export function ProgramSelectionView({ featureTitle, onSelect }: ProgramSelectionViewProps) {
   // 全番組選択肢（全番組 + 各番組）
   const options = [ALL_PROGRAMS_OPTION, ...programOptions];
 
@@ -58,9 +54,7 @@ export function ProgramSelectionView({
                     </div>
                   )}
                   {option.value === "all" && (
-                    <div className="text-xs text-gray-400">
-                      番組を指定せずに検討
-                    </div>
+                    <div className="text-xs text-gray-400">番組を指定せずに検討</div>
                   )}
                 </div>
                 <ArrowRight className="w-4 h-4 text-gray-300 group-hover:text-gray-500 flex-shrink-0 ml-2 transition-colors" />
