@@ -15,11 +15,11 @@ import {
 } from "./programs-detailed-data";
 import {
   programHayashiosamu,
+  programHenaimuseum,
   programKamichallenge,
+  programMainichioogiri,
+  programMainichishouresu,
   programNikagame,
-  programSorega,
-  programTalksurvivor,
-  programYakai,
 } from "./programs-detailed-data-2";
 import type { KnowledgeBase, ProgramInfo, ProgramOption } from "./types";
 
@@ -35,15 +35,15 @@ export const programs: ProgramInfo[] = [
   programHayashiosamu,
   programKamichallenge,
   programNikagame,
-  programYakai,
-  programSorega,
-  programTalksurvivor,
+  programMainichioogiri,
+  programMainichishouresu,
+  programHenaimuseum,
 ];
 
 /** ナレッジベース全体 */
 export const knowledgeBase: KnowledgeBase = {
   programs: programs,
-  updatedAt: "2026-02-24",
+  updatedAt: "2026-02-27",
   updatedBy: "AI Assistant",
 };
 
