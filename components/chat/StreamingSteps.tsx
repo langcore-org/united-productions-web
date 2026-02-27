@@ -71,7 +71,7 @@ export function StreamingSteps({
           <div className="flex-1 max-w-[85%] items-start">
             <div className="flex items-center gap-2 mb-1.5">
               <span className="text-sm font-medium text-gray-600">Teddy</span>
-              
+
               {!isComplete && (
                 <span className="flex items-center gap-1.5 text-xs text-gray-600">
                   <span className="w-1.5 h-1.5 bg-gray-500 rounded-full animate-pulse" />
@@ -84,7 +84,12 @@ export function StreamingSteps({
             <div className="space-y-3">
               {/* 完了した要約イベント */}
               {completedSummarizations.map((event) => (
-                <SummarizationMessage key={event.id} event={event} provider={provider} showHeader={false} />
+                <SummarizationMessage
+                  key={event.id}
+                  event={event}
+                  provider={provider}
+                  showHeader={false}
+                />
               ))}
 
               {/* 完了したツール呼び出し（ヘッダーなし） */}
@@ -101,7 +106,12 @@ export function StreamingSteps({
 
               {/* 実行中の要約イベント */}
               {runningSummarizations.map((event) => (
-                <SummarizationMessage key={event.id} event={event} provider={provider} showHeader={false} />
+                <SummarizationMessage
+                  key={event.id}
+                  event={event}
+                  provider={provider}
+                  showHeader={false}
+                />
               ))}
 
               {/* 実行中のツール呼び出し（ヘッダーなし） */}
@@ -118,7 +128,12 @@ export function StreamingSteps({
 
               {/* エラーの要約イベント */}
               {errorSummarizations.map((event) => (
-                <SummarizationMessage key={event.id} event={event} provider={provider} showHeader={false} />
+                <SummarizationMessage
+                  key={event.id}
+                  event={event}
+                  provider={provider}
+                  showHeader={false}
+                />
               ))}
 
               {/* 何もない場合は「考え中...」を表示 */}
@@ -127,9 +142,7 @@ export function StreamingSteps({
               )}
 
               {/* エラーメッセージ */}
-              {error && (
-                <ErrorMessage error={error} showHeader={false} />
-              )}
+              {error && <ErrorMessage error={error} showHeader={false} />}
 
               {/* メインコンテンツ */}
               {content && !isComplete && (
@@ -146,8 +159,8 @@ export function StreamingSteps({
               {/* Usage Info */}
               {isComplete && usage && (
                 <div className="text-xs text-gray-400">
-                  {usage.inputTokens.toLocaleString()} 入力 / {usage.outputTokens.toLocaleString()} 出力
-                  • ${usage.cost.toFixed(6)}
+                  {usage.inputTokens.toLocaleString()} 入力 / {usage.outputTokens.toLocaleString()}{" "}
+                  出力 • ${usage.cost.toFixed(6)}
                 </div>
               )}
 

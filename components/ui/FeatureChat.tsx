@@ -307,6 +307,7 @@ export function FeatureChat({
                     }}
                     status={tc.status === "completed" ? "completed" : "running"}
                     provider={message.llmProvider ?? provider}
+                    showHeader={false}
                   />
                 ))}
                 <MessageBubble

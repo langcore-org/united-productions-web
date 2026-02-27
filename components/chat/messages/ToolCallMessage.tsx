@@ -5,11 +5,11 @@
  * @updated 2026-02-27 クリック展開機能を追加、showHeaderオプションを追加
  */
 
-import { useState } from "react";
 import { Bot, CheckCircle2, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
+import { useState } from "react";
 import { getToolConfig } from "@/lib/tools/config";
-import { CitationsList } from "./CitationsList";
 import type { ToolCallMessageProps } from "../types";
+import { CitationsList } from "./CitationsList";
 
 export function ToolCallMessage({
   toolCall,

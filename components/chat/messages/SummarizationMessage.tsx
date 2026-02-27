@@ -10,7 +10,11 @@
 import { CheckCircle2, FileText, Loader2, XCircle } from "lucide-react";
 import type { SummarizationMessageProps } from "../types";
 
-export function SummarizationMessage({ event, provider, showHeader = true }: SummarizationMessageProps) {
+export function SummarizationMessage({
+  event,
+  provider,
+  showHeader = true,
+}: SummarizationMessageProps) {
   const getIcon = () => {
     switch (event.status) {
       case "running":
@@ -45,7 +49,9 @@ export function SummarizationMessage({ event, provider, showHeader = true }: Sum
         {getIcon()}
         <span className="font-medium">{event.displayName}</span>
         {event.status === "running" && event.targetMessageCount > 0 && (
-          <span className="text-amber-700/70 text-xs">({event.targetMessageCount}件のメッセージ)</span>
+          <span className="text-amber-700/70 text-xs">
+            ({event.targetMessageCount}件のメッセージ)
+          </span>
         )}
       </div>
       {event.error && <div className="mt-1 text-xs text-red-600">{event.error}</div>}

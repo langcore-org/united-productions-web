@@ -8,7 +8,10 @@
 import { Loader2, Sparkles } from "lucide-react";
 import type { ThinkingPlaceholderMessageProps } from "../types";
 
-export function ThinkingPlaceholderMessage({ provider, showHeader = true }: ThinkingPlaceholderMessageProps) {
+export function ThinkingPlaceholderMessage({
+  provider,
+  showHeader = true,
+}: ThinkingPlaceholderMessageProps) {
   const messageContent = (
     <div className="relative px-4 py-3 text-sm leading-relaxed rounded-2xl bg-purple-50 text-purple-900 border border-purple-200 rounded-tl-sm">
       <div className="flex items-center gap-2">
