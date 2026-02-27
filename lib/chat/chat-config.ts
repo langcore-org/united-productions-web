@@ -33,7 +33,6 @@ export interface ChatFeatureConfig {
   description?: string;
   promptKey: string; // DBプロンプトキー
   promptSuggestions?: PromptSuggestion[]; // プロンプトサジェスト
-  enableProgramSelector?: boolean; // 番組選択機能を有効化
 }
 
 // デフォルトプロンプトをキーで検索するヘルパー
@@ -58,7 +57,6 @@ export const chatFeatureConfigs: Record<ChatFeatureId, ChatFeatureConfig> = {
       { id: "2", text: "具体例を挙げて" },
       { id: "3", text: "別の視点から考えて" },
     ],
-    enableProgramSelector: true,
   },
   "research-cast": {
     featureId: "research-cast",
@@ -87,7 +85,6 @@ export const chatFeatureConfigs: Record<ChatFeatureId, ChatFeatureConfig> = {
         text: "実在する候補者を具体的にリサーチして、連絡先や実績とともにリスト化してください",
       },
     ],
-    enableProgramSelector: true,
   },
   "research-location": {
     featureId: "research-location",
@@ -103,7 +100,6 @@ export const chatFeatureConfigs: Record<ChatFeatureId, ChatFeatureConfig> = {
       { id: "2", text: "周辺の宿泊施設とアクセス情報をまとめて" },
       { id: "3", text: "類似のロケ地を他に提案して" },
     ],
-    enableProgramSelector: true,
   },
   "research-info": {
     featureId: "research-info",
@@ -119,7 +115,6 @@ export const chatFeatureConfigs: Record<ChatFeatureId, ChatFeatureConfig> = {
       { id: "2", text: "専門家用語を分かりやすく解説して" },
       { id: "3", text: "関連する統計データを探してまとめて" },
     ],
-    enableProgramSelector: true,
   },
   "research-evidence": {
     featureId: "research-evidence",
@@ -135,7 +130,6 @@ export const chatFeatureConfigs: Record<ChatFeatureId, ChatFeatureConfig> = {
       { id: "2", text: "反対の意見や反論も調査して提示してください" },
       { id: "3", text: "専門家の見解や学術的な根拠を追加で調べて" },
     ],
-    enableProgramSelector: true,
   },
   minutes: {
     featureId: "minutes",
@@ -152,7 +146,6 @@ export const chatFeatureConfigs: Record<ChatFeatureId, ChatFeatureConfig> = {
       { id: "2", text: "ToDoリストだけを抽出して" },
       { id: "3", text: "決定事項を箇条書きでまとめて" },
     ],
-    enableProgramSelector: true,
   },
   proposal: {
     featureId: "proposal",
@@ -168,7 +161,6 @@ export const chatFeatureConfigs: Record<ChatFeatureId, ChatFeatureConfig> = {
       { id: "2", text: "予算とスケジュール案も追加してください" },
       { id: "3", text: "類似企画との差別化ポイントを強調してください" },
     ],
-    enableProgramSelector: true,
   },
   "na-script": {
     featureId: "na-script",
@@ -186,7 +178,6 @@ export const chatFeatureConfigs: Record<ChatFeatureId, ChatFeatureConfig> = {
       { id: "2", text: "NA原稿形式（テロップ指示付き）に変換してください" },
       { id: "3", text: "重要なポイントだけを箇条書きで抽出してください" },
     ],
-    enableProgramSelector: true,
   },
 };
 

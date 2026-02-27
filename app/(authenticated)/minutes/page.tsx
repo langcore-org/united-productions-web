@@ -191,7 +191,7 @@ export default function MinutesPage() {
               placeholder="議事録の調整が必要な場合は、ここに入力してください"
               inputLabel="追加指示"
               outputFormat="markdown"
-              enableProgramSelector={false}
+              selectedProgramId={null}
             />
           </div>
         </div>

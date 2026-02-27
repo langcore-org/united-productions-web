@@ -1,22 +1,9 @@
 "use client";
 
-import dynamic from "next/dynamic";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useCallback, useEffect, useState } from "react";
-import { AGENTS, getAgentById } from "@/lib/chat/agents";
-
-// FeatureChatを動的インポート
-const FeatureChat = dynamic(
-  () => import("@/components/ui/FeatureChat").then((mod) => mod.FeatureChat),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="flex items-center justify-center h-full">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
-      </div>
-    ),
-  },
-);
+import { Suspense, useCallback } from "react";
+import { ChatPage } from "@/components/chat/ChatPage";
+import { isValidFeatureId } from "@/lib/chat/chat-config";
 
 /**
  * 統合チャットページ
@@ -27,33 +14,13 @@ const FeatureChat = dynamic(
 function ChatPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
+
+  // agent指定があればそれを使用、なければ general
   const agentId = searchParams.get("agent") || "general";
+  const featureId = isValidFeatureId(agentId) ? agentId : "general-chat";
+
   // chatId指定なし = 新規チャット、指定あり = 既存チャットの続き
   const chatId = searchParams.get("chatId") ?? undefined;
-
-  const [agent, setAgent] = useState(AGENTS[0]);
-  const [systemPrompt, setSystemPrompt] = useState<string>("");
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    async function loadAgent() {
-      setIsLoading(true);
-
-      try {
-        const selectedAgent = getAgentById(agentId as Parameters<typeof getAgentById>[0]);
-        setAgent(selectedAgent);
-        setSystemPrompt(selectedAgent.systemPrompt);
-      } catch (error) {
-        console.error("Failed to load agent:", error);
-        setAgent(AGENTS[0]);
-        setSystemPrompt(AGENTS[0].systemPrompt);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-
-    loadAgent();
-  }, [agentId]);
 
   // 新規チャット作成時にURLを更新（ブラウザ履歴を汚さないようreplaceState）
   const handleChatCreated = useCallback(
@@ -65,32 +32,16 @@ function ChatPageContent() {
     [searchParams, router],
   );
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
-      </div>
-    );
-  }
-
   return (
-    <FeatureChat
-      key={`${agent.id}-${chatId ?? "new"}`}
-      featureId={agent.id}
+    <ChatPage
+      featureId={featureId}
       chatId={chatId}
       onChatCreated={handleChatCreated}
-      title={agent.name}
-      systemPrompt={systemPrompt}
-      placeholder={agent.placeholder}
-      inputLabel={agent.inputLabel}
-      outputFormat={agent.outputFormat}
-      suggestions={agent.suggestions}
-      enableProgramSelector={agent.enableProgramSelector}
     />
   );
 }
 
-export default function ChatPage() {
+export default function ChatPageWrapper() {
   return (
     <Suspense
       fallback={

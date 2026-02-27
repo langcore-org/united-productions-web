@@ -3,6 +3,8 @@
 import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 import { type ChatFeatureId, getChatConfig } from "@/lib/chat/chat-config";
+import { hasWelcomeMessage } from "@/lib/chat/welcome-messages";
+import { ProgramSelectionView } from "./ProgramSelectionView";
 
 // FeatureChatを動的インポート
 const FeatureChat = dynamic(
@@ -19,12 +21,16 @@ const FeatureChat = dynamic(
 
 interface ChatPageProps {
   featureId: ChatFeatureId;
+  chatId?: string;
+  onChatCreated?: (chatId: string) => void;
 }
 
-export function ChatPage({ featureId }: ChatPageProps) {
+export function ChatPage({ featureId, chatId, onChatCreated }: ChatPageProps) {
   const [config, setConfig] = useState(getChatConfig(featureId));
   const [systemPrompt, setSystemPrompt] = useState<string>("");
   const [isLoading, setIsLoading] = useState(true);
+  // 番組選択状態（null = 未選択、string = 選択済み）
+  const [selectedProgramId, setSelectedProgramId] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadConfig() {
@@ -55,16 +61,31 @@ export function ChatPage({ featureId }: ChatPageProps) {
     );
   }
 
+  // 番組選択が必要な機能で、まだ番組が選択されていない場合は選択画面を表示
+  const needsProgramSelection = hasWelcomeMessage(featureId);
+  if (needsProgramSelection && selectedProgramId === null) {
+    return (
+      <ProgramSelectionView
+        featureTitle={config.title}
+        featureDescription={config.description}
+        onSelect={(programId) => setSelectedProgramId(programId)}
+      />
+    );
+  }
+
   return (
     <FeatureChat
+      key={`${config.featureId}-${chatId ?? "new"}-${selectedProgramId ?? "no-program"}`}
       featureId={config.featureId}
+      chatId={chatId}
+      onChatCreated={onChatCreated}
       title={config.title}
       systemPrompt={systemPrompt}
       placeholder={config.placeholder}
       inputLabel={config.inputLabel}
       outputFormat={config.outputFormat}
       promptSuggestions={config.promptSuggestions}
-      enableProgramSelector={true}
+      selectedProgramId={selectedProgramId}
     />
   );
 }

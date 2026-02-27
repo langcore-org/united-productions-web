@@ -1,7 +1,7 @@
 "use client";
 
 import { Loader2, MessageSquare } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { StreamingSteps } from "@/components/chat";
 import { FollowUpSuggestions } from "@/components/chat/FollowUpSuggestions";
 import { CitationsList } from "@/components/chat/messages/CitationsList";
@@ -12,6 +12,8 @@ import { useLLMStream } from "@/hooks/useLLMStream";
 import { DEFAULT_PROVIDER } from "@/lib/llm/config";
 import type { LLMProvider } from "@/lib/llm/types";
 import { cn } from "@/lib/utils";
+import { getWelcomeMessage, hasWelcomeMessage } from "@/lib/chat/welcome-messages";
+import { getProgramById } from "@/lib/knowledge/programs";
 import { ChatHeader } from "./ChatHeader";
 import { ChatInputArea } from "./ChatInputArea";
 import type { AttachedFile } from "./FileAttachment";
@@ -56,8 +58,8 @@ export interface FeatureChatProps {
   promptSuggestions?: PromptSuggestion[];
   /** 新規チャット時のサジェスト例 */
   suggestions?: string[];
-  /** 番組選択機能を有効化 */
-  enableProgramSelector?: boolean;
+  /** 選択された番組ID（必須） */
+  selectedProgramId: string | null;
 }
 
 export function FeatureChat({
@@ -75,13 +77,13 @@ export function FeatureChat({
   enableFileAttachment = true,
   promptSuggestions = [],
   suggestions = [],
-  enableProgramSelector = false,
+  selectedProgramId,
 }: FeatureChatProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isCopied, setIsCopied] = useState(false);
   const [attachedFiles, setAttachedFiles] = useState<AttachedFile[]>([]);
-  const [selectedProgramId, setSelectedProgramId] = useState<string>("all");
+  const hasShownWelcomeRef = useRef(false);
 
   const provider: LLMProvider = initialProvider;
 
@@ -107,11 +109,43 @@ export function FeatureChat({
     if (initialChatId) {
       setCurrentChatId(initialChatId);
       loadConversation(initialChatId).then(setMessages);
+      hasShownWelcomeRef.current = true; // 既存会話ではウェルカムメッセージを出さない
     } else {
       setMessages([]);
       setCurrentChatId(undefined);
+      hasShownWelcomeRef.current = false;
     }
   }, [initialChatId, loadConversation, setCurrentChatId]);
+
+  // ウェルカムメッセージを表示（新規チャット時のみ）
+  useEffect(() => {
+    // 既存会話、または既にウェルカムメッセージを表示済みの場合はスキップ
+    if (initialChatId || hasShownWelcomeRef.current) return;
+
+    // ウェルカムメッセージが定義されていない機能の場合はスキップ
+    if (!hasWelcomeMessage(featureId)) return;
+
+    // メッセージが空の場合のみ表示（初回またはクリア後）
+    if (messages.length === 0) {
+      // 番組名を取得（selectedProgramId が null の場合は「番組を指定しない」用のメッセージ）
+      const programInfo = selectedProgramId ? getProgramById(selectedProgramId) : null;
+      const programName = programInfo?.name ?? "全番組";
+
+      const welcomeContent = getWelcomeMessage(featureId, programName);
+
+      if (welcomeContent) {
+        const welcomeMessage: Message = {
+          id: `welcome-${Date.now()}`,
+          role: "assistant",
+          content: welcomeContent,
+          timestamp: new Date(),
+          llmProvider: provider,
+        };
+        setMessages([welcomeMessage]);
+        hasShownWelcomeRef.current = true;
+      }
+    }
+  }, [selectedProgramId, featureId, initialChatId, messages.length, provider]);
 
   // ストリーミング完了時にメッセージを保存
   useEffect(() => {
@@ -179,7 +213,7 @@ export function FeatureChat({
     setAttachedFiles([]);
 
     const streamMessages = buildStreamMessages(userMessage.content, messages);
-    await startStream(streamMessages, provider, featureId, selectedProgramId);
+    await startStream(streamMessages, provider, featureId, selectedProgramId ?? undefined);
   };
 
   const handleCopy = async () => {
@@ -193,6 +227,7 @@ export function FeatureChat({
 
   const handleClear = async () => {
     setMessages([]);
+    hasShownWelcomeRef.current = false; // クリア後は再びウェルカムメッセージを表示可能に
     const chatIdToDelete = currentChatId;
     setCurrentChatId(undefined);
     if (chatIdToDelete) {
@@ -220,7 +255,7 @@ export function FeatureChat({
       setMessages((prev) => {
         const newMessages = [...prev, userMessage];
         const streamMessages = buildStreamMessages(userMessage.content, newMessages.slice(0, -1));
-        startStream(streamMessages, provider, featureId, selectedProgramId);
+        startStream(streamMessages, provider, featureId, selectedProgramId ?? undefined);
         return newMessages;
       });
     },
@@ -239,10 +274,6 @@ export function FeatureChat({
         isCopied={isCopied}
         onClear={handleClear}
         onCopy={handleCopy}
-        enableProgramSelector={enableProgramSelector}
-        selectedProgramId={selectedProgramId}
-        onProgramChange={setSelectedProgramId}
-        isProgramSelectorDisabled={!isComplete}
       />
 
       {/* Messages */}
