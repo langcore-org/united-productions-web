@@ -5,12 +5,12 @@
  * @updated 2026-02-27 ヘッダーを1回だけ表示するように変更
  */
 
-import { Loader2 } from "lucide-react";
+import { Bot, Loader2 } from "lucide-react";
 import {
   CitationsList,
   ContentMessage,
   ErrorMessage,
-
+  SkeletonMessage,
   SummarizationMessage,
   ThinkingPlaceholderMessage,
   ToolCallMessage,
