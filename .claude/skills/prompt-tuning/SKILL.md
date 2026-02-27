@@ -1,3 +1,8 @@
+---
+name: prompt-tuning
+description: テストケース駆動でシステムプロンプトを改善するskill。チューニングループを繰り返し、満足したら本番DBへ反映。Use when tuning system prompts with test-case driven iterative approach. Triggers include "プロンプト調整", "プロンプトチューニング", "prompt tuning", "プロンプト改善", "テストケース".
+---
+
 # プロンプトチューニング
 
 テストケース駆動でシステムプロンプトを改善するskillです。
