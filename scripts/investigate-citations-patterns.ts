@@ -11,7 +11,7 @@ import { createClientLogger } from "@/lib/logger";
 
 const logger = createClientLogger("InvestigateCitations");
 
-import { readFileSync } from "fs";
+import { readFileSync } from "node:fs";
 
 const envContent = readFileSync(".env.local", "utf-8");
 const apiKeyMatch = envContent.match(/XAI_API_KEY=(.+)/);

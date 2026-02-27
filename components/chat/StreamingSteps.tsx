@@ -8,7 +8,6 @@
 import { Bot, Loader2 } from "lucide-react";
 import {
   CitationsList,
-  ContentMessage,
   ErrorMessage,
   SkeletonMessage,
   SummarizationMessage,

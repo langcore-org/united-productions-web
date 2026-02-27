@@ -9,7 +9,7 @@
  *   各処理ステップの所要時間（ミリ秒）
  */
 
-import { performance } from "perf_hooks";
+import { performance } from "node:perf_hooks";
 
 // テスト用のメッセージ
 const testMessages = [
