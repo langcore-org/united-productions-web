@@ -272,6 +272,8 @@ export function FeatureChat({
         hasMessages={hasMessages}
         lastAssistantMessage={lastAssistantMessage}
         isCopied={isCopied}
+        selectedProgramId={selectedProgramId}
+        isStreaming={isPending}
         onClear={handleClear}
         onCopy={handleCopy}
       />

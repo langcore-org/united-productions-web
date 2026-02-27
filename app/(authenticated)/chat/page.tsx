@@ -8,8 +8,10 @@ import { isValidFeatureId } from "@/lib/chat/chat-config";
 /**
  * 統合チャットページ
  *
- * クエリパラメータ ?agent=xxx で機能を指定
- * 指定がない場合は一般チャット
+ * クエリパラメータ:
+ * - ?agent=xxx : 機能を指定（指定なしは一般チャット）
+ * - ?chatId=xxx : 既存チャットを開く
+ * - ?program=xxx : 指定番組で新規チャット（番組選択スキップ）
  */
 function ChatPageContent() {
   const searchParams = useSearchParams();
@@ -21,6 +23,9 @@ function ChatPageContent() {
 
   // chatId指定なし = 新規チャット、指定あり = 既存チャットの続き
   const chatId = searchParams.get("chatId") ?? undefined;
+
+  // program指定あり = その番組で新規チャット開始（番組選択スキップ）
+  const initialProgramId = searchParams.get("program") ?? undefined;
 
   // 新規チャット作成時にURLを更新（ブラウザ履歴を汚さないようreplaceState）
   const handleChatCreated = useCallback(
@@ -36,6 +41,7 @@ function ChatPageContent() {
     <ChatPage
       featureId={featureId}
       chatId={chatId}
+      initialProgramId={initialProgramId}
       onChatCreated={handleChatCreated}
     />
   );

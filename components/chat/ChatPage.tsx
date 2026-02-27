@@ -22,15 +22,18 @@ const FeatureChat = dynamic(
 interface ChatPageProps {
   featureId: ChatFeatureId;
   chatId?: string;
+  /** 初期番組ID（指定時は番組選択をスキップ） */
+  initialProgramId?: string;
   onChatCreated?: (chatId: string) => void;
 }
 
-export function ChatPage({ featureId, chatId, onChatCreated }: ChatPageProps) {
+export function ChatPage({ featureId, chatId, initialProgramId, onChatCreated }: ChatPageProps) {
   const [config, setConfig] = useState(getChatConfig(featureId));
   const [systemPrompt, setSystemPrompt] = useState<string>("");
   const [isLoading, setIsLoading] = useState(true);
   // 番組選択状態（null = 未選択、string = 選択済み）
-  const [selectedProgramId, setSelectedProgramId] = useState<string | null>(null);
+  // initialProgramId が指定されていればそれを初期値に
+  const [selectedProgramId, setSelectedProgramId] = useState<string | null>(initialProgramId ?? null);
 
   useEffect(() => {
     async function loadConfig() {
@@ -62,7 +65,8 @@ export function ChatPage({ featureId, chatId, onChatCreated }: ChatPageProps) {
   }
 
   // 番組選択が必要な機能で、まだ番組が選択されていない場合は選択画面を表示
-  if (needsProgramSelection(featureId) && selectedProgramId === null) {
+  // initialProgramId が指定されていればスキップ
+  if (needsProgramSelection(featureId) && selectedProgramId === null && !initialProgramId) {
     return (
       <ProgramSelectionView
         featureTitle={config.title}
