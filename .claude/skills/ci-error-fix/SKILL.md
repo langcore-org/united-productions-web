@@ -2,114 +2,207 @@
 
 GitHub ActionsなどのCIで発生したエラーを効率的に修正するためのスキル。
 
-## 使用タイミング
+## 最重要原則
 
-- GitHub Actionsでビルド/テスト/リントが失敗した時
-- PR作成後にCIが失敗した時
-- ローカルでは通るがCIで失敗する時
+1. **推測で決めつけない** - 必ずログを確認して原因を特定する
+2. **一度で直そうとしない** - 小さく修正して、ログを確認し、次に進む
+3. **ステップバイステップ** - ログ確認 → 修正 → ログ確認 → 修正 → を繰り返す
 
-## 基本ワークフロー
+## ワークフロー（反復的アプローチ）
 
-### 1. エラーの詳細を確認する
-
-**必ずログを確認してから修正を始めること。**
+### Step 1: エラーログを取得する
 
 ```bash
-# ローカルで各チェックを実行
-npm run build 2>&1
+# TypeScriptエラーの場合
 npx tsc --noEmit 2>&1
-npm run lint 2>&1
-npm test 2>&1
+
+# 最初の数件だけ確認
+npx tsc --noEmit 2>&1 | head -20
 ```
 
-### 2. エラーの種類を特定する
+**この時点で考えないこと：**
+- ❌ "おそらくこういう原因だろう"
+- ❌ "以前同じようなエラーがあったから"
+- ✅ **ただ事実（エラーメッセージ）を確認するだけ**
 
-| エラー種別 | 確認コマンド | 対応方法 |
-|-----------|------------|---------|
-| TypeScript | `npx tsc --noEmit` | 型定義を修正 |
-| Lint | `npm run lint` | コードスタイルを修正 |
-| Test | `npm test` | テストコードまたは実装を修正 |
-| Build | `npm run build` | ビルド設定またはコードを修正 |
+### Step 2: 最初の1エラーを調査する
 
-### 3. エラーの原因を特定する
-
-#### TypeScriptエラーの場合
+**複数エラーがある場合、最初の1つだけに集中する。**
 
 ```bash
-# エラーが出たファイルを確認
-npx tsc --noEmit 2>&1 | grep "error TS"
-
-# 特定のエラーの詳細を確認
-npx tsc --noEmit 2>&1 | head -50
+# 最初のエラーだけを確認
+npx tsc --noEmit 2>&1 | grep -m1 "error TS"
 ```
 
-よくある原因：
-- 存在しないプロパティへのアクセス
-- 型の不整合
-- 未使用の変数/インポート
-- Propsの型定義と実際の使用が不一致
+**調査のポイント：**
+- どのファイルの何行目か
+- エラーコードは何か（TS2339など）
+- エラーメッセージの具体的な内容
 
-#### Lintエラーの場合
+### Step 3: 該当コードを確認する
 
 ```bash
-# エラーが出たファイルを確認
-npm run lint 2>&1 | grep "error"
-
-# 自動修正可能か確認
-npx biome check --write . 2>&1
+# エラーが出たファイルを開く
+# 例: app/api/chat/feature/route.ts(90,24)
 ```
 
-#### Testエラーの場合
+**確認すること：**
+- その行で何をしようとしているか
+- 型定義は何か（型定義ファイルやJSDocを確認）
+- 周辺のコードの文脈
 
-```bash
-# 失敗したテスト名を確認
-npm test 2>&1 | grep "FAIL\|✕"
+### Step 4: 1エラーを修正する
 
-# 詳細なエラーメッセージ
-npm test 2>&1 | tail -100
-```
+**最小限の修正のみ行う。**
 
-### 4. 修正する
-
-#### 型エラーの修正パターン
-
-**パターン1: 存在しないプロパティ**
 ```typescript
-// ❌ エラー
-const provider = message.llmProvider;
-
-// ✅ 修正：型定義を確認し、正しいプロパティ名を使用
-const provider = message.llmProvider; // 型定義に存在するか確認
+// 例: Property 'llmProvider' does not exist on type 'Message'
+// → 型定義を確認して、存在するプロパティ名を使用
 ```
 
-**パターン2: 未使用の変数**
-```typescript
-// ❌ エラー
-const unusedVar = something;
-
-// ✅ 修正：使用しない場合は削除、または_プレフィックス
-const _unusedVar = something;
-```
-
-**パターン3: Propsの不一致**
-```typescript
-// ❌ 親コンポーネントで渡しているが子で使用していない
-<ChildComponent unusedProp={value} />
-
-// ✅ 修正：子コンポーネントのPropsから削除
-interface ChildProps {
-  // unusedProp: string; // 削除
-}
-```
-
-### 5. 修正を確認する
+### Step 5: 再度ログを確認する
 
 ```bash
 # 修正後、再度チェック
-npm run build 2>&1 | tail -5
-npx tsc --noEmit 2>&1 | tail -5
-npm run lint 2>&1 | tail -5
+npx tsc --noEmit 2>&1 | head -20
 ```
+
+**結果を見て判断：**
+- ✅ エラーが減った → 次のエラーへ
+- ❌ エラーが変わった → 新しいエラーを調査
+- ❌ 同じエラーが残っている → 修正が不十分、Step 2に戻る
+
+### Step 6: 繰り返す
+
+エラーが0になるまで Step 2〜5 を繰り返す。
+
+---
+
+## エラー種別ごとの調査方法
+
+### TypeScriptエラー
+
+```bash
+# 全エラーを確認
+npx tsc --noEmit 2>&1
+
+# エラー数をカウント
+npx tsc --noEmit 2>&1 | grep -c "error TS"
+
+# 最初のエラーだけ
+npx tsc --noEmit 2>&1 | grep -m1 "error TS"
+```
+
+### Lintエラー
+
+```bash
+# エラーを確認
+npm run lint 2>&1
+
+# 自動修正を試す（慎重に）
+npx biome check --write <特定のファイル> 2>&1
+```
+
+### Testエラー
+
+```bash
+# 失敗したテスト名
+npm test 2>&1 | grep "✕\|FAIL"
+
+# 特定のテストのみ実行
+npm test <テスト名> 2>&1
+```
+
+---
+
+## よくあるエラーと調査方法
+
+### ケース1: Property 'xxx' does not exist on type 'YYY'
+
+**調査：**
+```bash
+# 型定義を確認
+grep -r "interface YYY\|type YYY" --include="*.ts" --include="*.d.ts"
+
+# または定義ジャンプで確認
+```
+
+**修正：**
+- 型定義に存在しないプロパティ → 削除または正しいプロパティ名に変更
+- 型定義が古い → 型定義を更新
+
+### ケース2: Argument of type 'XXX' is not assignable to parameter of type 'YYY'
+
+**調査：**
+- 関数の型定義を確認
+- 渡している値の型を確認
+- 型変換が必要か判断
+
+### ケース3: Unused variable/parameter
+
+**調査：**
+- 本当に未使用か確認
+- 将来使う予定か確認
+
+**修正：**
+- 未使用 → 削除
+- 将来使う → `_` プレフィックスを付ける
+
+---
+
+## スクリプト
+
+### ci-check.sh - ローカルでCIチェックを実行
+
+```bash
+./.claude/skills/ci-error-fix/scripts/ci-check.sh
+```
+
+### find-ts-errors.sh - エラー分析
+
+```bash
+./.claude/skills/ci-error-fix/scripts/find-ts-errors.sh
+```
+
+---
+
+## 禁止事項
+
+1. **推測で修正しない**
+   ```
+   ❌ "おそらくこの型だろう" → 調査せずに修正
+   ✅ エラーメッセージを確認 → 型定義を調査 → 修正
+   ```
+
+2. **一度で全部直そうとしない**
+   ```
+   ❌ 10個のエラーを一気に修正してから確認
+   ✅ 1個修正 → 確認 → 次の1個修正 → 確認
+   ```
+
+3. **型安全性を犠牲にしない**
+   ```
+   ❌ `as any` でごまかす
+   ✅ 正しい型を調査して修正
+   ```
+
+---
+
+## コミット戦略
+
+1. **1エラー修正ごとにコミットしてもよい**
+   - 小さく確実に進める
+   - やり直しが容易
+
+2. **コミットメッセージ**
+   ```
+   fix: TypeScriptエラーを修正 - Message型のプロパティ名を修正
+   
+   - llmProvider → provider に修正
+   - 型定義と実装の不一致を解消
+   ```
+
+---
 
 ## トラブルシューティング
 
@@ -121,55 +214,41 @@ rm -rf node_modules package-lock.json
 npm install
 
 # 2. キャッシュをクリア
-npm run clean 2>/dev/null || rm -rf .next dist
+rm -rf .next dist
 
-# 3. 再度実行
-npm run build
+# 3. 再度チェック
+npx tsc --noEmit 2>&1 | head -20
 ```
 
-### エラーメッセージが不明確
+### エラーが多すぎて混乱する
 
 ```bash
-# より詳細な出力
-npx tsc --noEmit --pretty 2>&1
-
-# 特定のファイルのみチェック
-npx tsc --noEmit --project tsconfig.json 2>&1 | grep "app/path/to/file"
+# 最初の1つだけに集中
+tsc_output=$(npx tsc --noEmit 2>&1)
+first_error=$(echo "$tsc_output" | grep -m1 "error TS")
+echo "修正対象: $first_error"
 ```
 
-### 大量のエラーが出た場合
-
-1. **最初のエラーから修正する** - 連鎖的なエラーの可能性あり
-2. **共通の原因を探す** - 型定義の変更が影響している場合など
-3. **分割して対応** - ファイルごとにコミット
-
-## スクリプト
-
-### ci-check.sh - ローカルでCIチェックを再現
+### 原因がわからない
 
 ```bash
-./.claude/skills/ci-error-fix/scripts/ci-check.sh
+# エラーコードで検索
+grep -r "TS2339" docs/ --include="*.md"
+grep -r "TS2345" docs/ --include="*.md"
 ```
 
-### find-ts-errors.sh - TypeScriptエラーの場所を特定
+---
 
-```bash
-./.claude/skills/ci-error-fix/scripts/find-ts-errors.sh
-```
+## まとめ
 
-## コミットメッセージのテンプレート
+**反復的アプローチ：**
 
 ```
-fix: CIエラーを修正
-
-- TypeScript: XXXの型定義を修正
-- Lint: XXXのスタイルを修正
-- Test: XXXのテストを修正
+ログ確認 → 1エラー調査 → 修正 → ログ確認 → 次のエラー → ... → 0エラー
 ```
 
-## 重要な注意事項
-
-1. **推測で修正しない** - 必ずエラーログを確認する
-2. **最小限の修正** - 必要最小限の変更に留める
-3. **型安全性を損なわない** - `as any` は最後の手段
-4. **テストも確認** - 型エラー修正後、テストが通るか確認
+**キーワード：**
+- 推測禁止
+- ステップバイステップ
+- ログを信じる
+- 小さく確実に
