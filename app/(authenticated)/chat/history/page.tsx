@@ -49,7 +49,6 @@ const FEATURE_FILTERS = [
   { id: "research-evidence", label: "エビデンスリサーチ", icon: Shield },
   { id: "minutes", label: "議事録作成", icon: FileText },
   { id: "proposal", label: "新企画立案", icon: Lightbulb },
-  { id: "na-script", label: "NA原稿作成", icon: Mic },
 ];
 
 // 機能名を取得

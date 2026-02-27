@@ -154,12 +154,9 @@ export type GrokToolSettings = Record<ChatFeatureId, GrokToolType[]>;
 export const DEFAULT_GROK_TOOL_SETTINGS: GrokToolSettings = {
   "general-chat": [...ALL_TOOL_TYPES],
   "research-cast": [...ALL_TOOL_TYPES],
-  "research-location": [...ALL_TOOL_TYPES],
-  "research-info": [...ALL_TOOL_TYPES],
   "research-evidence": [...ALL_TOOL_TYPES],
   minutes: [...ALL_TOOL_TYPES],
   proposal: [...ALL_TOOL_TYPES],
-  "na-script": [...ALL_TOOL_TYPES],
 };
 
 /**

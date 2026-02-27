@@ -13,8 +13,7 @@ export type AgentId =
   | "research-cast"
   | "research-evidence"
   | "minutes"
-  | "proposal"
-  | "na-script";
+  | "proposal";
 
 /** Agent（専用チャット機能）の定義 */
 export interface Agent {
@@ -124,24 +123,6 @@ export const AGENTS: Agent[] = [
       "若年層向けの新しい企画を考えて",
       "季節に合った特番企画を提案して",
       "低予算で実現できる企画を考えて",
-    ],
-  },
-  {
-    id: "na-script",
-    name: "NA原稿作成",
-    description: "文字起こしからナレーション原稿を作成",
-    icon: "Mic",
-    systemPrompt: getDefaultPromptContent(PROMPT_KEYS.TRANSCRIPT),
-    placeholder: "文字起こしテキストを貼り付けてください",
-    inputLabel: "文字起こし",
-    outputFormat: "plaintext",
-    category: "document",
-    color: "#14b8a6",
-    promptKey: PROMPT_KEYS.TRANSCRIPT,
-    suggestions: [
-      "Premiere Pro書き起こしをNA原稿にして",
-      "話者を判定して整形して",
-      "フィラーを除去して原稿にして",
     ],
   },
 ];

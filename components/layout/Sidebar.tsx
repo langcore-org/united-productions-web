@@ -56,13 +56,6 @@ const NEW_CHAT_BUTTONS = [
     href: "/chat?agent=proposal&new=1",
     description: "企画提案を作成",
   },
-  // NA原稿作成は第2段階以降で実装予定
-  // {
-  //   icon: <Mic className="w-[18px] h-[18px]" />,
-  //   label: "NA原稿作成",
-  //   href: "/chat?agent=na-script&new=1",
-  //   description: "NA原稿を作成",
-  // },
 ];
 
 export function Sidebar({ className, onCollapseChange }: SidebarProps) {

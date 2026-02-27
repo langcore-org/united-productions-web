@@ -14,12 +14,9 @@ import { DEFAULT_PROMPTS, PROMPT_KEYS } from "@/lib/prompts";
 export type ChatFeatureId =
   | "general-chat"
   | "research-cast"
-  | "research-location"
-  | "research-info"
   | "research-evidence"
   | "minutes"
-  | "proposal"
-  | "na-script";
+  | "proposal";
 
 /** チャット機能の設定 */
 export interface ChatFeatureConfig {
@@ -86,36 +83,6 @@ export const chatFeatureConfigs: Record<ChatFeatureId, ChatFeatureConfig> = {
       },
     ],
   },
-  "research-location": {
-    featureId: "research-location",
-    title: "場所リサーチ",
-    systemPrompt: getDefaultPromptContent(PROMPT_KEYS.RESEARCH_LOCATION),
-    placeholder: "ロケ地・撮影場所の条件を入力してください",
-    outputFormat: "markdown",
-    icon: "MapPin",
-    description: "ロケ地候補と撮影条件を調査",
-    promptKey: PROMPT_KEYS.RESEARCH_LOCATION,
-    promptSuggestions: [
-      { id: "1", text: "この場所の撮影許可取得方法を教えて" },
-      { id: "2", text: "周辺の宿泊施設とアクセス情報をまとめて" },
-      { id: "3", text: "類似のロケ地を他に提案して" },
-    ],
-  },
-  "research-info": {
-    featureId: "research-info",
-    title: "情報リサーチ",
-    systemPrompt: getDefaultPromptContent(PROMPT_KEYS.RESEARCH_INFO),
-    placeholder: "リサーチしたいテーマを入力してください",
-    outputFormat: "markdown",
-    icon: "Search",
-    description: "テーマに関する情報を収集・整理",
-    promptKey: PROMPT_KEYS.RESEARCH_INFO,
-    promptSuggestions: [
-      { id: "1", text: "このトピックの最新ニュースを調べて" },
-      { id: "2", text: "専門家用語を分かりやすく解説して" },
-      { id: "3", text: "関連する統計データを探してまとめて" },
-    ],
-  },
   "research-evidence": {
     featureId: "research-evidence",
     title: "エビデンスリサーチ",
@@ -162,23 +129,6 @@ export const chatFeatureConfigs: Record<ChatFeatureId, ChatFeatureConfig> = {
       { id: "3", text: "類似企画との差別化ポイントを強調してください" },
     ],
   },
-  "na-script": {
-    featureId: "na-script",
-    title: "NA原稿作成",
-    systemPrompt: getDefaultPromptContent(PROMPT_KEYS.TRANSCRIPT),
-    placeholder:
-      "動画の文字起こしテキストを貼り付けてください。「整形して」や「NA原稿にして」など指示してください",
-    inputLabel: "文字起こし入力",
-    outputFormat: "plaintext",
-    icon: "FileEdit",
-    description: "文字起こし整形・NA原稿作成",
-    promptKey: PROMPT_KEYS.TRANSCRIPT,
-    promptSuggestions: [
-      { id: "1", text: "読みやすく段落分けして整形してください" },
-      { id: "2", text: "NA原稿形式（テロップ指示付き）に変換してください" },
-      { id: "3", text: "重要なポイントだけを箇条書きで抽出してください" },
-    ],
-  },
 };
 
 /** 機能IDから設定を取得 */
@@ -199,8 +149,6 @@ export function getAllChatFeatures(): ChatFeatureConfig[] {
 export function getResearchFeatures(): ChatFeatureConfig[] {
   return [
     chatFeatureConfigs["research-cast"],
-    chatFeatureConfigs["research-location"],
-    chatFeatureConfigs["research-info"],
     chatFeatureConfigs["research-evidence"],
   ];
 }

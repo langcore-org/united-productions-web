@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowUp, AtSign, FileText, Globe, Mic, Search, Sparkles } from "lucide-react";
+import { ArrowUp, AtSign, FileText, Globe, Search, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
@@ -25,12 +25,6 @@ const modeButtons: ModeButton[] = [
     label: "議事録",
     icon: <FileText className="w-4 h-4" />,
     href: "/chat?agent=minutes",
-  },
-  {
-    id: "na-script",
-    label: "NA原稿",
-    icon: <Mic className="w-4 h-4" />,
-    href: "/chat?agent=na-script",
   },
   {
     id: "proposal",
