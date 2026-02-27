@@ -230,7 +230,11 @@ export const programMainichioogiri: ProgramInfo = {
     "テレビ朝日のYouTubeチャンネル看板コンテンツ",
   ],
   social: [
-    { platform: "YouTube", url: "https://www.youtube.com/c/動画-はじめてみました-テレビ朝日公式", followers: "登録者数数十万" },
+    {
+      platform: "YouTube",
+      url: "https://www.youtube.com/c/動画-はじめてみました-テレビ朝日公式",
+      followers: "登録者数数十万",
+    },
     { platform: "TikTok", url: "@dogahajime", followers: "" },
     { platform: "X", url: "@douhaji_ex", followers: "" },
   ],
@@ -252,9 +256,7 @@ export const programMainichishouresu: ProgramInfo = {
   name: "まいにち賞レース",
   station: "テレビ朝日／YouTube",
   schedule: "金曜17:00〜配信（完全版）",
-  scheduleDetail: [
-    { day: "金曜", startTime: "17:00", endTime: "17:30", note: "完全版配信" },
-  ],
+  scheduleDetail: [{ day: "金曜", startTime: "17:00", endTime: "17:30", note: "完全版配信" }],
   timeSlot: "金曜夕方",
   officialUrl: "https://www.youtube.com/c/動画-はじめてみました-テレビ朝日公式",
   cast: "アルコ＆ピース（平子祐希・酒井健太）",
@@ -278,7 +280,9 @@ export const programMainichishouresu: ProgramInfo = {
   regularStartDate: "2023年11月",
   totalEpisodes: "数十回以上",
   broadcastHistory: "2023年11月開始→まいにちシリーズ第2弾として展開中",
-  ratings: [{ period: "YouTube", average: "", note: "累計再生回数1.4億回以上（まいにちシリーズ全体）" }],
+  ratings: [
+    { period: "YouTube", average: "", note: "累計再生回数1.4億回以上（まいにちシリーズ全体）" },
+  ],
   awards: [],
   achievements: [
     "「まいにちシリーズ」第2弾",
@@ -286,7 +290,11 @@ export const programMainichishouresu: ProgramInfo = {
     "アイドル審査員の「迷」審査が話題",
   ],
   social: [
-    { platform: "YouTube", url: "https://www.youtube.com/c/動画-はじめてみました-テレビ朝日公式", followers: "" },
+    {
+      platform: "YouTube",
+      url: "https://www.youtube.com/c/動画-はじめてみました-テレビ朝日公式",
+      followers: "",
+    },
     { platform: "TikTok", url: "@dogahajime", followers: "" },
     { platform: "X", url: "@douhaji_ex", followers: "" },
   ],
