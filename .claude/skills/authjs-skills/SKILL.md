@@ -1,3 +1,8 @@
+---
+name: authjs-skills
+description: Auth.js v5による認証設定。Google OAuth、クレデンシャル認証、セッション管理をサポート。
+---
+
 # Auth.js Skills
 
 ## Description

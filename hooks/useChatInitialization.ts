@@ -83,7 +83,15 @@ export function useChatInitialization({
         hasShownWelcomeRef.current = true;
       }
     }
-  }, [selectedProgramId, featureId, initialChatId, messages.length, provider, initialMessage, setMessages]);
+  }, [
+    selectedProgramId,
+    featureId,
+    initialChatId,
+    messages.length,
+    provider,
+    initialMessage,
+    setMessages,
+  ]);
 
   // 3. 初期メッセージを自動送信（新規チャット時のみ）
   useEffect(() => {

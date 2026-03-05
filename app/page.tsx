@@ -14,10 +14,12 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { buildChatUrl, navigateToChat } from "@/lib/chat/navigation";
+import type { ChatFeatureId } from "@/lib/chat/chat-config";
 import { cn } from "@/lib/utils";
 
 interface ModeButton {
-  id: string;
+  id: ChatFeatureId;
   label: string;
   icon: React.ReactNode;
   href: string;
@@ -25,34 +27,34 @@ interface ModeButton {
 
 const modeButtons: ModeButton[] = [
   {
-    id: "chat",
+    id: "general-chat",
     label: "チャット",
     icon: <MessageSquare className="w-4 h-4" />,
-    href: "/chat?new=1",
+    href: buildChatUrl({ featureId: "general-chat", isNew: true }),
   },
   {
     id: "research-cast",
     label: "出演者リサーチ",
     icon: <Users className="w-4 h-4" />,
-    href: "/chat?agent=research-cast&new=1",
+    href: buildChatUrl({ featureId: "research-cast", isNew: true }),
   },
   {
     id: "research-evidence",
     label: "エビデンスリサーチ",
     icon: <Shield className="w-4 h-4" />,
-    href: "/chat?agent=research-evidence&new=1",
+    href: buildChatUrl({ featureId: "research-evidence", isNew: true }),
   },
   {
     id: "minutes",
     label: "議事録作成",
     icon: <FileText className="w-4 h-4" />,
-    href: "/chat?agent=minutes&new=1",
+    href: buildChatUrl({ featureId: "minutes", isNew: true }),
   },
   {
     id: "proposal",
     label: "新企画立案",
     icon: <Lightbulb className="w-4 h-4" />,
-    href: "/chat?agent=proposal&new=1",
+    href: buildChatUrl({ featureId: "proposal", isNew: true }),
   },
 ];
 
@@ -75,9 +77,7 @@ export default function DashboardPage() {
 
   const handleSend = () => {
     if (inputValue.trim()) {
-      // 一般チャットとしてメッセージを送信
-      const encodedMessage = encodeURIComponent(inputValue.trim());
-      router.push(`/chat?new=1&message=${encodedMessage}`);
+      navigateToChat(router, { message: inputValue.trim(), isNew: true });
     }
   };
 

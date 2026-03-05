@@ -1,3 +1,8 @@
+---
+name: nextjs
+description: Next.js 14+アプリケーション開発。App Router、Server Components/Actions、TypeScript、Tailwind CSS、パフォーマンス最適化を統合サポート。
+---
+
 # Next.js Developer
 
 > **Next.js 14+ / App Router / TypeScript / Tailwind CSS 統合スキル**

@@ -1,3 +1,8 @@
+---
+name: prisma
+description: Prisma ORMによるデータベース開発。スキーマ設計、マイグレーション、クライアントAPI、クエリ最適化を統合サポート。
+---
+
 # Prisma Developer
 
 > **Prisma ORM 開発統合スキル - スキーマ設計、クエリ、マイグレーション**

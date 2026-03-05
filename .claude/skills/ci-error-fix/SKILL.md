@@ -1,3 +1,8 @@
+---
+name: ci-error-fix
+description: GitHub ActionsのCIエラーを段階的に修正。TypeScript、Lint、テストエラーの対応と、別作業ファイルを含めないコミット戦略をサポート。
+---
+
 # CIエラー修正スキル（GitHub Actions対応）
 
 GitHub Actionsで発生したエラーを効率的に修正するためのスキル。

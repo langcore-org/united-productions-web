@@ -1,3 +1,8 @@
+---
+name: testing
+description: テスト戦略と実装。E2Eテスト（Playwright）とユニット/統合テスト（Vitest）を統合サポート。
+---
+
 # Testing
 
 > **E2E & ユニットテスト統合スキル - Playwright + Vitest**

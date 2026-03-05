@@ -1,3 +1,8 @@
+---
+name: llm-application-dev
+description: LLMアプリケーション開発。プロンプトエンジニアリング、Few-shot学習、Chain-of-Thoughtによる推論実装をサポート。
+---
+
 # LLM Application Development
 
 ## Description
