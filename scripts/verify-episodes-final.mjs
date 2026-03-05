@@ -91,7 +91,7 @@ async function verifyWithXAI(program) {
   console.log(`番組: ${program.name}`);
   console.log(`${"=".repeat(60)}`);
 
-  const query = `${program.name} ${program.station} ${program.timeSlot} 放送回 最新 ${program.episodes.map((e) => e.date.replace(/-/g, "/")).join(" ")}`;
+  const _query = `${program.name} ${program.station} ${program.timeSlot} 放送回 最新 ${program.episodes.map((e) => e.date.replace(/-/g, "/")).join(" ")}`;
 
   const requestBody = {
     model: "grok-4-1-fast-reasoning",
@@ -160,7 +160,7 @@ ${program.episodes.map((e, i) => `${i + 1}. ${e.date} - ${e.title}`).join("\n")}
             fullText += event.delta;
             process.stdout.write(event.delta);
           }
-        } catch (e) {
+        } catch (_e) {
           // Ignore parse errors
         }
       }
@@ -187,7 +187,7 @@ async function main() {
     await new Promise((resolve) => setTimeout(resolve, 3000));
   }
 
-  console.log("\n" + "=".repeat(60));
+  console.log(`\n${"=".repeat(60)}`);
   console.log("検証完了");
   console.log("=".repeat(60));
 }

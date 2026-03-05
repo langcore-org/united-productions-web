@@ -81,7 +81,7 @@ async function verifyEpisodes() {
             fullText += event.delta;
             process.stdout.write(event.delta);
           }
-        } catch (e) {}
+        } catch (_e) {}
       }
     }
 

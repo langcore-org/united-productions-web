@@ -32,6 +32,7 @@ export function ChatHeader({
   title,
   featureId,
   outputFormat,
+  // biome-ignore lint/correctness/noUnusedFunctionParameters: 将来の機能拡張用
   hasMessages,
   lastAssistantMessage,
   isCopied,

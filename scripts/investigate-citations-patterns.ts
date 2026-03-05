@@ -159,7 +159,7 @@ const testCases: TestCase[] = [
 ];
 
 async function runTest(testCase: TestCase): Promise<void> {
-  console.log("\n" + "=".repeat(80));
+  console.log(`\n${"=".repeat(80)}`);
   console.log(`テスト: ${testCase.name}`);
   console.log(`クエリ: ${testCase.input}`);
   console.log(`期待: ${testCase.expectedBehavior}`);
@@ -307,16 +307,18 @@ async function runTest(testCase: TestCase): Promise<void> {
 
   if (onlyInInline.length > 0) {
     console.log("\n⚠️  欠損リスク！ MessageにないURL:");
-    onlyInInline.slice(0, 3).forEach((url) => console.log(`    - ${url}`));
+    // biome-ignore lint/suspicious/useIterableCallbackReturn: console.logは副作用のみ
+    onlyInInline.slice(0, 3).forEach((url) => { console.log(`    - ${url}`); });
   }
 
   if (onlyInMessage.length > 0) {
     console.log("\n⚠️  欠損リスク！ InlineにないURL:");
-    onlyInMessage.slice(0, 3).forEach((url) => console.log(`    - ${url}`));
+    // biome-ignore lint/suspicious/useIterableCallbackReturn: console.logは副作用のみ
+    onlyInMessage.slice(0, 3).forEach((url) => { console.log(`    - ${url}`); });
   }
 
   // 結果をファイルに保存
-  const fs = await import("fs");
+  const fs = await import("node:fs");
   const outputPath = `/tmp/citations_${testCase.name.replace(/\s+/g, "_")}.json`;
   fs.writeFileSync(
     outputPath,
@@ -359,7 +361,7 @@ async function main(): Promise<void> {
     await new Promise((resolve) => setTimeout(resolve, 2000));
   }
 
-  console.log("\n" + "=".repeat(80));
+  console.log(`\n${"=".repeat(80)}`);
   console.log("All tests completed!");
   console.log("=".repeat(80));
 }

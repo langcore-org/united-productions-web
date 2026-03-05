@@ -5,9 +5,9 @@
  * xAI APIを使用して各番組の直近5回分の放送回データを検証
  */
 
-import { readFileSync } from "fs";
-import { dirname, join } from "path";
-import { fileURLToPath } from "url";
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -94,7 +94,7 @@ async function verifyEpisodes(program) {
     console.log(`  ${i + 1}. ${ep.date} - ${ep.title}`);
   });
 
-  const query = `${program.name} ${program.station} 直近の放送回 2025年 2026年 ${program.episodes.map((e) => e.title).join(" ")}`;
+  const _query = `${program.name} ${program.station} 直近の放送回 2025年 2026年 ${program.episodes.map((e) => e.title).join(" ")}`;
 
   try {
     const response = await fetch("https://api.x.ai/v1/chat/completions", {

@@ -204,7 +204,7 @@ async function streamWithCapture(): Promise<void> {
               }
               break;
           }
-        } catch (err) {
+        } catch (_err) {
           console.log("Parse error:", trimmed.slice(0, 100));
         }
       }
@@ -234,7 +234,7 @@ async function streamWithCapture(): Promise<void> {
   }
 
   // レスポンス全体の構造を保存
-  const fs = await import("fs");
+  const fs = await import("node:fs");
   const outputPath = "/tmp/xai_tool_investigation.json";
   fs.writeFileSync(
     outputPath,

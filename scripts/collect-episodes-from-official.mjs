@@ -9,7 +9,7 @@
  *   node scripts/collect-episodes-from-official.mjs
  */
 
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -159,7 +159,7 @@ function generateTemplate(program) {
 /**
  * 全番組のテンプレートを生成
  */
-function generateAllTemplates() {
+function _generateAllTemplates() {
   const outputDir = join(rootDir, "docs", "verification", "collection-templates");
 
   // ディレクトリがなければ作成
@@ -272,7 +272,7 @@ console.log(`  ${outputDir}`);
 console.log("\n【Step 2】検証チェックリストを生成中...");
 generateChecklist();
 
-console.log("\n" + "=".repeat(50));
+console.log(`\n${"=".repeat(50)}`);
 console.log("\n次のステップ:");
 console.log("1. docs/verification/collection-templates/ を開く");
 console.log("2. 各番組のテンプレートに従って公式サイトからデータを収集");

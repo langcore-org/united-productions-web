@@ -102,7 +102,7 @@ async function callXAI({ tools }) {
     const reader = response.body.getReader();
     const decoder = new TextDecoder();
     let buffer = "";
-    let contentBuffer = "";
+    let _contentBuffer = "";
 
     while (true) {
       const { done, value } = await reader.read();
@@ -147,7 +147,7 @@ async function callXAI({ tools }) {
               timings.firstContent = now - startTime;
               console.log(`  最初のコンテンツ:       ${timings.firstContent}ms`);
             }
-            contentBuffer += event.delta;
+            _contentBuffer += event.delta;
           }
 
           // 完了

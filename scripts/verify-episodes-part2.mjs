@@ -3,9 +3,9 @@
  * 放送回データ検証スクリプト（残り8番組）
  */
 
-import { readFileSync } from "fs";
-import { dirname, join } from "path";
-import { fileURLToPath } from "url";
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -201,7 +201,7 @@ ${program.episodes.map((e, i) => `${i + 1}. ${e.date} - ${e.title}`).join("\n")}
             fullText += event.delta;
             process.stdout.write(event.delta);
           }
-        } catch (e) {
+        } catch (_e) {
           // Ignore parse errors
         }
       }
@@ -224,7 +224,7 @@ async function main() {
     await new Promise((resolve) => setTimeout(resolve, 3000));
   }
 
-  console.log("\n" + "=".repeat(60));
+  console.log(`\n${"=".repeat(60)}`);
   console.log("検証完了");
   console.log("=".repeat(60));
 }

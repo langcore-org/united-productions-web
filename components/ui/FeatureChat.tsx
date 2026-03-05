@@ -105,7 +105,7 @@ export function FeatureChat({
     resetStream,
   } = useLLMStream();
 
-  const { currentChatId, setCurrentChatId, isLoadingHistory, loadConversation, saveConversation } =
+  const { currentChatId, isLoadingHistory, loadConversation, saveConversation } =
     useConversationSave({ featureId, initialChatId, onChatCreated });
 
   // チャット初期化（履歴読み込み、ウェルカムメッセージ、初期メッセージ送信準備）

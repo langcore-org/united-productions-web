@@ -4,15 +4,9 @@
  * URL構築とナビゲーションアイテムの生成を一元化
  */
 
-import type { ComponentType } from "react";
 import type { LucideProps } from "lucide-react";
-import {
-  FileText,
-  Lightbulb,
-  MessageSquare,
-  Shield,
-  Users,
-} from "lucide-react";
+import { FileText, Lightbulb, MessageSquare, Shield, Users } from "lucide-react";
+import type { ComponentType } from "react";
 import type { ChatFeatureId } from "./chat-config";
 import { chatFeatureConfigs } from "./chat-config";
 
@@ -105,10 +99,7 @@ export function getNewChatUrl(featureId: ChatFeatureId, programId?: string): str
 /**
  * 機能別の初期メッセージ付きチャットURLを取得
  */
-export function getChatUrlWithMessage(
-  message: string,
-  featureId?: ChatFeatureId,
-): string {
+export function getChatUrlWithMessage(message: string, featureId?: ChatFeatureId): string {
   return buildChatUrl({ featureId, message, isNew: true });
 }
 

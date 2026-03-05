@@ -12,7 +12,7 @@ import { createClientLogger } from "@/lib/logger";
 const logger = createClientLogger("InvestigateXCitations");
 
 // 環境変数を直接読み込み
-import { readFileSync } from "fs";
+import { readFileSync } from "node:fs";
 
 const envContent = readFileSync(".env.local", "utf-8");
 const apiKeyMatch = envContent.match(/XAI_API_KEY=(.+)/);
@@ -86,7 +86,7 @@ async function investigateXCitations(): Promise<void> {
   ];
 
   for (const testCase of testCases) {
-    console.log("\n" + "=".repeat(80));
+    console.log(`\n${"=".repeat(80)}`);
     console.log(`テストケース: ${testCase.name}`);
     console.log("=".repeat(80));
 
@@ -225,7 +225,7 @@ async function investigateXCitations(): Promise<void> {
     }
 
     // 結果サマリー
-    console.log("\n" + "-".repeat(80));
+    console.log(`\n${"-".repeat(80)}`);
     console.log("📈 RESULT SUMMARY");
     console.log("-".repeat(80));
     console.log(`Total events captured: ${capturedEvents.length}`);
@@ -247,7 +247,7 @@ async function investigateXCitations(): Promise<void> {
     }
 
     // 結果をファイルに保存
-    const fs = await import("fs");
+    const fs = await import("node:fs");
     const outputPath = `/tmp/x_citations_${testCase.name.replace(/\s+/g, "_")}.json`;
     fs.writeFileSync(
       outputPath,
@@ -275,7 +275,7 @@ async function investigateXCitations(): Promise<void> {
     console.log(`\n📁 Full data saved to: ${outputPath}`);
   }
 
-  console.log("\n" + "=".repeat(80));
+  console.log(`\n${"=".repeat(80)}`);
   console.log("調査完了");
   console.log("=".repeat(80));
 }

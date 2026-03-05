@@ -103,7 +103,7 @@ async function measureAPITiming() {
             time: Math.round(now - fetchStart),
             type: event.type,
             ...(event.name && { name: event.name }),
-            ...(event.delta && { delta: event.delta.substring(0, 50) + "..." }),
+            ...(event.delta && { delta: `${event.delta.substring(0, 50)}...` }),
           });
 
           // 主要イベントのみ表示
