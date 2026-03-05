@@ -181,7 +181,16 @@ export function FeatureChat({
 
     const streamMessages = buildStreamMessages(userMessage.content, []);
     startStream(streamMessages, provider, featureId, selectedProgramId ?? undefined);
-  }, [initialMessage, initialChatId, messages.length, provider, featureId, selectedProgramId, buildStreamMessages, startStream]);
+  }, [
+    initialMessage,
+    initialChatId,
+    messages.length,
+    provider,
+    featureId,
+    selectedProgramId,
+    buildStreamMessages,
+    startStream,
+  ]);
 
   // ストリーミング完了時にメッセージを保存
   useEffect(() => {

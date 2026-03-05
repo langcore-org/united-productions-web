@@ -29,7 +29,13 @@ interface ChatPageProps {
   onChatCreated?: (chatId: string) => void;
 }
 
-export function ChatPage({ featureId, chatId, initialProgramId, initialMessage, onChatCreated }: ChatPageProps) {
+export function ChatPage({
+  featureId,
+  chatId,
+  initialProgramId,
+  initialMessage,
+  onChatCreated,
+}: ChatPageProps) {
   const [config, setConfig] = useState(getChatConfig(featureId));
   const [systemPrompt, setSystemPrompt] = useState<string>("");
   const [isLoading, setIsLoading] = useState(true);

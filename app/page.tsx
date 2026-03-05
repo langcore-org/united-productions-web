@@ -1,6 +1,15 @@
 "use client";
 
-import { ArrowUp, FileText, Globe, Lightbulb, MessageSquare, Shield, Sparkles, Users } from "lucide-react";
+import {
+  ArrowUp,
+  FileText,
+  Globe,
+  Lightbulb,
+  MessageSquare,
+  Shield,
+  Sparkles,
+  Users,
+} from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
