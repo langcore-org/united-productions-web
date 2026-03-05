@@ -118,18 +118,6 @@ export function ChatHeader({
             </Select>
           )}
 
-          {hasMessages && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onClear}
-              className="text-gray-500 hover:text-red-500 hover:bg-red-50"
-            >
-              <Trash2 className="w-4 h-4 mr-1" />
-              クリア
-            </Button>
-          )}
-
           {outputFormat === "plaintext" && lastAssistantMessage && (
             <>
               <WordExportButton
