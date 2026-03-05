@@ -7,10 +7,9 @@ import { FollowUpSuggestions } from "@/components/chat/FollowUpSuggestions";
 import { CitationsList } from "@/components/chat/messages/CitationsList";
 import { ToolCallMessage } from "@/components/chat/messages/ToolCallMessage";
 import { type PromptSuggestion, PromptSuggestions } from "@/components/chat/PromptSuggestions";
+import { useChatInitialization } from "@/hooks/useChatInitialization";
 import { useConversationSave } from "@/hooks/useConversationSave";
 import { useLLMStream } from "@/hooks/useLLMStream";
-import { getWelcomeMessage, hasWelcomeMessage } from "@/lib/chat/welcome-messages";
-import { getProgramById } from "@/lib/knowledge/programs";
 import { DEFAULT_PROVIDER } from "@/lib/llm/config";
 import type { LLMProvider } from "@/lib/llm/types";
 import { cn } from "@/lib/utils";
@@ -86,7 +85,6 @@ export function FeatureChat({
   const [input, setInput] = useState("");
   const [isCopied, setIsCopied] = useState(false);
   const [attachedFiles, setAttachedFiles] = useState<AttachedFile[]>([]);
-  const hasShownWelcomeRef = useRef(false);
   const hasSentInitialMessageRef = useRef(false);
 
   const provider: LLMProvider = initialProvider;
@@ -110,81 +108,41 @@ export function FeatureChat({
   const { currentChatId, setCurrentChatId, isLoadingHistory, loadConversation, saveConversation } =
     useConversationSave({ featureId, initialChatId, onChatCreated });
 
+  // チャット初期化（履歴読み込み、ウェルカムメッセージ、初期メッセージ送信準備）
+  useChatInitialization({
+    featureId,
+    provider,
+    initialChatId,
+    initialMessage,
+    selectedProgramId,
+    messages,
+    setMessages,
+    loadConversation,
+  });
+
   const buildStreamMessages = useCallback((userContent: string, history: Message[]) => {
     const conversationHistory = history.map((m) => ({ role: m.role, content: m.content }));
     return [...conversationHistory, { role: "user" as const, content: userContent }];
   }, []);
 
-  // 初回マウント時: chatIdがあれば履歴を読み込む、なければ新規（空）
-  useEffect(() => {
-    if (initialChatId) {
-      setCurrentChatId(initialChatId);
-      loadConversation(initialChatId).then(setMessages);
-      hasShownWelcomeRef.current = true; // 既存会話ではウェルカムメッセージを出さない
-    } else {
-      setMessages([]);
-      setCurrentChatId(undefined);
-      hasShownWelcomeRef.current = false;
-    }
-  }, [initialChatId, loadConversation, setCurrentChatId]);
-
-  // ウェルカムメッセージを表示（新規チャット時のみ）
-  useEffect(() => {
-    // 既存会話、または既にウェルカムメッセージを表示済みの場合はスキップ
-    if (initialChatId || hasShownWelcomeRef.current) return;
-
-    // 初期メッセージがある場合はウェルカムメッセージをスキップ
-    if (initialMessage) return;
-
-    // ウェルカムメッセージが定義されていない機能の場合はスキップ
-    if (!hasWelcomeMessage(featureId)) return;
-
-    // メッセージが空の場合のみ表示（初回またはクリア後）
-    if (messages.length === 0) {
-      // 番組名を取得（selectedProgramId が null の場合は「番組を指定しない」用のメッセージ）
-      const programInfo = selectedProgramId ? getProgramById(selectedProgramId) : null;
-      const programName = programInfo?.name ?? "番組を指定せずにはじめる";
-
-      const welcomeContent = getWelcomeMessage(featureId, programName);
-
-      if (welcomeContent) {
-        const welcomeMessage: Message = {
-          id: `welcome-${Date.now()}`,
-          role: "assistant",
-          content: welcomeContent,
-          timestamp: new Date(),
-          llmProvider: provider,
-        };
-        setMessages([welcomeMessage]);
-        hasShownWelcomeRef.current = true;
-      }
-    }
-  }, [selectedProgramId, featureId, initialChatId, messages.length, provider, initialMessage]);
-
-  // 初期メッセージを自動送信（新規チャット時のみ）
+  // 初期メッセージの自動送信（useChatInitializationでメッセージがセットされた後）
   useEffect(() => {
     // 既存会話、または既に送信済みの場合はスキップ
     if (initialChatId || hasSentInitialMessageRef.current) return;
-    if (!initialMessage || !initialMessage.trim()) return;
-    if (messages.length > 0) return; // 既にメッセージがある場合はスキップ
+    if (!initialMessage?.trim()) return;
+    // 初期化フックでセットされたメッセージを検知して送信
+    if (messages.length !== 1) return;
+    if (messages[0]?.role !== "user") return;
+    if (messages[0]?.content !== initialMessage.trim()) return;
 
     hasSentInitialMessageRef.current = true;
 
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      role: "user",
-      content: initialMessage.trim(),
-      timestamp: new Date(),
-    };
-
-    setMessages([userMessage]);
-
-    const streamMessages = buildStreamMessages(userMessage.content, []);
+    const streamMessages = buildStreamMessages(messages[0].content, []);
     startStream(streamMessages, provider, featureId, selectedProgramId ?? undefined);
   }, [
+    messages,
     initialMessage,
     initialChatId,
-    messages.length,
     provider,
     featureId,
     selectedProgramId,

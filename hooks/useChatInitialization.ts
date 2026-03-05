@@ -9,7 +9,7 @@
  * - 初期メッセージの自動送信
  */
 
-import { useCallback, useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import type { Message } from "@/components/ui/FeatureChat";
 import { getWelcomeMessage, hasWelcomeMessage } from "@/lib/chat/welcome-messages";
 import { getProgramById } from "@/lib/knowledge/programs";
@@ -22,21 +22,9 @@ interface UseChatInitializationOptions {
   initialMessage?: string;
   selectedProgramId: string | null;
   messages: Message[];
-  setMessages: (messages: Message[] | ((prev: Message[]) => Message[])) => void;
-  setCurrentChatId: (chatId: string | undefined) => void;
+  setMessages: (updater: Message[] | ((prev: Message[]) => Message[])) => void;
   loadConversation: (chatId: string) => Promise<Message[]>;
-  buildStreamMessages: (userContent: string, history: Message[]) => Array<{ role: string; content: string }>;
-  startStream: (
-    messages: Array<{ role: string; content: string }>,
-    provider: LLMProvider,
-    featureId: string,
-    programId?: string,
-  ) => void;
-}
-
-interface UseChatInitializationResult {
-  /** 履歴読み込み中かどうか */
-  isLoadingHistory: boolean;
+  onHistoryLoaded?: (messages: Message[]) => void;
 }
 
 export function useChatInitialization({
@@ -47,24 +35,22 @@ export function useChatInitialization({
   selectedProgramId,
   messages,
   setMessages,
-  setCurrentChatId,
   loadConversation,
-  buildStreamMessages,
-  startStream,
-}: UseChatInitializationOptions): UseChatInitializationResult {
+}: UseChatInitializationOptions): void {
   // 重複実行防止用のref
   const hasShownWelcomeRef = useRef(false);
   const hasSentInitialMessageRef = useRef(false);
-  const hasLoadedHistoryRef = useRef(false);
 
   // 1. 履歴読み込み（既存チャットの場合）
   useEffect(() => {
-    if (initialChatId && !hasLoadedHistoryRef.current) {
-      hasLoadedHistoryRef.current = true;
-      setCurrentChatId(initialChatId);
+    if (initialChatId) {
       loadConversation(initialChatId).then(setMessages);
+    } else {
+      setMessages([]);
+      hasShownWelcomeRef.current = false;
+      hasSentInitialMessageRef.current = false;
     }
-  }, [initialChatId, loadConversation, setCurrentChatId, setMessages]);
+  }, [initialChatId, loadConversation, setMessages]);
 
   // 2. ウェルカムメッセージ表示（新規チャット時のみ）
   useEffect(() => {
@@ -103,7 +89,7 @@ export function useChatInitialization({
   useEffect(() => {
     // 既存会話、または既に送信済みの場合はスキップ
     if (initialChatId || hasSentInitialMessageRef.current) return;
-    if (!initialMessage || !initialMessage.trim()) return;
+    if (!initialMessage?.trim()) return;
     if (messages.length > 0) return; // 既にメッセージがある場合はスキップ
 
     hasSentInitialMessageRef.current = true;
@@ -116,31 +102,8 @@ export function useChatInitialization({
     };
 
     setMessages([userMessage]);
-
-    const streamMessages = buildStreamMessages(userMessage.content, []);
-    startStream(streamMessages, provider, featureId, selectedProgramId ?? undefined);
-  }, [
-    initialMessage,
-    initialChatId,
-    messages.length,
-    provider,
-    featureId,
-    selectedProgramId,
-    buildStreamMessages,
-    startStream,
-    setMessages,
-  ]);
-
-  // リセット関数（クリア時に使用）
-  const reset = useCallback(() => {
-    hasShownWelcomeRef.current = false;
-    hasSentInitialMessageRef.current = false;
-    hasLoadedHistoryRef.current = false;
-  }, []);
-
-  return {
-    isLoadingHistory: false, // 実際のローディング状態はuseConversationSaveから取得
-  };
+    // 実際の送信はFeatureChatで行う（useEffectの依存関係をシンプルに保つため）
+  }, [initialMessage, initialChatId, messages.length, setMessages]);
 }
 
 export default useChatInitialization;
