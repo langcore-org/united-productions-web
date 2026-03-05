@@ -4,7 +4,8 @@
  * URL構築とナビゲーションアイテムの生成を一元化
  */
 
-import type { ReactNode } from "react";
+import type { ComponentType } from "react";
+import type { LucideProps } from "lucide-react";
 import {
   FileText,
   Lightbulb,
@@ -15,16 +16,17 @@ import {
 import type { ChatFeatureId } from "./chat-config";
 import { chatFeatureConfigs } from "./chat-config";
 
+/** Lucideアイコン型 */
+type LucideIcon = ComponentType<LucideProps>;
+
 // アイコン名からコンポーネントへのマッピング
-const iconMap = {
+const iconMap: Record<string, LucideIcon> = {
   MessageSquare,
   Users,
   Shield,
   FileText,
   Lightbulb,
-} as const;
-
-type IconName = keyof typeof iconMap;
+};
 
 interface NavigateToChatOptions {
   /** 機能ID（指定なしは一般チャット） */
@@ -44,7 +46,7 @@ export interface NavigationItem {
   id: ChatFeatureId;
   label: string;
   description: string;
-  icon: ReactNode;
+  icon: LucideIcon;
   href: string;
 }
 
@@ -116,7 +118,7 @@ export function getChatUrlWithMessage(
 export function getChatNavigationItems(): NavigationItem[] {
   return (Object.keys(chatFeatureConfigs) as ChatFeatureId[]).map((featureId) => {
     const config = chatFeatureConfigs[featureId];
-    const IconComponent = iconMap[config.icon as IconName] || MessageSquare;
+    const IconComponent = iconMap[config.icon || ""] || MessageSquare;
 
     return {
       id: featureId,
@@ -133,7 +135,7 @@ export function getChatNavigationItems(): NavigationItem[] {
  */
 export function getChatNavigationItem(featureId: ChatFeatureId): NavigationItem {
   const config = chatFeatureConfigs[featureId];
-  const IconComponent = iconMap[config.icon as IconName] || MessageSquare;
+  const IconComponent = iconMap[config.icon || ""] || MessageSquare;
 
   return {
     id: featureId,

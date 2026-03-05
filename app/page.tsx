@@ -1,62 +1,12 @@
 "use client";
 
-import {
-  ArrowUp,
-  FileText,
-  Globe,
-  Lightbulb,
-  MessageSquare,
-  Shield,
-  Sparkles,
-  Users,
-} from "lucide-react";
+import { ArrowUp, Globe, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { buildChatUrl, navigateToChat } from "@/lib/chat/navigation";
-import type { ChatFeatureId } from "@/lib/chat/chat-config";
+import { getChatNavigationItems, navigateToChat } from "@/lib/chat/navigation";
 import { cn } from "@/lib/utils";
-
-interface ModeButton {
-  id: ChatFeatureId;
-  label: string;
-  icon: React.ReactNode;
-  href: string;
-}
-
-const modeButtons: ModeButton[] = [
-  {
-    id: "general-chat",
-    label: "チャット",
-    icon: <MessageSquare className="w-4 h-4" />,
-    href: buildChatUrl({ featureId: "general-chat", isNew: true }),
-  },
-  {
-    id: "research-cast",
-    label: "出演者リサーチ",
-    icon: <Users className="w-4 h-4" />,
-    href: buildChatUrl({ featureId: "research-cast", isNew: true }),
-  },
-  {
-    id: "research-evidence",
-    label: "エビデンスリサーチ",
-    icon: <Shield className="w-4 h-4" />,
-    href: buildChatUrl({ featureId: "research-evidence", isNew: true }),
-  },
-  {
-    id: "minutes",
-    label: "議事録作成",
-    icon: <FileText className="w-4 h-4" />,
-    href: buildChatUrl({ featureId: "minutes", isNew: true }),
-  },
-  {
-    id: "proposal",
-    label: "新企画立案",
-    icon: <Lightbulb className="w-4 h-4" />,
-    href: buildChatUrl({ featureId: "proposal", isNew: true }),
-  },
-];
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -162,18 +112,21 @@ export default function DashboardPage() {
 
             {/* Mode Selection Buttons */}
             <div className="flex flex-wrap items-center justify-center gap-2 max-w-4xl">
-              {modeButtons.map((mode) => (
-                <Link
-                  key={mode.id}
-                  href={mode.href}
-                  className="group flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium bg-gray-50 border border-gray-200 text-gray-600 hover:border-black hover:text-black hover:bg-white hover:shadow-md transition-all duration-200"
-                >
-                  <span className="text-black group-hover:scale-110 transition-transform">
-                    {mode.icon}
-                  </span>
-                  <span>{mode.label}</span>
-                </Link>
-              ))}
+              {getChatNavigationItems().map((mode) => {
+                const IconComponent = mode.icon;
+                return (
+                  <Link
+                    key={mode.id}
+                    href={mode.href}
+                    className="group flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium bg-gray-50 border border-gray-200 text-gray-600 hover:border-black hover:text-black hover:bg-white hover:shadow-md transition-all duration-200"
+                  >
+                    <span className="text-black group-hover:scale-110 transition-transform">
+                      <IconComponent className="w-4 h-4" />
+                    </span>
+                    <span>{mode.label}</span>
+                  </Link>
+                );
+              })}
             </div>
           </main>
         </div>

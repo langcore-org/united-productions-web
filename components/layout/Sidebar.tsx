@@ -2,61 +2,23 @@
 
 import {
   ChevronRight,
-  FileText,
   History,
-  Lightbulb,
   LogOut,
-  MessageSquare,
   PanelLeft,
   Plus,
-  Shield,
-  Users,
 } from "lucide-react";
 // import { TeddyIcon } from "@/components/icons/TeddyIcon"; // ロゴは非表示（将来使用予定）
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { useEffect, useState } from "react";
+import { getChatNavigationItems } from "@/lib/chat/navigation";
 import { cn } from "@/lib/utils";
 
 interface SidebarProps {
   className?: string;
   onCollapseChange?: (isCollapsed: boolean) => void;
 }
-
-// 機能別新規作成ボタン定義
-const NEW_CHAT_BUTTONS = [
-  {
-    icon: <MessageSquare className="w-[18px] h-[18px]" />,
-    label: "チャット",
-    href: "/chat?new=1",
-    description: "新しいチャットを開始",
-  },
-  {
-    icon: <Users className="w-[18px] h-[18px]" />,
-    label: "出演者リサーチ",
-    href: "/chat?agent=research-cast&new=1",
-    description: "出演者候補を調査",
-  },
-  {
-    icon: <Shield className="w-[18px] h-[18px]" />,
-    label: "エビデンスリサーチ",
-    href: "/chat?agent=research-evidence&new=1",
-    description: "事実確認を実施",
-  },
-  {
-    icon: <FileText className="w-[18px] h-[18px]" />,
-    label: "議事録作成",
-    href: "/chat?agent=minutes&new=1",
-    description: "議事録を作成",
-  },
-  {
-    icon: <Lightbulb className="w-[18px] h-[18px]" />,
-    label: "新企画立案",
-    href: "/chat?agent=proposal&new=1",
-    description: "企画提案を作成",
-  },
-];
 
 export function Sidebar({ className, onCollapseChange }: SidebarProps) {
   const pathname = usePathname();
@@ -160,12 +122,13 @@ export function Sidebar({ className, onCollapseChange }: SidebarProps) {
 
         {/* Buttons */}
         <div className={cn("py-2 space-y-0.5", isCollapsed ? "px-1.5" : "px-2")}>
-          {NEW_CHAT_BUTTONS.map((item) => {
+          {getChatNavigationItems().map((item) => {
             const isItemActive = isActive(item.href);
+            const IconComponent = item.icon;
 
             return (
               <Link
-                key={item.href}
+                key={item.id}
                 href={item.href}
                 className={cn(
                   "flex items-center rounded-xl transition-all duration-200 ease-out",
@@ -193,7 +156,7 @@ export function Sidebar({ className, onCollapseChange }: SidebarProps) {
                       : "group-hover:scale-110 transition-transform duration-200",
                   )}
                 >
-                  {item.icon}
+                  <IconComponent className="w-[18px] h-[18px]" />
                   {!isCollapsed && (
                     <div className="absolute -top-1 -right-1 w-3 h-3 bg-black rounded-full flex items-center justify-center">
                       <Plus className="w-2 h-2 text-white" />
