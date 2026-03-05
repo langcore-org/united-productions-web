@@ -248,7 +248,6 @@ export default function MeetingNotesPage() {
               </div>
               <div>
                 <h1 className="text-xl font-semibold text-gray-900">議事録・文字起こし</h1>
-                <p className="text-sm text-gray-500">Zoom文字起こしをAIで整形</p>
               </div>
             </div>
             <ProgramSelector

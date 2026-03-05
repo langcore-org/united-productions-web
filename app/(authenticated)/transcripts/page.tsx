@@ -308,7 +308,6 @@ Premiere Proの書き起こしテキストを、放送用のNA原稿形式に整
               </div>
               <div>
                 <h1 className="text-xl font-semibold text-gray-900">起こし・NA原稿</h1>
-                <p className="text-sm text-gray-500">Premiere Pro書き起こしをAIで整形</p>
               </div>
             </div>
             <ProgramSelector
