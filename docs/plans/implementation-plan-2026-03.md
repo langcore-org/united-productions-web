@@ -1,7 +1,7 @@
 # 実装プラン 2026年3月
 
 > **作成日**: 2026-02-26  
-> **更新日**: 2026-02-26  
+> **更新日**: 2026-03-02  
 > **関連会議**: LangCore - United Productions様 2026/02/26  
 > **ステータス**: 進行中
 
@@ -141,15 +141,16 @@
 
 #### 3.1.3 議事録作成
 
-**現状**: 初期画面設計変更が必要
+**現状**: ✅ **実装済み（テスト待ち）**
 
 **関連ドキュメント**: [議事録作成機能のファイルアップロード対応](./development/meeting-minutes-file-upload.md)
 
 **TODO**:
-- [ ] 初期画面を「ファイルアップロード」を基本としたUIに変更
-- [ ] VTTファイルアップロード対応
-- [ ] TXTファイルアップロード対応
-- [ ] アップロード後の議事録生成プロンプト実装
+- [x] 初期画面を「ファイルアップロード」を基本としたUIに変更
+- [x] VTTファイルアップロード対応
+- [x] TXTファイルアップロード対応
+- [x] アップロード後の議事録生成プロンプト実装
+- [ ] 3月12日現場テストでの動作確認
 
 **仕様**:
 - Zoomから出力されるVTTまたはTXTファイルをアップロードする形式
@@ -157,12 +158,16 @@
 
 #### 3.1.4 新企画立案
 
-**現状**: 過去アプリの移植が可能
+**現状**: 🟡 **進行中（移植元特定・プロンプト抽出中）**
 
 **関連ドキュメント**: [新規企画立案機能の移植](./development/new-project-planning-porting.md)
 
+**進捗**:
+- ✅ 移植元アプリを特定（2026-03-02）
+- 🟡 プロンプトコードを探しているところ
+
 **TODO**:
-- [ ] 過去アプリのプロンプトを移植
+- [ ] 過去アプリのプロンプトを移植（抽出中）
 - [ ] 過去の番組情報インプットなしで動作確認
 - [ ] 機能名「新企画立案」+ サブテキスト「アイデアを出してくれます」の実装
 - [ ] 3月後半のデザイン最終調整
@@ -177,15 +182,15 @@
 #### 3.2.1 SNS統合（YouTube/Instagram）
 
 **検証→実装の流れ**：
-1. **検証**（〜3/5）：[SNS有料ツール統合検証](./development/sns-paid-tool-verification.md)
+1. **検証**（3/2〜3/5）：🟡 [SNS有料ツール統合検証](./development/sns-paid-tool-verification.md)（調査開始）
 2. **判断**（3/5）：費用対効果・技術的実現性の評価
 3. **実装**（3/6〜3/19）：[YouTube/Instagramリサーチ統合（3月実装）](./development/youtube-instagram-research-implementation.md)
 
 | SNS | 状況 | 対応 |
 |-----|------|------|
 | X (Twitter) | ✅ 実装済み、使い勝手良好 | 継続利用 |
-| YouTube | 🟡 検証後、3月中に実装可能 | 費用承認が下りれば実装 |
-| Instagram | 🟡 検証後、3月中に実装可能 | 費用承認が下りれば実装 |
+| YouTube | 🟡 検証中（3/5判断予定） | 費用承認が下りれば実装 |
+| Instagram | 🟡 検証中（3/5判断予定） | 費用承認が下りれば実装 |
 | TikTok | ⏸️ API申請に時間がかかる | [4月以降に検討](../backlog/research/tiktok-research-integration.md) |
 
 #### 3.2.2 その他の中優先度タスク
@@ -336,11 +341,11 @@ EOF
 
 ### 8.1 浅野宏耀
 
-- [ ] [SNS統合のための有料ツール統合検証](./development/sns-paid-tool-verification.md)
+- 🟡 [SNS統合のための有料ツール統合検証](./development/sns-paid-tool-verification.md)（調査開始）
 - [ ] [プロンプトの磨き込み（ハード実施）- 出演者リサーチ](./development/prompt-tuning-performer-research.md)
 - [ ] [プロンプトの磨き込み（ハード実施）- エビデンスリサーチ](./development/prompt-tuning-evidence-research.md)
-- [ ] [新規企画立案機能の移植（過去アプリのプロンプト流用）](./development/new-project-planning-porting.md)
-- [ ] [番組情報の事前インプット拡充](./development/program-info-input-expansion.md)
+- 🟡 [新規企画立案機能の移植（過去アプリのプロンプト流用）](./development/new-project-planning-porting.md)（移植元特定済み・プロンプト抽出中）
+- 🟡 [~~番組情報の事前インプット拡充~~（リサーチ完了・データ更新済・最終確認待ち）](./development/program-info-input-expansion.md)
 - [ ] [ナレーション原稿作成の優先度を下げ、他機能を優先](../backlog/features/narration-script-creation.md)
 - [ ] [議事録作成機能の初期画面をファイルアップロード基本に変更](./development/meeting-minutes-file-upload.md)
 - [ ] [ナレーション原稿作成を省いた画面のスクリーンショットを島田源太郎に共有](./design/screenshot-for-company-announcement.md)
@@ -366,12 +371,12 @@ EOF
 #### 開発タスク（13件）
 | ドキュメント | 期限 | 優先度 |
 |--------------|------|--------|
-| [SNS有料ツール統合検証](./development/sns-paid-tool-verification.md) | 3/5 | 🔴 高 |
+| [SNS有料ツール統合検証](./development/sns-paid-tool-verification.md) | 3/5 | 🔴 高（🟡 調査開始） |
 | [YouTube/Instagramリサーチ統合（3月実装）](./development/youtube-instagram-research-implementation.md) | 3/19 | 🟡 中〜高（検証結果次第） |
 | [出演者リサーチプロンプト磨き込み](./development/prompt-tuning-performer-research.md) | 3/12 | 🔴 高 |
 | [エビデンスリサーチプロンプト磨き込み](./development/prompt-tuning-evidence-research.md) | 3/12 | 🔴 高 |
 | [新規企画立案機能の移植](./development/new-project-planning-porting.md) | 3/12 | 🔴 高 |
-| [番組情報の事前インプット拡充](./development/program-info-input-expansion.md) | 3/19 | 🟡 中 |
+| [番組情報の事前インプット拡充](./development/program-info-input-expansion.md) | 3/19 | 🟡 中（リサーチ完了・データ更新済・最終確認待ち） |
 | [議事録作成機能のファイルアップロード対応](./development/meeting-minutes-file-upload.md) | 3/12 | 🔴 高 |
 | [テストから本番への移行](./development/test-to-production-migration.md) | 3/10 | 🟡 中 |
 | [管理画面調整（コスト監視）](./development/admin-dashboard-cost-monitoring.md) | 3/19 | 🟢 低 |
@@ -425,7 +430,8 @@ EOF
 | 2026-02-26 | 初版作成 | 浅野宏耀 |
 | 2026-02-26 | タスクを個別ドキュメントに分割、リンク追加 | 浅野宏耀 |
 | 2026-02-26 | 抜け漏れタスク追加（週次会議、サイドバー相談、テストユーザー対応、サブテキスト策定）、各タスク詳細化 | 浅野宏耀 |
+| 2026-03-02 | 進捗状況を反映（議事録作成実装済み、スクリーンショット完了） | 浅野宏耀 |
 
 ---
 
-*最終更新: 2026-02-26 14:00*
+*最終更新: 2026-03-02*
