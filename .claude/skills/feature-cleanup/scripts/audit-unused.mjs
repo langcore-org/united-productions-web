@@ -1,27 +1,30 @@
 #!/usr/bin/env node
 /**
- * Feature Cleanup - Audit Unused Features (Enhanced)
+ * Feature Cleanup - Audit Unused Features (Enhanced v2.0)
  * 
  * 未使用機能を発見し、削除候補を提示するスクリプト
- * Sidebarにない機能、コメントアウトされている機能、参照が少ない機能を検出
  * 
- * ⚠️ このスクリプトは「候補発見」まで。最終判断はエージェントが行う。
+ * 【改善点】v2.0
+ * - 空のディレクトリ検出機能
+ * - 削除スクリプト自動生成 (--generate-delete)
+ * - 対話的削除モード (--interactive)
  * 
  * Usage:
  *   node audit-unused.mjs
- * 
- * Options:
- *   --show-all      すべての機能を表示（Sidebarにあるものも含む）
- *   --min-refs N    最小参照数（デフォルト: 1、これ以下は未使用とみなす）
- *   --deep          深層調査モード（prisma/schema, types/, config/ も含む）
+ *   node audit-unused.mjs --deep
+ *   node audit-unused.mjs --generate-delete [機能ID]
+ *   node audit-unused.mjs --interactive
  */
 
 import { execSync } from 'child_process';
-import { existsSync, readFileSync } from 'fs';
+import { existsSync, readFileSync, writeFileSync } from 'fs';
 
 const args = process.argv.slice(2);
 const showAll = args.includes('--deep') || args.includes('--show-all');
 const deepMode = args.includes('--deep');
+const interactive = args.includes('--interactive');
+const generateDelete = args.includes('--generate-delete');
+const generateDeleteTarget = generateDelete ? args[args.indexOf('--generate-delete') + 1] : null;
 const minRefsArg = args.find(arg => arg.startsWith('--min-refs='));
 const minRefs = minRefsArg ? parseInt(minRefsArg.split('=')[1]) : 1;
 
@@ -33,10 +36,216 @@ function runCommand(cmd, ignoreError = true) {
   }
 }
 
-console.log('=== 未使用機能調査（強化版）===\n');
+// 新機能: 空のディレクトリを検出
+function findEmptyDirectories() {
+  console.log('\n【🔍 空のディレクトリ検出】');
+  
+  const checkPaths = [
+    'app/(authenticated)',
+    'app/api',
+    'lib',
+    'components',
+    'hooks'
+  ];
+  
+  const emptyDirs = [];
+  
+  for (const basePath of checkPaths) {
+    if (!existsSync(basePath)) continue;
+    
+    const dirs = runCommand(`find ${basePath} -type d 2>/dev/null`).trim().split('\n');
+    
+    for (const dir of dirs) {
+      if (!dir || dir === basePath) continue;
+      
+      const contents = runCommand(`ls -A "${dir}" 2>/dev/null`).trim();
+      if (!contents) {
+        emptyDirs.push(dir);
+      }
+    }
+  }
+  
+  if (emptyDirs.length > 0) {
+    console.log(`  ⚠️  空のディレクトリが ${emptyDirs.length}件見つかりました:\n`);
+    emptyDirs.forEach(dir => {
+      console.log(`    - ${dir}`);
+      console.log(`      → 削除: rm -rf ${dir}`);
+    });
+    console.log('');
+  } else {
+    console.log('  ✅ 空のディレクトリはありません\n');
+  }
+  
+  return emptyDirs;
+}
+
+// 新機能: DB削除スクリプト自動生成
+function generateDeleteScript(featureId) {
+  console.log(`\n【📝 DB削除スクリプト生成: ${featureId}】\n`);
+  
+  const scriptContent = `#!/usr/bin/env node
+/**
+ * Auto-generated delete script for ${featureId}
+ * Generated: ${new Date().toISOString()}
+ */
+
+import { PrismaClient } from '@prisma/client';
+const prisma = new PrismaClient();
+
+const FEATURE_ID = '${featureId}';
+const PROMPT_KEYS = ['${featureId.toUpperCase().replace(/-/g, '_')}']; // 必要に応じて追加
+
+async function deleteFeature() {
+  console.log(\`=== \${FEATURE_ID} 関連データの削除 ===\\n\`);
+  
+  try {
+    // 1. FeaturePrompt削除
+    const featurePromptResult = await prisma.featurePrompt.deleteMany({
+      where: { featureId: FEATURE_ID }
+    });
+    console.log(\`✅ FeaturePrompt: \${featurePromptResult.count}件削除\`);
+    
+    // 2. SystemPromptVersion削除
+    for (const key of PROMPT_KEYS) {
+      const prompt = await prisma.systemPrompt.findUnique({ where: { key } });
+      if (prompt) {
+        const versionsResult = await prisma.systemPromptVersion.deleteMany({
+          where: { promptId: prompt.id }
+        });
+        console.log(\`✅ SystemPromptVersion (\${key}): \${versionsResult.count}件削除\`);
+        
+        // 3. SystemPrompt削除
+        await prisma.systemPrompt.delete({ where: { key } });
+        console.log(\`✅ SystemPrompt (\${key}): 削除\`);
+      }
+    }
+    
+    console.log('\\n🎉 すべての削除が完了しました');
+  } catch (error) {
+    console.error('❌ エラー:', error.message);
+    process.exit(1);
+  } finally {
+    await prisma.\$disconnect();
+  }
+}
+
+deleteFeature();
+`;
+
+  const scriptPath = `scripts/delete-${featureId}.mjs`;
+  writeFileSync(scriptPath, scriptContent);
+  console.log(`✅ 削除スクリプトを生成しました: ${scriptPath}`);
+  console.log(`\n実行方法:`);
+  console.log(`  node ${scriptPath}`);
+  console.log(`\n⚠️  実行前に必ずDBバックアップを取ってください`);
+}
+
+// 新機能: 対話的削除モード
+async function interactiveMode() {
+  console.log('\n【🎮 対話的削除モード】\n');
+  
+  // Node.jsのreadlineを動的にインポート
+  const readline = await import('readline');
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout
+  });
+  
+  const question = (prompt) => new Promise(resolve => rl.question(prompt, resolve));
+  
+  // 候補を取得
+  console.log('未使用機能の候補を収集中...\n');
+  
+  // 簡易的な候補検出
+  const chatConfigPath = 'lib/chat/chat-config.ts';
+  const sidebarPath = 'components/layout/Sidebar.tsx';
+  
+  const allFeatureIds = new Set();
+  
+  if (existsSync(chatConfigPath)) {
+    const content = readFileSync(chatConfigPath, 'utf-8');
+    const matches = content.match(/featureId: "([^"]+)"/g);
+    if (matches) {
+      matches.forEach(match => {
+        const id = match.match(/featureId: "([^"]+)"/)?.[1];
+        if (id) allFeatureIds.add(id);
+      });
+    }
+  }
+  
+  const candidates = [...allFeatureIds];
+  
+  console.log('削除候補:');
+  candidates.forEach((id, i) => {
+    console.log(`  ${i + 1}. ${id}`);
+  });
+  console.log('  0. キャンセル');
+  
+  const answer = await question('\n削除する機能番号を選択: ');
+  const index = parseInt(answer) - 1;
+  
+  if (index === -1 || !candidates[index]) {
+    console.log('キャンセルしました');
+    rl.close();
+    return;
+  }
+  
+  const target = candidates[index];
+  console.log(`\n「${target}」を削除しますか？`);
+  console.log('  1. 完全削除（ファイル+DB）');
+  console.log('  2. ファイルのみ削除');
+  console.log('  3. DBのみ削除');
+  console.log('  0. キャンセル');
+  
+  const action = await question('\n選択: ');
+  
+  switch(action) {
+    case '1':
+      console.log(`\n✅ 「${target}」の完全削除を実行します`);
+      console.log('実行コマンド:');
+      console.log(`  node .claude/skills/feature-cleanup/scripts/delete-feature.mjs "${target}"`);
+      break;
+    case '2':
+      console.log(`\n✅ 「${target}」のファイル削除を実行します`);
+      console.log(`  rm -rf app/(authenticated)/${target}`);
+      break;
+    case '3':
+      generateDeleteScript(target);
+      break;
+    default:
+      console.log('キャンセルしました');
+  }
+  
+  rl.close();
+}
+
+// ======== メイン処理 ========
+
+// 削除スクリプト生成モード
+if (generateDelete && generateDeleteTarget) {
+  generateDeleteScript(generateDeleteTarget);
+  process.exit(0);
+}
+
+// 対話的モード
+if (interactive) {
+  interactiveMode().then(() => process.exit(0));
+  // 対話的モードの場合はここで終了
+} else {
+  // 通常モードは以下続行
+  runAudit();
+}
+
+function runAudit() {
+
+// 通常モード
+console.log('=== 未使用機能調査（強化版 v2.0）===\n');
 if (deepMode) {
   console.log('🔍 深層調査モード: prisma/schema, types/, config/ も対象\n');
 }
+
+// 空のディレクトリ検出（新機能）
+const emptyDirs = findEmptyDirectories();
 
 // ========== 1. 機能IDの収集（複数ソース） ==========
 console.log('【機能IDを収集中...】');
@@ -331,6 +540,7 @@ if (categories.configOnly.length > 0) {
     console.log(`  ${f.id}`);
     console.log(`    定義ソース: ${f.sources.join(', ')}`);
     console.log(`    → 削除候補（詳細調査推奨）: node analyze.mjs "${f.id}"`);
+    console.log(`    → 削除スクリプト生成: node audit-unused.mjs --generate-delete "${f.id}"`);
     console.log('');
   }
 }
@@ -344,6 +554,7 @@ if (categories.unused.length > 0) {
     console.log(`    参照: ${f.refsInCode}件`);
     console.log(`    ページ: ${f.hasPage ? '⚠️ あり' : 'なし'} | API: ${f.hasApi ? '⚠️ あり' : 'なし'} | コンポーネント: ${f.hasComponent ? '⚠️ あり' : 'なし'}`);
     console.log(`    → 削除候補: node analyze.mjs "${f.id}"`);
+    console.log(`    → 削除スクリプト生成: node audit-unused.mjs --generate-delete "${f.id}"`);
     console.log('');
   }
 }
@@ -405,9 +616,15 @@ if (needsInvestigation.length === 0) {
   console.log('   → SKILL.md の Phase 0-5 を参照');
 }
 
+// 新機能: 対話的モードの案内
+console.log('\n【💡 新機能の案内】');
+console.log('  対話的削除モード: node audit-unused.mjs --interactive');
+console.log('  削除スクリプト生成: node audit-unused.mjs --generate-delete "機能ID"');
+console.log('  空ディレクトリ検出: 自動実行済み');
+
 // 深層調査推奨
 if (!deepMode) {
-  console.log('\n【💡 深層調査の推奨】');
+  console.log('\n【🔍 深層調査の推奨】');
   console.log('より網羅的な調査が必要な場合：');
   console.log('  node audit-unused.mjs --deep');
   console.log('');
@@ -416,4 +633,5 @@ if (!deepMode) {
   console.log('  - types/ ディレクトリ');
   console.log('  - config/ ディレクトリ');
   console.log('  - hooks/ ディレクトリ');
+}
 }
