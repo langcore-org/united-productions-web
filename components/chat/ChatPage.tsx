@@ -24,10 +24,12 @@ interface ChatPageProps {
   chatId?: string;
   /** 初期番組ID（指定時は番組選択をスキップ） */
   initialProgramId?: string;
+  /** 初期メッセージ（指定時は自動送信） */
+  initialMessage?: string;
   onChatCreated?: (chatId: string) => void;
 }
 
-export function ChatPage({ featureId, chatId, initialProgramId, onChatCreated }: ChatPageProps) {
+export function ChatPage({ featureId, chatId, initialProgramId, initialMessage, onChatCreated }: ChatPageProps) {
   const [config, setConfig] = useState(getChatConfig(featureId));
   const [systemPrompt, setSystemPrompt] = useState<string>("");
   const [isLoading, setIsLoading] = useState(true);
@@ -90,6 +92,7 @@ export function ChatPage({ featureId, chatId, initialProgramId, onChatCreated }:
       outputFormat={config.outputFormat}
       promptSuggestions={config.promptSuggestions}
       selectedProgramId={selectedProgramId}
+      initialMessage={initialMessage}
     />
   );
 }

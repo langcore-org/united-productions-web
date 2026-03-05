@@ -60,6 +60,8 @@ export interface FeatureChatProps {
   suggestions?: string[];
   /** 選択された番組ID（必須） */
   selectedProgramId: string | null;
+  /** 初期メッセージ（指定時は自動送信） */
+  initialMessage?: string;
 }
 
 export function FeatureChat({
@@ -78,12 +80,14 @@ export function FeatureChat({
   promptSuggestions = [],
   suggestions = [],
   selectedProgramId,
+  initialMessage,
 }: FeatureChatProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isCopied, setIsCopied] = useState(false);
   const [attachedFiles, setAttachedFiles] = useState<AttachedFile[]>([]);
   const hasShownWelcomeRef = useRef(false);
+  const hasSentInitialMessageRef = useRef(false);
 
   const provider: LLMProvider = initialProvider;
 
@@ -106,6 +110,11 @@ export function FeatureChat({
   const { currentChatId, setCurrentChatId, isLoadingHistory, loadConversation, saveConversation } =
     useConversationSave({ featureId, initialChatId, onChatCreated });
 
+  const buildStreamMessages = useCallback((userContent: string, history: Message[]) => {
+    const conversationHistory = history.map((m) => ({ role: m.role, content: m.content }));
+    return [...conversationHistory, { role: "user" as const, content: userContent }];
+  }, []);
+
   // 初回マウント時: chatIdがあれば履歴を読み込む、なければ新規（空）
   useEffect(() => {
     if (initialChatId) {
@@ -123,6 +132,9 @@ export function FeatureChat({
   useEffect(() => {
     // 既存会話、または既にウェルカムメッセージを表示済みの場合はスキップ
     if (initialChatId || hasShownWelcomeRef.current) return;
+
+    // 初期メッセージがある場合はウェルカムメッセージをスキップ
+    if (initialMessage) return;
 
     // ウェルカムメッセージが定義されていない機能の場合はスキップ
     if (!hasWelcomeMessage(featureId)) return;
@@ -147,7 +159,29 @@ export function FeatureChat({
         hasShownWelcomeRef.current = true;
       }
     }
-  }, [selectedProgramId, featureId, initialChatId, messages.length, provider]);
+  }, [selectedProgramId, featureId, initialChatId, messages.length, provider, initialMessage]);
+
+  // 初期メッセージを自動送信（新規チャット時のみ）
+  useEffect(() => {
+    // 既存会話、または既に送信済みの場合はスキップ
+    if (initialChatId || hasSentInitialMessageRef.current) return;
+    if (!initialMessage || !initialMessage.trim()) return;
+    if (messages.length > 0) return; // 既にメッセージがある場合はスキップ
+
+    hasSentInitialMessageRef.current = true;
+
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      role: "user",
+      content: initialMessage.trim(),
+      timestamp: new Date(),
+    };
+
+    setMessages([userMessage]);
+
+    const streamMessages = buildStreamMessages(userMessage.content, []);
+    startStream(streamMessages, provider, featureId, selectedProgramId ?? undefined);
+  }, [initialMessage, initialChatId, messages.length, provider, featureId, selectedProgramId, buildStreamMessages, startStream]);
 
   // ストリーミング完了時にメッセージを保存
   useEffect(() => {
@@ -182,11 +216,6 @@ export function FeatureChat({
     resetStream,
     saveConversation,
   ]);
-
-  const buildStreamMessages = useCallback((userContent: string, history: Message[]) => {
-    const conversationHistory = history.map((m) => ({ role: m.role, content: m.content }));
-    return [...conversationHistory, { role: "user" as const, content: userContent }];
-  }, []);
 
   const handleSend = async () => {
     if (!input.trim() && attachedFiles.length === 0) return;
