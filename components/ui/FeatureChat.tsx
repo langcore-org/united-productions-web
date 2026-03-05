@@ -265,20 +265,6 @@ export function FeatureChat({
     }
   };
 
-  const handleClear = async () => {
-    setMessages([]);
-    hasShownWelcomeRef.current = false; // クリア後は再びウェルカムメッセージを表示可能に
-    const chatIdToDelete = currentChatId;
-    setCurrentChatId(undefined);
-    if (chatIdToDelete) {
-      try {
-        await fetch(`/api/chat/feature?chatId=${chatIdToDelete}`, { method: "DELETE" });
-      } catch (err) {
-        console.error("Failed to clear conversation:", err);
-      }
-    }
-  };
-
   const lastAssistantMessage = [...messages].reverse().find((m) => m.role === "assistant");
   const hasMessages = messages.length > 0;
 
@@ -314,7 +300,6 @@ export function FeatureChat({
         isCopied={isCopied}
         selectedProgramId={selectedProgramId}
         isStreaming={isPending}
-        onClear={handleClear}
         onCopy={handleCopy}
       />
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Copy, ExternalLink, Sparkles, Trash2 } from "lucide-react";
+import { Check, Copy, ExternalLink, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -25,7 +25,6 @@ export interface ChatHeaderProps {
   isCopied: boolean;
   selectedProgramId: string | null;
   isStreaming: boolean;
-  onClear: () => void;
   onCopy: () => void;
 }
 
@@ -38,7 +37,6 @@ export function ChatHeader({
   isCopied,
   selectedProgramId,
   isStreaming,
-  onClear,
   onCopy,
 }: ChatHeaderProps) {
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
