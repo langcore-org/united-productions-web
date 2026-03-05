@@ -23,6 +23,7 @@ export const MessageBubble = memo(function MessageBubble({
   isThinking,
   thinkingContent,
   timestamp,
+  // biome-ignore lint/correctness/noUnusedFunctionParameters: 将来の機能拡張用
   llmProvider,
   className,
 }: MessageBubbleProps) {

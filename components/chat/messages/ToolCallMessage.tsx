@@ -40,6 +40,7 @@ export function ToolCallMessage({
   const hasDetails = toolCall.input || relatedCitations.length > 0;
 
   const messageContent = (
+    // biome-ignore lint/a11y/noStaticElementInteractions: hasDetails条件付きでインタラクティブ
     <div
       className={`relative px-4 py-3 text-sm leading-relaxed rounded-2xl bg-blue-50 text-blue-900 border border-blue-200 rounded-tl-sm ${
         hasDetails ? "cursor-pointer hover:bg-blue-100/80 transition-colors" : ""
@@ -52,7 +53,7 @@ export function ToolCallMessage({
       }}
       role={hasDetails ? "button" : undefined}
       tabIndex={hasDetails ? 0 : undefined}
-      aria-expanded={hasDetails ? isExpanded : undefined}
+      {...(hasDetails && { "aria-expanded": isExpanded })}
     >
       <div className="flex items-center gap-2">
         {status === "running" ? (

@@ -2,15 +2,17 @@
   "$schema": "https://biomejs.dev/schemas/2.4.4/schema.json",
   "files": {
     "includes": [
-      "app/**",
-      "lib/**",
-      "components/**",
-      "tests/**",
-      "types/**",
-      "hooks/**",
-      "prisma/**",
-      "scripts/**",
-      "config/**"
+      "app/**/*.ts",
+      "app/**/*.tsx",
+      "lib/**/*.ts",
+      "components/**/*.tsx",
+      "tests/**/*.ts",
+      "types/**/*.ts",
+      "hooks/**/*.ts",
+      "prisma/**/*.ts",
+      "scripts/**/*.ts",
+      "scripts/**/*.mjs",
+      "config/**/*.ts"
     ]
   },
   "assist": { "actions": { "source": { "organizeImports": "on" } } },

@@ -307,14 +307,16 @@ async function runTest(testCase: TestCase): Promise<void> {
 
   if (onlyInInline.length > 0) {
     console.log("\n⚠️  欠損リスク！ MessageにないURL:");
-    // biome-ignore lint/suspicious/useIterableCallbackReturn: console.logは副作用のみ
-    onlyInInline.slice(0, 3).forEach((url) => { console.log(`    - ${url}`); });
+    onlyInInline.slice(0, 3).forEach((url) => {
+      console.log(`    - ${url}`);
+    });
   }
 
   if (onlyInMessage.length > 0) {
     console.log("\n⚠️  欠損リスク！ InlineにないURL:");
-    // biome-ignore lint/suspicious/useIterableCallbackReturn: console.logは副作用のみ
-    onlyInMessage.slice(0, 3).forEach((url) => { console.log(`    - ${url}`); });
+    onlyInMessage.slice(0, 3).forEach((url) => {
+      console.log(`    - ${url}`);
+    });
   }
 
   // 結果をファイルに保存
