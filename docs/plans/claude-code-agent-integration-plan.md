@@ -634,15 +634,50 @@ export function DeepResearchToggle({
 
 ## 6. 実装タスク（改訂版）
 
+### インフラ選定による工数比較
+
+| 項目 | **Railway** | **AWS ECS Fargate** | 差分 |
+|------|-------------|---------------------|------|
+| **Phase 1工数** | 8.5時間 | 16.5時間 | **+8時間** |
+| **インフラ管理** | GUI/CLIで簡単 | Terraform必須 | 学習コストあり |
+| **デプロイ** | Git連携で自動 | GitHub Actions + ECR | CI/CD構築必要 |
+| **監視** | ダッシュボード基本 | CloudWatch詳細設定 | 設定工数2時間 |
+| **本番安定性** | 十分 | 高（可用性99.9%） | - |
+
+**判断基準:**
+- **Railway推奨**: スピード優先、8日でリリースしたい、監視は最低限でOK
+- **AWS推奨**: 長期運用、詳細な監視・監査が必要、既存AWS環境との統合
+
+---
+
 ### Phase 1: Agent APIセットアップ + セキュリティ基盤 + xAI連携（2日）
+
+#### パターンA: Railway（推奨・スピード重視）
 
 | # | タスク | 詳細 | 工数 |
 |---|--------|------|------|
 | 1.1 | Agent API準備 | `reference/up-web-legacy/agent/` をコピー | 2時間 |
 | 1.2 | **xAI連携ツール追加** | `x_search`, `grok_web_search` ツール実装 | 4時間 |
-| 1.3 | 環境変数設定 | `XAI_API_KEY` をAgent APIに追加 | 30分 |
-| 1.4 | 起動・接続テスト | Agent API ↔ xAI API 疎通確認 | 2時間 |
-| 1.5 | **セキュリティ設定** | Security Group, Secrets Manager設定 | 3時間 |
+| 1.3 | Railwayデプロイ | Dockerfile + railway.yml作成、Git連携 | 1時間 |
+| 1.4 | 環境変数設定 | Railway Dashboardで設定 | 30分 |
+| 1.5 | 起動・接続テスト | Agent API ↔ xAI API 疎通確認 | 2時間 |
+| 1.6 | **セキュリティ設定** | Basic認証 + RailwayのIP制限機能 | 1時間 |
+| | **小計** | | **10.5時間** |
+
+#### パターンB: AWS ECS Fargate（本番・堅牢性重視）
+
+| # | タスク | 詳細 | 工数 |
+|---|--------|------|------|
+| 1.1 | Agent API準備 | `reference/up-web-legacy/agent/` をコピー | 2時間 |
+| 1.2 | **xAI連携ツール追加** | `x_search`, `grok_web_search` ツール実装 | 4時間 |
+| 1.3 | Terraform環境構築 | VPC, ECS, ALB, Route53の定義 | 4時間 |
+| 1.4 | CI/CD構築 | GitHub Actions → ECR → ECSデプロイ | 2時間 |
+| 1.5 | Secrets Manager設定 | キー登録、ECSタスク定義更新 | 1時間 |
+| 1.6 | 起動・接続テスト | Agent API ↔ xAI API 疎通確認 | 2時間 |
+| 1.7 | **セキュリティ設定** | Security Group, IP制限, CloudWatch | 3時間 |
+| | **小計** | | **18時間** |
+
+**工数差: Railwayが7.5時間短縮**
 
 ### Phase 2: Teddy API実装（2日）
 
@@ -680,7 +715,7 @@ export function DeepResearchToggle({
 | 5.2 | x_search連携テスト | X検索→結果表示 | 2時間 |
 | 5.3 | 全機能テスト | 各機能のエンドツーエンド | 4時間 |
 
-**合計**: 8日
+**合計**: Railway=約7日 / AWS=約9日
 
 ---
 
