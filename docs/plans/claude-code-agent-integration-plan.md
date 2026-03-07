@@ -94,19 +94,19 @@ flowchart TB
         Router["リクエスト振り分け"]
         
         subgraph AgentAPIRoutes["/api/agent/*"]
-            AgentChat[/api/agent/chat\nPOST]
-            AgentStream[/api/agent/sessions/{id}/stream\nGET]
-            AgentBuffer[/api/agent/sessions/{id}/buffer\nGET]
+            AgentChat[/api/agent/chat<br/>POST]
+            AgentStream[/api/agent/sessions/{id}/stream<br/>GET]
+            AgentBuffer[/api/agent/sessions/{id}/buffer<br/>GET]
         end
         
         subgraph GrokAPIRoutes["/api/llm/*"]
-            GrokStream[/api/llm/stream\nPOST]
+            GrokStream[/api/llm/stream<br/>POST]
         end
     end
 
     subgraph AgentService["🤖 Agent API Service (FastAPI)"]
         direction TB
-        OpenAIEndpoint[/v1/chat/completions\nOpenAI互換]
+        OpenAIEndpoint[/v1/chat/completions<br/>OpenAI互換]
         SessionMgr["SessionManager"]
         ToolRegistry["ToolRegistry"]
         
