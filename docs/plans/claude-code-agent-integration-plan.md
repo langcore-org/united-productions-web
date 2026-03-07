@@ -638,15 +638,18 @@ export function DeepResearchToggle({
 
 | 項目 | **Railway** | **AWS ECS Fargate** | 差分 |
 |------|-------------|---------------------|------|
-| **Phase 1工数** | 8.5時間 | 16.5時間 | **+8時間** |
-| **インフラ管理** | GUI/CLIで簡単 | Terraform必須 | 学習コストあり |
+| **Phase 1工数** | 10.5時間 | 13.5時間 (※) | **+3時間** |
+| **インフラ管理** | GUI/CLIで簡単 | Terraform（Claude Code生成） | レビュー・デバッグ必要 |
 | **デプロイ** | Git連携で自動 | GitHub Actions + ECR | CI/CD構築必要 |
 | **監視** | ダッシュボード基本 | CloudWatch詳細設定 | 設定工数2時間 |
 | **本番安定性** | 十分 | 高（可用性99.9%） | - |
 
+※ Claude CodeにTerraformを書かせる前提。手動で書く場合は18時間→約+7.5時間差
+
 **判断基準:**
 - **Railway推奨**: スピード優先、8日でリリースしたい、監視は最低限でOK
 - **AWS推奨**: 長期運用、詳細な監視・監査が必要、既存AWS環境との統合
+- **どちらも可**: TerraformをClaude Codeに書かせれば差は3時間のみ
 
 ---
 
@@ -670,14 +673,36 @@ export function DeepResearchToggle({
 |---|--------|------|------|
 | 1.1 | Agent API準備 | `reference/up-web-legacy/agent/` をコピー | 2時間 |
 | 1.2 | **xAI連携ツール追加** | `x_search`, `grok_web_search` ツール実装 | 4時間 |
-| 1.3 | Terraform環境構築 | VPC, ECS, ALB, Route53の定義 | 4時間 |
+| 1.3 | Terraform環境構築 | **Claude Codeに生成依頼** → レビュー・修正 | 1.5時間 (※) |
 | 1.4 | CI/CD構築 | GitHub Actions → ECR → ECSデプロイ | 2時間 |
 | 1.5 | Secrets Manager設定 | キー登録、ECSタスク定義更新 | 1時間 |
 | 1.6 | 起動・接続テスト | Agent API ↔ xAI API 疎通確認 | 2時間 |
-| 1.7 | **セキュリティ設定** | Security Group, IP制限, CloudWatch | 3時間 |
-| | **小計** | | **18時間** |
+| 1.7 | **セキュリティ設定** | Security Group, IP制限, CloudWatch | 1時間 (※) |
+| | **小計** | | **13.5時間** |
 
-**工数差: Railwayが7.5時間短縮**
+※ Claude Code生成前提。手動で書く場合: Terraform=4時間、セキュリティ=3時間、**合計18時間**
+
+**工数差: Railwayが3時間短縮（Claude Code使用時）**
+
+#### Claude CodeによるTerraform生成の注意点
+
+```
+✅ 得意なこと:
+   - 基本的なVPC/ECS/ALBの構成コード生成
+   - IAMポリシーの記述
+   - Security Groupのルール定義
+
+⚠️ 要確認ポイント:
+   - 既存AWS環境との整合（VPC ID, サブネットID等）
+   - terraform plan のエラー解消
+   - 実際のapplyで出るエラー対応
+   - 後続メンテナンスのための理解・ドキュメント化
+
+💡 効率化Tips:
+   - 参考実装（up-web-legacyのTerraform）があれば学習に使える
+   - 1回のプロンプトで全部生成せず、モジュール単位で生成
+   - 生成後は必ずterraform validate, planで検証
+```
 
 ### Phase 2: Teddy API実装（2日）
 
@@ -715,7 +740,7 @@ export function DeepResearchToggle({
 | 5.2 | x_search連携テスト | X検索→結果表示 | 2時間 |
 | 5.3 | 全機能テスト | 各機能のエンドツーエンド | 4時間 |
 
-**合計**: Railway=約7日 / AWS=約9日
+**合計**: Railway=約7日 / AWS=約8日（Claude CodeでTerraform生成時）
 
 ---
 
