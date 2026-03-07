@@ -95,8 +95,8 @@ flowchart TB
         
         subgraph AgentAPIRoutes["/api/agent/*"]
             AgentChat[/api/agent/chat<br/>POST]
-            AgentStream[/api/agent/sessions/{id}/stream<br/>GET]
-            AgentBuffer[/api/agent/sessions/{id}/buffer<br/>GET]
+            AgentStream["/api/agent/sessions/:id/stream GET"]
+            AgentBuffer["/api/agent/sessions/:id/buffer GET"]
         end
         
         subgraph GrokAPIRoutes["/api/llm/*"]
