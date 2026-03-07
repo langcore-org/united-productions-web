@@ -4,6 +4,7 @@
 > **改訂日**: 2026-03-07  
 > **目的**: Teddy（AI Hub）の既存機能をClaude Codeに移行し、Claude Codeが必要に応じてGrok（xAI）を呼び出す設計に変更  
 > **統合方式**: Agent APIラッパー + xAI API連携（ハイブリッド）
+> **開発方式**: **Claude Codeメイン**（人間は指示・レビュー・テスト）
 
 ---
 
@@ -94,7 +95,7 @@ flowchart TB
         Router["リクエスト振り分け"]
         
         subgraph AgentAPIRoutes["/api/agent/*"]
-            AgentChat["/api/agent/chat POST"]
+            AgentChat["/api/agent chat POST"]
             AgentStream["/api/agent/sessions/:id/stream GET"]
             AgentBuffer["/api/agent/sessions/:id/buffer GET"]
         end
@@ -287,7 +288,7 @@ stateDiagram-v2
     接続中 --> 切断: エラー/タイムアウト
     接続中 --> 再接続待機: クライアント切断
     
-    再接続待機 --> 接続中: GET /sessions/{id}/stream
+    再接続待機 --> 接続中: GET /sessions/:id/stream
     
     応答完了 --> 接続中: 継続会話
     応答完了 --> 終了: セッション終了
@@ -632,115 +633,114 @@ export function DeepResearchToggle({
 
 ---
 
-## 6. 実装タスク（改訂版）
+## 6. 実装タスク（Claude Codeメイン版）
 
-### インフラ選定による工数比較
+> **前提**: 全工程でClaude Codeを使用。人間は指示出し・レビュー・テスト・軽微な修正のみ。
 
-| 項目 | **Railway** | **AWS ECS Fargate** | 差分 |
-|------|-------------|---------------------|------|
-| **Phase 1工数** | 10.5時間 | 13.5時間 (※) | **+3時間** |
-| **インフラ管理** | GUI/CLIで簡単 | Terraform（Claude Code生成） | レビュー・デバッグ必要 |
-| **デプロイ** | Git連携で自動 | GitHub Actions + ECR | CI/CD構築必要 |
-| **監視** | ダッシュボード基本 | CloudWatch詳細設定 | 設定工数2時間 |
-| **本番安定性** | 十分 | 高（可用性99.9%） | - |
+### 6.1 Claude Code活用ガイドライン
 
-※ Claude CodeにTerraformを書かせる前提。手動で書く場合は18時間→約+7.5時間差
+```
+✅ 効率が良い使い方:
+   - 参考実装を提示して「これと同じように」指示
+   - 1ファイルずつ生成（まとめてだと品質が落ちる）
+   - 型定義・エラーハンドリングを先に決める
+   - テストケースを先に書いてもらい、実装は後
 
-**判断基準:**
-- **Railway推奨**: スピード優先、8日でリリースしたい、監視は最低限でOK
-- **AWS推奨**: 長期運用、詳細な監視・監査が必要、既存AWS環境との統合
-- **どちらも可**: TerraformをClaude Codeに書かせれば差は3時間のみ
+⚠️ 注意が必要な箇所:
+   - SSEストリーミングの変換ロジック（複雑）
+   - Terraformの既存環境との整合（ID等）
+   - セキュリティ関連（人間が必ずレビュー）
+
+💡 工数短縮のコツ:
+   - プロンプトに「参考: docs/plans/claude-code-agent-integration-plan.md」と入れる
+   - 生成後は必ず型チェック・ビルド・テスト
+   - エラーが出たらログを渡して修正依頼
+```
 
 ---
 
-### Phase 1: Agent APIセットアップ + セキュリティ基盤 + xAI連携（2日）
+### Phase 1: Agent APIセットアップ + セキュリティ基盤 + xAI連携（1日）
 
-#### パターンA: Railway（推奨・スピード重視）
+| # | タスク | 詳細 | Claude Code | 人間 | 計 |
+|---|--------|------|:-----------:|:----:|:--:|
+| 1.1 | **xAI連携ツール追加** | `x_search`, `grok_web_search` 実装 | 1h | 0.5h(レビュー) | **1.5h** |
+| 1.2 | **Railwayデプロイ設定** | Dockerfile, railway.yml作成 | 0.5h | 0.5h(動作確認) | **1h** |
+| 1.3 | **セキュリティ実装** | Basic認証, IP制限設定 | 0.5h | 0.5h(レビュー) | **1h** |
+| 1.4 | 接続テスト | Agent API ↔ xAI API疎通 | - | 1h(テスト) | **1h** |
+| | **小計** | | **2h** | **2.5h** | **4.5h** |
 
-| # | タスク | 詳細 | 工数 |
-|---|--------|------|------|
-| 1.1 | Agent API準備 | `reference/up-web-legacy/agent/` をコピー | 2時間 |
-| 1.2 | **xAI連携ツール追加** | `x_search`, `grok_web_search` ツール実装 | 4時間 |
-| 1.3 | Railwayデプロイ | Dockerfile + railway.yml作成、Git連携 | 1時間 |
-| 1.4 | 環境変数設定 | Railway Dashboardで設定 | 30分 |
-| 1.5 | 起動・接続テスト | Agent API ↔ xAI API 疎通確認 | 2時間 |
-| 1.6 | **セキュリティ設定** | Basic認証 + RailwayのIP制限機能 | 1時間 |
-| | **小計** | | **10.5時間** |
+**Phase 1合計: 約4.5時間（0.5日）**
 
-#### パターンB: AWS ECS Fargate（本番・堅牢性重視）
+---
 
-| # | タスク | 詳細 | 工数 |
-|---|--------|------|------|
-| 1.1 | Agent API準備 | `reference/up-web-legacy/agent/` をコピー | 2時間 |
-| 1.2 | **xAI連携ツール追加** | `x_search`, `grok_web_search` ツール実装 | 4時間 |
-| 1.3 | Terraform環境構築 | **Claude Codeに生成依頼** → レビュー・修正 | 1.5時間 (※) |
-| 1.4 | CI/CD構築 | GitHub Actions → ECR → ECSデプロイ | 2時間 |
-| 1.5 | Secrets Manager設定 | キー登録、ECSタスク定義更新 | 1時間 |
-| 1.6 | 起動・接続テスト | Agent API ↔ xAI API 疎通確認 | 2時間 |
-| 1.7 | **セキュリティ設定** | Security Group, IP制限, CloudWatch | 1時間 (※) |
-| | **小計** | | **13.5時間** |
+### Phase 2: Teddy API実装（1日）
 
-※ Claude Code生成前提。手動で書く場合: Terraform=4時間、セキュリティ=3時間、**合計18時間**
+| # | タスク | 詳細 | Claude Code | 人間 | 計 |
+|---|--------|------|:-----------:|:----:|:--:|
+| 2.1 | **`/api/agent/chat`** | Agent API Proxy実装 | 1h | 0.5h(レビュー) | **1.5h** |
+| 2.2 | **`/api/agent/sessions/[id]/stream`** | SSE Proxy実装 | 1h | 0.5h(レビュー) | **1.5h** |
+| 2.3 | **SSE変換ロジック** | Agent API形式 → Teddy形式 | 1h | 1h(複雑なため) | **2h** |
+| 2.4 | **エラーハンドリング** | 両APIのエラー統合 | 0.5h | 0.5h(レビュー) | **1h** |
+| | **小計** | | **3.5h** | **2.5h** | **6h** |
 
-**工数差: Railwayが3時間短縮（Claude Code使用時）**
+**Phase 2合計: 約6時間（1日）**
 
-#### Claude CodeによるTerraform生成の注意点
+---
 
-```
-✅ 得意なこと:
-   - 基本的なVPC/ECS/ALBの構成コード生成
-   - IAMポリシーの記述
-   - Security Groupのルール定義
+### Phase 3: フロントエンド統合（1日）
 
-⚠️ 要確認ポイント:
-   - 既存AWS環境との整合（VPC ID, サブネットID等）
-   - terraform plan のエラー解消
-   - 実際のapplyで出るエラー対応
-   - 後続メンテナンスのための理解・ドキュメント化
+| # | タスク | 詳細 | Claude Code | 人間 | 計 |
+|---|--------|------|:-----------:|:----:|:--:|
+| 3.1 | **Deep Researchトグル** | ON/OFFボタン実装 | 0.5h | 0.5h(レビュー) | **1h** |
+| 3.2 | **API分岐ロジック** | DeepR状態でAPI先切り替え | 0.5h | 0.5h(レビュー) | **1h** |
+| 3.3 | **`useAgentStream`フック** | Agent API用カスタムフック | 1h | 0.5h(レビュー) | **1.5h** |
+| 3.4 | **ToolCallIndicator** | ツール実行状態表示コンポーネント | 0.5h | 0.5h(レビュー) | **1h** |
+| 3.5 | **TaskList** | TodoWrite連携コンポーネント | 0.5h | 0.5h(レビュー) | **1h** |
+| | **小計** | | **3h** | **2.5h** | **5.5h** |
 
-💡 効率化Tips:
-   - 参考実装（up-web-legacyのTerraform）があれば学習に使える
-   - 1回のプロンプトで全部生成せず、モジュール単位で生成
-   - 生成後は必ずterraform validate, planで検証
-```
+**Phase 3合計: 約5.5時間（1日）**
 
-### Phase 2: Teddy API実装（2日）
+---
 
-| # | タスク | 詳細 | 工数 |
-|---|--------|------|------|
-| 2.1 | `/api/agent/chat` | Agent API Proxy実装 | 4時間 |
-| 2.2 | `/api/agent/sessions/[id]/stream` | SSE Proxy | 4時間 |
-| 2.3 | SSE変換ロジック | Agent API形式 → Teddy形式 | 4時間 |
-| 2.4 | エラーハンドリング | 両APIのエラー統合 | 2時間 |
+### Phase 4: 既存機能移行（0.5日）
 
-### Phase 3: フロントエンド統合（2日）
+| # | タスク | 詳細 | Claude Code | 人間 | 計 |
+|---|--------|------|:-----------:|:----:|:--:|
+| 4.1 | **出演者リサーチ移行** | Grok → Agent API切り替え | 0.5h | 0.5h(テスト) | **1h** |
+| 4.2 | **エビデンスリサーチ移行** | Grok → Agent API切り替え | 0.5h | 0.5h(テスト) | **1h** |
+| 4.3 | **新企画立案移行** | Grok → Agent API切り替え | 0.5h | 0.5h(テスト) | **1h** |
+| 4.4 | **議事録作成移行** | Grok → Agent API（軽量設定） | 0.5h | 0.5h(テスト) | **1h** |
+| | **小計** | | **2h** | **2h** | **4h** |
 
-| # | タスク | 詳細 | 工数 |
-|---|--------|------|------|
-| 3.1 | **Deep Researchトグル** | ON/OFFボタン実装 | 2時間 |
-| 3.2 | **API分岐ロジック** | DeepR状態でAPI先切り替え | 2時間 |
-| 3.3 | useAgentStreamフック | Agent API用フック | 4時間 |
-| 3.4 | ToolCallIndicator統合 | ツール実行状態表示 | 4時間 |
-| 3.5 | TaskList実装 | TodoWrite連携 | 4時間 |
+**Phase 4合計: 約4時間（0.5日）**
 
-### Phase 4: 既存機能移行（1日）
+---
 
-| # | タスク | 詳細 | 工数 |
-|---|--------|------|------|
-| 4.1 | 出演者リサーチ移行 | Grok → Agent API | 2時間 |
-| 4.2 | エビデンスリサーチ移行 | Grok → Agent API | 2時間 |
-| 4.3 | 新企画立案移行 | Grok → Agent API | 2時間 |
-| 4.4 | 議事録作成移行 | Grok → Agent API（軽量設定） | 2時間 |
+### Phase 5: 統合テスト（0.5日）
 
-### Phase 5: 統合テスト（1日）
+| # | タスク | 詳細 | Claude Code | 人間 | 計 |
+|---|--------|------|:-----------:|:----:|:--:|
+| 5.1 | **Deep Research ON/OFFテスト** | 両モードの動作確認 | - | 1.5h | **1.5h** |
+| 5.2 | **x_search連携テスト** | X検索→結果表示の確認 | - | 1h | **1h** |
+| 5.3 | **全機能E2Eテスト** | 各機能のエンドツーエンド | 0.5h(テスト生成) | 1h | **1.5h** |
+| | **小計** | | **0.5h** | **3.5h** | **4h** |
 
-| # | タスク | 詳細 | 工数 |
-|---|--------|------|------|
-| 5.1 | Deep Research ON/OFFテスト | 両モードの動作確認 | 2時間 |
-| 5.2 | x_search連携テスト | X検索→結果表示 | 2時間 |
-| 5.3 | 全機能テスト | 各機能のエンドツーエンド | 4時間 |
+**Phase 5合計: 約4時間（0.5日）**
 
-**合計**: Railway=約7日 / AWS=約8日（Claude CodeでTerraform生成時）
+---
+
+## 工数サマリー
+
+| Phase | 内容 | Claude Code | 人間 | 合計 |
+|-------|------|:-----------:|:----:|:----:|
+| 1 | Agent API + xAI連携 | 2h | 2.5h | **4.5h** |
+| 2 | Teddy API実装 | 3.5h | 2.5h | **6h** |
+| 3 | フロントエンド統合 | 3h | 2.5h | **5.5h** |
+| 4 | 既存機能移行 | 2h | 2h | **4h** |
+| 5 | 統合テスト | 0.5h | 3.5h | **4h** |
+| | **合計** | **11h** | **13h** | **24h（3日）** |
+
+**Claude Codeメイン開発で従来の8日→3日に短縮（約60%削減）**
 
 ---
 
@@ -754,16 +754,12 @@ AGENT_API_URL=http://localhost:8230
 AGENT_API_TIMEOUT=600000
 AGENT_API_SECRET=shared-secret-key-32char-min  # セキュリティ対策②: API Key認証
 
-# Agent API側 (ECS Fargate / Railway)
-# Secrets Managerから注入される環境変数
+# Agent API側 (Railway)
+# Railway Dashboardで設定
 ANTHROPIC_API_KEY=sk-ant-xxx
 XAI_API_KEY=xai-xxx  # 新規: xAI連携用
 AGENT_API_SECRET=shared-secret-key-32char-min
 ```
-
-**セキュリティ設定:**
-- `AGENT_API_SECRET`: TeddyとAgent API間の共有秘密鍵（32文字以上のランダム文字列）
-- Secrets Manager: 本番では環境変数を直接設定せず、AWS Secrets Managerから注入
 
 ### 7.2 新規作成ファイル
 
@@ -771,31 +767,29 @@ AGENT_API_SECRET=shared-secret-key-32char-min
 app/
 ├── api/
 │   ├── agent/
-│   │   ├── chat/route.ts
+│   │   ├── chat/route.ts           # Claude Code生成
 │   │   └── sessions/[sessionId]/
-│   │       ├── stream/route.ts
-│   │       └── buffer/route.ts
+│   │       ├── stream/route.ts     # Claude Code生成
+│   │       └── buffer/route.ts     # Claude Code生成
 │   └── llm/
 │       └── stream/route.ts（既存、変更なし）
 ├── hooks/
-│   └── useAgentStream.ts
+│   └── useAgentStream.ts           # Claude Code生成
 └── components/
     ├── chat/
-    │   ├── DeepResearchToggle.tsx  # 新規
-    │   ├── ToolCallIndicator.tsx
-    │   └── TaskList.tsx
+    │   ├── DeepResearchToggle.tsx  # Claude Code生成
+    │   ├── ToolCallIndicator.tsx   # Claude Code生成
+    │   └── TaskList.tsx            # Claude Code生成
     └── sidebar/
         └── AgentSelector.tsx（変更なし、裏側変更）
 
-agent/（新規ディレクトリ）
+agent/（Claude Codeで改修）
 ├── src/
 │   ├── main.py
-│   ├── tools/
-│   │   ├── xai_tools.py  # xAI連携ツール
-│   │   └── ...
-│   └── ...
-├── pyproject.toml
-└── Dockerfile
+│   └── tools/
+│       └── xai_tools.py            # xAI連携ツール（Claude Code生成）
+├── Dockerfile                      # Claude Code生成
+└── railway.yml                     # Claude Code生成
 ```
 
 ---
@@ -806,8 +800,8 @@ agent/（新規ディレクトリ）
 |--------|------|------|
 | Agent API停止 | 高 | Docker自動再起動、ヘルスチェック |
 | xAI APIレート制限 | 中 | リトライロジック、フォールバック（WebSearch） |
-| 2つのAPIキー管理 | 低 | 環境変数一元管理、ローテーション対応 |
-| Deep Research ON時の長時間実行 | 中 | タイムアウト設定（10分）、進捗表示 |
+| Claude Code生成コードの品質 | 中 | 人間レビュー必須、テスト駆動 |
+| SSEストリーミングの複雑性 | 中 | 段階的実装、十分なテスト |
 | セッション消失 | 中 | バッファリング、再接続対応 |
 
 ---
@@ -841,3 +835,4 @@ agent/（新規ディレクトリ）
 | 2026-03-07 | **大幅改訂**: 既存機能移行方針に変更、Deep Researchトグル追加、Claude↔Grok連携設計を追加 |
 | 2026-03-07 | **マーメイド図追加**: システム構成図、シーケンス図、状態遷移図、データフロー図を追加 |
 | 2026-03-07 | **セキュリティ設計追加**: AWS ECS推奨構成、4層防御、インシデント対応手順を追加 |
+| 2026-03-07 | **工数見直し**: Claude Codeメイン開発前提で従来の8日→3日に短縮 |
