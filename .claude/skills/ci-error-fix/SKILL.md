@@ -375,3 +375,133 @@ git add -p  # 対話的に選択
 - 適切な粒度で修正（1つずつまたはまとめて）
 - 部分的成功でもコミット
 - 別作業のファイルは含めない
+
+---
+
+## スキル連携
+
+### biome-linting との連携
+
+Lintエラー発生時：
+```bash
+# 自動修正を試行
+npm run lint:fix
+
+# 手動修正が必要な残りを確認
+npm run lint
+```
+
+### code-care との連携
+
+型エラー発生時：
+```bash
+# as any の除去
+node .claude/skills/code-care/scripts/code.js fix-any --file=<file>
+
+# 型安全性の監査
+node .claude/skills/code-care/scripts/code.js audit-types
+```
+
+### vercel-deploy との連携
+
+デプロイエラーがビルドエラーの場合：
+```bash
+# ローカルでビルド確認
+npm run build
+
+# デプロイ監視
+npm run deploy:monitor
+```
+
+---
+
+## 対話例：複合エラーの対応
+
+```
+ユーザー: 「CIが通らない。TypeScriptとLintのエラーが出てる"
+
+AI: 「複合エラーの対応を行います。まずエラーの優先順位を決めます：
+
+【優先順位】
+1. TypeScriptエラー（型安全性）
+2. Lintエラー（コードスタイル）
+
+まずTypeScriptから対応します。」
+
+[TypeScriptエラーを修正]
+
+AI: 「TypeScriptエラーを修正しました。コミットします：
+
+```bash
+git add -A
+git commit -m "fix: TypeScriptエラーを修正" --no-verify
+```
+
+次にLintエラーを対応します。」
+
+[Lintエラーを修正]
+
+AI: 「Lintエラーも修正しました。再度コミット：
+
+```bash
+git add -A
+git commit -m "style: Lintエラーを修正"
+git push
+```
+
+CIを監視しますか？」
+```
+
+---
+
+## 高度な対話パターン
+
+### パターン1: 依存関係の連鎖エラー
+
+```
+ユーザー: 「修正しても新しいエラーが出る..."
+
+AI: 「依存関係の連鎖エラーの可能性があります。一時的にコミットせず、連鎖修正を続行します。
+
+修正の順序：
+1. 基本型定義の修正
+2. それを使う関数の修正
+3. それを使うコンポーネントの修正
+
+最後にまとめてコミットします。」
+```
+
+### パターン2: 大規模なリファクタリングが必要
+
+```
+ユーザー: 「同じエラーが50箇所出てる"
+
+AI: 「パターンエラーの可能性があります。以下を検討します：
+
+A. 一括置換で対応（簡単なケース）
+B. 型定義の修正で一括解決
+C. リファクタリングが必要
+
+エラーの内容を見て判断します。」
+```
+
+---
+
+## 緊急時の対応フロー
+
+```
+【緊急度が高い場合】
+1. 致命的なエラーを特定
+2. 最小限の修正でCIを通す
+3. 詳細な改善は後続タスクとして記録
+
+```bash
+# 例: 型エラーを一時的に回避
+// @ts-expect-error - 緊急回避。FIXME: 後で修正
+const x = problematicValue;
+```
+
+# FIXMEをバックログに記録
+node .claude/skills/project-docs/scripts/docs.js backlog create-todo \
+  "型エラーの根本解決" --priority=high --file=<file>
+```
