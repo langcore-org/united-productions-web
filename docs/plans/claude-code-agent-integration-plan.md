@@ -450,9 +450,136 @@ if (deepResearch) {
 
 ---
 
-## 4. UI/UX設計
+## 4. セキュリティ設計
 
-### 4.1 サイドバー（変更なし・統合済み）
+### 4.1 脅威モデルとリスク評価
+
+| 脅威 | リスクレベル | 影響 | 対策 |
+|------|-------------|------|------|
+| APIキー流出 | 中 | 金銭的被害（月数万円程度） | Secrets Manager + IP制限 + API Key認証 |
+| 不正アクセス | 中 | サービス悪用 | IP制限 + API Key認証 + レート制限 |
+| データ流出 | 低 | 個人情報なし、業務情報のみ | VPC分離は不要、HTTPS必須 |
+| DDoS | 低 | サービス停止 | ALB + ECSの自動スケーリング |
+
+**判断**: Teddyは個人情報を扱わず、APIキー流出の影響は「即座に無効化できる金銭的被害」のみ。VPC閉じる必要なし。
+
+### 4.2 セキュリティ対策（推奨レベル）
+
+本番環境では以下の4層防御を採用する：
+
+```
+[Teddy@Vercel] ──HTTPS──▶ [ALB] ──▶ [Security Group] ──▶ [ECS Fargate]
+                              │                              │
+                              ▼ ① IP制限                     ▼ ② API Key認証
+                        (Vercel IPのみ)                 (Shared Secret)
+                                                               │
+                                                               ▼ ③ レート制限
+                                                          [Agent API]
+                                                               │
+                                                               ▼ ④ Secrets Manager
+                                                          [Claude Code]
+```
+
+#### 対策①: IP制限（Security Group）
+
+```hcl
+# Terraform
+resource "aws_security_group_rule" "allow_vercel_only" {
+  type        = "ingress"
+  from_port   = 8230
+  to_port     = 8230
+  protocol    = "tcp"
+  cidr_blocks = ["76.76.21.0/24"]  # VercelのIPレンジ
+}
+```
+
+#### 対策②: API Key認証（二重チェック）
+
+```python
+# Agent API側
+from fastapi import HTTPException, Header
+import os
+
+AGENT_API_SECRET = os.environ["AGENT_API_SECRET"]
+
+async def verify_auth(x_api_key: str = Header(...)):
+    if x_api_key != AGENT_API_SECRET:
+        raise HTTPException(401, "Invalid API key")
+```
+
+```typescript
+// Teddy側
+const response = await fetch('/api/agent/chat', {
+  headers: {
+    'X-API-Key': process.env.AGENT_API_SECRET!
+  }
+});
+```
+
+#### 対策③: レート制限
+
+```python
+# slowapi等で実装
+from slowapi import Limiter
+
+limiter = Limiter(key_func=lambda: "global")
+
+@app.post("/v1/chat/completions")
+@limiter.limit("100/minute")
+async def chat_completions(request: Request):
+    ...
+```
+
+#### 対策④: Secrets Manager管理
+
+```hcl
+# Terraform
+resource "aws_secretsmanager_secret" "agent_api_keys" {
+  name = "teddy/agent-api-keys"
+}
+
+resource "aws_secretsmanager_secret_version" "agent_api_keys" {
+  secret_id = aws_secretsmanager_secret.agent_api_keys.id
+  secret_string = jsonencode({
+    ANTHROPIC_API_KEY = var.anthropic_api_key
+    XAI_API_KEY       = var.xai_api_key
+    AGENT_API_SECRET  = var.agent_api_secret
+  })
+}
+```
+
+### 4.3 インシデント対応手順
+
+**APIキー流出が疑われた場合:**
+
+1. **即座の対応（5分以内）**
+   ```bash
+   # AWS Secrets Managerでキーをローテーション
+   aws secretsmanager rotate-secret --secret-id teddy/agent-api-keys
+   ```
+
+2. **影響確認**
+   - Anthropic Dashboard: 不審な使用量の確認
+   - xAI Dashboard: 同様
+
+3. **復旧**
+   - 新しいキーをTeddyの環境変数に設定
+   - 古いキーを無効化
+
+### 4.4 セキュリティ監視
+
+| 監視項目 | ツール | アラート条件 |
+|---------|--------|-------------|
+| リクエスト数 | CloudWatch | 1時間に1000件超過 |
+| エラーレート | CloudWatch | 5xxエラーが10%超過 |
+| キーアクセス | CloudTrail | Secrets Managerへのアクセス |
+| コスト | AWS Billing | 月額$100超過 |
+
+---
+
+## 5. UI/UX設計
+
+### 5.1 サイドバー（変更なし・統合済み）
 
 既存のサイドバーメニューをそのまま使用。裏側のエンジンがClaude Codeに変更される。
 
@@ -467,7 +594,7 @@ Sidebar
 └── 履歴
 ```
 
-### 4.2 Deep Researchトグルボタン
+### 5.2 Deep Researchトグルボタン
 
 ```tsx
 // components/chat/DeepResearchToggle.tsx
@@ -496,7 +623,7 @@ export function DeepResearchToggle({
 }
 ```
 
-### 4.3 表示切り替え
+### 5.3 表示切り替え
 
 | モード | 表示 | 応答時間 | ツール使用 |
 |--------|------|---------|-----------|
@@ -505,9 +632,9 @@ export function DeepResearchToggle({
 
 ---
 
-## 5. 実装タスク（改訂版）
+## 6. 実装タスク（改訂版）
 
-### Phase 1: Agent APIセットアップ + xAI連携（2日）
+### Phase 1: Agent APIセットアップ + セキュリティ基盤 + xAI連携（2日）
 
 | # | タスク | 詳細 | 工数 |
 |---|--------|------|------|
@@ -515,6 +642,7 @@ export function DeepResearchToggle({
 | 1.2 | **xAI連携ツール追加** | `x_search`, `grok_web_search` ツール実装 | 4時間 |
 | 1.3 | 環境変数設定 | `XAI_API_KEY` をAgent APIに追加 | 30分 |
 | 1.4 | 起動・接続テスト | Agent API ↔ xAI API 疎通確認 | 2時間 |
+| 1.5 | **セキュリティ設定** | Security Group, Secrets Manager設定 | 3時間 |
 
 ### Phase 2: Teddy API実装（2日）
 
@@ -556,21 +684,28 @@ export function DeepResearchToggle({
 
 ---
 
-## 6. 技術仕様
+## 7. 技術仕様
 
-### 6.1 環境変数
+### 7.1 環境変数
 
 ```bash
-# Teddy側
+# Teddy側 (Vercel)
 AGENT_API_URL=http://localhost:8230
 AGENT_API_TIMEOUT=600000
+AGENT_API_SECRET=shared-secret-key-32char-min  # セキュリティ対策②: API Key認証
 
-# Agent API側
+# Agent API側 (ECS Fargate / Railway)
+# Secrets Managerから注入される環境変数
 ANTHROPIC_API_KEY=sk-ant-xxx
 XAI_API_KEY=xai-xxx  # 新規: xAI連携用
+AGENT_API_SECRET=shared-secret-key-32char-min
 ```
 
-### 6.2 新規作成ファイル
+**セキュリティ設定:**
+- `AGENT_API_SECRET`: TeddyとAgent API間の共有秘密鍵（32文字以上のランダム文字列）
+- Secrets Manager: 本番では環境変数を直接設定せず、AWS Secrets Managerから注入
+
+### 7.2 新規作成ファイル
 
 ```
 app/
@@ -605,7 +740,7 @@ agent/（新規ディレクトリ）
 
 ---
 
-## 7. リスクと対策
+## 8. リスクと対策
 
 | リスク | 影響 | 対策 |
 |--------|------|------|
@@ -617,7 +752,7 @@ agent/（新規ディレクトリ）
 
 ---
 
-## 8. 今後の拡張
+## 9. 今後の拡張
 
 | 拡張 | 優先度 | 説明 |
 |------|--------|------|
@@ -628,7 +763,7 @@ agent/（新規ディレクトリ）
 
 ---
 
-## 9. 参考リンク
+## 10. 参考リンク
 
 - **Agent API実装**: [`reference/up-web-legacy/agent/`](/reference/up-web-legacy/agent/)
 - **United Productions API Proxy**: [`reference/up-web-legacy/up_web/app/api/chat/completions/route.ts`](/reference/up-web-legacy/up_web/app/api/chat/completions/route.ts)
@@ -638,10 +773,11 @@ agent/（新規ディレクトリ）
 
 ---
 
-## 10. 更新履歴
+## 11. 更新履歴
 
 | 日付 | 更新内容 |
 |------|---------|
 | 2026-03-07 | 初版作成 |
 | 2026-03-07 | **大幅改訂**: 既存機能移行方針に変更、Deep Researchトグル追加、Claude↔Grok連携設計を追加 |
 | 2026-03-07 | **マーメイド図追加**: システム構成図、シーケンス図、状態遷移図、データフロー図を追加 |
+| 2026-03-07 | **セキュリティ設計追加**: AWS ECS推奨構成、4層防御、インシデント対応手順を追加 |
