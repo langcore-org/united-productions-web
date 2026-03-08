@@ -1,0 +1,212 @@
+/**
+ * ストリーミングステップ表示コンポーネント
+ *
+ * @created 2026-02-22 11:50
+ * @updated 2026-02-27 ヘッダーを1回だけ表示するように変更
+ */
+
+import { Bot, Loader2 } from "lucide-react";
+import {
+  CitationsList,
+  ErrorMessage,
+  SkeletonMessage,
+  SummarizationMessage,
+  ThinkingPlaceholderMessage,
+  ToolCallGroup,
+} from "./messages";
+import type { StreamingStepsProps } from "./types";
+
+export function StreamingSteps({
+  content,
+  toolCalls,
+  citations,
+  summarizationEvents,
+  usage,
+  provider,
+  isComplete,
+  phase,
+  connectionStatus,
+  error,
+}: StreamingStepsProps) {
+  // 重複を除去したツール呼び出し
+  const uniqueToolCalls = toolCalls.filter(
+    (call, index, self) => index === self.findIndex((c) => c.id === call.id),
+  );
+
+  // ツール呼び出しをグループ化（同じツール名でグループ化）
+  const groupToolCalls = (calls: typeof uniqueToolCalls) => {
+    const groups = new Map<string, typeof uniqueToolCalls>();
+    for (const call of calls) {
+      const existing = groups.get(call.name) ?? [];
+      existing.push(call);
+      groups.set(call.name, existing);
+    }
+    return groups;
+  };
+
+  const completedToolGroups = groupToolCalls(
+    uniqueToolCalls.filter((call) => call.status === "completed"),
+  );
+  const runningToolGroups = groupToolCalls(
+    uniqueToolCalls.filter((call) => call.status === "running"),
+  );
+
+  // 完了した要約イベント
+  const completedSummarizations = summarizationEvents.filter((e) => e.status === "completed");
+  // 実行中の要約イベント
+  const runningSummarizations = summarizationEvents.filter((e) => e.status === "running");
+  // エラーの要約イベント
+  const errorSummarizations = summarizationEvents.filter((e) => e.status === "error");
+
+  // ツール呼び出しもコンテンツもない場合は「考え中...」を表示
+  const hasAnyActivity = toolCalls.length > 0 || summarizationEvents.length > 0 || !!content;
+
+  // ヘッダーを表示すべきか（1回目のみ）
+  const hasAnyContent =
+    completedSummarizations.length > 0 ||
+    completedToolGroups.size > 0 ||
+    runningSummarizations.length > 0 ||
+    runningToolGroups.size > 0 ||
+    errorSummarizations.length > 0 ||
+    !!content ||
+    citations.length > 0;
+
+  // streaming中だがまだコンテンツがない場合（xAI処理待ち）
+  const isWaitingForResponse = phase === "streaming" && !hasAnyContent;
+
+  return (
+    <div className="space-y-3">
+      {/* streaming開始直後、コンテンツ到着前のスケルトン表示 */}
+      {isWaitingForResponse && <SkeletonMessage />}
+
+      {/* 接続ステータス表示（connecting/thinking/tool_executing/responding） */}
+      {connectionStatus?.status && !isComplete && (
+        <div className="flex gap-4 px-4 py-2">
+          <div className="flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center bg-gradient-to-br from-black to-gray-800 shadow-lg">
+            <Loader2 className="w-4 h-4 text-white animate-spin" />
+          </div>
+          <div className="flex-1 max-w-[85%]">
+            <div className="flex items-center gap-2 mb-1.5">
+              <span className="text-sm font-medium text-gray-600">Teddy</span>
+              <span className="flex items-center gap-1.5 text-xs text-gray-600">
+                <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse" />
+                {connectionStatus.message}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ヘッダー - Teddy + アイコン（1回だけ表示） */}
+      {hasAnyContent && (
+        <div className="flex gap-4 px-4 py-2">
+          <div className="flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center bg-gradient-to-br from-black to-gray-800 shadow-lg">
+            {isComplete ? (
+              <Bot className="w-4 h-4 text-white" />
+            ) : (
+              <Loader2 className="w-4 h-4 text-white animate-spin" />
+            )}
+          </div>
+          <div className="flex-1 max-w-[85%] items-start">
+            <div className="flex items-center gap-2 mb-1.5">
+              <span className="text-sm font-medium text-gray-600">Teddy</span>
+
+              {!isComplete && (
+                <span className="flex items-center gap-1.5 text-xs text-gray-600">
+                  <span className="w-1.5 h-1.5 bg-gray-500 rounded-full animate-pulse" />
+                  生成中...
+                </span>
+              )}
+            </div>
+
+            {/* ここから下に各種メッセージをネスト */}
+            <div className="space-y-3">
+              {/* 完了した要約イベント */}
+              {completedSummarizations.map((event) => (
+                <SummarizationMessage
+                  key={event.id}
+                  event={event}
+                  provider={provider}
+                  showHeader={false}
+                />
+              ))}
+
+              {/* 完了したツール呼び出し（グループ化） */}
+              {Array.from(completedToolGroups.entries()).map(([toolName, calls]) => (
+                <ToolCallGroup
+                  key={`completed-${toolName}`}
+                  toolName={toolName}
+                  toolCalls={calls}
+                  citations={citations}
+                />
+              ))}
+
+              {/* 実行中の要約イベント */}
+              {runningSummarizations.map((event) => (
+                <SummarizationMessage
+                  key={event.id}
+                  event={event}
+                  provider={provider}
+                  showHeader={false}
+                />
+              ))}
+
+              {/* 実行中のツール呼び出し（グループ化） */}
+              {Array.from(runningToolGroups.entries()).map(([toolName, calls]) => (
+                <ToolCallGroup
+                  key={`running-${toolName}`}
+                  toolName={toolName}
+                  toolCalls={calls}
+                  citations={citations}
+                />
+              ))}
+
+              {/* エラーの要約イベント */}
+              {errorSummarizations.map((event) => (
+                <SummarizationMessage
+                  key={event.id}
+                  event={event}
+                  provider={provider}
+                  showHeader={false}
+                />
+              ))}
+
+              {/* 何もない場合は「考え中...」を表示 */}
+              {!hasAnyActivity && !isComplete && (
+                <ThinkingPlaceholderMessage provider={provider} showHeader={false} />
+              )}
+
+              {/* エラーメッセージ */}
+              {error && <ErrorMessage error={error} showHeader={false} />}
+
+              {/* メインコンテンツ */}
+              {content && !isComplete && (
+                <div className="relative px-4 py-3 text-sm leading-relaxed rounded-2xl bg-white text-gray-800 border border-gray-200 rounded-tl-sm">
+                  <div className="whitespace-pre-wrap">
+                    {content}
+                    {!isComplete && (
+                      <span className="inline-block w-2 h-4 bg-gray-400 ml-1 animate-pulse rounded-sm" />
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Usage Info */}
+              {isComplete && usage && (
+                <div className="text-xs text-gray-400">
+                  {usage.inputTokens.toLocaleString()} 入力 / {usage.outputTokens.toLocaleString()}{" "}
+                  出力 • ${usage.cost.toFixed(6)}
+                </div>
+              )}
+
+              {/* 引用URL */}
+              {citations.length > 0 && <CitationsList citations={citations} />}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default StreamingSteps;

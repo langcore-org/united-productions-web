@@ -1,0 +1,357 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// Enums
+// ============================================
+
+enum LLMProvider {
+  GEMINI_25_FLASH_LITE     // デフォルト（無料枠）
+  GEMINI_30_FLASH          // 高品質（無料枠）
+  GROK_4_1_FAST_REASONING  // Grok 4.1 Fast（推論）
+  GROK_4_0709              // Grok 4 標準版
+  GPT_4O_MINI              // コスパ
+  GPT_5                    // フラッグシップ
+  CLAUDE_SONNET_45         // バランス
+  CLAUDE_OPUS_46           // 最高品質
+  PERPLEXITY_SONAR         // エビデンス検索
+  PERPLEXITY_SONAR_PRO     // 高品質検索
+}
+
+// ============================================
+// Models
+// ============================================
+
+// ============================================
+// NextAuth.js 認証モデル
+// ============================================
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+  refresh_token_expires_in Int?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ============================================
+// アプリケーションモデル
+// ============================================
+
+model User {
+  id              String             @id @default(uuid())
+  email           String             @unique
+  name            String?
+  image           String?
+  emailVerified   DateTime?
+  googleId        String?            @unique
+  role            String             @default("USER") // ADMIN | USER
+  accounts        Account[]
+  sessions        Session[]
+  meetingNotes    MeetingNote[]
+  transcripts     Transcript[]
+  researchChats   ResearchChat[]
+  schedules       LocationSchedule[]
+  usageLogs       UsageLog[]
+  appLogs         AppLog[]
+  programSettings ProgramSettings?
+  grokToolSettings GrokToolSettings?
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  // @unique と重複するため削除
+  // @@index([email])
+  // @@index([googleId])
+}
+
+// PJ-A: 議事録・文字起こし
+model MeetingNote {
+  id            String      @id @default(uuid())
+  userId        String
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type          String      // MEETING | INTERVIEW
+  rawText       String      @db.Text
+  formattedText String?     @db.Text
+  llmProvider   LLMProvider @default(GEMINI_25_FLASH_LITE)
+  status        String      // DRAFT | FORMATTING | COMPLETED
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  // 複合インデックスを追加
+  @@index([userId, status, createdAt])
+  @@index([userId, createdAt])
+}
+
+// PJ-B: 起こし・NA原稿
+model Transcript {
+  id            String      @id @default(uuid())
+  userId        String
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rawText       String      @db.Text
+  formattedText String?     @db.Text
+  llmProvider   LLMProvider @default(GEMINI_25_FLASH_LITE)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@index([userId, createdAt])
+}
+
+// PJ-C: リサーチ・考査
+model ResearchChat {
+  id          String            @id @default(uuid())
+  userId      String
+  user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  agentType   String            // PEOPLE | LOCATION | EVIDENCE
+  title       String?           // チャットのタイトル（最初のメッセージから自動生成）
+  llmProvider LLMProvider       @default(GROK_4_1_FAST_REASONING)
+  messages    ResearchMessage[]
+  results     Json?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  // 複合インデックスを追加
+  @@index([userId, agentType, createdAt])
+  @@index([userId, createdAt])
+  @@index([agentType])
+}
+
+model ResearchMessage {
+  id        String       @id @default(uuid())
+  chatId    String
+  chat      ResearchChat @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  role      String       // USER | ASSISTANT | SYSTEM
+  content   String       @db.Text
+  thinking  String?      @db.Text
+
+  // 使用モデル（メッセージ単位で記録）
+  llmProvider LLMProvider?
+
+  // usage（1:1 → カラム展開）
+  inputTokens   Int?
+  outputTokens  Int?
+  costUsd       Float?
+
+  // toolCalls・citations（1:N → Json）
+  toolCallsJson Json?
+  citationsJson Json?
+
+  createdAt DateTime     @default(now())
+
+  @@index([chatId, createdAt])
+}
+
+// PJ-D: ロケスケ管理
+model LocationSchedule {
+  id          String      @id @default(uuid())
+  userId      String
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title       String?
+  masterData  Json
+  llmProvider LLMProvider @default(GEMINI_25_FLASH_LITE)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@index([userId, createdAt])
+}
+
+// 使用量記録
+model UsageLog {
+  id            String      @id @default(uuid())
+  userId        String
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider      LLMProvider
+  inputTokens   Int
+  outputTokens  Int
+  cost          Float       // USD（無料枠は0）
+  metadata      Json?       // 追加情報（エンドポイント、モデル詳細など）
+  createdAt     DateTime    @default(now())
+
+  // 複合インデックスを追加
+  @@index([userId, provider, createdAt])
+  @@index([userId, createdAt])
+  @@index([provider, createdAt])
+  @@index([createdAt, cost])
+}
+
+// 番組設定
+model ProgramSettings {
+  id             String   @id @default(cuid())
+  userId         String   @unique
+  programInfo    String   @db.Text
+  pastProposals  String   @db.Text
+  updatedAt      DateTime @updatedAt
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// Grokツール設定（機能別・JSON構造）
+// settings: Record<ChatFeatureId, GrokToolType[]> 形式で保存
+model GrokToolSettings {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  settings  Json     @default("{}")
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ============================================
+// アプリケーションログ
+// ============================================
+
+enum LogLevel {
+  DEBUG
+  INFO
+  WARN
+  ERROR
+  AUDIT
+}
+
+enum LogCategory {
+  AUTH
+  API
+  DB
+  SYSTEM
+  USER_ACTION
+  SECURITY
+  PERFORMANCE
+}
+
+model AppLog {
+  id          String      @id @default(uuid())
+  level       LogLevel
+  category    LogCategory
+  message     String      @db.Text
+  details     Json?       // 詳細情報（スタックトレース、パラメータなど）
+  
+  // ユーザー情報
+  userId      String?
+  user        User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
+  
+  // リクエスト情報
+  requestId   String?
+  path        String?     // APIパスやページパス
+  method      String?     // HTTPメソッド
+  ip          String?     // IPアドレス
+  userAgent   String?     // User-Agent
+  
+  // パフォーマンス
+  duration    Int?        // 処理時間（ms）
+  
+  // エラー情報
+  errorCode   String?     // エラーコード
+  stackTrace  String?     @db.Text
+  
+  createdAt   DateTime    @default(now())
+  
+  // インデックス
+  @@index([level, createdAt])
+  @@index([category, createdAt])
+  @@index([userId, createdAt])
+  @@index([createdAt])
+  @@index([requestId])
+  @@index([path])
+}
+
+// ============================================
+// システム設定（KVストア）
+// ============================================
+
+model SystemSettings {
+  key       String   @id   // キー（例: "llm.defaultProvider"）
+  value     String         // 値（文字列）
+  updatedAt DateTime @updatedAt
+}
+
+// ============================================
+// システム設定（プロンプトなど）
+// ============================================
+
+model SystemPrompt {
+  id             String   @id @default(cuid())
+  key            String   @unique // プロンプトの識別子（例: MINUTES, TRANSCRIPT, RESEARCH_CAST）
+  name           String   // 表示名
+  description    String?  // 説明
+  content        String   @db.Text // プロンプト内容
+  category       String   // カテゴリ（minutes, transcript, research, document, general）
+  isActive       Boolean  @default(true)
+  currentVersion Int      @default(1) // 現在のバージョン番号
+  changedBy      String?  // 最終更新者 UserId
+  changeNote     String?  // 最終更新の理由メモ
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // リレーション
+  versions       SystemPromptVersion[]
+
+  @@index([category])
+  @@index([isActive])
+}
+
+// システムプロンプトバージョン履歴
+model SystemPromptVersion {
+  id          String       @id @default(cuid())
+  promptId    String       // FK -> SystemPrompt.id
+  prompt      SystemPrompt @relation(fields: [promptId], references: [id], onDelete: Cascade)
+  version     Int          // 連番（1, 2, 3...）
+  content     String       @db.Text // プロンプト本文（スナップショット）
+  changedBy   String?      // 変更者 UserId
+  changeNote  String?      // 変更理由・メモ（任意）
+  createdAt   DateTime     @default(now())
+
+  @@index([promptId, version])
+  @@index([promptId, createdAt])
+}
+
+// 機能とプロンプトのマッピング
+model FeaturePrompt {
+  id          String   @id @default(cuid())
+  featureId   String   @unique // 機能ID（例: research-cast, proposal）
+  promptKey   String            // 紐付くプロンプトキー（例: RESEARCH_CAST）
+  description String?           // 説明
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([featureId])
+  @@index([promptKey])
+  @@index([isActive])
+}

@@ -1,0 +1,23 @@
+
+# ログ
+logs/
+*.log
+
+# 環境変数
+.env
+.env.local
+.env.production
+*.env
+.env.bypass
+
+# Node modules
+node_modules/
+
+# ビルド成果物
+.next/
+dist/
+build/
+
+
+# macOS
+.DS_Store

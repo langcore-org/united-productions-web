@@ -1,0 +1,40 @@
+# ドキュメント
+*.md
+docs/
+
+# テストファイル
+tests/
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
+
+# テストレポート
+playwright-report/
+test-results/
+playwright.config.ts
+vitest.config.ts
+
+# 開発ツール
+.eslintrc*
+eslint.config.*
+.prettierrc*
+.vscode/
+.idea/
+
+# ログ
+*.log
+logs/
+
+# キャッシュ
+.cache/
+.next/cache/
+
+# その他
+.git/
+.gitignore
+*.mdx
+README.md
+CHANGELOG.md
+CONTRIBUTING.md
+LICENSE
