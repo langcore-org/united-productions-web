@@ -1,11 +1,9 @@
 /**
- * LLM Usage Tracking API
+ * LLM Usage Tracking API（Supabase版）
  *
  * POST /api/llm/usage
- * フロントエンドから使用量を記録
  */
 
-import type { Prisma } from "@prisma/client";
 import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { requireAuth } from "@/lib/api/auth";
@@ -19,41 +17,29 @@ const usageSchema = z.object({
   metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
-/**
- * POST /api/llm/usage
- * 使用量を記録
- */
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
-    // 認証チェック
     const authResult = await requireAuth(request);
-    if (authResult instanceof NextResponse) {
-      return authResult;
-    }
+    if (authResult instanceof NextResponse) return authResult;
 
     const body = await request.json();
 
-    // バリデーション
     const validationResult = usageSchema.safeParse(body);
     if (!validationResult.success) {
       return NextResponse.json(
-        {
-          error: "リクエストが無効です",
-          details: validationResult.error.format(),
-        },
+        { error: "リクエストが無効です", details: validationResult.error.format() },
         { status: 400 },
       );
     }
 
     const { provider, inputTokens, outputTokens, metadata } = validationResult.data;
 
-    // 使用量を記録
     await trackUsage({
       userId: authResult.user.id,
       provider: provider as LLMProvider,
       inputTokens,
       outputTokens,
-      metadata: metadata as Prisma.InputJsonValue,
+      metadata: metadata as Record<string, unknown>,
     });
 
     return NextResponse.json({ success: true });

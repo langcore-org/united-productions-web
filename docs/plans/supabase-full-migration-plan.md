@@ -2020,14 +2020,15 @@ if (error) {
   - RLSポリシー修正、ファイル一覧を実コードベースに更新
 - [x] パッケージインストール: `@supabase/supabase-js`, `@supabase/ssr` 追加済
 - [x] Supabase MCP設定: アクセストークン設定済（Claude Code再起動で有効化）
-- [ ] `.env.local` にSupabase環境変数追加 (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`)
-- [ ] ステップ1: SQLスキーマをSupabaseに適用
-- [ ] ステップ2: Supabaseクライアント設定ファイル作成 (`lib/supabase/client.ts`, `server.ts`, `middleware.ts`, `admin.ts`)
-- [ ] ステップ3: 認証システム移行（NextAuth → Supabase Auth）
-- [ ] ステップ4: DB操作コード移行 - libレイヤー（prompts/db, usage/tracker, settings/db）
-- [ ] ステップ5: DB操作コード移行 - APIルート（~20ファイル）
-- [ ] ステップ6: 不要ファイル削除 & パッケージ整理
-- [ ] ステップ7: ビルド検証 & エラー修正
+- [x] `.env.local` にSupabase環境変数追加済（`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`）
+- [x] ステップ1: SQLスキーマ作成済 → `supabase/migrations/20260309000000_initial_schema.sql`
+- [x] ステップ2: Supabaseクライアント設定ファイル作成済（`lib/supabase/client.ts`, `server.ts`, `middleware.ts`, `admin.ts`）
+- [x] ステップ3: 認証システム移行完了（middleware.ts, auth/callback/route.ts, signin/page.tsx, lib/api/auth.ts）
+- [x] ステップ4: DB操作コード移行 - libレイヤー完了（prompts/db/crud,version,versions,seed,types, usage/tracker, settings/db, prompts/system-prompt）
+- [x] ステップ5: DB操作コード移行 - APIルート完了（chat/history, chat/feature, admin/users, admin/users/[id]/role, admin/prompts, admin/usage, prompts, prompts/[key]/versions, llm/usage, admin/prompts/[key], admin/prompts/[key]/restore, admin/prompts/[key]/history, admin/prompts/[key]/history/[version], prompts/[key]/rollback）
+- [x] ステップ6: 型チェックエラー修正完了（snake_case対応: scripts/apply-prompt-change, scripts/check-general-chat）
+- [ ] ステップ7: 不要ファイル削除 & パッケージ整理（lib/prisma.ts, lib/auth-options.ts, app/api/auth/[...nextauth] 等）
+- [ ] ステップ8: `npm run build` による最終ビルド検証
 
 ### 移行後
 
@@ -2074,3 +2075,4 @@ if (error) {
 | 2026-03-08 | **既存データ移行手順を追加**（Neon→Supabaseのデータ移行スクリプト、整合性検証手順） |
 | 2026-03-08 | **コードベース調査に基づく全面修正**: テーブル漏れ修正（ProgramSettings, SystemSettings, SystemPromptVersion, FeaturePrompt追加）、未使用テーブル除外（LocationSchedule, GrokToolSettings, AppLog）、RLSポリシーの`auth.uid()`キャスト修正（UUID直比較）、`users.id`を`auth.users(id)`参照に変更、移行対象ファイル一覧を実コードベース32ファイルに更新、Prisma使用箇所の正確な記載 |
 | 2026-03-08 | **実装開始**: `@supabase/supabase-js` + `@supabase/ssr` インストール済、Supabase MCPアクセストークン設定済、チェックリストを実装ステップに合わせて更新 |
+| 2026-03-09 | **コード移行完了**: SQLスキーマ作成、lib/supabase/* 4ファイル作成、認証移行（middleware/callback/signin/auth）、libレイヤー移行（prompts/db 5ファイル + system-prompt + usage/tracker + settings/db）、APIルート移行（14ファイル）、全型チェックパス。残: 不要ファイル削除・ビルド検証・データ移行 |

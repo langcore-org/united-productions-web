@@ -81,11 +81,11 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       success: true,
       data: {
         key: decodedKey,
-        version: updated.currentVersion,
+        version: updated.current_version,
         content: updated.content,
-        changedBy: updated.changedBy,
-        changeNote: updated.changeNote,
-        updatedAt: updated.updatedAt,
+        changedBy: updated.changed_by,
+        changeNote: updated.change_note,
+        updatedAt: updated.updated_at,
       },
     });
   } catch (error) {

@@ -1,5 +1,5 @@
 /**
- * Feature Chat API Route
+ * Feature Chat API Route（Supabase版）
  *
  * GET  /api/chat/feature?chatId=xxx        → 特定チャットの履歴取得
  * GET  /api/chat/feature?featureId=xxx     → チャット一覧取得
@@ -7,21 +7,15 @@
  * DELETE /api/chat/feature?chatId=xxx      → 特定チャット削除
  */
 
-import type { ResearchChat } from "@prisma/client";
 import type { NextRequest } from "next/server";
 import { z } from "zod";
 import { requireAuth } from "@/lib/api/auth";
 import { createLLMClient } from "@/lib/llm";
 import { logger } from "@/lib/logger";
-import { prisma } from "@/lib/prisma";
+import { createClient } from "@/lib/supabase/server";
 
-/**
- * チャットのタイトルをGrokで自動生成する（バックグラウンド実行）
- * レスポンスを遅延させないためawaitしない
- */
 async function generateAndSaveChatTitle(chatId: string, firstUserMessage: string): Promise<void> {
   try {
-    // ツールを全て無効化した安価なモデルでタイトル生成
     const grok = createLLMClient("grok-4-0709");
     const response = await grok.chat([
       {
@@ -36,127 +30,81 @@ async function generateAndSaveChatTitle(chatId: string, firstUserMessage: string
     ]);
     const title = response.content.trim().slice(0, 40);
     if (title) {
-      await prisma.researchChat.update({
-        where: { id: chatId },
-        data: { title },
-      });
+      const supabase = await createClient();
+      await supabase.from("research_chats").update({ title }).eq("id", chatId);
     }
   } catch (err) {
     logger.error("Failed to generate chat title", { chatId, error: String(err) });
   }
 }
 
-/**
- * GET /api/chat/feature?chatId=xxx
- * 特定チャットの履歴を取得
- *
- * GET /api/chat/feature?featureId=xxx
- * 機能別チャット一覧を取得（サイドバー用）
- */
 export async function GET(request: NextRequest): Promise<Response> {
   const requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
   try {
     const authResult = await requireAuth(request);
-    if (authResult instanceof Response) {
-      return authResult;
-    }
+    if (authResult instanceof Response) return authResult;
     const userId = authResult.user.id;
 
+    const supabase = await createClient();
     const { searchParams } = new URL(request.url);
     const chatId = searchParams.get("chatId");
     const featureId = searchParams.get("featureId");
 
-    // chatId指定: 特定チャットのメッセージを返す
     if (chatId) {
-      const chat = await prisma.researchChat.findFirst({
-        where: { id: chatId, userId },
-        include: {
-          messages: { orderBy: { createdAt: "asc" } },
-        },
-      });
+      const { data: chat } = await supabase
+        .from("research_chats")
+        .select("id, llm_provider")
+        .eq("id", chatId)
+        .eq("user_id", userId)
+        .single();
 
       if (!chat) {
-        return new Response(JSON.stringify({ messages: [] }), {
-          headers: { "Content-Type": "application/json" },
-        });
+        return Response.json({ messages: [] });
       }
 
-      const messages = chat.messages.map((m) => ({
+      const { data: msgs } = await supabase
+        .from("research_messages")
+        .select("*")
+        .eq("chat_id", chatId)
+        .order("created_at", { ascending: true });
+
+      const messages = (msgs || []).map((m) => ({
         id: m.id,
         role: m.role.toLowerCase(),
         content: m.content,
-        timestamp: m.createdAt,
-        llmProvider: m.llmProvider ?? chat.llmProvider,
-        toolCalls:
-          (m.toolCallsJson as Array<{
-            id: string;
-            name: string;
-            displayName: string;
-            status: string;
-            input?: string;
-          }>) ?? undefined,
-        citations: (m.citationsJson as Array<{ url: string; title: string }>) ?? undefined,
+        timestamp: m.created_at,
+        llmProvider: m.llm_provider ?? chat.llm_provider,
+        toolCalls: m.tool_calls_json ?? undefined,
+        citations: m.citations_json ?? undefined,
         usage:
-          m.inputTokens != null
-            ? {
-                inputTokens: m.inputTokens,
-                outputTokens: m.outputTokens,
-                cost: m.costUsd,
-              }
+          m.input_tokens != null
+            ? { inputTokens: m.input_tokens, outputTokens: m.output_tokens, cost: m.cost_usd }
             : undefined,
       }));
 
-      return new Response(JSON.stringify({ messages }), {
-        headers: { "Content-Type": "application/json" },
-      });
+      return Response.json({ messages });
     }
 
-    // featureId指定: チャット一覧を返す（サイドバー用）
     if (featureId) {
-      const chats = await prisma.researchChat.findMany({
-        where: {
-          userId,
-          agentType: featureId.toUpperCase(),
-        },
-        orderBy: { updatedAt: "desc" },
-        select: {
-          id: true,
-          title: true,
-          createdAt: true,
-          updatedAt: true,
-          _count: { select: { messages: true } },
-        },
-      });
+      const { data: chats } = await supabase
+        .from("research_chats")
+        .select("id, title, created_at, updated_at")
+        .eq("user_id", userId)
+        .eq("agent_type", featureId.toUpperCase())
+        .order("updated_at", { ascending: false });
 
-      return new Response(JSON.stringify({ chats }), {
-        headers: { "Content-Type": "application/json" },
-      });
+      return Response.json({ chats: chats || [] });
     }
 
-    return new Response(JSON.stringify({ error: "chatId or featureId is required" }), {
-      status: 400,
-      headers: { "Content-Type": "application/json" },
-    });
+    return Response.json({ error: "chatId or featureId is required" }, { status: 400 });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
-    logger.error(`[${requestId}] Failed to get conversation`, {
-      error: errorMessage,
-    });
-    return new Response(JSON.stringify({ error: "Failed to get conversation", requestId }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" },
-    });
+    logger.error(`[${requestId}] Failed to get conversation`, { error: errorMessage });
+    return Response.json({ error: "Failed to get conversation", requestId }, { status: 500 });
   }
 }
 
-/**
- * POST /api/chat/feature
- * 新規チャット作成 + メッセージ追加
- *
- * chatIdなし → 新規チャットセッションを作成してchatIdを返す
- * chatIdあり → 既存チャットにメッセージを追加
- */
 const saveRequestSchema = z.object({
   chatId: z.string().optional(),
   featureId: z.string(),
@@ -195,179 +143,140 @@ export async function POST(request: NextRequest): Promise<Response> {
 
   try {
     const authResult = await requireAuth(request);
-    if (authResult instanceof Response) {
-      return authResult;
-    }
+    if (authResult instanceof Response) return authResult;
     const userId = authResult.user.id;
 
     let body: unknown;
     try {
       body = await request.json();
     } catch {
-      return new Response(JSON.stringify({ error: "Invalid request body" }), {
-        status: 400,
-        headers: { "Content-Type": "application/json" },
-      });
+      return Response.json({ error: "Invalid request body" }, { status: 400 });
     }
 
     const validationResult = saveRequestSchema.safeParse(body);
     if (!validationResult.success) {
-      return new Response(
-        JSON.stringify({
-          error: "Invalid request",
-          details: validationResult.error.format(),
-        }),
-        { status: 400, headers: { "Content-Type": "application/json" } },
+      return Response.json(
+        { error: "Invalid request", details: validationResult.error.format() },
+        { status: 400 },
       );
     }
 
     const { chatId, featureId, messages } = validationResult.data;
-
     const firstUserMessage = messages.find((m) => m.role === "user");
+    const supabase = await createClient();
 
-    let chat: ResearchChat | null;
+    let actualChatId: string;
     let isNewChat = false;
 
     if (chatId) {
-      // 既存チャット: 所有権を確認
-      chat = await prisma.researchChat.findFirst({
-        where: { id: chatId, userId },
-      });
-      if (!chat) {
-        return new Response(JSON.stringify({ error: "Chat not found" }), {
-          status: 404,
-          headers: { "Content-Type": "application/json" },
-        });
+      const { data: existing } = await supabase
+        .from("research_chats")
+        .select("id")
+        .eq("id", chatId)
+        .eq("user_id", userId)
+        .single();
+
+      if (!existing) {
+        return Response.json({ error: "Chat not found" }, { status: 404 });
       }
+      actualChatId = existing.id;
     } else {
-      // 新規チャット作成（タイトルは後からLLMで生成）
       isNewChat = true;
-      chat = await prisma.researchChat.create({
-        data: {
-          userId,
-          agentType: featureId.toUpperCase(),
-          llmProvider: "GROK_4_1_FAST_REASONING",
-        },
-      });
+      const { data: newChat, error: createError } = await supabase
+        .from("research_chats")
+        .insert({
+          user_id: userId,
+          agent_type: featureId.toUpperCase(),
+          llm_provider: "GROK_4_1_FAST_REASONING",
+        })
+        .select("id")
+        .single();
+
+      if (createError || !newChat) throw createError || new Error("Chat creation failed");
+      actualChatId = newChat.id;
     }
 
-    // 全メッセージを置き換え（シンプルに全削除→再挿入）
-    await prisma.researchMessage.deleteMany({
-      where: { chatId: chat.id },
-    });
+    await supabase.from("research_messages").delete().eq("chat_id", actualChatId);
 
     if (messages.length > 0) {
-      await prisma.researchMessage.createMany({
-        data: messages.map((msg) => ({
-          chatId: chat?.id,
+      const { error: insertError } = await supabase.from("research_messages").insert(
+        messages.map((msg) => ({
+          chat_id: actualChatId,
           role: msg.role.toUpperCase(),
           content: msg.content,
-          llmProvider: msg.llmProvider ?? undefined,
-          inputTokens: msg.usage?.inputTokens ?? null,
-          outputTokens: msg.usage?.outputTokens ?? null,
-          costUsd: msg.usage?.cost ?? null,
-          toolCallsJson: msg.toolCalls?.length ? msg.toolCalls : undefined,
-          citationsJson: msg.citations?.length ? msg.citations : undefined,
+          llm_provider: msg.llmProvider ?? null,
+          input_tokens: msg.usage?.inputTokens ?? null,
+          output_tokens: msg.usage?.outputTokens ?? null,
+          cost_usd: msg.usage?.cost ?? null,
+          tool_calls_json: msg.toolCalls?.length ? msg.toolCalls : null,
+          citations_json: msg.citations?.length ? msg.citations : null,
         })),
-      });
+      );
+      if (insertError) throw insertError;
     }
 
-    // 更新日時を更新
-    await prisma.researchChat.update({
-      where: { id: chat.id },
-      data: { updatedAt: new Date() },
-    });
+    await supabase
+      .from("research_chats")
+      .update({ updated_at: new Date().toISOString() })
+      .eq("id", actualChatId);
 
-    // 新規チャットの場合、バックグラウンドでLLMによるタイトルを生成（レスポンスを遅延させない）
     if (isNewChat && firstUserMessage) {
-      generateAndSaveChatTitle(chat.id, firstUserMessage.content).catch(() => {});
+      generateAndSaveChatTitle(actualChatId, firstUserMessage.content).catch(() => {});
     }
 
-    return new Response(JSON.stringify({ success: true, chatId: chat.id }), {
-      headers: { "Content-Type": "application/json" },
-    });
+    return Response.json({ success: true, chatId: actualChatId });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
-    logger.error(`[${requestId}] Failed to save conversation`, {
-      error: errorMessage,
-    });
-    return new Response(JSON.stringify({ error: "Failed to save conversation", requestId }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" },
-    });
+    logger.error(`[${requestId}] Failed to save conversation`, { error: errorMessage });
+    return Response.json({ error: "Failed to save conversation", requestId }, { status: 500 });
   }
 }
 
-/**
- * DELETE /api/chat/feature?chatId=xxx
- * 特定チャットを削除
- */
 export async function DELETE(request: NextRequest): Promise<Response> {
   const requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
   try {
     const authResult = await requireAuth(request);
-    if (authResult instanceof Response) {
-      return authResult;
-    }
+    if (authResult instanceof Response) return authResult;
     const userId = authResult.user.id;
 
+    const supabase = await createClient();
     const { searchParams } = new URL(request.url);
     const chatId = searchParams.get("chatId");
 
-    // 後方互換: bodyからfeatureIdを受け取る旧形式もサポート
     if (!chatId) {
       let body: unknown;
       try {
         body = await request.json();
       } catch {
-        return new Response(JSON.stringify({ error: "chatId is required" }), {
-          status: 400,
-          headers: { "Content-Type": "application/json" },
-        });
+        return Response.json({ error: "chatId is required" }, { status: 400 });
       }
 
       const parsed = z.object({ featureId: z.string() }).safeParse(body);
       if (!parsed.success) {
-        return new Response(JSON.stringify({ error: "chatId is required" }), {
-          status: 400,
-          headers: { "Content-Type": "application/json" },
-        });
+        return Response.json({ error: "chatId is required" }, { status: 400 });
       }
 
-      // featureId指定の場合は最新チャットを1件削除（旧API互換）
-      const chat = await prisma.researchChat.findFirst({
-        where: { userId, agentType: parsed.data.featureId.toUpperCase() },
-        orderBy: { updatedAt: "desc" },
-      });
+      const { data: chat } = await supabase
+        .from("research_chats")
+        .select("id")
+        .eq("user_id", userId)
+        .eq("agent_type", parsed.data.featureId.toUpperCase())
+        .order("updated_at", { ascending: false })
+        .limit(1)
+        .single();
+
       if (chat) {
-        await prisma.researchChat.delete({ where: { id: chat.id } });
+        await supabase.from("research_chats").delete().eq("id", chat.id);
       }
-      return new Response(JSON.stringify({ success: true }), {
-        headers: { "Content-Type": "application/json" },
-      });
+      return Response.json({ success: true });
     }
 
-    // chatId指定: 所有権確認して削除
-    const chat = await prisma.researchChat.findFirst({
-      where: { id: chatId, userId },
-    });
-
-    if (chat) {
-      await prisma.researchChat.delete({ where: { id: chat.id } });
-    }
-
-    return new Response(JSON.stringify({ success: true }), {
-      headers: { "Content-Type": "application/json" },
-    });
+    await supabase.from("research_chats").delete().eq("id", chatId).eq("user_id", userId);
+    return Response.json({ success: true });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
-    logger.error(`[${requestId}] Failed to delete conversation`, {
-      error: errorMessage,
-    });
-    return new Response(JSON.stringify({ error: "Failed to delete conversation", requestId }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" },
-    });
+    logger.error(`[${requestId}] Failed to delete conversation`, { error: errorMessage });
+    return Response.json({ error: "Failed to delete conversation", requestId }, { status: 500 });
   }
 }

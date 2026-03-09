@@ -46,9 +46,9 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       data: {
         version: versionData.version,
         content: versionData.content,
-        changedBy: versionData.changedBy,
-        changeNote: versionData.changeNote,
-        createdAt: versionData.createdAt,
+        changedBy: versionData.changed_by,
+        changeNote: versionData.change_note,
+        createdAt: versionData.created_at,
       },
     });
   } catch (error) {

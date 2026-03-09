@@ -1,10 +1,11 @@
 /**
- * 初期プロンプトデータ投入
+ * 初期プロンプトデータ投入（Supabase版）
  *
  * @created 2026-02-22 12:30
+ * @updated 2026-03-09 Supabase移行
  */
 
-import { prisma } from "@/lib/prisma";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { DEFAULT_PROMPTS } from "../constants";
 
 /**
@@ -13,40 +14,47 @@ import { DEFAULT_PROMPTS } from "../constants";
  */
 export async function seedPrompts(): Promise<void> {
   try {
-    const count = await prisma.systemPrompt.count();
-    if (count > 0) {
+    const supabase = createAdminClient();
+
+    const { count, error: countError } = await supabase
+      .from("system_prompts")
+      .select("*", { count: "exact", head: true });
+
+    if (countError) throw countError;
+
+    if ((count ?? 0) > 0) {
       console.log("[Prompts] Already seeded, skipping...");
       return;
     }
 
     console.log("[Prompts] Seeding default prompts...");
     for (const prompt of DEFAULT_PROMPTS) {
-      await prisma.systemPrompt.create({
-        data: {
+      const { data: created, error: insertError } = await supabase
+        .from("system_prompts")
+        .insert({
           id: prompt.id,
           key: prompt.key,
           name: prompt.name,
           description: prompt.description,
           content: prompt.content,
           category: prompt.category,
-          currentVersion: 1,
-        },
-      });
+          current_version: 1,
+        })
+        .select()
+        .single();
 
-      // バージョン1の履歴も作成
-      const created = await prisma.systemPrompt.findUnique({
-        where: { key: prompt.key },
-      });
+      if (insertError) {
+        console.error(`  Failed to insert prompt "${prompt.key}":`, insertError);
+        continue;
+      }
 
       if (created) {
-        await prisma.systemPromptVersion.create({
-          data: {
-            promptId: created.id,
-            version: 1,
-            content: prompt.content,
-            changedBy: null,
-            changeNote: "Initial version",
-          },
+        await supabase.from("system_prompt_versions").insert({
+          prompt_id: created.id,
+          version: 1,
+          content: prompt.content,
+          changed_by: null,
+          change_note: "Initial version",
         });
       }
     }

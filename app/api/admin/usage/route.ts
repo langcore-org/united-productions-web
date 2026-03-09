@@ -1,15 +1,12 @@
 /**
- * API使用量・コスト監視API
+ * API使用量・コスト監視API（Supabase版）
  *
  * GET /api/admin/usage
- * 使用量統計を取得（ツール使用状況含む）
- *
- * 更新: 2026-02-20 - ツール使用量・ログ統計を追加
  */
 
 import { type NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/api/auth";
-import { prisma } from "@/lib/prisma";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 interface UsageStats {
   totalCost: number;
@@ -35,7 +32,6 @@ interface UsageStats {
     cost: number;
     requests: number;
   }[];
-  // ツール使用統計（2026-02-20追加）
   byTool: {
     toolName: string;
     requests: number;
@@ -45,134 +41,70 @@ interface UsageStats {
 
 export async function GET(request: NextRequest) {
   try {
-    // 認証チェック（管理者のみ）
     const authResult = await requireAuth(request);
     if (authResult instanceof NextResponse) return authResult;
 
     const { searchParams } = new URL(request.url);
-
-    // 日付範囲の取得（デフォルト：過去30日）
     const days = parseInt(searchParams.get("days") || "30", 10);
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
+    const startISO = startDate.toISOString();
 
-    // 全体の統計
-    const totalStats = await prisma.usageLog.aggregate({
-      where: {
-        createdAt: {
-          gte: startDate,
-        },
-      },
-      _sum: {
-        cost: true,
-        inputTokens: true,
-        outputTokens: true,
-      },
-      _count: {
-        id: true,
-      },
-    });
+    const supabase = createAdminClient();
 
-    // プロバイダー別の統計
-    const byProvider = await prisma.usageLog.groupBy({
-      by: ["provider"],
-      where: {
-        createdAt: {
-          gte: startDate,
-        },
-      },
-      _sum: {
-        cost: true,
-        inputTokens: true,
-        outputTokens: true,
-      },
-      _count: {
-        id: true,
-      },
-      orderBy: {
-        _sum: {
-          cost: "desc",
-        },
-      },
-    });
+    const { data: allLogs, error: logsError } = await supabase
+      .from("usage_logs")
+      .select("id, user_id, provider, input_tokens, output_tokens, cost, metadata, created_at")
+      .gte("created_at", startISO)
+      .order("created_at", { ascending: false });
 
-    // 日別の統計
-    const byDay = await prisma.$queryRaw`
-      SELECT 
-        DATE("createdAt") as date,
-        SUM(cost) as cost,
-        COUNT(*) as requests
-      FROM "UsageLog"
-      WHERE "createdAt" >= ${startDate}
-      GROUP BY DATE("createdAt")
-      ORDER BY date DESC
-    `;
+    if (logsError) throw logsError;
+    const logs = allLogs || [];
 
-    // ユーザー別の統計
-    const byUser = await prisma.usageLog.groupBy({
-      by: ["userId"],
-      where: {
-        createdAt: {
-          gte: startDate,
-        },
-      },
-      _sum: {
-        cost: true,
-      },
-      _count: {
-        id: true,
-      },
-      orderBy: {
-        _sum: {
-          cost: "desc",
-        },
-      },
-      take: 20,
-    });
+    const totalCost = logs.reduce((sum, l) => sum + Number(l.cost), 0);
+    const totalInputTokens = logs.reduce((sum, l) => sum + l.input_tokens, 0);
+    const totalOutputTokens = logs.reduce((sum, l) => sum + l.output_tokens, 0);
 
-    // ユーザー情報を取得
-    const userIds = byUser.map((u) => u.userId);
-    const users = await prisma.user.findMany({
-      where: {
-        id: {
-          in: userIds,
-        },
-      },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-      },
-    });
+    const providerMap = new Map<
+      string,
+      { cost: number; requests: number; inputTokens: number; outputTokens: number }
+    >();
+    const dayMap = new Map<string, { cost: number; requests: number }>();
+    const userMap = new Map<string, { cost: number; requests: number }>();
 
-    const userMap = new Map(users.map((u) => [u.id, u]));
+    for (const log of logs) {
+      const p = providerMap.get(log.provider) || {
+        cost: 0,
+        requests: 0,
+        inputTokens: 0,
+        outputTokens: 0,
+      };
+      p.cost += Number(log.cost);
+      p.requests++;
+      p.inputTokens += log.input_tokens;
+      p.outputTokens += log.output_tokens;
+      providerMap.set(log.provider, p);
 
-    // ツール別統計（2026-02-20追加）
-    // Grokプロバイダーのみツール使用を集計
-    const grokLogs = await prisma.usageLog.findMany({
-      where: {
-        createdAt: {
-          gte: startDate,
-        },
-        provider: {
-          in: ["GROK_4_1_FAST_REASONING", "GROK_4_0709"],
-        },
-      },
-      select: {
-        cost: true,
-        metadata: true,
-      },
-    });
+      const day = log.created_at.split("T")[0];
+      const d = dayMap.get(day) || { cost: 0, requests: 0 };
+      d.cost += Number(log.cost);
+      d.requests++;
+      dayMap.set(day, d);
 
-    // ツール使用統計を計算
-    const toolStats = {
-      webSearch: { requests: 0, cost: 0 },
-      xSearch: { requests: 0, cost: 0 },
-      codeExecution: { requests: 0, cost: 0 },
-      fileSearch: { requests: 0, cost: 0 },
-    };
+      const u = userMap.get(log.user_id) || { cost: 0, requests: 0 };
+      u.cost += Number(log.cost);
+      u.requests++;
+      userMap.set(log.user_id, u);
+    }
 
-    // ツール情報の型定義
+    const userIds = [...userMap.keys()];
+    const { data: usersData } = await supabase
+      .from("users")
+      .select("id, name, email")
+      .in("id", userIds);
+
+    const usersMap = new Map((usersData || []).map((u) => [u.id, u]));
+
     type ToolInfo = {
       webSearch?: boolean;
       xSearch?: boolean;
@@ -180,27 +112,35 @@ export async function GET(request: NextRequest) {
       fileSearch?: boolean;
     };
 
-    for (const log of grokLogs) {
+    const toolStats = {
+      webSearch: { requests: 0, cost: 0 },
+      xSearch: { requests: 0, cost: 0 },
+      codeExecution: { requests: 0, cost: 0 },
+      fileSearch: { requests: 0, cost: 0 },
+    };
+
+    for (const log of logs) {
+      if (!["GROK_4_1_FAST_REASONING", "GROK_4_0709"].includes(log.provider)) continue;
       const metadata = log.metadata as Record<string, unknown> | null;
       const tools = metadata?.tools as ToolInfo | undefined;
+      if (!tools) continue;
 
-      if (tools) {
-        if (tools.webSearch) {
-          toolStats.webSearch.requests++;
-          toolStats.webSearch.cost += log.cost;
-        }
-        if (tools.xSearch) {
-          toolStats.xSearch.requests++;
-          toolStats.xSearch.cost += log.cost;
-        }
-        if (tools.codeExecution) {
-          toolStats.codeExecution.requests++;
-          toolStats.codeExecution.cost += log.cost;
-        }
-        if (tools.fileSearch) {
-          toolStats.fileSearch.requests++;
-          toolStats.fileSearch.cost += log.cost;
-        }
+      const c = Number(log.cost);
+      if (tools.webSearch) {
+        toolStats.webSearch.requests++;
+        toolStats.webSearch.cost += c;
+      }
+      if (tools.xSearch) {
+        toolStats.xSearch.requests++;
+        toolStats.xSearch.cost += c;
+      }
+      if (tools.codeExecution) {
+        toolStats.codeExecution.requests++;
+        toolStats.codeExecution.cost += c;
+      }
+      if (tools.fileSearch) {
+        toolStats.fileSearch.requests++;
+        toolStats.fileSearch.cost += c;
       }
     }
 
@@ -211,79 +151,53 @@ export async function GET(request: NextRequest) {
       { toolName: "ファイル検索", ...toolStats.fileSearch },
     ].filter((t) => t.requests > 0);
 
-    // 最近の使用履歴
-    const recentLogs = await prisma.usageLog.findMany({
-      where: {
-        createdAt: {
-          gte: startDate,
-        },
-      },
-      include: {
-        user: {
-          select: {
-            name: true,
-            email: true,
-          },
-        },
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-      take: 50,
-    });
-
     const stats: UsageStats = {
-      totalCost: totalStats._sum.cost || 0,
-      totalRequests: totalStats._count.id || 0,
-      totalInputTokens: totalStats._sum.inputTokens || 0,
-      totalOutputTokens: totalStats._sum.outputTokens || 0,
-      byProvider: byProvider.map((p) => ({
-        provider: p.provider,
-        cost: p._sum.cost || 0,
-        requests: p._count.id,
-        inputTokens: p._sum.inputTokens || 0,
-        outputTokens: p._sum.outputTokens || 0,
-      })),
-      byDay: (byDay as { date: Date; cost: bigint | number; requests: bigint | number }[]).map(
-        (d) => ({
-          date: d.date.toISOString().split("T")[0],
-          cost: Number(d.cost) || 0,
-          requests: Number(d.requests) || 0,
-        }),
-      ),
-      byUser: byUser.map((u) => {
-        const user = userMap.get(u.userId);
-        return {
-          userId: u.userId,
-          userName: user?.name || null,
-          userEmail: user?.email || "Unknown",
-          cost: u._sum.cost || 0,
-          requests: u._count.id,
-        };
-      }),
+      totalCost,
+      totalRequests: logs.length,
+      totalInputTokens,
+      totalOutputTokens,
+      byProvider: [...providerMap.entries()]
+        .map(([provider, v]) => ({ provider, ...v }))
+        .sort((a, b) => b.cost - a.cost),
+      byDay: [...dayMap.entries()]
+        .map(([date, v]) => ({ date, ...v }))
+        .sort((a, b) => b.date.localeCompare(a.date)),
+      byUser: [...userMap.entries()]
+        .map(([userId, v]) => {
+          const user = usersMap.get(userId);
+          return {
+            userId,
+            userName: user?.name || null,
+            userEmail: user?.email || "Unknown",
+            ...v,
+          };
+        })
+        .sort((a, b) => b.cost - a.cost)
+        .slice(0, 20),
       byTool,
     };
+
+    const recentLogs = logs.slice(0, 50).map((log) => {
+      const user = usersMap.get(log.user_id);
+      return {
+        id: log.id,
+        provider: log.provider,
+        inputTokens: log.input_tokens,
+        outputTokens: log.output_tokens,
+        cost: log.cost,
+        userName: user?.name || null,
+        userEmail: user?.email || "Unknown",
+        createdAt: log.created_at,
+        metadata: log.metadata,
+      };
+    });
 
     return NextResponse.json({
       success: true,
       data: {
         stats,
-        recentLogs: recentLogs.map((log) => ({
-          id: log.id,
-          provider: log.provider,
-          inputTokens: log.inputTokens,
-          outputTokens: log.outputTokens,
-          cost: log.cost,
-          userName: log.user.name,
-          userEmail: log.user.email,
-          createdAt: log.createdAt.toISOString(),
-          metadata: log.metadata,
-        })),
-        period: {
-          start: startDate.toISOString(),
-          end: new Date().toISOString(),
-          days,
-        },
+        recentLogs,
+        period: { start: startISO, end: new Date().toISOString(), days },
       },
     });
   } catch (error) {

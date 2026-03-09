@@ -1,68 +1,59 @@
 /**
  * Next.js Middleware
- * シンプル版 - Vercel Edge互換
+ * Supabase Auth でセッション更新・認証チェック
  */
 
-import type { NextRequest } from "next/server";
-import { NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
+import { updateSession } from "@/lib/supabase/middleware";
 
-// 認証が必要なパス
-const PROTECTED_PATHS = [
-  "/meeting-notes",
-  "/transcripts",
-  "/research",
-  "/chat",
-  // '/schedules', // 削除
-  "/settings",
-];
+const PUBLIC_PATHS = ["/", "/auth/signin", "/auth/error", "/preview-login"];
 
-// 認証関連パス
-const AUTH_PATHS = ["/auth/signin", "/auth/error"];
-
-// Preview環境判定
-const isPreviewEnv = process.env.VERCEL_ENV === "preview";
-
-export function middleware(request: NextRequest): NextResponse {
+export async function middleware(request: NextRequest) {
   const url = new URL(request.url);
   const { pathname } = url;
 
-  // Preview Loginページへのアクセス制御
+  // Preview Login は Preview 環境のみ許可
   if (pathname.startsWith("/preview-login")) {
-    // Preview環境でない場合はアクセスをブロック
-    if (!isPreviewEnv) {
-      // 404ページまたはトップページへリダイレクト
+    if (process.env.VERCEL_ENV !== "preview") {
       return NextResponse.redirect(new URL("/", request.url));
     }
   }
 
-  // 保護されたパスかチェック
-  const isProtectedPath = PROTECTED_PATHS.some((path) => pathname.startsWith(path));
+  // 静的・公開パスはスキップ
+  if (
+    pathname.startsWith("/_next") ||
+    pathname.startsWith("/static") ||
+    pathname.match(/\.(ico|png|jpg|jpeg|svg|css|js)$/)
+  ) {
+    return NextResponse.next();
+  }
+  if (PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(p + "/"))) {
+    const { supabaseResponse, user } = await updateSession(request);
+    // 認証済みでサインインページに来た場合はトップへ
+    if (user && (pathname.startsWith("/auth/signin") || pathname.startsWith("/auth/error"))) {
+      return NextResponse.redirect(new URL("/", request.url));
+    }
+    return supabaseResponse;
+  }
 
-  // Preview環境では /preview-login も認証パスとして扱う
-  const isAuthPath =
-    AUTH_PATHS.some((path) => pathname.startsWith(path)) ||
-    (isPreviewEnv && pathname.startsWith("/preview-login"));
+  // 保護パス: セッション更新して認証チェック
+  const { supabaseResponse, user } = await updateSession(request);
 
-  // セッションCookieの存在をチェック（簡易認証チェック）
-  const sessionCookie =
-    request.cookies.get("next-auth.session-token") ||
-    request.cookies.get("__Secure-next-auth.session-token");
-  const isAuthenticated = !!sessionCookie;
+  const isProtectedPath = [
+    "/meeting-notes",
+    "/transcripts",
+    "/research",
+    "/chat",
+    "/settings",
+  ].some((p) => pathname.startsWith(p));
 
-  // 未認証で保護されたパスにアクセスした場合はサインインページへ
-  if (isProtectedPath && !isAuthenticated) {
+  if (isProtectedPath && !user) {
     const signInUrl = new URL("/auth/signin", request.url);
-    signInUrl.searchParams.set("callbackUrl", request.url);
+    signInUrl.searchParams.set("callbackUrl", pathname);
     return NextResponse.redirect(signInUrl);
   }
 
-  // 認証済みで認証ページにアクセスした場合はトップページへ
-  if (isAuthPath && isAuthenticated) {
-    return NextResponse.redirect(new URL("/", request.url));
-  }
-
-  // 通常のレスポンス
-  return NextResponse.next();
+  return supabaseResponse;
 }
 
 export const config = {
@@ -71,7 +62,6 @@ export const config = {
     "/transcripts/:path*",
     "/research/:path*",
     "/chat/:path*",
-    // '/schedules/:path*', // 削除
     "/settings/:path*",
     "/auth/:path*",
     "/preview-login",

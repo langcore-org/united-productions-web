@@ -32,9 +32,9 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     // レスポンスを整形
     const formattedVersions = versions.map((v) => ({
       version: v.version,
-      changedBy: v.changedBy,
-      changeNote: v.changeNote,
-      createdAt: v.createdAt,
+      changedBy: v.changed_by,
+      changeNote: v.change_note,
+      createdAt: v.created_at,
     }));
 
     return NextResponse.json({

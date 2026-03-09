@@ -1,28 +1,25 @@
 /**
- * Chat History API Route
+ * Chat History API Route（Supabase版）
  *
  * GET /api/chat/history
- * ユーザーの全チャット履歴を取得（サイドバー用）
+ * DELETE /api/chat/history?id=xxx
  */
 
 import type { NextRequest } from "next/server";
 import { requireAuth } from "@/lib/api/auth";
 import { logger } from "@/lib/logger";
-import { prisma } from "@/lib/prisma";
+import { createClient } from "@/lib/supabase/server";
 
 export interface ChatHistoryItem {
   id: string;
   featureId: string;
   title: string;
   agentType: string;
-  updatedAt: Date;
+  updatedAt: string;
   messageCount: number;
   lastMessage?: string;
 }
 
-/**
- * エージェントタイプから表示名を取得
- */
 function getAgentTypeLabel(agentType: string): string {
   const labels: Record<string, string> = {
     "RESEARCH-CAST": "出演者リサーチ",
@@ -37,120 +34,99 @@ function getAgentTypeLabel(agentType: string): string {
   return labels[agentType.toUpperCase()] || "チャット";
 }
 
-/**
- * GET /api/chat/history
- * 全チャット履歴を取得
- */
 export async function GET(request: NextRequest): Promise<Response> {
   const requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
   try {
     const authResult = await requireAuth(request);
-    if (authResult instanceof Response) {
-      return authResult;
-    }
+    if (authResult instanceof Response) return authResult;
     const userId = authResult.user.id;
 
-    // ユーザーの全チャットを取得
-    const chats = await prisma.researchChat.findMany({
-      where: { userId },
-      include: {
-        messages: {
-          orderBy: { createdAt: "desc" },
-          take: 1,
+    const supabase = await createClient();
+
+    const { data: chats, error: chatsError } = await supabase
+      .from("research_chats")
+      .select("id, agent_type, title, updated_at")
+      .eq("user_id", userId)
+      .order("updated_at", { ascending: false });
+
+    if (chatsError) throw chatsError;
+
+    if (!chats || chats.length === 0) {
+      return Response.json({ history: [] });
+    }
+
+    const chatIds = chats.map((c) => c.id);
+    const { data: messages } = await supabase
+      .from("research_messages")
+      .select("chat_id, content, created_at")
+      .in("chat_id", chatIds)
+      .order("created_at", { ascending: false });
+
+    const messagesByChat =
+      messages?.reduce(
+        (acc, msg) => {
+          if (!acc[msg.chat_id]) acc[msg.chat_id] = [];
+          acc[msg.chat_id].push(msg);
+          return acc;
         },
-        _count: {
-          select: { messages: true },
-        },
-      },
-      orderBy: { updatedAt: "desc" },
-    });
+        {} as Record<string, typeof messages>,
+      ) || {};
 
     const history: ChatHistoryItem[] = chats.map((chat) => {
-      const lastMessage = chat.messages[0];
-      // 最初のユーザーメッセージをタイトルとして使用
-      const title = lastMessage?.content.slice(0, 30) || getAgentTypeLabel(chat.agentType);
+      const chatMessages = messagesByChat[chat.id] || [];
+      const lastMessage = chatMessages[0];
+      const title =
+        chat.title || lastMessage?.content.slice(0, 30) || getAgentTypeLabel(chat.agent_type);
 
       return {
         id: chat.id,
-        featureId: chat.agentType.toLowerCase().replace(/_/g, "-"),
+        featureId: chat.agent_type.toLowerCase().replace(/_/g, "-"),
         title: title.length > 30 ? `${title}...` : title,
-        agentType: getAgentTypeLabel(chat.agentType),
-        updatedAt: chat.updatedAt,
-        messageCount: chat._count.messages,
+        agentType: getAgentTypeLabel(chat.agent_type),
+        updatedAt: chat.updated_at,
+        messageCount: chatMessages.length,
         lastMessage: lastMessage?.content.slice(0, 100),
       };
     });
 
-    return new Response(JSON.stringify({ history }), {
-      headers: { "Content-Type": "application/json" },
-    });
+    return Response.json({ history });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
-    logger.error(`[${requestId}] Failed to get chat history`, {
-      error: errorMessage,
-    });
-    return new Response(JSON.stringify({ error: "Failed to get chat history", requestId }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" },
-    });
+    logger.error(`[${requestId}] Failed to get chat history`, { error: errorMessage });
+    return Response.json({ error: "Failed to get chat history", requestId }, { status: 500 });
   }
 }
 
-/**
- * DELETE /api/chat/history?id=xxx
- * 特定のチャット履歴を削除
- */
 export async function DELETE(request: NextRequest): Promise<Response> {
   const requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
   try {
     const authResult = await requireAuth(request);
-    if (authResult instanceof Response) {
-      return authResult;
-    }
+    if (authResult instanceof Response) return authResult;
     const userId = authResult.user.id;
 
     const { searchParams } = new URL(request.url);
     const chatId = searchParams.get("id");
 
     if (!chatId) {
-      return new Response(JSON.stringify({ error: "id is required" }), {
-        status: 400,
-        headers: { "Content-Type": "application/json" },
-      });
+      return Response.json({ error: "id is required" }, { status: 400 });
     }
 
-    // チャットがユーザーのものか確認して削除
-    const chat = await prisma.researchChat.findFirst({
-      where: {
-        id: chatId,
-        userId,
-      },
-    });
+    const supabase = await createClient();
 
-    if (!chat) {
-      return new Response(JSON.stringify({ error: "Chat not found" }), {
-        status: 404,
-        headers: { "Content-Type": "application/json" },
-      });
-    }
+    const { error } = await supabase
+      .from("research_chats")
+      .delete()
+      .eq("id", chatId)
+      .eq("user_id", userId);
 
-    await prisma.researchChat.delete({
-      where: { id: chatId },
-    });
+    if (error) throw error;
 
-    return new Response(JSON.stringify({ success: true }), {
-      headers: { "Content-Type": "application/json" },
-    });
+    return Response.json({ success: true });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
-    logger.error(`[${requestId}] Failed to delete chat`, {
-      error: errorMessage,
-    });
-    return new Response(JSON.stringify({ error: "Failed to delete chat", requestId }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" },
-    });
+    logger.error(`[${requestId}] Failed to delete chat`, { error: errorMessage });
+    return Response.json({ error: "Failed to delete chat", requestId }, { status: 500 });
   }
 }

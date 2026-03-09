@@ -48,12 +48,12 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       success: true,
       data: {
         key: decodedKey,
-        version: restored.currentVersion,
+        version: restored.current_version,
         restoredFrom: validatedData.version,
         content: restored.content,
-        changedBy: restored.changedBy,
-        changeNote: restored.changeNote,
-        updatedAt: restored.updatedAt,
+        changedBy: restored.changed_by,
+        changeNote: restored.change_note,
+        updatedAt: restored.updated_at,
       },
     });
   } catch (error) {

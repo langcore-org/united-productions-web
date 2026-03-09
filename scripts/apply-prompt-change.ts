@@ -17,8 +17,8 @@ async function main() {
 
     console.log("✅ Success!");
     console.log(`   Version: ${version.version}`);
-    console.log(`   Change note: ${version.changeNote}`);
-    console.log(`   Created at: ${version.createdAt}`);
+    console.log(`   Change note: ${version.change_note}`);
+    console.log(`   Created at: ${version.created_at}`);
   } catch (error) {
     console.error("❌ Failed:", error);
     process.exit(1);

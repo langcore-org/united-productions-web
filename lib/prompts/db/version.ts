@@ -1,20 +1,15 @@
 /**
- * プロンプトバージョン管理
+ * プロンプトバージョン管理（Supabase版）
  *
  * @created 2026-02-22 12:10
+ * @updated 2026-03-09 Supabase移行
  */
 
-import type { SystemPrompt, SystemPromptVersion } from "@prisma/client";
-import { prisma } from "@/lib/prisma";
-import type { PromptWithVersions } from "./types";
+import { createClient } from "@/lib/supabase/server";
+import type { PromptWithVersions, SystemPrompt, SystemPromptVersion } from "./types";
 
 /**
  * プロンプトを更新（バージョン自動採番）
- * @param key - プロンプトキー
- * @param content - 新しいプロンプト内容
- * @param changedBy - 変更者ID（オプション）
- * @param changeNote - 変更理由メモ（オプション）
- * @returns 更新されたプロンプト
  */
 export async function updatePromptWithVersion(
   key: string,
@@ -22,97 +17,102 @@ export async function updatePromptWithVersion(
   changedBy?: string,
   changeNote?: string,
 ): Promise<SystemPrompt> {
-  return await prisma.$transaction(async (tx) => {
-    const current = await tx.systemPrompt.findUnique({
-      where: { key },
-    });
+  const supabase = await createClient();
 
-    if (!current) {
-      throw new Error(`Prompt not found: ${key}`);
-    }
+  const { data: current, error: fetchError } = await supabase
+    .from("system_prompts")
+    .select("*")
+    .eq("key", key)
+    .single();
 
-    const newVersion = current.currentVersion + 1;
+  if (fetchError || !current) {
+    throw new Error(`Prompt not found: ${key}`);
+  }
 
-    await tx.systemPromptVersion.create({
-      data: {
-        promptId: current.id,
-        version: newVersion,
-        content,
-        changedBy: changedBy || null,
-        changeNote: changeNote || null,
-      },
-    });
+  const newVersion = current.current_version + 1;
 
-    const updated = await tx.systemPrompt.update({
-      where: { key },
-      data: {
-        content,
-        currentVersion: newVersion,
-        changedBy: changedBy || null,
-        changeNote: changeNote || null,
-        updatedAt: new Date(),
-      },
-    });
-
-    return updated;
+  const { error: versionError } = await supabase.from("system_prompt_versions").insert({
+    prompt_id: current.id,
+    version: newVersion,
+    content,
+    changed_by: changedBy || null,
+    change_note: changeNote || null,
   });
+
+  if (versionError) throw versionError;
+
+  const { data: updated, error: updateError } = await supabase
+    .from("system_prompts")
+    .update({
+      content,
+      current_version: newVersion,
+      changed_by: changedBy || null,
+      change_note: changeNote || null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("key", key)
+    .select()
+    .single();
+
+  if (updateError || !updated) throw updateError || new Error("Update failed");
+  return updated as SystemPrompt;
 }
 
 /**
  * プロンプトのバージョン履歴を取得
- * @param key - プロンプトキー
- * @returns バージョン履歴一覧
  */
 export async function getPromptVersionHistory(key: string): Promise<SystemPromptVersion[]> {
-  const prompt = await prisma.systemPrompt.findUnique({
-    where: { key },
-    include: {
-      versions: {
-        orderBy: { version: "desc" },
-      },
-    },
-  });
+  const supabase = await createClient();
 
-  if (!prompt) {
+  const { data: prompt, error: promptError } = await supabase
+    .from("system_prompts")
+    .select("id")
+    .eq("key", key)
+    .single();
+
+  if (promptError || !prompt) {
     throw new Error(`Prompt not found: ${key}`);
   }
 
-  return prompt.versions;
+  const { data: versions, error } = await supabase
+    .from("system_prompt_versions")
+    .select("*")
+    .eq("prompt_id", prompt.id)
+    .order("version", { ascending: false });
+
+  if (error) throw error;
+  return (versions as SystemPromptVersion[]) || [];
 }
 
 /**
  * 特定バージョンのプロンプト内容を取得
- * @param key - プロンプトキー
- * @param version - バージョン番号
- * @returns バージョン情報
  */
 export async function getPromptVersion(
   key: string,
   version: number,
 ): Promise<SystemPromptVersion | null> {
-  const prompt = await prisma.systemPrompt.findUnique({
-    where: { key },
-  });
+  const supabase = await createClient();
 
-  if (!prompt) {
-    return null;
-  }
+  const { data: prompt } = await supabase
+    .from("system_prompts")
+    .select("id")
+    .eq("key", key)
+    .single();
 
-  return await prisma.systemPromptVersion.findFirst({
-    where: {
-      promptId: prompt.id,
-      version,
-    },
-  });
+  if (!prompt) return null;
+
+  const { data } = await supabase
+    .from("system_prompt_versions")
+    .select("*")
+    .eq("prompt_id", prompt.id)
+    .eq("version", version)
+    .single();
+
+  return (data as SystemPromptVersion) || null;
 }
 
 /**
  * 指定バージョンに復元（新バージョンとして記録）
- * @param key - プロンプトキー
- * @param version - 復元元バージョン番号
- * @param changedBy - 変更者ID（オプション）
- * @param changeNote - 変更理由メモ（オプション）
- * @returns 更新されたプロンプト
  */
 export async function restorePromptVersion(
   key: string,
@@ -120,77 +120,40 @@ export async function restorePromptVersion(
   changedBy?: string,
   changeNote?: string,
 ): Promise<SystemPrompt> {
-  return await prisma.$transaction(async (tx) => {
-    const current = await tx.systemPrompt.findUnique({
-      where: { key },
-    });
+  const targetVersion = await getPromptVersion(key, version);
+  if (!targetVersion) {
+    throw new Error(`Version ${version} not found for prompt: ${key}`);
+  }
 
-    if (!current) {
-      throw new Error(`Prompt not found: ${key}`);
-    }
+  const restoreNote = changeNote
+    ? `${changeNote}（バージョン${version}から復元）`
+    : `バージョン${version}から復元`;
 
-    const targetVersion = await tx.systemPromptVersion.findFirst({
-      where: {
-        promptId: current.id,
-        version,
-      },
-    });
-
-    if (!targetVersion) {
-      throw new Error(`Version ${version} not found for prompt: ${key}`);
-    }
-
-    const newVersion = current.currentVersion + 1;
-    const restoreNote = changeNote
-      ? `${changeNote}（バージョン${version}から復元）`
-      : `バージョン${version}から復元`;
-
-    await tx.systemPromptVersion.create({
-      data: {
-        promptId: current.id,
-        version: newVersion,
-        content: targetVersion.content,
-        changedBy: changedBy || null,
-        changeNote: restoreNote,
-      },
-    });
-
-    const updated = await tx.systemPrompt.update({
-      where: { key },
-      data: {
-        content: targetVersion.content,
-        currentVersion: newVersion,
-        changedBy: changedBy || null,
-        changeNote: restoreNote,
-        updatedAt: new Date(),
-      },
-    });
-
-    return updated;
-  });
+  return updatePromptWithVersion(key, targetVersion.content, changedBy, restoreNote);
 }
 
 /**
  * プロンプト詳細を取得（バージョン履歴付き）
- * @param key - プロンプトキー
- * @returns プロンプト詳細
  */
 export async function getPromptWithHistory(key: string): Promise<PromptWithVersions | null> {
-  return await prisma.systemPrompt.findUnique({
-    where: { key },
-    include: {
-      versions: {
-        orderBy: { version: "desc" },
-        select: {
-          id: true,
-          promptId: true,
-          version: true,
-          content: true,
-          changedBy: true,
-          changeNote: true,
-          createdAt: true,
-        },
-      },
-    },
-  });
+  const supabase = await createClient();
+
+  const { data: prompt, error: promptError } = await supabase
+    .from("system_prompts")
+    .select("*")
+    .eq("key", key)
+    .single();
+
+  if (promptError || !prompt) return null;
+
+  const { data: versions } = await supabase
+    .from("system_prompt_versions")
+    .select("id, prompt_id, version, content, changed_by, change_note, created_at")
+    .eq("prompt_id", prompt.id)
+    .order("version", { ascending: false });
+
+  return {
+    ...(prompt as SystemPrompt),
+    versions: (versions as SystemPromptVersion[]) || [],
+  };
 }

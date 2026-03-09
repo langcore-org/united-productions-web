@@ -11,7 +11,7 @@ async function main() {
   const versions = await getPromptVersions("GENERAL_CHAT");
   console.log("バージョン履歴:");
   versions.forEach((v) => {
-    console.log(`  v${v.version}: ${v.changeNote}`);
+    console.log(`  v${v.version}: ${v.change_note}`);
   });
 }
 

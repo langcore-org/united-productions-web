@@ -1,12 +1,13 @@
 /**
- * システムプロンプト構築（一元管理版）
+ * システムプロンプト構築（一元管理版 / Supabase版）
  *
  * 番組情報と機能プロンプトを結合してシステムプロンプトを生成
  *
  * @created 2026-02-25
+ * @updated 2026-03-09 Supabase移行
  */
 
-import { prisma } from "@/lib/prisma";
+import { createClient } from "@/lib/supabase/server";
 
 // =============================================================================
 // データ（直接定義）
@@ -199,7 +200,7 @@ interface CacheEntry {
 }
 
 const promptCache = new Map<string, CacheEntry>();
-const CACHE_TTL_MS = 5 * 60 * 1000; // 5分
+const CACHE_TTL_MS = 5 * 60 * 1000;
 
 function getCacheKey(programId: string, featureId?: string): string {
   return `${programId}:${featureId || "default"}`;
@@ -232,15 +233,23 @@ function setCachedPrompt(programId: string, featureId: string | undefined, promp
 // =============================================================================
 
 async function getPromptByFeatureId(featureId: string): Promise<string | null> {
-  const mapping = await prisma.featurePrompt.findUnique({
-    where: { featureId, isActive: true },
-  });
+  const supabase = await createClient();
+
+  const { data: mapping } = await supabase
+    .from("feature_prompts")
+    .select("prompt_key")
+    .eq("feature_id", featureId)
+    .eq("is_active", true)
+    .single();
 
   if (!mapping) return null;
 
-  const prompt = await prisma.systemPrompt.findUnique({
-    where: { key: mapping.promptKey, isActive: true },
-  });
+  const { data: prompt } = await supabase
+    .from("system_prompts")
+    .select("content")
+    .eq("key", mapping.prompt_key)
+    .eq("is_active", true)
+    .single();
 
   return prompt?.content || null;
 }
@@ -251,16 +260,11 @@ async function getPromptByFeatureId(featureId: string): Promise<string | null> {
 
 /**
  * システムプロンプトを構築
- *
- * @param programId - 番組ID（"all"または特定の番組ID）
- * @param featureId - 機能ID（例: research-cast）
- * @returns 構築されたシステムプロンプト
  */
 export async function buildSystemPrompt(
   programId: string = "all",
   featureId?: string,
 ): Promise<string> {
-  // キャッシュをチェック（開発環境・テスト環境以外）
   const isDevOrTest = process.env.NODE_ENV === "development" || process.env.NODE_ENV === "test";
   if (!isDevOrTest) {
     const cached = getCachedPrompt(programId, featureId);
@@ -269,7 +273,6 @@ export async function buildSystemPrompt(
     }
   }
 
-  // 1. 番組情報部分を構築
   const baseParts: string[] = [];
 
   if (programId === "all") {
@@ -286,7 +289,6 @@ export async function buildSystemPrompt(
   baseParts.push("", createFooter());
   const basePrompt = baseParts.join("\n");
 
-  // 2. 機能プロンプトを取得して結合
   if (!featureId) return basePrompt;
 
   const featurePrompt = await getPromptByFeatureId(featureId);
@@ -294,7 +296,6 @@ export async function buildSystemPrompt(
 
   const finalPrompt = `${basePrompt}\n\n---\n\n## 機能固有の指示\n\n${featurePrompt}`;
 
-  // キャッシュに保存（開発環境・テスト環境以外）
   if (!isDevOrTest) {
     setCachedPrompt(programId, featureId, finalPrompt);
   }
@@ -304,8 +305,6 @@ export async function buildSystemPrompt(
 
 /**
  * 番組情報のみのプロンプトを構築（同期版）
- *
- * DBアクセスが不要な場合に使用
  */
 export function buildProgramPrompt(programId: string = "all"): string {
   const parts: string[] = [];

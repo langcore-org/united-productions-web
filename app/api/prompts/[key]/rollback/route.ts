@@ -50,9 +50,9 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         id: newVersion.id,
         version: newVersion.version,
         content: newVersion.content,
-        changeNote: newVersion.changeNote,
-        changedBy: newVersion.changedBy,
-        createdAt: newVersion.createdAt,
+        changeNote: newVersion.change_note,
+        changedBy: newVersion.changed_by,
+        createdAt: newVersion.created_at,
       },
     });
   } catch (error) {

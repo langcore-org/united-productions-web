@@ -1,24 +1,22 @@
 /**
- * プロンプトバージョン管理API
- * GET  /api/prompts/[key]/versions - バージョン履歴一覧
- * POST /api/prompts/[key]/versions - 新しいバージョンを作成
+ * プロンプトバージョン管理API（Supabase版）
+ * GET  /api/prompts/[key]/versions
+ * POST /api/prompts/[key]/versions
  */
 
 import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { requireAuth } from "@/lib/api/auth";
-import { prisma } from "@/lib/prisma";
 import { createPromptVersion, getPromptVersions } from "@/lib/prompts/db/versions";
+import { createClient } from "@/lib/supabase/server";
 
 const createVersionSchema = z.object({
   content: z.string().min(1),
   changeNote: z.string().optional(),
 });
 
-// GET: バージョン履歴一覧
 export async function GET(request: NextRequest, { params }: { params: Promise<{ key: string }> }) {
   try {
-    // 開発環境では認証をスキップ
     const isDev = process.env.NODE_ENV === "development";
     let authResult: { user: { id: string } } | NextResponse;
 
@@ -26,9 +24,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       authResult = { user: { id: "dev-user" } };
     } else {
       authResult = await requireAuth(request);
-      if (authResult instanceof NextResponse) {
-        return authResult;
-      }
+      if (authResult instanceof NextResponse) return authResult;
     }
 
     const { key } = await params;
@@ -36,36 +32,28 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     const limit = parseInt(searchParams.get("limit") || "20", 10);
     const offset = parseInt(searchParams.get("offset") || "0", 10);
 
-    const prompt = await prisma.systemPrompt.findUnique({
-      where: { key },
-      select: {
-        id: true,
-        key: true,
-        name: true,
-        currentVersion: true,
-      },
-    });
+    const supabase = await createClient();
+    const { data: prompt, error } = await supabase
+      .from("system_prompts")
+      .select("id, key, name, current_version")
+      .eq("key", key)
+      .single();
 
-    if (!prompt) {
+    if (error || !prompt) {
       return NextResponse.json({ error: "Prompt not found" }, { status: 404 });
     }
 
     const versions = await getPromptVersions(key, { limit, offset });
 
-    return NextResponse.json({
-      prompt,
-      versions,
-    });
+    return NextResponse.json({ prompt, versions });
   } catch (error) {
     console.error("Failed to fetch versions:", error);
     return NextResponse.json({ error: "Failed to fetch versions" }, { status: 500 });
   }
 }
 
-// POST: 新しいバージョンを作成
 export async function POST(request: NextRequest, { params }: { params: Promise<{ key: string }> }) {
   try {
-    // 開発環境では認証をスキップ
     const isDev = process.env.NODE_ENV === "development";
     let authResult: { user: { id: string } } | NextResponse;
 
@@ -73,9 +61,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       authResult = { user: { id: "dev-user" } };
     } else {
       authResult = await requireAuth(request);
-      if (authResult instanceof NextResponse) {
-        return authResult;
-      }
+      if (authResult instanceof NextResponse) return authResult;
     }
 
     const { key } = await params;
@@ -101,9 +87,9 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         id: version.id,
         version: version.version,
         content: version.content,
-        changeNote: version.changeNote,
-        changedBy: version.changedBy,
-        createdAt: version.createdAt,
+        change_note: version.change_note,
+        changed_by: version.changed_by,
+        created_at: version.created_at,
       },
     });
   } catch (error) {

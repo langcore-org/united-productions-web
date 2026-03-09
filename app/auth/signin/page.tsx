@@ -1,16 +1,33 @@
 "use client";
 
 import { Chrome, Loader2 } from "lucide-react";
-import { signIn } from "next-auth/react";
 import { useState } from "react";
+import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 
 export default function SignInPage() {
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSignIn = async () => {
     setIsLoading(true);
-    await signIn("google", { callbackUrl: "/" });
+    setError(null);
+
+    try {
+      const supabase = createClient();
+      const { error: signInError } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          scopes: "openid email profile",
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+
+      if (signInError) throw signInError;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "サインインに失敗しました");
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -52,6 +69,12 @@ export default function SignInPage() {
           <p className="text-sm text-gray-500 mb-6 text-center">
             Google Workspace アカウントでログインしてください
           </p>
+
+          {error && (
+            <div className="mb-4 p-3 bg-red-900/30 border border-red-700/50 text-red-300 rounded-lg text-sm">
+              {error}
+            </div>
+          )}
 
           <button
             type="button"
