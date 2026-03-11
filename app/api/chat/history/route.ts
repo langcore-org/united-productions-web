@@ -115,11 +115,7 @@ export async function DELETE(request: NextRequest): Promise<Response> {
 
     const supabase = await createClient();
 
-    const { error } = await supabase
-      .from("chats")
-      .delete()
-      .eq("id", chatId)
-      .eq("user_id", userId);
+    const { error } = await supabase.from("chats").delete().eq("id", chatId).eq("user_id", userId);
 
     if (error) throw error;
 

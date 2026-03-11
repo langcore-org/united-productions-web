@@ -26,7 +26,13 @@ vi.mock("@/lib/supabase/server", () => ({
       from: () => ({
         select: () => makeChain(),
         insert: () => Promise.resolve({ error: null }),
-        update: () => ({ eq: () => ({ select: () => ({ single: () => Promise.resolve(responseQueue.shift() ?? { data: null, error: null }) }) }) }),
+        update: () => ({
+          eq: () => ({
+            select: () => ({
+              single: () => Promise.resolve(responseQueue.shift() ?? { data: null, error: null }),
+            }),
+          }),
+        }),
       }),
     }),
   ),
@@ -288,7 +294,10 @@ describe("バージョン管理機能", () => {
 
   describe("getPromptWithHistory", () => {
     it("プロンプト詳細とバージョン履歴を取得できる", async () => {
-      responseQueue.push({ data: { id: "prompt-1", key: "TEST_KEY", name: "テストプロンプト" }, error: null });
+      responseQueue.push({
+        data: { id: "prompt-1", key: "TEST_KEY", name: "テストプロンプト" },
+        error: null,
+      });
       responseQueue.push({
         data: [
           { version: 2, content: "内容2", change_note: "更新2" },

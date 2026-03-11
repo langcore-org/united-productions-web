@@ -109,10 +109,7 @@ export async function GET(request: NextRequest) {
 
     const accessToken = session.provider_token;
     const { searchParams } = new URL(request.url);
-    const pageSize = Math.min(
-      Number.parseInt(searchParams.get("pageSize") || "20", 10),
-      100,
-    );
+    const pageSize = Math.min(Number.parseInt(searchParams.get("pageSize") || "20", 10), 100);
     const rawQuery = searchParams.get("q") || "";
 
     const query = sanitizeDriveQuery(rawQuery);

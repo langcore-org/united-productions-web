@@ -1,0 +1,34 @@
+[
+  {
+    "neon_id": "prompt_agentic_base",
+    "supabase_id": "f59811d5-9ea3-4550-bb45-588fc55b0951"
+  },
+  {
+    "neon_id": "prompt_meeting_format_meeting",
+    "supabase_id": "2171d0f2-1da9-470e-87c1-dd913ec222ec"
+  },
+  {
+    "neon_id": "prompt_general_chat",
+    "supabase_id": "ad0bcc15-0db1-4766-b46a-71c8e2844150"
+  },
+  {
+    "neon_id": "prompt_minutes",
+    "supabase_id": "d9abc19e-5c3a-4a47-b2c3-88aa3d4a7ddc"
+  },
+  {
+    "neon_id": "prompt_research_evidence",
+    "supabase_id": "c16852f7-1782-4b69-be50-8d57bebd8296"
+  },
+  {
+    "neon_id": "prompt_meeting_format_interview",
+    "supabase_id": "a8adfa56-9b6e-4ea3-bde7-32f8d20136b6"
+  },
+  {
+    "neon_id": "prompt_research_cast",
+    "supabase_id": "897a9099-88d8-406b-8dec-60d5625bd559"
+  },
+  {
+    "neon_id": "prompt_proposal",
+    "supabase_id": "0fc600ed-13a9-46c7-b335-7cfb93919921"
+  }
+]

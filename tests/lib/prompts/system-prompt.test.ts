@@ -22,16 +22,16 @@ vi.mock("@/lib/supabase/server", () => ({
             single: () =>
               Promise.resolve(
                 table === "feature_prompts"
-                  ? mockSupabaseState.feature_prompts ?? { data: null, error: null }
+                  ? (mockSupabaseState.feature_prompts ?? { data: null, error: null })
                   : table === "system_prompts"
-                    ? mockSupabaseState.system_prompts ?? { data: null, error: null }
+                    ? (mockSupabaseState.system_prompts ?? { data: null, error: null })
                     : { data: null, error: null },
               ),
             eq: () => ({
               single: () =>
                 Promise.resolve(
                   table === "feature_prompts"
-                    ? mockSupabaseState.feature_prompts ?? { data: null, error: null }
+                    ? (mockSupabaseState.feature_prompts ?? { data: null, error: null })
                     : { data: null, error: null },
                 ),
             }),
