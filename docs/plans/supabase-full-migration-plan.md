@@ -1,7 +1,7 @@
 # Supabase 全面移行計画書（詳細版）
 
 > **作成日**: 2026-03-08  
-> **更新日**: 2026-03-08（実装進捗を追記）
+> **更新日**: 2026-03-11（デプロイ実施中）
 > **移行対象**: Prisma + Neon + NextAuth.js → Supabase（Auth + Database）  
 > **前提条件**: Supabaseプロジェクトは既に作成済み
 
@@ -2067,6 +2067,9 @@ if (error) {
 - [x] Supabase MCP設定: アクセストークン設定済（Claude Code再起動で有効化）
 - [x] `.env.local` にSupabase環境変数追加済（`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`）
 - [x] ステップ1: SQLスキーマ作成・適用済 → `supabase/migrations/20260309000000_initial_schema.sql`（`supabase db push` で適用完了、全7テーブル確認済）※未使用3テーブル除外
+- [x] ステップ2: テーブル名変更（research_chats → chats, research_messages → chat_messages）
+- [x] ステップ3: プロンプトデータ移行（8件/34件/5件）
+- [ ] ステップ4: 本番デプロイ（Vercel設定修正中 - rootDirectory問題対応）
 - [x] ステップ2: Supabaseクライアント設定ファイル作成済（`lib/supabase/client.ts`, `server.ts`, `middleware.ts`, `admin.ts`）
 - [x] ステップ3: 認証システム移行完了（middleware.ts, auth/callback/route.ts, signin/page.tsx, lib/api/auth.ts）
 - [x] ステップ4: DB操作コード移行 - libレイヤー完了（prompts/db/crud,version,versions,seed,types, usage/tracker, settings/db, prompts/system-prompt）
