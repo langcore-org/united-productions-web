@@ -49,11 +49,6 @@ const adminNavItems = [
     label: "使用量統計",
     href: "/admin/usage",
   },
-  {
-    icon: <Shield className="w-[18px] h-[18px]" />,
-    label: "ログ閲覧",
-    href: "/admin/logs",
-  },
 ];
 
 export function AdminSidebar({ className, onCollapseChange }: AdminSidebarProps) {

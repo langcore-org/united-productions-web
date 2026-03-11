@@ -8,7 +8,6 @@ import {
   DollarSign,
   FileText,
   Mic,
-  ScrollText,
   Settings,
   Shield,
   Sparkles,
@@ -77,13 +76,6 @@ const ADMIN_MENU = [
     icon: Activity,
     label: "使用量・コスト",
     description: "API使用状況の監視",
-    borderColor: "gray",
-  },
-  {
-    href: "/admin/logs",
-    icon: ScrollText,
-    label: "アプリケーションログ",
-    description: "システムログの閲覧",
     borderColor: "gray",
   },
 ];

@@ -8,11 +8,15 @@
  * 例:    node prompt-tuning/scripts/init-session.mjs RESEARCH_CAST
  */
 
-import { PrismaClient } from "@prisma/client";
+import { createClient } from "@supabase/supabase-js";
 import { writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { join } from "node:path";
 
-const prisma = new PrismaClient();
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY,
+);
+
 const key = process.argv[2];
 
 if (!key) {
@@ -21,9 +25,13 @@ if (!key) {
 }
 
 async function main() {
-  const prompt = await prisma.systemPrompt.findUnique({ where: { key } });
+  const { data: prompt, error } = await supabase
+    .from("system_prompts")
+    .select("*")
+    .eq("key", key)
+    .single();
 
-  if (!prompt) {
+  if (error || !prompt) {
     console.error(`❌ プロンプト "${key}" がDBに見つかりません`);
     process.exit(1);
   }
@@ -35,15 +43,13 @@ async function main() {
 
   mkdirSync(historyDir, { recursive: true });
 
-  // draft.md: 既存があれば継続使用、なければ本番のコピーを作成
   if (!existsSync(draftPath)) {
     writeFileSync(draftPath, prompt.content, "utf-8");
-    console.log(`✅ draft.md を作成しました（本番 v${prompt.currentVersion} のコピー）`);
+    console.log(`✅ draft.md を作成しました（本番 v${prompt.current_version} のコピー）`);
   } else {
     console.log(`ℹ️  draft.md は既に存在します（既存のdraftを継続使用）`);
   }
 
-  // test-cases.md: なければテンプレートを生成
   if (!existsSync(testCasesPath)) {
     const template = `# テストケース: ${key}
 
@@ -77,14 +83,12 @@ async function main() {
   }
 
   console.log(`\n📋 プロンプト: ${prompt.name} (${key})`);
-  console.log(`   本番バージョン: v${prompt.currentVersion}`);
+  console.log(`   本番バージョン: v${prompt.current_version}`);
   console.log(`   作業ディレクトリ: prompt-tuning/${key}/`);
   console.log(`\n次のステップ: prompt-tuning/${key}/test-cases.md を確認してください`);
 }
 
-main()
-  .catch((e) => {
-    console.error(e);
-    process.exit(1);
-  })
-  .finally(() => prisma.$disconnect());
+main().catch((e) => {
+  console.error(e);
+  process.exit(1);
+});

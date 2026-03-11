@@ -85,47 +85,40 @@ function generateDeleteScript(featureId) {
   
   const scriptContent = `#!/usr/bin/env node
 /**
- * Auto-generated delete script for ${featureId}
+ * Auto-generated delete script for ${featureId} (Supabase)
  * Generated: ${new Date().toISOString()}
  */
 
-import { PrismaClient } from '@prisma/client';
-const prisma = new PrismaClient();
+import { createClient } from '@supabase/supabase-js';
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+);
 
 const FEATURE_ID = '${featureId}';
-const PROMPT_KEYS = ['${featureId.toUpperCase().replace(/-/g, '_')}']; // 必要に応じて追加
+const PROMPT_KEYS = ['${featureId.toUpperCase().replace(/-/g, "_")}'];
 
 async function deleteFeature() {
   console.log(\`=== \${FEATURE_ID} 関連データの削除 ===\\n\`);
-  
+
   try {
-    // 1. FeaturePrompt削除
-    const featurePromptResult = await prisma.featurePrompt.deleteMany({
-      where: { featureId: FEATURE_ID }
-    });
-    console.log(\`✅ FeaturePrompt: \${featurePromptResult.count}件削除\`);
-    
-    // 2. SystemPromptVersion削除
+    await supabase.from('feature_prompts').delete().eq('feature_id', FEATURE_ID);
+    console.log('✅ FeaturePrompt: 削除');
+
     for (const key of PROMPT_KEYS) {
-      const prompt = await prisma.systemPrompt.findUnique({ where: { key } });
+      const { data: prompt } = await supabase.from('system_prompts').select('id').eq('key', key).single();
       if (prompt) {
-        const versionsResult = await prisma.systemPromptVersion.deleteMany({
-          where: { promptId: prompt.id }
-        });
-        console.log(\`✅ SystemPromptVersion (\${key}): \${versionsResult.count}件削除\`);
-        
-        // 3. SystemPrompt削除
-        await prisma.systemPrompt.delete({ where: { key } });
+        await supabase.from('system_prompt_versions').delete().eq('prompt_id', prompt.id);
+        await supabase.from('system_prompts').delete().eq('key', key);
         console.log(\`✅ SystemPrompt (\${key}): 削除\`);
       }
     }
-    
+
     console.log('\\n🎉 すべての削除が完了しました');
   } catch (error) {
     console.error('❌ エラー:', error.message);
     process.exit(1);
-  } finally {
-    await prisma.\$disconnect();
   }
 }
 
@@ -241,7 +234,7 @@ function runAudit() {
 // 通常モード
 console.log('=== 未使用機能調査（強化版 v2.0）===\n');
 if (deepMode) {
-  console.log('🔍 深層調査モード: prisma/schema, types/, config/ も対象\n');
+  console.log('🔍 深層調査モード: supabase/migrations, types/, config/ も対象\n');
 }
 
 // 空のディレクトリ検出（新機能）
@@ -310,23 +303,20 @@ if (existsSync(sidebarPath)) {
   }
 }
 
-// 1.4 prisma/schema.prisma から取得（deepモードのみ）
+// 1.4 supabase/migrations から取得（deepモードのみ）
 if (deepMode) {
-  const prismaPath = 'prisma/schema.prisma';
-  if (existsSync(prismaPath)) {
-    const content = readFileSync(prismaPath, 'utf-8');
-    // enum や コメント内の機能IDを検出
-    const enumMatches = content.match(/enum\s+\w*[Ff]eature\w*\s*\{([^}]+)\}/g);
-    if (enumMatches) {
-      const idMatches = enumMatches.join(' ').match(/([a-z0-9_-]+)/g);
-      if (idMatches) {
-        idMatches.forEach(id => {
-          if (id.length > 2 && !['enum', 'model', 'id', 'createdAt'].includes(id)) {
-            allFeatureIds.add(id);
-            featureSources.push({ id, source: 'prisma-schema', location: prismaPath });
-          }
-        });
-      }
+  const migrationsDir = 'supabase/migrations';
+  if (existsSync(migrationsDir)) {
+    const content = runCommand(`find ${migrationsDir} -name "*.sql" -exec cat {} \\; 2>/dev/null`) || '';
+    const tableMatches = content.match(/CREATE TABLE\s+(\w+)/g);
+    if (tableMatches) {
+      tableMatches.forEach((m) => {
+        const name = m.replace(/CREATE TABLE\s+/, '');
+        if (name.length > 2 && name.includes('feature')) {
+          allFeatureIds.add(name);
+          featureSources.push({ id: name, source: 'supabase-migrations', location: migrationsDir });
+        }
+      });
     }
   }
 }
@@ -378,8 +368,8 @@ sidebarFeatures.forEach(f => console.log(`    - ${f}`));
 // ========== 3. 各機能の使用状況を調査（拡張版） ==========
 console.log('\n【使用状況調査中...】\n');
 
-const searchPaths = deepMode 
-  ? 'app/ lib/ components/ types/ config/ hooks/ prisma/'
+const searchPaths = deepMode
+  ? 'app/ lib/ components/ types/ config/ hooks/ supabase/'
   : 'app/ lib/ components/';
 
 const featureAnalysis = [];
@@ -405,14 +395,14 @@ for (const featureId of allFeatureIds) {
   };
   
   // コード内参照数（拡張パス）
-  const codeRefs = runCommand(`grep -r "${featureId}" ${searchPaths} --include="*.ts" --include="*.tsx" --include="*.prisma" 2>/dev/null`);
+  const codeRefs = runCommand(`grep -r "${featureId}" ${searchPaths} --include="*.ts" --include="*.tsx" --include="*.sql" 2>/dev/null`);
   const codeLines = codeRefs.trim().split('\n').filter(l => l.trim() && !l.includes('node_modules'));
   analysis.refsInCode = codeLines.length;
   analysis.refsInApp = codeLines.filter(l => l.startsWith('app/')).length;
   analysis.refsInLib = codeLines.filter(l => l.startsWith('lib/')).length;
   analysis.refsInTypes = codeLines.filter(l => l.startsWith('types/')).length;
   analysis.refsInConfig = codeLines.filter(l => l.startsWith('config/')).length;
-  analysis.refsInPrisma = codeLines.filter(l => l.includes('.prisma')).length;
+  analysis.refsInPrisma = codeLines.filter(l => l.includes('.sql')).length;
   
   // コメントアウトされているか
   analysis.isCommentedOut = codeLines.some(l => {
@@ -451,11 +441,11 @@ for (const featureId of allFeatureIds) {
   // 専用フックがあるか
   analysis.hasHook = existsSync(`hooks/use${toPascalCase(featureId)}.ts`);
   
-  // DBレコード確認
+  // DBレコード確認（Supabase: feature_prompts）
   if (existsSync('.claude/skills/db-query/scripts/query.mjs')) {
-    const dbResult = runCommand(`node .claude/skills/db-query/scripts/query.mjs find FeaturePrompt "featureId=${featureId}" --fields isActive 2>/dev/null`);
-    if (dbResult.includes('isActive:')) {
-      const isActive = dbResult.includes('isActive: true');
+    const dbResult = runCommand(`node .claude/skills/db-query/scripts/query.mjs find feature_prompts "feature_id=${featureId}" --fields is_active 2>/dev/null`);
+    if (dbResult.includes('is_active:')) {
+      const isActive = dbResult.includes('is_active: true');
       analysis.dbRecord = { exists: true, isActive };
     }
   }
@@ -629,7 +619,7 @@ if (!deepMode) {
   console.log('  node audit-unused.mjs --deep');
   console.log('');
   console.log('--deep モードでは以下も対象になります：');
-  console.log('  - prisma/schema.prisma');
+  console.log('  - supabase/migrations');
   console.log('  - types/ ディレクトリ');
   console.log('  - config/ ディレクトリ');
   console.log('  - hooks/ ディレクトリ');

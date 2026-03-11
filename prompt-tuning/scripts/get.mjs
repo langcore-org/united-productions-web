@@ -5,9 +5,13 @@
  * 例:    node prompt-tuning/scripts/get.mjs RESEARCH_CAST
  */
 
-import { PrismaClient } from "@prisma/client";
+import { createClient } from "@supabase/supabase-js";
 
-const prisma = new PrismaClient();
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY,
+);
+
 const key = process.argv[2];
 
 if (!key) {
@@ -16,36 +20,38 @@ if (!key) {
 }
 
 async function main() {
-  const prompt = await prisma.systemPrompt.findUnique({
-    where: { key },
-    include: {
-      versions: {
-        orderBy: { version: "desc" },
-        take: 3,
-        select: { version: true, changeNote: true, createdAt: true },
-      },
-    },
-  });
+  const { data: prompt, error } = await supabase
+    .from("system_prompts")
+    .select("*")
+    .eq("key", key)
+    .single();
 
-  if (!prompt) {
+  if (error || !prompt) {
     console.error(`❌ プロンプト "${key}" が見つかりません`);
     process.exit(1);
   }
 
+  const { data: versions } = await supabase
+    .from("system_prompt_versions")
+    .select("version, change_note, created_at")
+    .eq("prompt_id", prompt.id)
+    .order("version", { ascending: false })
+    .limit(3);
+
   console.log(`📋 ${prompt.name} (${prompt.key})`);
-  console.log(`   バージョン: v${prompt.currentVersion}`);
+  console.log(`   バージョン: v${prompt.current_version}`);
   console.log(`   カテゴリ: ${prompt.category}`);
   console.log(`\nバージョン履歴 (直近3件):`);
-  for (const v of prompt.versions) {
-    console.log(`  v${v.version}: ${v.changeNote ?? "-"} (${v.createdAt.toISOString().slice(0, 10)})`);
+  for (const v of versions || []) {
+    console.log(
+      `  v${v.version}: ${v.change_note ?? "-"} (${new Date(v.created_at).toISOString().slice(0, 10)})`,
+    );
   }
   console.log(`\n--- プロンプト内容 ---\n`);
   console.log(prompt.content);
 }
 
-main()
-  .catch((e) => {
-    console.error(e);
-    process.exit(1);
-  })
-  .finally(() => prisma.$disconnect());
+main().catch((e) => {
+  console.error(e);
+  process.exit(1);
+});

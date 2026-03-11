@@ -1,14 +1,14 @@
 import { redirect } from "next/navigation";
-import type { Session } from "next-auth";
-import { getServerSession } from "next-auth/next";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { authOptions } from "@/lib/auth-options";
+import { createClient } from "@/lib/supabase/server";
 
 export default async function AuthenticatedLayout({ children }: { children: React.ReactNode }) {
-  const session = await getServerSession(authOptions);
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  const typedSession = session as Session | null;
-  if (!typedSession?.user?.id) {
+  if (!user) {
     redirect("/auth/signin");
   }
 

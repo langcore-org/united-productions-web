@@ -1,21 +1,31 @@
-import { PrismaClient } from "@prisma/client";
+import { createClient } from "@supabase/supabase-js";
 
-const prisma = new PrismaClient();
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY,
+);
 
 async function makeAdmin(email) {
   try {
-    const user = await prisma.user.update({
-      where: { email },
-      data: { role: "ADMIN" },
-      select: { id: true, email: true, name: true, role: true },
-    });
+    const { data: users, error } = await supabase
+      .from("users")
+      .update({ role: "ADMIN" })
+      .eq("email", email)
+      .select("id, email, name, role");
+
+    const user = Array.isArray(users) ? users[0] : users;
+
+    if (error) throw error;
+    if (!user) {
+      console.error("❌ ユーザーが見つかりません:", email);
+      process.exit(1);
+    }
+
     console.log("✅ 管理者権限を付与しました:");
     console.log(JSON.stringify(user, null, 2));
   } catch (error) {
     console.error("❌ エラー:", error.message);
     process.exit(1);
-  } finally {
-    await prisma.$disconnect();
   }
 }
 

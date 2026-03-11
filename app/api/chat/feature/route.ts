@@ -31,7 +31,7 @@ async function generateAndSaveChatTitle(chatId: string, firstUserMessage: string
     const title = response.content.trim().slice(0, 40);
     if (title) {
       const supabase = await createClient();
-      await supabase.from("research_chats").update({ title }).eq("id", chatId);
+      await supabase.from("chats").update({ title }).eq("id", chatId);
     }
   } catch (err) {
     logger.error("Failed to generate chat title", { chatId, error: String(err) });
@@ -53,7 +53,7 @@ export async function GET(request: NextRequest): Promise<Response> {
 
     if (chatId) {
       const { data: chat } = await supabase
-        .from("research_chats")
+        .from("chats")
         .select("id, llm_provider")
         .eq("id", chatId)
         .eq("user_id", userId)
@@ -64,7 +64,7 @@ export async function GET(request: NextRequest): Promise<Response> {
       }
 
       const { data: msgs } = await supabase
-        .from("research_messages")
+        .from("chat_messages")
         .select("*")
         .eq("chat_id", chatId)
         .order("created_at", { ascending: true });
@@ -88,7 +88,7 @@ export async function GET(request: NextRequest): Promise<Response> {
 
     if (featureId) {
       const { data: chats } = await supabase
-        .from("research_chats")
+        .from("chats")
         .select("id, title, created_at, updated_at")
         .eq("user_id", userId)
         .eq("agent_type", featureId.toUpperCase())
@@ -170,7 +170,7 @@ export async function POST(request: NextRequest): Promise<Response> {
 
     if (chatId) {
       const { data: existing } = await supabase
-        .from("research_chats")
+        .from("chats")
         .select("id")
         .eq("id", chatId)
         .eq("user_id", userId)
@@ -183,7 +183,7 @@ export async function POST(request: NextRequest): Promise<Response> {
     } else {
       isNewChat = true;
       const { data: newChat, error: createError } = await supabase
-        .from("research_chats")
+        .from("chats")
         .insert({
           user_id: userId,
           agent_type: featureId.toUpperCase(),
@@ -196,10 +196,10 @@ export async function POST(request: NextRequest): Promise<Response> {
       actualChatId = newChat.id;
     }
 
-    await supabase.from("research_messages").delete().eq("chat_id", actualChatId);
+    await supabase.from("chat_messages").delete().eq("chat_id", actualChatId);
 
     if (messages.length > 0) {
-      const { error: insertError } = await supabase.from("research_messages").insert(
+      const { error: insertError } = await supabase.from("chat_messages").insert(
         messages.map((msg) => ({
           chat_id: actualChatId,
           role: msg.role.toUpperCase(),
@@ -216,7 +216,7 @@ export async function POST(request: NextRequest): Promise<Response> {
     }
 
     await supabase
-      .from("research_chats")
+      .from("chats")
       .update({ updated_at: new Date().toISOString() })
       .eq("id", actualChatId);
 
@@ -258,7 +258,7 @@ export async function DELETE(request: NextRequest): Promise<Response> {
       }
 
       const { data: chat } = await supabase
-        .from("research_chats")
+        .from("chats")
         .select("id")
         .eq("user_id", userId)
         .eq("agent_type", parsed.data.featureId.toUpperCase())
@@ -267,12 +267,12 @@ export async function DELETE(request: NextRequest): Promise<Response> {
         .single();
 
       if (chat) {
-        await supabase.from("research_chats").delete().eq("id", chat.id);
+        await supabase.from("chats").delete().eq("id", chat.id);
       }
       return Response.json({ success: true });
     }
 
-    await supabase.from("research_chats").delete().eq("id", chatId).eq("user_id", userId);
+    await supabase.from("chats").delete().eq("id", chatId).eq("user_id", userId);
     return Response.json({ success: true });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : "Unknown error";

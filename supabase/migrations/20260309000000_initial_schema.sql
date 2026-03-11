@@ -44,17 +44,10 @@ CREATE TABLE meeting_notes (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE TABLE transcripts (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  raw_text TEXT NOT NULL,
-  formatted_text TEXT,
-  llm_provider llm_provider DEFAULT 'GEMINI_25_FLASH_LITE',
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
-);
+-- Note: transcripts テーブルは現在未使用（Sidebarから削除済み）のため作成しない
+-- 将来的に必要になった場合は manuscripts などの名前で作成を検討
 
-CREATE TABLE research_chats (
+CREATE TABLE chats (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   agent_type TEXT NOT NULL,
@@ -65,9 +58,9 @@ CREATE TABLE research_chats (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE TABLE research_messages (
+CREATE TABLE chat_messages (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  chat_id UUID NOT NULL REFERENCES research_chats(id) ON DELETE CASCADE,
+  chat_id UUID NOT NULL REFERENCES chats(id) ON DELETE CASCADE,
   role TEXT NOT NULL CHECK (role IN ('USER', 'ASSISTANT', 'SYSTEM')),
   content TEXT NOT NULL,
   thinking TEXT,
@@ -91,19 +84,9 @@ CREATE TABLE usage_logs (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE TABLE program_settings (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID UNIQUE NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  program_info TEXT NOT NULL DEFAULT '',
-  past_proposals TEXT NOT NULL DEFAULT '',
-  updated_at TIMESTAMPTZ DEFAULT NOW()
-);
+-- Note: program_settings テーブルは現在未使用のため作成しない
 
-CREATE TABLE system_settings (
-  key TEXT PRIMARY KEY,
-  value TEXT NOT NULL,
-  updated_at TIMESTAMPTZ DEFAULT NOW()
-);
+-- Note: system_settings テーブルは現在未使用のため作成しない
 
 CREATE TABLE system_prompts (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -144,15 +127,22 @@ CREATE TABLE feature_prompts (
 -- 4. インデックス
 CREATE INDEX idx_meeting_notes_user_status_created ON meeting_notes(user_id, status, created_at);
 CREATE INDEX idx_meeting_notes_user_created ON meeting_notes(user_id, created_at);
-CREATE INDEX idx_transcripts_user_created ON transcripts(user_id, created_at);
-CREATE INDEX idx_research_chats_user_agent_created ON research_chats(user_id, agent_type, created_at);
-CREATE INDEX idx_research_chats_user_created ON research_chats(user_id, created_at);
-CREATE INDEX idx_research_chats_agent_type ON research_chats(agent_type);
-CREATE INDEX idx_research_messages_chat_created ON research_messages(chat_id, created_at);
+
+-- Note: transcripts テーブル未使用のためインデックスも作成しない
+
+CREATE INDEX idx_chats_user_agent_created ON chats(user_id, agent_type, created_at);
+CREATE INDEX idx_chats_user_created ON chats(user_id, created_at);
+CREATE INDEX idx_chats_agent_type ON chats(agent_type);
+CREATE INDEX idx_chat_messages_chat_created ON chat_messages(chat_id, created_at);
 CREATE INDEX idx_usage_logs_user_provider_created ON usage_logs(user_id, provider, created_at);
 CREATE INDEX idx_usage_logs_user_created ON usage_logs(user_id, created_at);
 CREATE INDEX idx_usage_logs_provider_created ON usage_logs(provider, created_at);
 CREATE INDEX idx_usage_logs_created_cost ON usage_logs(created_at, cost);
+
+-- Note: program_settings テーブル未使用のためインデックスも作成しない
+
+-- Note: system_settings テーブル未使用のためインデックスも作成しない
+
 CREATE INDEX idx_system_prompts_category ON system_prompts(category);
 CREATE INDEX idx_system_prompts_is_active ON system_prompts(is_active);
 CREATE INDEX idx_system_prompt_versions_prompt_created ON system_prompt_versions(prompt_id, created_at);
@@ -168,31 +158,22 @@ CREATE POLICY "Users can update own data" ON users FOR UPDATE USING (auth.uid() 
 ALTER TABLE meeting_notes ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Users can CRUD own meeting notes" ON meeting_notes FOR ALL USING (auth.uid() = user_id);
 
-ALTER TABLE transcripts ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Users can CRUD own transcripts" ON transcripts FOR ALL USING (auth.uid() = user_id);
+-- Note: transcripts テーブル未使用のためRLSポリシー不要
 
-ALTER TABLE research_chats ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Users can CRUD own research chats" ON research_chats FOR ALL USING (auth.uid() = user_id);
+ALTER TABLE chats ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Users can CRUD own chats" ON chats FOR ALL USING (auth.uid() = user_id);
 
-ALTER TABLE research_messages ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Users can CRUD messages in own chats" ON research_messages
+ALTER TABLE chat_messages ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Users can CRUD messages in own chats" ON chat_messages
   FOR ALL USING (
-    chat_id IN (SELECT id FROM research_chats WHERE user_id = auth.uid())
+    chat_id IN (SELECT id FROM chats WHERE user_id = auth.uid())
   );
 
 ALTER TABLE usage_logs ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Users can view own usage logs" ON usage_logs FOR SELECT USING (auth.uid() = user_id);
 CREATE POLICY "Service role can insert usage logs" ON usage_logs FOR INSERT WITH CHECK (true);
 
-ALTER TABLE program_settings ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Users can CRUD own program settings" ON program_settings FOR ALL USING (auth.uid() = user_id);
-
-ALTER TABLE system_settings ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Anyone can view system settings" ON system_settings FOR SELECT USING (true);
-CREATE POLICY "Only admins can modify system settings" ON system_settings
-  FOR ALL USING (
-    EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role = 'ADMIN')
-  );
+-- Note: program_settings, system_settings テーブル未使用のためRLSポリシー不要
 
 ALTER TABLE system_prompts ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Anyone can view active prompts" ON system_prompts FOR SELECT USING (is_active = TRUE);

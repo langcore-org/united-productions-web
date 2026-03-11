@@ -6,13 +6,10 @@
  */
 
 import { type NextRequest, NextResponse } from "next/server";
-import type { Session } from "next-auth";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/auth-options";
+import { createClient } from "@/lib/supabase/server";
 
 const DRIVE_API_BASE = "https://www.googleapis.com/drive/v3";
 
-// 許可するファイルタイプ
 const ALLOWED_MIME_TYPES = [
   "text/plain",
   "text/markdown",
@@ -25,10 +22,8 @@ const ALLOWED_MIME_TYPES = [
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
 ];
 
-// 最大ファイルサイズ（10MB）
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
-// 危険な拡張子のブラックリスト
 const DANGEROUS_EXTENSIONS = [
   ".exe",
   ".dll",
@@ -49,37 +44,25 @@ interface FileValidationResult {
   error?: string;
 }
 
-/**
- * ファイル名をサニタイズ
- */
 function sanitizeFilename(filename: string): string {
-  // パストラバーサル対策
   return filename
-    .replace(/[\\/]/g, "_") // パス区切り文字を除去
-    .replace(/\.\./g, "_") // 親ディレクトリ参照を除去
-    .replace(/[^\w\-.]/g, "_") // 英数字・ハイフン・ドット以外を除去
-    .substring(0, 255); // 長さ制限
+    .replace(/[\\/]/g, "_")
+    .replace(/\.\./g, "_")
+    .replace(/[^\w\-.]/g, "_")
+    .substring(0, 255);
 }
 
-/**
- * Drive APIクエリ文字列をサニタイズ
- */
 function sanitizeDriveQuery(query: string): string {
-  // 制御文字を除去
   return (
     query
-      // biome-ignore lint/suspicious/noControlCharactersInRegex: 正規表現の文字クラス範囲指定
-      .replace(/[\x00-\x1F\x7F]/g, "") // 制御文字
-      .replace(/[<>]/g, "") // HTMLタグ
+      // biome-ignore lint/suspicious/noControlCharactersInRegex: character class range
+      .replace(/[\x00-\x1F\x7F]/g, "")
+      .replace(/[<>]/g, "")
       .substring(0, 100)
-  ); // 長さ制限
+  );
 }
 
-/**
- * ファイルを検証
- */
 function validateFile(file: File, allowedName?: string): FileValidationResult {
-  // ファイルサイズチェック
   if (file.size > MAX_FILE_SIZE) {
     return {
       valid: false,
@@ -87,7 +70,6 @@ function validateFile(file: File, allowedName?: string): FileValidationResult {
     };
   }
 
-  // MIMEタイプチェック
   if (!ALLOWED_MIME_TYPES.includes(file.type)) {
     return {
       valid: false,
@@ -95,7 +77,6 @@ function validateFile(file: File, allowedName?: string): FileValidationResult {
     };
   }
 
-  // 拡張子チェック
   const extension = `.${file.name.split(".").pop()?.toLowerCase() || ""}`;
   if (DANGEROUS_EXTENSIONS.includes(extension)) {
     return {
@@ -104,7 +85,6 @@ function validateFile(file: File, allowedName?: string): FileValidationResult {
     };
   }
 
-  // ファイル名の長さチェック
   const sanitizedName = sanitizeFilename(allowedName || file.name);
   if (sanitizedName.length === 0) {
     return {
@@ -116,37 +96,33 @@ function validateFile(file: File, allowedName?: string): FileValidationResult {
   return { valid: true };
 }
 
-/**
- * Google Driveのファイル一覧を取得
- */
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const supabase = await createClient();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
 
-    const typedSession = session as Session | null;
-    if (!typedSession?.accessToken) {
+    if (!session?.provider_token) {
       return NextResponse.json({ error: "認証が必要です" }, { status: 401 });
     }
 
+    const accessToken = session.provider_token;
     const { searchParams } = new URL(request.url);
     const pageSize = Math.min(
-      parseInt(searchParams.get("pageSize") || "20", 10),
-      100, // 最大100件に制限
+      Number.parseInt(searchParams.get("pageSize") || "20", 10),
+      100,
     );
     const rawQuery = searchParams.get("q") || "";
 
-    // クエリパラメータのバリデーションとサニタイズ
     const query = sanitizeDriveQuery(rawQuery);
 
-    // pageSizeのバリデーション
     if (Number.isNaN(pageSize) || pageSize < 1) {
       return NextResponse.json({ error: "無効なpageSizeです" }, { status: 400 });
     }
 
-    // Drive APIクエリ構築
     let q = "trashed=false";
     if (query) {
-      // シングルクォートをエスケープしてインジェクション防止
       const safeQuery = query.replace(/'/g, "\\'");
       q += ` and name contains '${safeQuery}'`;
     }
@@ -155,7 +131,7 @@ export async function GET(request: NextRequest) {
       `${DRIVE_API_BASE}/files?pageSize=${pageSize}&q=${encodeURIComponent(q)}&fields=files(id,name,mimeType,size,modifiedTime,webViewLink)`,
       {
         headers: {
-          Authorization: `Bearer ${typedSession.accessToken}`,
+          Authorization: `Bearer ${accessToken}`,
         },
       },
     );
@@ -174,18 +150,18 @@ export async function GET(request: NextRequest) {
   }
 }
 
-/**
- * Google Driveにファイルをアップロード
- */
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const supabase = await createClient();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
 
-    const typedSession = session as Session | null;
-    if (!typedSession?.accessToken) {
+    if (!session?.provider_token) {
       return NextResponse.json({ error: "認証が必要です" }, { status: 401 });
     }
 
+    const accessToken = session.provider_token;
     const formData = await request.formData();
     const file = formData.get("file") as File;
     const name = formData.get("name") as string;
@@ -194,26 +170,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "ファイルが必要です" }, { status: 400 });
     }
 
-    // ファイル検証
     const validation = validateFile(file, name);
     if (!validation.valid) {
       return NextResponse.json({ error: validation.error }, { status: 400 });
     }
 
-    // サニタイズされたファイル名
     const sanitizedName = sanitizeFilename(name || file.name);
-
-    // ファイル内容をArrayBufferに変換
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    // メタデータ
     const metadata = {
       name: sanitizedName,
       mimeType: file.type || "application/octet-stream",
     };
 
-    // multipart upload
     const boundary = "-------314159265358979323846";
     const delimiter = `\r\n--${boundary}\r\n`;
     const close_delim = `\r\n--${boundary}--`;
@@ -232,7 +202,7 @@ export async function POST(request: NextRequest) {
     const response = await fetch(`${DRIVE_API_BASE}/files?uploadType=multipart`, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${typedSession.accessToken}`,
+        Authorization: `Bearer ${accessToken}`,
         "Content-Type": `multipart/related; boundary=${boundary}`,
       },
       body: body,

@@ -1,9 +1,5 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { getServerSession } from "next-auth/next";
-import { SessionProvider } from "@/components/providers/SessionProvider";
-
-import { authOptions } from "@/lib/auth-options";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -21,19 +17,17 @@ export const metadata: Metadata = {
   description: "Teddy - あなたのAIアシスタント",
 };
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const session = (await getServerSession(authOptions)) as import("next-auth").Session | null;
-
   return (
     <html lang="ja">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen bg-white`}
       >
-        <SessionProvider session={session}>{children}</SessionProvider>
+        {children}
       </body>
     </html>
   );

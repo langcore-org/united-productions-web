@@ -4,8 +4,9 @@ import { ChevronRight, History, LogOut, PanelLeft, Plus } from "lucide-react";
 // import { TeddyIcon } from "@/components/icons/TeddyIcon"; // ロゴは非表示（将来使用予定）
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { signOut } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
 import { getChatNavigationItems } from "@/lib/chat/navigation";
 import { cn } from "@/lib/utils";
 
@@ -16,6 +17,7 @@ interface SidebarProps {
 
 export function Sidebar({ className, onCollapseChange }: SidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
 
@@ -226,7 +228,11 @@ export function Sidebar({ className, onCollapseChange }: SidebarProps) {
       >
         <button
           type="button"
-          onClick={() => signOut({ callbackUrl: "/auth/signin" })}
+          onClick={async () => {
+            const supabase = createClient();
+            await supabase.auth.signOut();
+            router.push("/auth/signin");
+          }}
           className={cn(
             "flex items-center rounded-xl transition-all duration-200 ease-out group w-full",
             isCollapsed ? "w-10 h-10 justify-center p-0 mx-auto" : "gap-3 px-3 py-2",

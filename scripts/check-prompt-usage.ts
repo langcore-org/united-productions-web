@@ -2,10 +2,9 @@
  * プロンプト使用状況調査（詳細版）
  */
 
-import { prisma } from "@/lib/prisma";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 const USAGE_MAP: Record<string, { used: boolean; location: string }> = {
-  // 使用中
   GENERAL_CHAT: { used: true, location: "chat-config.ts (general-chat)" },
   RESEARCH_CAST: { used: true, location: "chat-config.ts (research-cast)" },
   RESEARCH_LOCATION: { used: true, location: "chat-config.ts (research-location)" },
@@ -18,8 +17,6 @@ const USAGE_MAP: Record<string, { used: boolean; location: string }> = {
   MEETING_FORMAT_MEETING: { used: true, location: "api/meeting-notes/route.ts" },
   MEETING_FORMAT_INTERVIEW: { used: true, location: "api/meeting-notes/route.ts" },
   TRANSCRIPT_FORMAT: { used: true, location: "api/transcripts/route.ts" },
-
-  // 未使用の可能性
   SCHEDULE_SYSTEM: { used: false, location: "未使用？" },
   SCHEDULE_ACTOR: { used: false, location: "未使用？" },
   SCHEDULE_STAFF: { used: false, location: "未使用？" },
@@ -29,10 +26,13 @@ const USAGE_MAP: Record<string, { used: boolean; location: string }> = {
 async function main() {
   console.log("=== プロンプト使用状況調査 ===\n");
 
-  const dbPrompts = await prisma.systemPrompt.findMany({
-    select: { key: true, name: true },
-    orderBy: { key: "asc" },
-  });
+  const supabase = createAdminClient();
+  const { data: dbPrompts, error } = await supabase
+    .from("system_prompts")
+    .select("key, name")
+    .order("key");
+
+  if (error) throw error;
 
   console.log("【使用中】\n");
   for (const p of dbPrompts) {
@@ -52,8 +52,6 @@ async function main() {
       console.log(`     ${p.name}\n`);
     }
   }
-
-  await prisma.$disconnect();
 }
 
 main();

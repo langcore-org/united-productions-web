@@ -1,16 +1,20 @@
 "use client";
 
-import { signOut } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { createClient } from "@/lib/supabase/client";
 
-/**
- * ログアウトページ
- * 自動的にサインアウト処理を実行し、サインインページへリダイレクト
- */
 export default function LogoutPage() {
+  const router = useRouter();
+
   useEffect(() => {
-    signOut({ callbackUrl: "/auth/signin" });
-  }, []);
+    const logout = async () => {
+      const supabase = createClient();
+      await supabase.auth.signOut();
+      router.push("/auth/signin");
+    };
+    logout();
+  }, [router]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">

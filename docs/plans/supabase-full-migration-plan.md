@@ -105,15 +105,15 @@
 | `VerificationToken` | メール検証トークン | 少 | ❌ 不要（Supabase Auth管理） |
 | `User` | ユーザー情報 | 少 | ✅ 移行（auth.usersと連携） |
 | `MeetingNote` | 議事録データ | 中 | ✅ 移行 |
-| `Transcript` | NA原稿データ | 中 | ✅ 移行 |
-| `ResearchChat` | リサーチチャット | 多 | ✅ 移行 |
-| `ResearchMessage` | チャットメッセージ | 多（最多） | ✅ 移行 |
+| `Transcript` | NA原稿データ | 中 | ❌ 作成しない（現在未使用）|
+| `chats` | チャット（一般・リサーチ・議事録・企画立案等） | 多 | ✅ 作成 |
+| `chat_messages` | チャットメッセージ | 多（最多） | ✅ 作成 |
 | `LocationSchedule` | ロケスケ管理 | 少 | ❌ 不要（未使用） |
 | `UsageLog` | LLM使用ログ | 多 | ✅ 移行 |
-| `ProgramSettings` | 番組設定（ユーザー別） | 少 | ✅ 移行 |
+| `ProgramSettings` | 番組設定（ユーザー別） | 少 | ❌ 作成しない（現在未使用）|
 | `GrokToolSettings` | Grokツール設定（ユーザー別） | 少 | ❌ 不要（未使用） |
 | `AppLog` | アプリケーションログ | 多 | ❌ 不要（未使用） |
-| `SystemSettings` | システム設定KVストア | 少 | ✅ 移行 |
+| `SystemSettings` | システム設定KVストア | 少 | ❌ 作成しない（現在未使用）|
 | `SystemPrompt` | システムプロンプト | 少 | ✅ 移行 |
 | `SystemPromptVersion` | プロンプトバージョン履歴 | 中 | ✅ 移行 |
 | `FeaturePrompt` | 機能→プロンプトマッピング | 少 | ✅ 移行 |
@@ -170,19 +170,12 @@ CREATE TABLE meeting_notes (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Transcriptsテーブル
-CREATE TABLE transcripts (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  raw_text TEXT NOT NULL,
-  formatted_text TEXT,
-  llm_provider llm_provider DEFAULT 'GEMINI_25_FLASH_LITE',
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
-);
+-- Note: Transcriptsテーブルは現在未使用（Sidebarから削除済み）のため作成しない
+-- 将来的に必要になった場合は以下のSQLを実行:
+-- CREATE TABLE transcripts (...);
 
--- ResearchChatsテーブル
-CREATE TABLE research_chats (
+-- Chatsテーブル（一般チャット・リサーチ・議事録・企画立案等全て）
+CREATE TABLE chats (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   agent_type TEXT NOT NULL,
@@ -193,10 +186,10 @@ CREATE TABLE research_chats (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- ResearchMessagesテーブル
-CREATE TABLE research_messages (
+-- ChatMessagesテーブル
+CREATE TABLE chat_messages (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  chat_id UUID NOT NULL REFERENCES research_chats(id) ON DELETE CASCADE,
+  chat_id UUID NOT NULL REFERENCES chats(id) ON DELETE CASCADE,
   role TEXT NOT NULL CHECK (role IN ('USER', 'ASSISTANT', 'SYSTEM')),
   content TEXT NOT NULL,
   thinking TEXT,
@@ -221,21 +214,17 @@ CREATE TABLE usage_logs (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- ProgramSettingsテーブル（ユーザー別番組設定）
-CREATE TABLE program_settings (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID UNIQUE NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  program_info TEXT,
-  past_proposals TEXT,
-  updated_at TIMESTAMPTZ DEFAULT NOW()
-);
+-- Note: ProgramSettingsテーブルは現在未使用のため作成しない
+-- 将来的に必要になった場合は以下のSQLを実行:
+-- CREATE TABLE program_settings (...);
 
--- SystemSettingsテーブル（グローバルKVストア）
-CREATE TABLE system_settings (
-  key TEXT PRIMARY KEY,
-  value TEXT NOT NULL,
-  updated_at TIMESTAMPTZ DEFAULT NOW()
-);
+-- Note: SystemSettingsテーブルは現在未使用のため作成しない
+-- 将来的に必要になった場合は以下のSQLを実行:
+-- CREATE TABLE system_settings (
+--   key TEXT PRIMARY KEY,
+--   value TEXT NOT NULL,
+--   updated_at TIMESTAMPTZ DEFAULT NOW()
+-- );
 
 -- SystemPromptsテーブル
 CREATE TABLE system_prompts (
@@ -282,11 +271,12 @@ CREATE TABLE feature_prompts (
 
 CREATE INDEX idx_meeting_notes_user_status_created ON meeting_notes(user_id, status, created_at);
 CREATE INDEX idx_meeting_notes_user_created ON meeting_notes(user_id, created_at);
-CREATE INDEX idx_transcripts_user_created ON transcripts(user_id, created_at);
-CREATE INDEX idx_research_chats_user_agent_created ON research_chats(user_id, agent_type, created_at);
-CREATE INDEX idx_research_chats_user_created ON research_chats(user_id, created_at);
-CREATE INDEX idx_research_chats_agent_type ON research_chats(agent_type);
-CREATE INDEX idx_research_messages_chat_created ON research_messages(chat_id, created_at);
+-- Note: transcriptsテーブル未使用のためインデックスも作成しない
+-- CREATE INDEX idx_transcripts_user_created ON transcripts(user_id, created_at);
+CREATE INDEX idx_chats_user_agent_created ON chats(user_id, agent_type, created_at);
+CREATE INDEX idx_chats_user_created ON chats(user_id, created_at);
+CREATE INDEX idx_chats_agent_type ON chats(agent_type);
+CREATE INDEX idx_chat_messages_chat_created ON chat_messages(chat_id, created_at);
 CREATE INDEX idx_usage_logs_user_provider_created ON usage_logs(user_id, provider, created_at);
 CREATE INDEX idx_usage_logs_user_created ON usage_logs(user_id, created_at);
 CREATE INDEX idx_usage_logs_provider_created ON usage_logs(provider, created_at);
@@ -323,25 +313,21 @@ ALTER TABLE meeting_notes ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Users can CRUD own meeting notes" ON meeting_notes
   FOR ALL USING (auth.uid() = user_id);
 
--- Transcriptsテーブル
-ALTER TABLE transcripts ENABLE ROW LEVEL SECURITY;
+-- Note: Transcriptsテーブルは現在未使用のためRLSポリシー不要
 
-CREATE POLICY "Users can CRUD own transcripts" ON transcripts
+-- Chatsテーブル
+ALTER TABLE chats ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can CRUD own chats" ON chats
   FOR ALL USING (auth.uid() = user_id);
 
--- ResearchChatsテーブル
-ALTER TABLE research_chats ENABLE ROW LEVEL SECURITY;
+-- ChatMessagesテーブル
+ALTER TABLE chat_messages ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Users can CRUD own research chats" ON research_chats
-  FOR ALL USING (auth.uid() = user_id);
-
--- ResearchMessagesテーブル
-ALTER TABLE research_messages ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Users can CRUD messages in own chats" ON research_messages
+CREATE POLICY "Users can CRUD messages in own chats" ON chat_messages
   FOR ALL USING (
     chat_id IN (
-      SELECT id FROM research_chats WHERE user_id = auth.uid()
+      SELECT id FROM chats WHERE user_id = auth.uid()
     )
   );
 
@@ -354,24 +340,7 @@ CREATE POLICY "Users can view own usage logs" ON usage_logs
 CREATE POLICY "Service role can insert usage logs" ON usage_logs
   FOR INSERT WITH CHECK (true);
 
--- ProgramSettingsテーブル
-ALTER TABLE program_settings ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Users can CRUD own program settings" ON program_settings
-  FOR ALL USING (auth.uid() = user_id);
-
--- SystemSettingsテーブル（全員閲覧、管理者のみ更新）
-ALTER TABLE system_settings ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Anyone can view system settings" ON system_settings
-  FOR SELECT USING (true);
-
-CREATE POLICY "Only admins can modify system settings" ON system_settings
-  FOR ALL USING (
-    EXISTS (
-      SELECT 1 FROM users WHERE id = auth.uid() AND role = 'ADMIN'
-    )
-  );
+-- Note: ProgramSettings, SystemSettingsテーブルは現在未使用のためRLSポリシー不要
 
 -- SystemPromptsテーブル（全員閲覧、管理者のみ更新）
 ALTER TABLE system_prompts ENABLE ROW LEVEL SECURITY;
@@ -464,18 +433,18 @@ ORDER BY pg_total_relation_size(schemaname||'.'||tablename) DESC;
 
 -- 1. 外部キー制約を一時的に無効化（データロード用）
 ALTER TABLE meeting_notes DISABLE TRIGGER ALL;
-ALTER TABLE transcripts DISABLE TRIGGER ALL;
-ALTER TABLE research_chats DISABLE TRIGGER ALL;
-ALTER TABLE research_messages DISABLE TRIGGER ALL;
+-- Note: transcriptsテーブル未使用
+ALTER TABLE chats DISABLE TRIGGER ALL;
+ALTER TABLE chat_messages DISABLE TRIGGER ALL;
 ALTER TABLE usage_logs DISABLE TRIGGER ALL;
 ALTER TABLE system_prompts DISABLE TRIGGER ALL;
 
 -- 2. RLSを一時的に無効化（サービスロールでの移行時）
 ALTER TABLE users DISABLE ROW LEVEL SECURITY;
 ALTER TABLE meeting_notes DISABLE ROW LEVEL SECURITY;
-ALTER TABLE transcripts DISABLE ROW LEVEL SECURITY;
-ALTER TABLE research_chats DISABLE ROW LEVEL SECURITY;
-ALTER TABLE research_messages DISABLE ROW LEVEL SECURITY;
+-- Note: transcriptsテーブル未使用
+ALTER TABLE chats DISABLE ROW LEVEL SECURITY;
+ALTER TABLE chat_messages DISABLE ROW LEVEL SECURITY;
 ALTER TABLE usage_logs DISABLE ROW LEVEL SECURITY;
 ```
 
@@ -558,7 +527,7 @@ interface NeonMeetingNote {
   updated_at: Date
 }
 
-interface NeonResearchChat {
+interface NeonChat {
   id: string
   user_id: string
   agent_type: string
@@ -569,7 +538,7 @@ interface NeonResearchChat {
   updated_at: Date
 }
 
-interface NeonResearchMessage {
+interface NeonChatMessage {
   id: string
   chat_id: string
   role: string
@@ -690,9 +659,9 @@ async function migrate() {
     }
     console.log(`  ✅ ${transcripts.length}件のTranscriptsを移行`)
     
-    // ===== Step 4: ResearchChats移行 =====
-    console.log('\n💬 ResearchChatsを移行中...')
-    const { rows: researchChats } = await neon.query<NeonResearchChat>('SELECT * FROM "ResearchChat"')
+    // ===== Step 4: Chats移行 =====
+    console.log('\n💬 Chatsを移行中...')
+    const { rows: researchChats } = await neon.query<NeonChat>('SELECT * FROM "ResearchChat"')
     
     const migratedChats = researchChats.map(chat => ({
       id: chat.id,
@@ -707,16 +676,16 @@ async function migrate() {
     
     for (let i = 0; i < migratedChats.length; i += batchSize) {
       const batch = migratedChats.slice(i, i + batchSize)
-      const { error } = await supabase.from('research_chats').insert(batch)
+      const { error } = await supabase.from('chats').insert(batch)
       if (error) {
-        console.error(`  ❌ ResearchChatsバッチ ${i} 失敗:`, error)
+        console.error(`  ❌ Chatsバッチ ${i} 失敗:`, error)
       }
     }
-    console.log(`  ✅ ${researchChats.length}件のResearchChatsを移行`)
+    console.log(`  ✅ ${researchChats.length}件のChatsを移行`)
     
-    // ===== Step 5: ResearchMessages移行 =====
-    console.log('\n💭 ResearchMessagesを移行中...')
-    const { rows: researchMessages } = await neon.query<NeonResearchMessage>('SELECT * FROM "ResearchMessage"')
+    // ===== Step 5: ChatMessages移行 =====
+    console.log('\n💭 ChatMessagesを移行中...')
+    const { rows: researchMessages } = await neon.query<NeonChatMessage>('SELECT * FROM "ResearchMessage"')
     
     const migratedMessages = researchMessages.map(msg => ({
       id: msg.id,
@@ -737,16 +706,16 @@ async function migrate() {
     const msgBatchSize = 50
     for (let i = 0; i < migratedMessages.length; i += msgBatchSize) {
       const batch = migratedMessages.slice(i, i + msgBatchSize)
-      const { error } = await supabase.from('research_messages').insert(batch)
+      const { error } = await supabase.from('chat_messages').insert(batch)
       if (error) {
-        console.error(`  ❌ ResearchMessagesバッチ ${i} 失敗:`, error)
+        console.error(`  ❌ ChatMessagesバッチ ${i} 失敗:`, error)
       }
       
       if (i % 500 === 0) {
         console.log(`  ⏳ ${i}/${migratedMessages.length}件処理中...`)
       }
     }
-    console.log(`  ✅ ${researchMessages.length}件のResearchMessagesを移行`)
+    console.log(`  ✅ ${researchMessages.length}件のChatMessagesを移行`)
     
     // ===== Step 6: UsageLogs移行 =====
     console.log('\n📊 UsageLogsを移行中...')
@@ -844,8 +813,8 @@ async function verify() {
     { name: 'Users', table: 'users' },
     { name: 'MeetingNotes', table: 'meeting_notes' },
     { name: 'Transcripts', table: 'transcripts' },
-    { name: 'ResearchChats', table: 'research_chats' },
-    { name: 'ResearchMessages', table: 'research_messages' },
+    { name: 'Chats', table: 'chats' },
+    { name: 'ChatMessages', table: 'chat_messages' },
     { name: 'UsageLogs', table: 'usage_logs' },
     { name: 'SystemPrompts', table: 'system_prompts' },
   ]
@@ -892,24 +861,25 @@ verify()
 -- RLS再有効化
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE meeting_notes ENABLE ROW LEVEL SECURITY;
-ALTER TABLE transcripts ENABLE ROW LEVEL SECURITY;
-ALTER TABLE research_chats ENABLE ROW LEVEL SECURITY;
-ALTER TABLE research_messages ENABLE ROW LEVEL SECURITY;
+-- Note: transcriptsテーブル未使用
+ALTER TABLE chats ENABLE ROW LEVEL SECURITY;
+ALTER TABLE chat_messages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE usage_logs ENABLE ROW LEVEL SECURITY;
 
 -- トリガー再有効化
 ALTER TABLE meeting_notes ENABLE TRIGGER ALL;
-ALTER TABLE transcripts ENABLE TRIGGER ALL;
-ALTER TABLE research_chats ENABLE TRIGGER ALL;
-ALTER TABLE research_messages ENABLE TRIGGER ALL;
+-- Note: transcriptsテーブル未使用
+ALTER TABLE chats ENABLE TRIGGER ALL;
+ALTER TABLE chat_messages ENABLE TRIGGER ALL;
 ALTER TABLE usage_logs ENABLE TRIGGER ALL;
 ALTER TABLE system_prompts ENABLE TRIGGER ALL;
 
 -- シーケンスリセット（必要に応じて）
 SELECT setval('meeting_notes_id_seq', (SELECT MAX(id) FROM meeting_notes));
-SELECT setval('transcripts_id_seq', (SELECT MAX(id) FROM transcripts));
-SELECT setval('research_chats_id_seq', (SELECT MAX(id) FROM research_chats));
-SELECT setval('research_messages_id_seq', (SELECT MAX(id) FROM research_messages));
+-- Note: transcriptsテーブル未使用
+-- SELECT setval('transcripts_id_seq', (SELECT MAX(id) FROM transcripts));
+SELECT setval('chats_id_seq', (SELECT MAX(id) FROM chats));
+SELECT setval('chat_messages_id_seq', (SELECT MAX(id) FROM chat_messages));
 SELECT setval('usage_logs_id_seq', (SELECT MAX(id) FROM usage_logs));
 SELECT setval('system_prompts_id_seq', (SELECT MAX(id) FROM system_prompts));
 ```
@@ -952,45 +922,66 @@ SELECT setval('system_prompts_id_seq', (SELECT MAX(id) FROM system_prompts));
 
 > **重要**: このステップはステップ1（スキーマ作成）**完了後**、ステップ3（認証移行）**前**に実施
 
-#### 2.1 データ移行の概要
+#### 2.1 データ移行の方針
 
-**移行対象データ量（推定）**:
+**プロンプト 3 テーブルのみ全レコードを移行する。ユーザーデータは移行しない。**
 
-| テーブル | 推定レコード数 | 移行優先度 |
-|---------|--------------|-----------|
-| `User` | 少（10-100件） | 🔴 高（認証と紐付け） |
-| `MeetingNote` | 中（100-1000件） | 🟡 中 |
-| `Transcript` | 中（100-1000件） | 🟡 中 |
-| `ResearchChat` | 多（1000-10000件） | 🟡 中 |
-| `ResearchMessage` | 最多（10000-100000件） | 🟡 中 |
-| `UsageLog` | 多（1000-10000件） | 🟢 低（履歴） |
-| `ProgramSettings` | 少（10件未満） | 🟡 中 |
-| `SystemSettings` | 少（10件未満） | 🔴 高（機能必須） |
-| `SystemPrompt` | 少（10件未満） | 🔴 高（機能必須） |
-| `SystemPromptVersion` | 中（10-100件） | 🔴 高（バージョン履歴） |
-| `FeaturePrompt` | 少（10件未満） | 🔴 高（機能マッピング） |
+| 対象 | テーブル | 移行内容 |
+|------|----------|----------|
+| ✅ 移行 | `system_prompts` | 管理画面で編集したプロンプト本文（全レコード） |
+| ✅ 移行 | `system_prompt_versions` | プロンプトのバージョン履歴（全レコード） |
+| ✅ 移行 | `feature_prompts` | 機能ID ↔ プロンプトキーのマッピング（全レコード） |
 
-> **移行対象外**: Account, Session, VerificationToken（Supabase Auth管理）、LocationSchedule, GrokToolSettings, AppLog（未使用）
+| 対象 | テーブル | 理由 |
+|------|----------|------|
+| ❌ 移行しない | `users` | Supabase Auth でログイン時に自動作成される |
+| ❌ 移行しない | `meeting_notes` | 過去の議事録は引き継がない |
+| ❌ 移行しない | `transcripts` | 現在未使用（Sidebar削除済み）、スキーマも作成しない |
+| ❌ 移行しない | `chats`, `chat_messages` | 過去のチャット履歴は引き継がない（旧: research_chats/research_messages）|
+| ❌ 移行しない | `usage_logs` | 使用量ログは引き継がない |
+| ❌ 移行しない | `program_settings` | 現在未使用、スキーマも作成しない |
+| ❌ 移行しない | `system_settings` | 現在未使用、スキーマも作成しない |
 
-#### 2.2 移行スクリプト実行
+> **スキーマ作成しないテーブル**: `transcripts`, `program_settings`, `system_settings`, `LocationSchedule`, `GrokToolSettings`, `AppLog`（現在未使用）
+> 
+> **移行対象外（Supabase Auth管理）**: `Account`, `Session`, `VerificationToken`
+
+#### 2.2 移行手順
+
+**方法**: Neon DB から 3 テーブルのレコードを読み取り、Supabase に INSERT するスクリプトを実行する。
 
 ```bash
-# 1. 依存関係インストール
-npm install @neondatabase/serverless
+# 1. 移行スクリプト実行（プロンプト3テーブルのみ）
+npx tsx scripts/migrate-prompts-to-supabase.ts
 
-# 2. データ移行実行（--dry-runで事前検証）
-npx tsx scripts/migrate-data-to-supabase.ts
-
-# 3. 整合性検証
-npx tsx scripts/verify-migration.ts
+# 2. 検証
+npx tsx scripts/migrate-prompts-to-supabase.ts --verify
 ```
 
-#### 2.3 移行後の検証ポイント
+**移行の流れ**:
 
-- [ ] 全テーブルの件数がNeonと一致
-- [ ] ユーザーIDが正しくマッピングされている
-- [ ] 外部キー制約に違反していない
-- [ ] タイムスタンプが正しく移行されている
+1. Neon の `SystemPrompt` → Supabase `system_prompts` へ全レコード INSERT
+   - カラム名マッピング: `currentVersion` → `current_version`, `changedBy` → `changed_by`, `changeNote` → `change_note`, `isActive` → `is_active`, `createdAt` → `created_at`, `updatedAt` → `updated_at`
+   - `changed_by` は UUID 外部キーのため、移行時は `NULL` に設定（旧ユーザーIDは Supabase に存在しないため）
+2. Neon の `SystemPromptVersion` → Supabase `system_prompt_versions` へ全レコード INSERT
+   - `prompt_id` は上記でマッピング済みの ID を使用（Neon/Supabase 共に UUID なのでそのまま使える場合はそのまま）
+   - カラム名マッピング: `promptId` → `prompt_id`, `changedBy` → `changed_by`, `changeNote` → `change_note`, `createdAt` → `created_at`
+3. Neon の `FeaturePrompt` → Supabase `feature_prompts` へ全レコード INSERT
+   - カラム名マッピング: `featureId` → `feature_id`, `promptKey` → `prompt_key`, `isActive` → `is_active`, `createdAt` → `created_at`, `updatedAt` → `updated_at`
+
+**注意事項**:
+
+- `system_prompts.changed_by` は Neon の旧ユーザーID（cuid）で、Supabase の `users.id`（UUID）と互換性がない。移行時は `NULL` にする
+- `system_prompt_versions.changed_by` は `TEXT` 型のため、旧値をそのまま入れてもエラーにはならない
+- 3 テーブルともレコード数が少ないため、移行は数秒で完了する
+
+#### 2.3 移行後の検証
+
+- [ ] `system_prompts` のレコード数が Neon と一致
+- [ ] `system_prompt_versions` のレコード数が Neon と一致
+- [ ] `feature_prompts` のレコード数が Neon と一致
+- [ ] 管理画面（`/admin/prompts`）でプロンプト一覧が表示される
+- [ ] プロンプトのバージョン履歴が正しく表示される
 
 ---
 
@@ -1511,7 +1502,7 @@ const chats = await prisma.researchChat.findMany({
 
 // Supabase（変更後）- 2クエリに分割
 const { data: chats, error: chatsError } = await supabase
-  .from('research_chats')
+  .from('chats')
   .select('*')
   .eq('user_id', userId)
   .order('updated_at', { ascending: false })
@@ -1521,7 +1512,7 @@ if (chatsError) throw chatsError
 // メッセージカウントと最新メッセージを別途取得
 const chatIds = chats.map(c => c.id)
 const { data: messages, error: msgError } = await supabase
-  .from('research_messages')
+  .from('chat_messages')
   .select('chat_id, content, created_at')
   .in('chat_id', chatIds)
   .order('created_at', { ascending: false })
@@ -1548,7 +1539,7 @@ const newChat = await prisma.researchChat.create({
 
 // Supabase（変更後）
 const { data: newChat, error } = await supabase
-  .from('research_chats')
+  .from('chats')
   .insert({
     user_id: userId,
     agent_type: 'RESEARCH-CAST',
@@ -1571,7 +1562,7 @@ const updated = await prisma.researchChat.update({
 
 // Supabase（変更後）
 const { data: updated, error } = await supabase
-  .from('research_chats')
+  .from('chats')
   .update({ title: newTitle, updated_at: new Date().toISOString() })
   .eq('id', chatId)
   .select()
@@ -1590,7 +1581,7 @@ await prisma.researchChat.delete({
 
 // Supabase（変更後）
 const { error } = await supabase
-  .from('research_chats')
+  .from('chats')
   .delete()
   .eq('id', chatId)
 
@@ -1609,7 +1600,7 @@ await prisma.$transaction([
 // Supabase（変更後）- RPC関数または順次実行
 // 方法1: 順次実行（RLSで保護される）
 const { data: chat, error: chatError } = await supabase
-  .from('research_chats')
+  .from('chats')
   .insert({ ... })
   .select()
   .single()
@@ -1617,7 +1608,7 @@ const { data: chat, error: chatError } = await supabase
 if (chatError) throw chatError
 
 const { error: msgError } = await supabase
-  .from('research_messages')
+  .from('chat_messages')
   .insert(messages.map(m => ({ ...m, chat_id: chat.id })))
 
 if (msgError) throw msgError
@@ -1676,7 +1667,7 @@ export async function GET(request: NextRequest): Promise<Response> {
 
     // チャット一覧を取得
     const { data: chats, error: chatsError } = await supabase
-      .from('research_chats')
+      .from('chats')
       .select('id, agent_type, title, updated_at')
       .eq('user_id', userId)
       .order('updated_at', { ascending: false })
@@ -1690,7 +1681,7 @@ export async function GET(request: NextRequest): Promise<Response> {
     // メッセージ情報を取得
     const chatIds = chats.map(c => c.id)
     const { data: messages, error: msgError } = await supabase
-      .from('research_messages')
+      .from('chat_messages')
       .select('chat_id, content, created_at')
       .in('chat_id', chatIds)
       .order('created_at', { ascending: false })
@@ -1752,7 +1743,7 @@ export async function DELETE(request: NextRequest): Promise<Response> {
 
     // RLSポリシーにより、ユーザー自身のチャットのみ削除可能
     const { error } = await supabase
-      .from('research_chats')
+      .from('chats')
       .delete()
       .eq('id', chatId)
       .eq('user_id', userId)
@@ -1898,6 +1889,60 @@ setup('create test user', async () => {
 
 ---
 
+### ステップ7: `npm run build` による最終ビルド検証（2-4時間）
+
+#### 7.1 ビルド検証手順
+
+```bash
+# 1. 型チェック
+npx tsc --noEmit
+
+# 2. ビルド実行
+npm run build
+
+# 3. ビルドエラーがあれば修正
+```
+
+#### 7.2 確認事項
+
+- [ ] 型エラーが0件
+- [ ] ビルドが成功
+- [ ] 警告が最小限
+
+---
+
+### ステップ8: 不要ファイル削除 & パッケージ整理（2-4時間）
+
+> **注意**: 本ステップはステップ7（ビルド検証）とデータ移行完了後に実施すること
+
+#### 8.1 削除するファイル
+
+| ファイル | 理由 |
+|---------|------|
+| `lib/auth-options.ts` | NextAuth設定不要 |
+| `lib/prisma.ts` | Prisma Client不要 |
+| `app/api/auth/[...nextauth]/route.ts` | NextAuth Route不要 |
+| `app/api/admin/logs/route.ts` | AppLog未使用のため不要 |
+| `prisma/schema.prisma` | Supabaseで管理（参考用に残してもよい） |
+| `prisma/migrations/` | Supabaseで管理 |
+
+#### 8.2 パッケージの整理
+
+```bash
+# 削除
+npm uninstall next-auth @auth/prisma-adapter
+
+# 開発用に維持または削除（マイグレーション完了後）
+npm uninstall prisma @prisma/client  # または devDependenciesに移動
+```
+
+#### 8.3 その他のクリーンアップ
+
+- 未使用の型定義やimportの整理
+- `.env.example` の更新（Neon関連削除、Supabase関連追加）
+
+---
+
 ## 3. ファイル別移行マッピング
 
 ### 3.1 削除するファイル
@@ -2015,20 +2060,20 @@ if (error) {
 ### 実装進捗
 
 - [x] ステップ0: 移行計画書をコードベース調査に基づき修正
-  - テーブル漏れ修正（17モデル→移行対象10テーブル特定）
+  - テーブル漏れ修正（17モデル→スキーマ作成対象7テーブル、データ移行3テーブル特定）
   - 未使用テーブル除外（LocationSchedule, GrokToolSettings, AppLog）
   - RLSポリシー修正、ファイル一覧を実コードベースに更新
 - [x] パッケージインストール: `@supabase/supabase-js`, `@supabase/ssr` 追加済
 - [x] Supabase MCP設定: アクセストークン設定済（Claude Code再起動で有効化）
 - [x] `.env.local` にSupabase環境変数追加済（`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`）
-- [x] ステップ1: SQLスキーマ作成済 → `supabase/migrations/20260309000000_initial_schema.sql`
+- [x] ステップ1: SQLスキーマ作成・適用済 → `supabase/migrations/20260309000000_initial_schema.sql`（`supabase db push` で適用完了、全7テーブル確認済）※未使用3テーブル除外
 - [x] ステップ2: Supabaseクライアント設定ファイル作成済（`lib/supabase/client.ts`, `server.ts`, `middleware.ts`, `admin.ts`）
 - [x] ステップ3: 認証システム移行完了（middleware.ts, auth/callback/route.ts, signin/page.tsx, lib/api/auth.ts）
 - [x] ステップ4: DB操作コード移行 - libレイヤー完了（prompts/db/crud,version,versions,seed,types, usage/tracker, settings/db, prompts/system-prompt）
 - [x] ステップ5: DB操作コード移行 - APIルート完了（chat/history, chat/feature, admin/users, admin/users/[id]/role, admin/prompts, admin/usage, prompts, prompts/[key]/versions, llm/usage, admin/prompts/[key], admin/prompts/[key]/restore, admin/prompts/[key]/history, admin/prompts/[key]/history/[version], prompts/[key]/rollback）
 - [x] ステップ6: 型チェックエラー修正完了（snake_case対応: scripts/apply-prompt-change, scripts/check-general-chat）
-- [ ] ステップ7: 不要ファイル削除 & パッケージ整理（lib/prisma.ts, lib/auth-options.ts, app/api/auth/[...nextauth] 等）
-- [ ] ステップ8: `npm run build` による最終ビルド検証
+- [ ] ステップ7: `npm run build` による最終ビルド検証
+- [ ] ステップ8: 不要ファイル削除 & パッケージ整理（lib/prisma.ts, lib/auth-options.ts, app/api/auth/[...nextauth] 等）※ステップ7とデータ移行完了後に実施
 
 ### 移行後
 
@@ -2076,3 +2121,5 @@ if (error) {
 | 2026-03-08 | **コードベース調査に基づく全面修正**: テーブル漏れ修正（ProgramSettings, SystemSettings, SystemPromptVersion, FeaturePrompt追加）、未使用テーブル除外（LocationSchedule, GrokToolSettings, AppLog）、RLSポリシーの`auth.uid()`キャスト修正（UUID直比較）、`users.id`を`auth.users(id)`参照に変更、移行対象ファイル一覧を実コードベース32ファイルに更新、Prisma使用箇所の正確な記載 |
 | 2026-03-08 | **実装開始**: `@supabase/supabase-js` + `@supabase/ssr` インストール済、Supabase MCPアクセストークン設定済、チェックリストを実装ステップに合わせて更新 |
 | 2026-03-09 | **コード移行完了**: SQLスキーマ作成、lib/supabase/* 4ファイル作成、認証移行（middleware/callback/signin/auth）、libレイヤー移行（prompts/db 5ファイル + system-prompt + usage/tracker + settings/db）、APIルート移行（14ファイル）、全型チェックパス。残: 不要ファイル削除・ビルド検証・データ移行 |
+| 2026-03-09 | **SQLスキーマ適用完了**: `supabase init` → `supabase link --project-ref tbzqswctewjgmhtswssq` → `supabase db push` で全7テーブル（未使用3テーブル除外）+ RLS + インデックスを本番適用。REST API で全テーブル存在確認済 |
+| 2026-03-09 | **続き**: スキルスクリプト Supabase 移行（feature-cleanup delete-feature.mjs / audit-unused.mjs、db-query query.mjs）、NextAuth ルート削除、admin logs 機能削除、`lib/chat/chat-config.ts` を `@/lib/prompts/constants` 参照に変更（クライアントでサーバーコードを読まないよう修正）、テストを Supabase モック化（system-prompt.test.ts / db.test.ts）、`tsconfig.json` に `reference` 除外追加。**`npm run build` 成功**。プロンプト関連ユニットテスト 25 件パス（1 件 skip） |

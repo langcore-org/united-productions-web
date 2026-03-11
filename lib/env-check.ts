@@ -1,6 +1,6 @@
 /**
  * 環境変数チェックユーティリティ
- * Vercel各環境での設定確認用
+ * Supabase認証に必要な環境変数の設定確認用
  */
 
 export interface EnvStatus {
@@ -10,16 +10,16 @@ export interface EnvStatus {
   info: Record<string, string>;
 }
 
-/**
- * 認証に必要な環境変数をチェック
- */
 export function checkAuthEnv(): EnvStatus {
   const missing: string[] = [];
   const warnings: string[] = [];
   const info: Record<string, string> = {};
 
-  // 必須環境変数
-  const required = ["GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET", "NEXTAUTH_SECRET"];
+  const required = [
+    "NEXT_PUBLIC_SUPABASE_URL",
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+    "SUPABASE_SERVICE_ROLE_KEY",
+  ];
 
   for (const key of required) {
     if (!process.env[key]) {
@@ -27,30 +27,17 @@ export function checkAuthEnv(): EnvStatus {
     }
   }
 
-  // NEXTAUTH_URLのチェック
-  const nextAuthUrl = getNextAuthUrl();
-  info.NEXTAUTH_URL = nextAuthUrl;
-
-  if (!process.env.NEXTAUTH_URL) {
-    if (process.env.VERCEL_URL) {
-      info.NEXTAUTH_URL_SOURCE = "VERCEL_URL (自動設定)";
-    } else {
-      warnings.push("NEXTAUTH_URLが明示的に設定されていません（フォールバック: localhost:3000）");
-    }
+  if (process.env.NEXT_PUBLIC_SUPABASE_URL) {
+    info.SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
   }
 
-  // Vercel環境の確認
   if (process.env.VERCEL_ENV) {
     info.VERCEL_ENV = process.env.VERCEL_ENV;
-
-    if (process.env.VERCEL_ENV === "preview" && !process.env.AUTH_TRUST_HOST) {
-      warnings.push("プレビュー環境で AUTH_TRUST_HOST=true の設定を推奨");
-    }
   }
 
-  // Google Cloud Console設定のヒント
-  const callbackUrl = `${nextAuthUrl}/api/auth/callback/google`;
-  info.GOOGLE_CALLBACK_URL = callbackUrl;
+  const siteUrl = getSiteUrl();
+  info.SITE_URL = siteUrl;
+  info.AUTH_CALLBACK_URL = `${siteUrl}/auth/callback`;
 
   return {
     isValid: missing.length === 0,
@@ -60,12 +47,9 @@ export function checkAuthEnv(): EnvStatus {
   };
 }
 
-/**
- * 現在のホストURLを取得
- */
-function getNextAuthUrl(): string {
-  if (process.env.NEXTAUTH_URL) {
-    return process.env.NEXTAUTH_URL;
+function getSiteUrl(): string {
+  if (process.env.NEXT_PUBLIC_SITE_URL) {
+    return process.env.NEXT_PUBLIC_SITE_URL;
   }
 
   if (process.env.VERCEL_PROJECT_PRODUCTION_URL) {
@@ -79,9 +63,6 @@ function getNextAuthUrl(): string {
   return "http://localhost:3000";
 }
 
-/**
- * 環境状態の文字列表現を取得（デバッグ用）
- */
 export function getEnvDebugInfo(): string {
   const status = checkAuthEnv();
 

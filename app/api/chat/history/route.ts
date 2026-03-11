@@ -45,7 +45,7 @@ export async function GET(request: NextRequest): Promise<Response> {
     const supabase = await createClient();
 
     const { data: chats, error: chatsError } = await supabase
-      .from("research_chats")
+      .from("chats")
       .select("id, agent_type, title, updated_at")
       .eq("user_id", userId)
       .order("updated_at", { ascending: false });
@@ -58,7 +58,7 @@ export async function GET(request: NextRequest): Promise<Response> {
 
     const chatIds = chats.map((c) => c.id);
     const { data: messages } = await supabase
-      .from("research_messages")
+      .from("chat_messages")
       .select("chat_id, content, created_at")
       .in("chat_id", chatIds)
       .order("created_at", { ascending: false });
@@ -116,7 +116,7 @@ export async function DELETE(request: NextRequest): Promise<Response> {
     const supabase = await createClient();
 
     const { error } = await supabase
-      .from("research_chats")
+      .from("chats")
       .delete()
       .eq("id", chatId)
       .eq("user_id", userId);

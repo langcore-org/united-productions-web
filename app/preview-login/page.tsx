@@ -2,8 +2,8 @@
 
 import { AlertCircle, Eye, EyeOff, Loader2, Lock, Mail } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { signIn } from "next-auth/react";
 import { useState } from "react";
+import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 
 export default function PreviewLoginPage() {
@@ -22,13 +22,13 @@ export default function PreviewLoginPage() {
     setIsLoading(true);
 
     try {
-      const result = await signIn("preview-credentials", {
+      const supabase = createClient();
+      const { error: signInError } = await supabase.auth.signInWithPassword({
         email,
         password,
-        redirect: false,
       });
 
-      if (result?.error) {
+      if (signInError) {
         setError("メールアドレスまたはパスワードが正しくありません");
       } else {
         router.push("/");
@@ -40,12 +40,10 @@ export default function PreviewLoginPage() {
     }
   };
 
-  // Preview環境でない場合の表示
   if (!isPreview) {
     return (
       <div className="min-h-screen bg-[#0d0d12] flex items-center justify-center p-4">
         <div className="w-full max-w-md">
-          {/* Logo */}
           <div className="text-center mb-8">
             <div className="w-16 h-16 rounded-2xl bg-[#ff6b00] flex items-center justify-center mx-auto mb-4">
               <span className="text-white font-bold text-2xl">UP</span>
@@ -53,7 +51,6 @@ export default function PreviewLoginPage() {
             <h1 className="text-2xl font-bold text-white mb-2">Teddy</h1>
           </div>
 
-          {/* Error Card */}
           <div className="bg-[#1a1a24] border border-[#2a2a35] rounded-2xl p-8">
             <div className="flex flex-col items-center text-center">
               <div className="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center mb-4">
@@ -64,7 +61,6 @@ export default function PreviewLoginPage() {
             </div>
           </div>
 
-          {/* Footer */}
           <p className="text-center text-gray-600 text-sm mt-8">
             © 2026 AD Production. All rights reserved.
           </p>
@@ -76,7 +72,6 @@ export default function PreviewLoginPage() {
   return (
     <div className="min-h-screen bg-[#0d0d12] flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        {/* Logo */}
         <div className="text-center mb-8">
           <div className="w-16 h-16 rounded-2xl bg-[#ff6b00] flex items-center justify-center mx-auto mb-4">
             <span className="text-white font-bold text-2xl">UP</span>
@@ -85,14 +80,12 @@ export default function PreviewLoginPage() {
           <p className="text-gray-400">Preview環境 ログイン</p>
         </div>
 
-        {/* Login Card */}
         <div className="bg-[#1a1a24] border border-[#2a2a35] rounded-2xl p-8">
           <h2 className="text-lg font-semibold text-white mb-2 text-center">ログイン</h2>
           <p className="text-sm text-gray-500 mb-6 text-center">
             Preview環境用のアカウントでログインしてください
           </p>
 
-          {/* Error Message */}
           {error && (
             <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center gap-3">
               <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
@@ -101,7 +94,6 @@ export default function PreviewLoginPage() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Email Field */}
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-400 mb-2">
                 メールアドレス
@@ -128,7 +120,6 @@ export default function PreviewLoginPage() {
               </div>
             </div>
 
-            {/* Password Field */}
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-400 mb-2">
                 パスワード
@@ -168,7 +159,6 @@ export default function PreviewLoginPage() {
               </div>
             </div>
 
-            {/* Submit Button */}
             <button
               type="submit"
               disabled={isLoading}
@@ -197,7 +187,6 @@ export default function PreviewLoginPage() {
           </div>
         </div>
 
-        {/* Footer */}
         <p className="text-center text-gray-600 text-sm mt-8">
           © 2026 United Productions. All rights reserved.
         </p>

@@ -8,7 +8,7 @@
  */
 
 import type { PromptSuggestion } from "@/components/chat/PromptSuggestions";
-import { DEFAULT_PROMPTS, PROMPT_KEYS } from "@/lib/prompts";
+import { DEFAULT_PROMPTS, PROMPT_KEYS } from "@/lib/prompts/constants";
 
 /** チャット機能の識別子 */
 export type ChatFeatureId =

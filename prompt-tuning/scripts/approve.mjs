@@ -6,11 +6,15 @@
  * 例:    node prompt-tuning/scripts/approve.mjs RESEARCH_CAST "Web検索指示を強化・出力フォーマットを統一"
  */
 
-import { PrismaClient } from "@prisma/client";
+import { createClient } from "@supabase/supabase-js";
 import { readFileSync, readdirSync, renameSync } from "node:fs";
 import { join } from "node:path";
 
-const prisma = new PrismaClient();
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY,
+);
+
 const key = process.argv[2];
 const note = process.argv[3] ?? "";
 
@@ -20,7 +24,6 @@ if (!key) {
 }
 
 async function main() {
-  // draft.mdを読み込む
   const draftPath = join(process.cwd(), "prompt-tuning", key, "draft.md");
   let draftContent;
   try {
@@ -31,43 +34,45 @@ async function main() {
     process.exit(1);
   }
 
-  // DBからプロンプトを取得
-  const prompt = await prisma.systemPrompt.findUnique({ where: { key } });
-  if (!prompt) {
+  const { data: prompt, error } = await supabase
+    .from("system_prompts")
+    .select("*")
+    .eq("key", key)
+    .single();
+
+  if (error || !prompt) {
     console.error(`❌ プロンプト "${key}" がDBに見つかりません`);
     process.exit(1);
   }
 
-  // 最新バージョンを取得
-  const latest = await prisma.systemPromptVersion.findFirst({
-    where: { promptId: prompt.id },
-    orderBy: { version: "desc" },
-  });
+  const { data: latest } = await supabase
+    .from("system_prompt_versions")
+    .select("version")
+    .eq("prompt_id", prompt.id)
+    .order("version", { ascending: false })
+    .limit(1)
+    .single();
+
   const newVersion = (latest?.version ?? 0) + 1;
 
-  // 新バージョンをDBに作成
-  await prisma.systemPromptVersion.create({
-    data: {
-      promptId: prompt.id,
-      version: newVersion,
-      content: draftContent,
-      changedBy: "prompt-tuning",
-      changeNote: note || `prompt-tuningによる更新`,
-    },
+  await supabase.from("system_prompt_versions").insert({
+    prompt_id: prompt.id,
+    version: newVersion,
+    content: draftContent,
+    changed_by: "prompt-tuning",
+    change_note: note || `prompt-tuningによる更新`,
   });
 
-  // SystemPromptの本番内容を更新
-  await prisma.systemPrompt.update({
-    where: { id: prompt.id },
-    data: {
+  await supabase
+    .from("system_prompts")
+    .update({
       content: draftContent,
-      currentVersion: newVersion,
-      changeNote: note || `prompt-tuningによる更新`,
-      changedBy: "prompt-tuning",
-    },
-  });
+      current_version: newVersion,
+      change_note: note || `prompt-tuningによる更新`,
+      changed_by: null,
+    })
+    .eq("id", prompt.id);
 
-  // 最後の試行ファイルに _APPROVED を付ける
   const historyDir = join(process.cwd(), "prompt-tuning", key, "history");
   try {
     const files = readdirSync(historyDir)
@@ -89,9 +94,7 @@ async function main() {
   console.log(`   変更理由: ${note || "(未記入)"}`);
 }
 
-main()
-  .catch((e) => {
-    console.error(e);
-    process.exit(1);
-  })
-  .finally(() => prisma.$disconnect());
+main().catch((e) => {
+  console.error(e);
+  process.exit(1);
+});

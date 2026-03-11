@@ -7,25 +7,19 @@
  */
 
 import { type NextRequest, NextResponse } from "next/server";
-import type { Session } from "next-auth";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/auth-options";
+import { createClient } from "@/lib/supabase/server";
 
 const DRIVE_API_BASE = "https://www.googleapis.com/drive/v3";
 
-// Google Workspaceファイルのエクスポート設定
 const GOOGLE_WORKSPACE_EXPORTS: Record<string, { mimeType: string; ext: string }> = {
-  // Google Docs
   "application/vnd.google-apps.document": {
     mimeType: "text/plain",
     ext: ".txt",
   },
-  // Google Sheets
   "application/vnd.google-apps.spreadsheet": {
     mimeType: "text/csv",
     ext: ".csv",
   },
-  // Google Slides
   "application/vnd.google-apps.presentation": {
     mimeType: "text/plain",
     ext: ".txt",
@@ -34,13 +28,16 @@ const GOOGLE_WORKSPACE_EXPORTS: Record<string, { mimeType: string; ext: string }
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const supabase = await createClient();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
 
-    const typedSession = session as Session | null;
-    if (!typedSession?.accessToken) {
+    if (!session?.provider_token) {
       return NextResponse.json({ error: "認証が必要です" }, { status: 401 });
     }
 
+    const accessToken = session.provider_token;
     const { searchParams } = new URL(request.url);
     const fileId = searchParams.get("fileId");
 
@@ -48,12 +45,11 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "fileIdが必要です" }, { status: 400 });
     }
 
-    // ファイルメタデータを取得
     const metaResponse = await fetch(
       `${DRIVE_API_BASE}/files/${fileId}?fields=id,name,mimeType,size,modifiedTime`,
       {
         headers: {
-          Authorization: `Bearer ${typedSession.accessToken}`,
+          Authorization: `Bearer ${accessToken}`,
         },
       },
     );
@@ -69,13 +65,12 @@ export async function GET(request: NextRequest) {
     let exportExt = "";
 
     if (isGoogleWorkspaceFile && GOOGLE_WORKSPACE_EXPORTS[metadata.mimeType]) {
-      // Google Workspaceファイルはエクスポート
       const exportConfig = GOOGLE_WORKSPACE_EXPORTS[metadata.mimeType];
       const exportResponse = await fetch(
         `${DRIVE_API_BASE}/files/${fileId}/export?mimeType=${encodeURIComponent(exportConfig.mimeType)}`,
         {
           headers: {
-            Authorization: `Bearer ${typedSession.accessToken}`,
+            Authorization: `Bearer ${accessToken}`,
           },
         },
       );
@@ -93,10 +88,9 @@ export async function GET(request: NextRequest) {
       content = await exportResponse.text();
       exportExt = exportConfig.ext;
     } else {
-      // 通常のファイルは直接ダウンロード
       const contentResponse = await fetch(`${DRIVE_API_BASE}/files/${fileId}?alt=media`, {
         headers: {
-          Authorization: `Bearer ${typedSession.accessToken}`,
+          Authorization: `Bearer ${accessToken}`,
         },
       });
 
