@@ -72,11 +72,7 @@ export default function SignInPage() {
             )}
           </button>
 
-          <div className="mt-6 pt-6 border-t border-[#2a2a35]">
-            <p className="text-xs text-gray-500 text-center">
-              ログインすることで、社内データへのアクセスが可能になります。
-            </p>
-          </div>
+
         </div>
 
         {/* Footer */}
