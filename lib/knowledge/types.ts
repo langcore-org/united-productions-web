@@ -100,6 +100,32 @@ export interface EpisodeInfo {
   notes?: string;
 }
 
+/** OAラインナップから取り込んだ放送回の詳細情報（制作情報含む） */
+export interface LineupEpisodeInfo {
+  /** 回数 */
+  episodeNumber?: string;
+  /** OA日（原本テキストそのまま） */
+  broadcastDateRaw: string;
+  /** 収録日 */
+  recordingDate?: string;
+  /** 演出 */
+  director?: string;
+  /** 内容/企画 */
+  content: string;
+  /** スタジオ出演者 */
+  studioCast?: string;
+  /** ロケ出演者 */
+  locationCast?: string;
+  /** 視聴率 */
+  rating?: string;
+  /** 裏番組 */
+  competingPrograms?: string;
+  /** 備考/メモ */
+  notes?: string;
+  /** 制作スタッフ情報（番組固有のカラムをすべて格納） */
+  production?: Record<string, string>;
+}
+
 /** 番組情報（詳細版） */
 export interface ProgramInfo {
   /** 番組ID（URL-friendly） */
