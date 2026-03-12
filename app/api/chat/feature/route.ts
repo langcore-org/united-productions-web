@@ -155,7 +155,7 @@ export async function POST(request: NextRequest): Promise<Response> {
 
     const validationResult = saveRequestSchema.safeParse(body);
     if (!validationResult.success) {
-      logger.error("[${requestId}] Validation failed", { 
+      logger.error("[${requestId}] Validation failed", {
         errors: validationResult.error.errors,
         body: JSON.stringify(body).slice(0, 500),
       });

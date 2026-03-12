@@ -59,7 +59,7 @@ export function useConversationSave({
           })),
         };
         console.log("[saveConversation] Sending payload:", JSON.stringify(payload, null, 2));
-        
+
         const response = await fetch("/api/chat/feature", {
           method: "POST",
           headers: { "Content-Type": "application/json" },

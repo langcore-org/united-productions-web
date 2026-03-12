@@ -152,7 +152,11 @@ export function FeatureChat({
 
   // ストリーミング完了時にメッセージを保存
   useEffect(() => {
-    console.log("[FeatureChat] Save effect triggered:", { isComplete, hasContent: !!content, currentChatId });
+    console.log("[FeatureChat] Save effect triggered:", {
+      isComplete,
+      hasContent: !!content,
+      currentChatId,
+    });
     if (isComplete && content) {
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),

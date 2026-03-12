@@ -7,7 +7,7 @@
 
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { createUserPrompt } from "@/docs/archive/prompts/transcript-format";
+import { createUserPrompt } from "@/lib/prompts/archive/transcript-format";
 import { createApiHandler } from "@/lib/api/handler";
 import { createLLMClient } from "@/lib/llm";
 import type { LLMMessage } from "@/lib/llm/types";
