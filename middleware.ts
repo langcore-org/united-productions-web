@@ -6,7 +6,8 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
 
-const PUBLIC_PATHS = ["/", "/auth/signin", "/auth/error", "/preview-login"];
+// 認証不要パス（ログイン・エラー・プレビュー専用）
+const PUBLIC_PATHS = ["/auth/signin", "/auth/error", "/preview-login"];
 
 export async function middleware(request: NextRequest) {
   const url = new URL(request.url);
@@ -27,8 +28,12 @@ export async function middleware(request: NextRequest) {
   ) {
     return NextResponse.next();
   }
-  if (PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(p + "/"))) {
-    const { supabaseResponse, user } = await updateSession(request);
+
+  // セッション更新してユーザー情報を取得
+  const { supabaseResponse, user } = await updateSession(request);
+
+  // 認証不要パスの処理
+  if (PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`))) {
     // 認証済みでサインインページに来た場合はトップへ
     if (user && (pathname.startsWith("/auth/signin") || pathname.startsWith("/auth/error"))) {
       return NextResponse.redirect(new URL("/", request.url));
@@ -36,18 +41,8 @@ export async function middleware(request: NextRequest) {
     return supabaseResponse;
   }
 
-  // 保護パス: セッション更新して認証チェック
-  const { supabaseResponse, user } = await updateSession(request);
-
-  const isProtectedPath = [
-    "/meeting-notes",
-    "/transcripts",
-    "/research",
-    "/chat",
-    "/settings",
-  ].some((p) => pathname.startsWith(p));
-
-  if (isProtectedPath && !user) {
+  // すべてのその他のパスは認証必須
+  if (!user) {
     const signInUrl = new URL("/auth/signin", request.url);
     signInUrl.searchParams.set("callbackUrl", pathname);
     return NextResponse.redirect(signInUrl);
@@ -58,6 +53,7 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
+    "/",
     "/chat",
     "/chat/:path*",
     "/meeting-notes/:path*",
