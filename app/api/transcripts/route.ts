@@ -7,11 +7,11 @@
 
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { createUserPrompt } from "@/lib/prompts/archive/transcript-format";
 import { createApiHandler } from "@/lib/api/handler";
 import { createLLMClient } from "@/lib/llm";
 import type { LLMMessage } from "@/lib/llm/types";
 import { getPromptFromDB, PROMPT_KEYS } from "@/lib/prompts";
+import { createUserPrompt } from "@/lib/prompts/archive/transcript-format";
 
 const transcriptRequestSchema = z.object({
   transcript: z.string().min(1, "書き起こしテキストを入力してください"),

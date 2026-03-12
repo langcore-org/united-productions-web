@@ -10,6 +10,16 @@
 import { useCallback, useState } from "react";
 import type { Message } from "@/components/ui/FeatureChat";
 
+/**
+ * LLMプロバイダー名をAPI期待形式（アッパースネークケース）に変換
+ * 例: "grok-4-1-fast-reasoning" → "GROK_4_1_FAST_REASONING"
+ */
+function normalizeProvider(provider: string | undefined): string | undefined {
+  if (!provider) return undefined;
+  // ハイフンをアンダースコアに、小文字を大文字に変換
+  return provider.replace(/-/g, "_").toUpperCase();
+}
+
 interface UseConversationSaveOptions {
   featureId: string;
   initialChatId?: string;
@@ -49,13 +59,14 @@ export function useConversationSave({
   const saveConversation = useCallback(
     async (updatedMessages: Message[], chatId: string | undefined) => {
       try {
-        // 送信データをシリアライズ（Date オブジェクトを文字列に変換）
+        // 送信データをシリアライズ（Date オブジェクトを文字列に変換、llmProviderを正規化）
         const payload = {
           chatId,
           featureId,
           messages: updatedMessages.map((m) => ({
             ...m,
             timestamp: m.timestamp instanceof Date ? m.timestamp.toISOString() : m.timestamp,
+            llmProvider: normalizeProvider(m.llmProvider),
           })),
         };
         console.log("[saveConversation] Sending payload:", JSON.stringify(payload, null, 2));
