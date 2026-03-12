@@ -5,8 +5,11 @@
  *
  * @created 2026-02-25
  * @updated 2026-03-09 Supabase移行
+ * @updated 2026-03-12 ラインナップ情報を追加
  */
 
+import { getLineupByProgramId } from "@/lib/knowledge/lineup";
+import type { LineupEpisodeInfo } from "@/lib/knowledge/types";
 import { createClient } from "@/lib/supabase/server";
 
 // =============================================================================
@@ -180,6 +183,252 @@ function formatAllPrograms(): string {
   return [`# レギュラー番組一覧（${PROGRAMS.length}本）`, "", ...programTexts].join("\n");
 }
 
+// =============================================================================
+// ラインナップ情報フォーマット関数
+// =============================================================================
+
+/**
+ * エピソード情報をフォーマット
+ */
+function formatEpisode(episode: LineupEpisodeInfo, index: number): string {
+  const lines: string[] = [];
+
+  lines.push(`### エピソード ${index + 1}`);
+  lines.push("");
+
+  if (episode.episodeNumber) {
+    lines.push(`- 回数: ${episode.episodeNumber}`);
+  }
+  lines.push(`- 放送日: ${episode.broadcastDateRaw.replace(/\r\n/g, " ").trim()}`);
+
+  if (episode.recordingDate) {
+    lines.push(`- 収録日: ${episode.recordingDate.replace(/\r\n/g, " ").trim()}`);
+  }
+  if (episode.director) {
+    lines.push(`- 演出: ${episode.director}`);
+  }
+
+  lines.push(`- 内容: ${episode.content.replace(/\r\n/g, " ").trim()}`);
+
+  if (episode.locationCast) {
+    lines.push(`- ロケ出演者: ${episode.locationCast.replace(/\r\n/g, " ").trim()}`);
+  }
+  if (episode.studioCast) {
+    lines.push(`- スタジオ出演者: ${episode.studioCast.replace(/\r\n/g, " ").trim()}`);
+  }
+  if (episode.rating) {
+    lines.push(`- 視聴率: ${episode.rating.replace(/\r\n/g, " ").trim()}`);
+  }
+  if (episode.competingPrograms) {
+    lines.push(`- 裏番組: ${episode.competingPrograms.replace(/\r\n/g, " ").trim()}`);
+  }
+  if (episode.notes) {
+    lines.push(`- 備考: ${episode.notes.replace(/\r\n/g, " ").trim()}`);
+  }
+
+  // 制作情報
+  if (episode.production && Object.keys(episode.production).length > 0) {
+    lines.push("- 制作情報:");
+    for (const [key, value] of Object.entries(episode.production)) {
+      if (typeof value === "string") {
+        lines.push(`  - ${key}: ${value.replace(/\r\n/g, " ").trim()}`);
+      }
+    }
+  }
+
+  return lines.join("\n");
+}
+
+/**
+ * ラインナップ情報をフォーマット
+ */
+function formatLineup(programId: string): string {
+  const lineup = getLineupByProgramId(programId);
+
+  if (!lineup || lineup.length === 0) {
+    return "";
+  }
+
+  const program = PROGRAMS.find((p) => p.id === programId);
+  const programName = program?.name || programId;
+
+  const lines: string[] = [];
+  lines.push(`## ${programName}の放送回ラインナップ（${lineup.length}回分）`);
+  lines.push("");
+
+  // 最新の放送回から順に表示（最大20回）
+  const recentLineup = lineup.slice(0, 20);
+
+  for (let i = 0; i < recentLineup.length; i++) {
+    lines.push(formatEpisode(recentLineup[i], i));
+    lines.push("");
+  }
+
+  return lines.join("\n");
+}
+
+/**
+ * 全番組のラインナップ情報をフォーマット
+ */
+function formatAllLineups(): string {
+  const lines: string[] = [];
+  lines.push("# 番組ラインナップ情報");
+  lines.push("");
+
+  // マニアさんのラインナップ
+  const maniasanLineupText = formatLineup("maniasan");
+  if (maniasanLineupText) {
+    lines.push(maniasanLineupText);
+    lines.push("");
+  }
+
+  // 神チャレンジのラインナップ
+  const kamichallengeLineupText = formatLineup("kamichallenge");
+  if (kamichallengeLineupText) {
+    lines.push(kamichallengeLineupText);
+    lines.push("");
+  }
+
+  return lines.join("\n");
+}
+
+// =============================================================================
+// 出演者リサーチ用：全出演者リスト
+// =============================================================================
+
+/**
+ * テキストから出演者名を抽出（○や⚪︎マークを除去）
+ */
+function extractCastNames(text: string | undefined): string[] {
+  if (!text) return [];
+
+  // ○や⚪︎などのマークと空白を除去して抽出
+  const cleaned = text
+    .replace(/○/g, "")
+    .replace(/⚪/g, "")
+    .replace(/⚪︎/g, "")
+    .replace(/\r\n/g, "\n")
+    .replace(/[（(].*?[)）]/g, "") // 括弧内の文字を除去
+    .replace(/\s+/g, " ")
+    .trim();
+
+  // 区切り文字で分割
+  const names = cleaned
+    .split(/[、,\n\r・]/)
+    .map((n) => n.trim())
+    .filter((n) => n.length > 0 && n.length < 50); // 長すぎるものは除外（本文の可能性）
+
+  return names;
+}
+
+/**
+ * ラインナップから全出演者を抽出して集計
+ */
+function extractAllCasts(
+  lineup: LineupEpisodeInfo[],
+): Map<string, { count: number; episodes: string[] }> {
+  const castMap = new Map<string, { count: number; episodes: string[] }>();
+
+  for (const episode of lineup) {
+    const episodeNum = episode.episodeNumber || "不明";
+
+    // ロケ出演者から抽出
+    const locationCasts = extractCastNames(episode.locationCast);
+    for (const name of locationCasts) {
+      const current = castMap.get(name) || { count: 0, episodes: [] };
+      current.count++;
+      if (!current.episodes.includes(episodeNum)) {
+        current.episodes.push(episodeNum);
+      }
+      castMap.set(name, current);
+    }
+
+    // スタジオ出演者から抽出
+    const studioCasts = extractCastNames(episode.studioCast);
+    for (const name of studioCasts) {
+      const current = castMap.get(name) || { count: 0, episodes: [] };
+      current.count++;
+      if (!current.episodes.includes(episodeNum)) {
+        current.episodes.push(episodeNum);
+      }
+      castMap.set(name, current);
+    }
+  }
+
+  return castMap;
+}
+
+/**
+ * 出演者リサーチ用：全出演者リストをフォーマット
+ */
+function formatCastListForResearch(programId: string): string {
+  const lineup = getLineupByProgramId(programId);
+
+  if (!lineup || lineup.length === 0) {
+    return "";
+  }
+
+  const program = PROGRAMS.find((p) => p.id === programId);
+  const programName = program?.name || programId;
+
+  const castMap = extractAllCasts(lineup);
+
+  if (castMap.size === 0) {
+    return "";
+  }
+
+  // 出演回数順にソート
+  const sortedCasts = Array.from(castMap.entries()).sort((a, b) => b[1].count - a[1].count);
+
+  const lines: string[] = [];
+  lines.push(`## ${programName}の出演者一覧（全${sortedCasts.length}名）`);
+  lines.push("");
+  lines.push("以下は過去の放送回に出演した全出演者リストです（出演回数順）：");
+  lines.push("");
+
+  // 50名ずつグループ化
+  const groupSize = 50;
+  for (let i = 0; i < sortedCasts.length; i += groupSize) {
+    const group = sortedCasts.slice(i, i + groupSize);
+    lines.push(`### 出演者 ${i + 1}〜${Math.min(i + groupSize, sortedCasts.length)}`);
+    lines.push("");
+
+    for (const [name, info] of group) {
+      const episodes = info.episodes.slice(0, 3).join(", "); // 最大3回分の回数を表示
+      const more = info.episodes.length > 3 ? ` ほか` : "";
+      lines.push(`- ${name}（${info.count}回：${episodes}${more}）`);
+    }
+    lines.push("");
+  }
+
+  return lines.join("\n");
+}
+
+/**
+ * 全番組の出演者リストをフォーマット（出演者リサーチ用）
+ */
+function formatAllCastListsForResearch(): string {
+  const lines: string[] = [];
+  lines.push("# 全番組の出演者一覧");
+  lines.push("");
+
+  // マニアさんの出演者
+  const maniasanCastText = formatCastListForResearch("maniasan");
+  if (maniasanCastText) {
+    lines.push(maniasanCastText);
+    lines.push("");
+  }
+
+  // 神チャレンジの出演者
+  const kamichallengeCastText = formatCastListForResearch("kamichallenge");
+  if (kamichallengeCastText) {
+    lines.push(kamichallengeCastText);
+    lines.push("");
+  }
+
+  return lines.join("\n");
+}
+
 function createFooter(): string {
   return [
     "---",
@@ -277,12 +526,43 @@ export async function buildSystemPrompt(
 
   if (programId === "all") {
     baseParts.push(formatAllPrograms());
+    baseParts.push("");
+    // 全番組選択時はラインナップ情報も追加
+    baseParts.push(formatAllLineups());
+
+    // 出演者リサーチ機能の場合は全出演者リストも追加
+    if (featureId === "research-cast") {
+      baseParts.push("");
+      baseParts.push(formatAllCastListsForResearch());
+    }
   } else {
     const program = PROGRAMS.find((p) => p.id === programId);
     if (program) {
       baseParts.push(formatProgram(program));
+      baseParts.push("");
+
+      // 出演者リサーチ機能の場合は全出演者リストを追加、それ以外はラインナップ情報
+      if (featureId === "research-cast") {
+        const castListText = formatCastListForResearch(programId);
+        if (castListText) {
+          baseParts.push(castListText);
+        }
+      } else {
+        const lineupText = formatLineup(programId);
+        if (lineupText) {
+          baseParts.push(lineupText);
+        }
+      }
     } else {
       baseParts.push(formatAllPrograms());
+      baseParts.push("");
+      baseParts.push(formatAllLineups());
+
+      // 出演者リサーチ機能の場合は全出演者リストも追加
+      if (featureId === "research-cast") {
+        baseParts.push("");
+        baseParts.push(formatAllCastListsForResearch());
+      }
     }
   }
 
@@ -311,9 +591,22 @@ export function buildProgramPrompt(programId: string = "all"): string {
 
   if (programId === "all") {
     parts.push(formatAllPrograms());
+    parts.push("");
+    parts.push(formatAllLineups());
   } else {
     const program = PROGRAMS.find((p) => p.id === programId);
-    parts.push(program ? formatProgram(program) : formatAllPrograms());
+    if (program) {
+      parts.push(formatProgram(program));
+      parts.push("");
+      const lineupText = formatLineup(programId);
+      if (lineupText) {
+        parts.push(lineupText);
+      }
+    } else {
+      parts.push(formatAllPrograms());
+      parts.push("");
+      parts.push(formatAllLineups());
+    }
   }
 
   parts.push("", createFooter());
