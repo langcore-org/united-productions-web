@@ -49,10 +49,21 @@ export function useConversationSave({
   const saveConversation = useCallback(
     async (updatedMessages: Message[], chatId: string | undefined) => {
       try {
+        // 送信データをシリアライズ（Date オブジェクトを文字列に変換）
+        const payload = {
+          chatId,
+          featureId,
+          messages: updatedMessages.map((m) => ({
+            ...m,
+            timestamp: m.timestamp instanceof Date ? m.timestamp.toISOString() : m.timestamp,
+          })),
+        };
+        console.log("[saveConversation] Sending payload:", JSON.stringify(payload, null, 2));
+        
         const response = await fetch("/api/chat/feature", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ chatId, featureId, messages: updatedMessages }),
+          body: JSON.stringify(payload),
         });
         if (response.ok) {
           const data = await response.json();
@@ -60,6 +71,13 @@ export function useConversationSave({
             setCurrentChatId(data.chatId);
             onChatCreated?.(data.chatId);
           }
+        } else {
+          const errorData = await response.json().catch(() => ({}));
+          console.error("Failed to save conversation:", {
+            status: response.status,
+            statusText: response.statusText,
+            error: errorData,
+          });
         }
       } catch (err) {
         console.error("Failed to save conversation:", err);

@@ -155,6 +155,10 @@ export async function POST(request: NextRequest): Promise<Response> {
 
     const validationResult = saveRequestSchema.safeParse(body);
     if (!validationResult.success) {
+      logger.error("[${requestId}] Validation failed", { 
+        errors: validationResult.error.errors,
+        body: JSON.stringify(body).slice(0, 500),
+      });
       return Response.json(
         { error: "Invalid request", details: validationResult.error.format() },
         { status: 400 },

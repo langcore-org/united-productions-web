@@ -359,7 +359,7 @@ function extractAllCasts(
 }
 
 /**
- * 出演者リサーチ用：全出演者リストをフォーマット
+ * 出演者リサーチ用：全出演者名のみをフォーマット（回数なし・コンパクト版）
  */
 function formatCastListForResearch(programId: string): string {
   const lineup = getLineupByProgramId(programId);
@@ -377,29 +377,14 @@ function formatCastListForResearch(programId: string): string {
     return "";
   }
 
-  // 出演回数順にソート
-  const sortedCasts = Array.from(castMap.entries()).sort((a, b) => b[1].count - a[1].count);
+  // アルファベット順・あいうえお順にソート
+  const sortedCasts = Array.from(castMap.keys()).sort((a, b) => a.localeCompare(b, "ja"));
 
   const lines: string[] = [];
   lines.push(`## ${programName}の出演者一覧（全${sortedCasts.length}名）`);
   lines.push("");
-  lines.push("以下は過去の放送回に出演した全出演者リストです（出演回数順）：");
+  lines.push(sortedCasts.join("、"));
   lines.push("");
-
-  // 50名ずつグループ化
-  const groupSize = 50;
-  for (let i = 0; i < sortedCasts.length; i += groupSize) {
-    const group = sortedCasts.slice(i, i + groupSize);
-    lines.push(`### 出演者 ${i + 1}〜${Math.min(i + groupSize, sortedCasts.length)}`);
-    lines.push("");
-
-    for (const [name, info] of group) {
-      const episodes = info.episodes.slice(0, 3).join(", "); // 最大3回分の回数を表示
-      const more = info.episodes.length > 3 ? ` ほか` : "";
-      lines.push(`- ${name}（${info.count}回：${episodes}${more}）`);
-    }
-    lines.push("");
-  }
 
   return lines.join("\n");
 }
@@ -423,6 +408,59 @@ function formatAllCastListsForResearch(): string {
   const kamichallengeCastText = formatCastListForResearch("kamichallenge");
   if (kamichallengeCastText) {
     lines.push(kamichallengeCastText);
+    lines.push("");
+  }
+
+  return lines.join("\n");
+}
+
+/**
+ * 出演者リサーチ用：直近5回の詳細ラインナップをフォーマット
+ */
+function formatRecentLineupForResearch(programId: string): string {
+  const lineup = getLineupByProgramId(programId);
+
+  if (!lineup || lineup.length === 0) {
+    return "";
+  }
+
+  const program = PROGRAMS.find((p) => p.id === programId);
+  const programName = program?.name || programId;
+
+  const lines: string[] = [];
+  lines.push(`## ${programName}の直近5回放送回詳細`);
+  lines.push("");
+
+  // 直近5回を取得（末尾から）
+  const recentLineup = lineup.slice(-5);
+
+  for (let i = 0; i < recentLineup.length; i++) {
+    lines.push(formatEpisode(recentLineup[i], i));
+    lines.push("");
+  }
+
+  return lines.join("\n");
+}
+
+/**
+ * 全番組の直近5回放送回をフォーマット（出演者リサーチ用）
+ */
+function formatAllRecentLineupsForResearch(): string {
+  const lines: string[] = [];
+  lines.push("# 全番組の直近5回放送回詳細");
+  lines.push("");
+
+  // マニアさんの直近5回
+  const maniasanLineupText = formatRecentLineupForResearch("maniasan");
+  if (maniasanLineupText) {
+    lines.push(maniasanLineupText);
+    lines.push("");
+  }
+
+  // 神チャレンジの直近5回
+  const kamichallengeLineupText = formatRecentLineupForResearch("kamichallenge");
+  if (kamichallengeLineupText) {
+    lines.push(kamichallengeLineupText);
     lines.push("");
   }
 
@@ -527,13 +565,15 @@ export async function buildSystemPrompt(
   if (programId === "all") {
     baseParts.push(formatAllPrograms());
     baseParts.push("");
-    // 全番組選択時はラインナップ情報も追加
-    baseParts.push(formatAllLineups());
 
-    // 出演者リサーチ機能の場合は全出演者リストも追加
+    // 出演者リサーチ機能の場合は全出演者リスト+直近5回詳細を追加
     if (featureId === "research-cast") {
-      baseParts.push("");
       baseParts.push(formatAllCastListsForResearch());
+      baseParts.push("");
+      baseParts.push(formatAllRecentLineupsForResearch());
+    } else {
+      // その他の機能はラインナップ情報（最新20回）
+      baseParts.push(formatAllLineups());
     }
   } else {
     const program = PROGRAMS.find((p) => p.id === programId);
@@ -541,13 +581,19 @@ export async function buildSystemPrompt(
       baseParts.push(formatProgram(program));
       baseParts.push("");
 
-      // 出演者リサーチ機能の場合は全出演者リストを追加、それ以外はラインナップ情報
+      // 出演者リサーチ機能の場合は全出演者リスト+直近5回詳細を追加
       if (featureId === "research-cast") {
         const castListText = formatCastListForResearch(programId);
         if (castListText) {
           baseParts.push(castListText);
         }
+        const recentLineupText = formatRecentLineupForResearch(programId);
+        if (recentLineupText) {
+          baseParts.push("");
+          baseParts.push(recentLineupText);
+        }
       } else {
+        // その他の機能はラインナップ情報（最新20回）
         const lineupText = formatLineup(programId);
         if (lineupText) {
           baseParts.push(lineupText);
@@ -556,12 +602,14 @@ export async function buildSystemPrompt(
     } else {
       baseParts.push(formatAllPrograms());
       baseParts.push("");
-      baseParts.push(formatAllLineups());
 
-      // 出演者リサーチ機能の場合は全出演者リストも追加
+      // 出演者リサーチ機能の場合は全出演者リスト+直近5回詳細を追加
       if (featureId === "research-cast") {
-        baseParts.push("");
         baseParts.push(formatAllCastListsForResearch());
+        baseParts.push("");
+        baseParts.push(formatAllRecentLineupsForResearch());
+      } else {
+        baseParts.push(formatAllLineups());
       }
     }
   }

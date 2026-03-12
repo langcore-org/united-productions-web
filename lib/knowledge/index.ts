@@ -4,6 +4,6 @@
  * United Productions 番組情報の管理
  */
 
+export * from "./lineup";
 export * from "./programs";
 export * from "./types";
-export * from "./lineup";
