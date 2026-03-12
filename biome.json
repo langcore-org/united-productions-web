@@ -12,7 +12,8 @@
       "prisma/**/*.ts",
       "scripts/**/*.ts",
       "scripts/**/*.mjs",
-      "config/**/*.ts"
+      "config/**/*.ts",
+      "middleware.ts"
     ]
   },
   "assist": { "actions": { "source": { "organizeImports": "on" } } },
