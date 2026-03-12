@@ -1,12 +1,9 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 
 export default function LogoutPage() {
-  const router = useRouter();
-
   useEffect(() => {
     const logout = async () => {
       const supabase = createClient();
