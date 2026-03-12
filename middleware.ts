@@ -6,8 +6,8 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
 
-// 認証不要パス（ログイン・エラー・プレビュー専用）
-const PUBLIC_PATHS = ["/auth/signin", "/auth/error", "/preview-login"];
+// 認証不要パス（ログイン・コールバック・エラー・プレビュー専用）
+const PUBLIC_PATHS = ["/auth/signin", "/auth/callback", "/auth/error", "/preview-login"];
 
 export async function middleware(request: NextRequest) {
   const url = new URL(request.url);
