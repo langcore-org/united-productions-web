@@ -3,10 +3,9 @@
 import { ChevronRight, History, LogOut, PanelLeft, Plus } from "lucide-react";
 // import { TeddyIcon } from "@/components/icons/TeddyIcon"; // ロゴは非表示（将来使用予定）
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { getChatNavigationItems } from "@/lib/chat/navigation";
-import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 
 interface SidebarProps {
@@ -16,7 +15,6 @@ interface SidebarProps {
 
 export function Sidebar({ className, onCollapseChange }: SidebarProps) {
   const pathname = usePathname();
-  const router = useRouter();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
 
@@ -225,15 +223,10 @@ export function Sidebar({ className, onCollapseChange }: SidebarProps) {
           isCollapsed ? "px-1.5" : "px-2",
         )}
       >
-        <button
-          type="button"
-          onClick={async () => {
-            const supabase = createClient();
-            await supabase.auth.signOut();
-            router.push("/auth/signin");
-          }}
+        <Link
+          href="/logout"
           className={cn(
-            "flex items-center rounded-xl transition-all duration-200 ease-out group w-full",
+            "flex items-center rounded-xl transition-all duration-200 ease-out group",
             isCollapsed ? "w-10 h-10 justify-center p-0 mx-auto" : "gap-3 px-3 py-2",
             "text-[#6b7280] hover:bg-white hover:text-[#1a1a1a]",
           )}
@@ -243,7 +236,7 @@ export function Sidebar({ className, onCollapseChange }: SidebarProps) {
             <LogOut className="w-[18px] h-[18px]" />
           </span>
           {!isCollapsed && <span className="text-sm font-medium">ログアウト</span>}
-        </button>
+        </Link>
 
         {/* 展開/縮小ボタン */}
         <button
