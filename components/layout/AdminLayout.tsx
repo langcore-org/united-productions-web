@@ -25,7 +25,7 @@ export function AdminLayout({ children, className }: AdminLayoutProps) {
       {/* Main Content - サイドバー幅に応じてマージンを調整 */}
       <main
         className={cn(
-          "min-h-screen transition-all duration-300 ease-in-out",
+          "h-screen overflow-y-auto transition-all duration-300 ease-in-out",
           isSidebarCollapsed ? "ml-[64px]" : "ml-[240px]",
         )}
       >

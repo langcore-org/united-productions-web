@@ -16,8 +16,8 @@ AI Hubは、テレビ制作現場の様々な業務をAIで支援する統合プ
 | 言語 | TypeScript 5.9 |
 | スタイリング | Tailwind CSS 4 |
 | UIコンポーネント | shadcn/ui |
-| 認証 | NextAuth.js v4 + Google OAuth |
-| データベース | PostgreSQL (Neon) + Prisma 5 |
+| 認証 | Supabase Auth (Google OAuth + Email/Password) |
+| データベース | PostgreSQL (Supabase) |
 | キャッシュ | Upstash Redis |
 | LLM統合 | LangChain + xAI Grok |
 | デプロイ | Vercel |
@@ -107,7 +107,7 @@ interface FeatureChatProps {
 
 **特徴:**
 - ストリーミングレスポンス対応（SSE）
-- 会話履歴の自動保存（Prisma）
+- 会話履歴の自動保存（Supabase）
 - チャットセッション管理（chatIdベースのCRUD）
 - 新規チャット時の自動タイトル生成（Grok）
 - plaintextモード時のWordコピー機能
@@ -153,8 +153,8 @@ interface FeatureChatProps {
 │   │   ├── transcript.ts
 │   │   └── na-script.ts
 │   └── llm/                      # LLM統合
-├── prisma/
-│   └── schema.prisma             # Prismaスキーマ
+├── supabase/
+│   └── migrations/               # Supabaseマイグレーション
 └── docs/                         # ドキュメント
     ├── ARCHITECTURE.md           # アーキテクチャ設計
     ├── API.md                    # API仕様書
@@ -186,14 +186,15 @@ cp .env.example .env.local
 # .env.localを編集して必要な値を設定
 ```
 
-4. **データベースのセットアップ**
+4. **Supabaseのセットアップ**
 ```bash
-# Prisma Clientの生成
-npx prisma generate
-
-# データベースマイグレーション
-npx prisma migrate dev
+# Supabase CLIがインストールされている場合
+supabase login
+supabase link --project-ref <project-ref>
+supabase db push
 ```
+
+詳細は [Supabaseセットアップガイド](./docs/guides/setup/database-cache.md) を参照
 
 5. **開発サーバーの起動**
 ```bash
@@ -210,7 +211,9 @@ npm run dev
 | `GOOGLE_CLIENT_SECRET` | Google OAuth クライアントシークレット | [Google Cloud Console](https://console.cloud.google.com/apis/credentials) |
 | `NEXTAUTH_SECRET` | NextAuth.js 秘密鍵 | `openssl rand -base64 32` |
 | `NEXTAUTH_URL` | アプリケーションURL | 開発時: `http://localhost:3000` |
-| `DATABASE_URL` | PostgreSQL接続URL | [Neon](https://neon.tech/) |
+| `NEXT_PUBLIC_SUPABASE_URL` | SupabaseプロジェクトURL | [Supabase](https://supabase.com/) |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase匿名キー | [Supabase](https://supabase.com/) |
+| `SUPABASE_SERVICE_ROLE_KEY` | Supabaseサービスロールキー | [Supabase](https://supabase.com/) |
 | `UPSTASH_REDIS_REST_URL` | Upstash Redis URL | [Upstash](https://upstash.com/) |
 | `UPSTASH_REDIS_REST_TOKEN` | Upstash Redis トークン | [Upstash](https://upstash.com/) |
 | `GEMINI_API_KEY` | Google AI Studio APIキー | [AI Studio](https://aistudio.google.com/app/apikey) |
@@ -258,10 +261,9 @@ npm run analyze          # バンドルサイズ分析
 npm run test             # 単体テスト（Vitest）
 npm run test:e2e         # E2Eテスト（Playwright）
 
-# Prisma関連
-npx prisma generate      # Client生成
-npx prisma migrate dev   # マイグレーション
-npx prisma studio        # DB GUI
+# Supabase関連
+supabase db push         # マイグレーション実行
+supabase db reset        # DBリセット（開発用）
 ```
 
 ## ドキュメント

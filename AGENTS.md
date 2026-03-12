@@ -92,6 +92,16 @@ SKILL.md に追加: 「このスクリプトで確認できます」
 
 ## 🛠 技術スタック
 
+### コアインフラ
+
+| 項目 | 内容 |
+|------|------|
+| **フレームワーク** | Next.js 16 (App Router) |
+| **認証** | Supabase Auth (Google OAuth + Email/Password) |
+| **データベース** | PostgreSQL (Supabase) |
+| **キャッシュ** | Upstash Redis |
+| **デプロイ** | Vercel |
+
 ### LLMフレームワーク（重要）
 
 | 項目 | 内容 |
@@ -137,7 +147,7 @@ SKILL.md に追加: 「このスクリプトで確認できます」
 | **「APIエンドポイントを新規作成・変更する」** | `docs/specs/api-specification.md` | エンドポイント命名規則、型定義、レスポンス形式 |
 | **「LLM連携のコードを書く・変更する」** | **`docs/specs/api-integration/llm-integration-overview.md`** | xAI直接呼び出し方式（LangChain不使用）、プロバイダー切り替え方法 |
 | **「AIの応答内容（プロンプト）を変更する」** | **`docs/specs/api-integration/system-prompt-management.md`** | DB管理方式、思考プロセス削除の方針、ワークフロー |
-| **「Prismaスキーマを変更する」** | `docs/specs/database-schema.md` | テーブル命名規則、インデックス設計、マイグレーション手順 |
+| **「Supabaseデータベーススキーマを変更する」** | `docs/specs/api-integration/database-schema.md` | テーブル命名規則、インデックス設計、RLSポリシー、マイグレーション手順 |
 | **「エラーハンドリングを実装する」** | `docs/specs/error-handling.md` | エラーコード一覧、レスポンス形式、ログ出力方法 |
 | **「本番環境にデプロイする」** | `docs/specs/deployment-guide.md` | 環境変数の設定、デプロイ手順、ロールバック方法 |
 
@@ -293,7 +303,7 @@ trustHost: process.env.VERCEL_ENV === "preview" || ...
 // → Vercel プレビュー環境の認証に必要
 
 // ❌ 理解せずに削除してはならない
-NEXTAUTH_SECRET, AUTH_SECRET, CSRF設定, CORSヘッダー
+SUPABASE_SERVICE_ROLE_KEY, CSRF設定, CORSヘッダー
 ```
 
 ### 型エラーでの対処

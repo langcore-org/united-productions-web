@@ -1,8 +1,8 @@
 # データベーススキーマ
 
-> **Prismaスキーマ定義と設計方針**
+> **Supabaseデータベース設計とスキーマ定義**
 > 
-> **最終更新**: 2026-02-22 00:17
+> **最終更新**: 2026-03-11 12:00
 
 ---
 
@@ -10,10 +10,11 @@
 
 | 項目 | 内容 |
 |------|------|
-| ORM | Prisma v5.22.0 |
-| データベース | PostgreSQL（Neon Serverless） |
-| スキーマファイル | `prisma/schema.prisma` |
-| 接続設定 | `lib/prisma.ts` |
+| データベース | PostgreSQL（Supabase） |
+| 認証 | Supabase Auth |
+| クライアント | `@supabase/supabase-js` |
+| サーバークライアント | `lib/supabase/server.ts` |
+| ミドルウェア | `lib/supabase/middleware.ts` |
 
 ---
 
@@ -21,92 +22,65 @@
 
 ```mermaid
 erDiagram
-    USER ||--o{ MEETING_NOTE : creates
-    USER ||--o{ TRANSCRIPT : creates
-    USER ||--o{ RESEARCH_CHAT : has
-    USER ||--o{ USAGE_LOG : generates
-    USER ||--o{ APP_LOG : generates
-    USER ||--o{ SYSTEM_PROMPT_VERSION : changes
-    RESEARCH_CHAT ||--o{ RESEARCH_MESSAGE : contains
-    USER ||--o{ PROGRAM_SETTINGS : has
-    USER ||--o{ GROK_TOOL_SETTINGS : has
-    SYSTEM_PROMPT ||--o{ SYSTEM_PROMPT_VERSION : has
+    USERS ||--o{ CHATS : creates
+    USERS ||--o{ USAGE_LOGS : generates
+    CHATS ||--o{ CHAT_MESSAGES : contains
+    USERS ||--o{ SYSTEM_PROMPTS : manages
     
-    USER {
-        string id PK
+    USERS {
+        uuid id PK
         string email
         string name
-        string googleId
         string role
-        datetime createdAt
+        timestamp created_at
     }
     
-    MEETING_NOTE {
-        string id PK
-        string userId FK
-        string type
-        string rawText
-        string formattedText
-        string llmProvider
-        string status
-        datetime createdAt
-    }
-    
-    TRANSCRIPT {
-        string id PK
-        string userId FK
-        string rawText
-        string formattedText
-        string llmProvider
-        datetime createdAt
-    }
-    
-    RESEARCH_CHAT {
-        string id PK
-        string userId FK
-        string agentType
+    CHATS {
+        uuid id PK
+        uuid user_id FK
+        string agent_type
         string title
-        string llmProvider
-        json results
-        datetime createdAt
+        string llm_provider
+        jsonb results
+        timestamp created_at
+        timestamp updated_at
     }
     
-    RESEARCH_MESSAGE {
-        string id PK
-        string chatId FK
+    CHAT_MESSAGES {
+        uuid id PK
+        uuid chat_id FK
         string role
         string content
-        datetime createdAt
+        string thinking
+        string llm_provider
+        int input_tokens
+        int output_tokens
+        decimal cost_usd
+        jsonb tool_calls_json
+        jsonb citations_json
+        timestamp created_at
     }
     
-    USAGE_LOG {
-        string id PK
-        string userId FK
+    USAGE_LOGS {
+        uuid id PK
+        uuid user_id FK
         string provider
-        int inputTokens
-        int outputTokens
-        float cost
-        datetime createdAt
+        int input_tokens
+        int output_tokens
+        decimal cost_usd
+        timestamp created_at
     }
     
-    SYSTEM_PROMPT {
-        string id PK
+    SYSTEM_PROMPTS {
+        uuid id PK
         string key
         string name
-        string content
+        text content
         string category
-        bool isActive
-        int currentVersion
-        datetime createdAt
-    }
-    
-    SYSTEM_PROMPT_VERSION {
-        string id PK
-        string promptId FK
-        int version
-        string content
-        string changedBy
-        datetime createdAt
+        bool is_active
+        int current_version
+        timestamp created_at
+        timestamp updated_at
     }
 ```
 
@@ -114,137 +88,105 @@ erDiagram
 
 ## 主要テーブル
 
-### User
-ユーザーアカウント（NextAuth連携）
+### users（Supabase Auth管理）
 
-| カラム | 型 | 制約 |
-|--------|-----|------|
-| `id` | String | PK, UUID |
-| `email` | String | UNIQUE |
-| `name` | String? | |
-| `googleId` | String? | UNIQUE |
-| `role` | String | default: "USER" (ADMIN \| USER) |
-| `createdAt` | DateTime | default: now() |
-| `updatedAt` | DateTime | updatedAt |
+ユーザーアカウントはSupabase Authで管理されます。`auth.users`テーブルと連携。
 
-### MeetingNote
-議事録データ
+| カラム | 型 | 制約 | 説明 |
+|--------|-----|------|------|
+| `id` | UUID | PK | Supabase AuthのユーザーID |
+| `email` | TEXT | UNIQUE | メールアドレス |
+| `name` | TEXT | | 表示名 |
+| `role` | TEXT | DEFAULT 'USER' | USER / ADMIN |
+| `created_at` | TIMESTAMPTZ | DEFAULT NOW() | 作成日時 |
 
-| カラム | 型 | 説明 |
-|--------|-----|------|
-| `id` | String | PK |
-| `userId` | String | FK → User |
-| `type` | String | `MEETING` \| `INTERVIEW` |
-| `rawText` | String | 元の文字起こし |
-| `formattedText` | String? | 整形後テキスト |
-| `llmProvider` | LLMProvider | 使用プロバイダー |
-| `status` | String | `DRAFT` \| `FORMATTING` \| `COMPLETED` |
+### chats
 
-### ResearchChat / ResearchMessage
-リサーチチャット
-
-| テーブル | 説明 |
-|---------|------|
-| `ResearchChat` | チャットセッション |
-| `ResearchMessage` | メッセージ履歴 |
-
-**ResearchChatカラム:**
+チャットセッション
 
 | カラム | 型 | 説明 |
 |--------|-----|------|
-| `id` | String | PK, UUID |
-| `userId` | String | FK → User |
-| `agentType` | String | `PEOPLE` \| `LOCATION` \| `EVIDENCE` |
-| `title` | String? | チャットタイトル（自動生成） |
-| `llmProvider` | LLMProvider | 使用プロバイダー |
-| `results` | Json? | リサーチ結果 |
-| `createdAt` | DateTime | 作成日時 |
-| `updatedAt` | DateTime | 更新日時 |
+| `id` | UUID | PK, 自動生成 |
+| `user_id` | UUID | FK → users(id) |
+| `agent_type` | TEXT | `RESEARCH-CAST` \| `RESEARCH-EVIDENCE` \| `MINUTES` \| `PROPOSAL` \| `GENERAL-CHAT` |
+| `title` | TEXT | チャットタイトル（自動生成） |
+| `llm_provider` | llm_provider | 使用LLMプロバイダー |
+| `results` | JSONB | リサーチ結果等 |
+| `created_at` | TIMESTAMPTZ | 作成日時 |
+| `updated_at` | TIMESTAMPTZ | 更新日時 |
 
 **タイトル自動生成:**
 - 新規チャット作成時、最初のユーザーメッセージからGrok(grok-4-0709)で自動生成
 - バックグラウンド実行（レスポンスを遅延させない）
 
-### SystemPrompt / SystemPromptVersion
-システムプロンプト管理
+### chat_messages
 
-| テーブル | 説明 |
-|---------|------|
-| `SystemPrompt` | 現在のプロンプト |
-| `SystemPromptVersion` | バージョン履歴 |
-
-**SystemPromptカラム:**
+チャットメッセージ履歴
 
 | カラム | 型 | 説明 |
 |--------|-----|------|
-| `id` | String | PK |
-| `key` | String | UNIQUE, 識別子（MINUTES等） |
-| `name` | String | 表示名 |
-| `content` | String | プロンプト本文 |
-| `category` | String | カテゴリ |
-| `isActive` | Boolean | 有効/無効 |
-| `currentVersion` | Int | 現在のバージョン番号 |
-| `changedBy` | String? | 最終更新者 |
-| `changeNote` | String? | 変更理由 |
+| `id` | UUID | PK, 自動生成 |
+| `chat_id` | UUID | FK → chats(id) ON DELETE CASCADE |
+| `role` | TEXT | `USER` \| `ASSISTANT` \| `SYSTEM` |
+| `content` | TEXT | メッセージ本文 |
+| `thinking` | TEXT | AIの思考プロセス（内部用） |
+| `llm_provider` | llm_provider | 使用したLLM |
+| `input_tokens` | INTEGER | 入力トークン数 |
+| `output_tokens` | INTEGER | 出力トークン数 |
+| `cost_usd` | DECIMAL(10,6) | 推定コスト（USD） |
+| `tool_calls_json` | JSONB | ツール呼び出し情報 |
+| `citations_json` | JSONB | 引用情報 |
+| `created_at` | TIMESTAMPTZ | 作成日時 |
 
-### UsageLog
+### usage_logs
+
 LLM使用量ログ
 
 | カラム | 型 | 説明 |
 |--------|-----|------|
-| `provider` | LLMProvider | 使用プロバイダー |
-| `inputTokens` | Int | 入力トークン |
-| `outputTokens` | Int | 出力トークン |
-| `cost` | Float | 推定コスト（USD） |
-| `userId` | String | FK → User |
+| `id` | UUID | PK |
+| `user_id` | UUID | FK → users(id) |
+| `provider` | TEXT | 使用プロバイダー |
+| `input_tokens` | INTEGER | 入力トークン |
+| `output_tokens` | INTEGER | 出力トークン |
+| `cost_usd` | DECIMAL(10,6) | 推定コスト（USD） |
+| `created_at` | TIMESTAMPTZ | 作成日時 |
 
-### AppLog
-アプリケーションログ
+### system_prompts
+
+システムプロンプト管理
 
 | カラム | 型 | 説明 |
 |--------|-----|------|
-| `level` | LogLevel | ERROR / WARN / INFO |
-| `category` | LogCategory | AUTH / API / DB等 |
-| `message` | String | ログメッセージ |
-| `details` | Json? | 詳細情報 |
-| `userId` | String? | 関連ユーザー |
-| `requestId` | String? | リクエストID |
-| `duration` | Int? | 処理時間（ms） |
+| `id` | UUID | PK |
+| `key` | TEXT | UNIQUE, 識別子（MINUTES等） |
+| `name` | TEXT | 表示名 |
+| `content` | TEXT | プロンプト本文 |
+| `category` | TEXT | カテゴリ |
+| `is_active` | BOOLEAN | 有効/無効 |
+| `current_version` | INTEGER | 現在のバージョン番号 |
+| `created_at` | TIMESTAMPTZ | 作成日時 |
+| `updated_at` | TIMESTAMPTZ | 更新日時 |
 
 ---
 
 ## Enum定義
 
-```prisma
-enum LLMProvider {
-  GEMINI_25_FLASH_LITE
-  GEMINI_30_FLASH
-  GROK_4_1_FAST_REASONING
-  GROK_4_0709
-  GPT_4O_MINI
-  GPT_5
-  CLAUDE_SONNET_45
-  CLAUDE_OPUS_46
-  PERPLEXITY_SONAR
-  PERPLEXITY_SONAR_PRO
-}
+### llm_provider
 
-enum LogLevel {
-  INFO
-  WARN
-  ERROR
-  AUDIT
-}
-
-enum LogCategory {
-  AUTH
-  API
-  DB
-  SYSTEM
-  USER_ACTION
-  SECURITY
-  PERFORMANCE
-}
+```sql
+CREATE TYPE llm_provider AS ENUM (
+  'GEMINI_25_FLASH_LITE',
+  'GEMINI_30_FLASH',
+  'GROK_4_1_FAST_REASONING',
+  'GROK_4_0709',
+  'GPT_4O_MINI',
+  'GPT_5',
+  'CLAUDE_SONNET_45',
+  'CLAUDE_OPUS_46',
+  'PERPLEXITY_SONAR',
+  'PERPLEXITY_SONAR_PRO'
+);
 ```
 
 ---
@@ -253,14 +195,31 @@ enum LogCategory {
 
 | テーブル | インデックス | 用途 |
 |---------|-----------|------|
-| MeetingNote | `(userId, status, createdAt)` | ステータス別一覧 |
-| ResearchChat | `(userId, agentType, createdAt)` | エージェント別一覧 |
-| UsageLog | `(userId, provider, createdAt)` | 利用統計 |
-| AppLog | `(level, createdAt)` | エラーログ検索 |
-| SystemPrompt | `(category, isActive)` | カテゴリ別検索 |
-| SystemPromptVersion | `(promptId, version)` | バージョン検索 |
+| chats | `idx_chats_user_agent_created` | エージェント別一覧 |
+| chats | `idx_chats_user_created` | ユーザー別一覧 |
+| chats | `idx_chats_agent_type` | エージェントタイプ検索 |
+| chat_messages | `idx_chat_messages_chat_created` | チャットメッセージ取得 |
+| usage_logs | `(user_id, created_at)` | 利用統計 |
 
-詳細なインデックス一覧: `prisma/schema.prisma` 参照
+---
+
+## Row Level Security（RLS）
+
+### chatsテーブル
+
+```sql
+CREATE POLICY "Users can CRUD own chats" ON chats
+  FOR ALL USING (auth.uid() = user_id);
+```
+
+### chat_messagesテーブル
+
+```sql
+CREATE POLICY "Users can CRUD messages in own chats" ON chat_messages
+  FOR ALL USING (
+    chat_id IN (SELECT id FROM chats WHERE user_id = auth.uid())
+  );
+```
 
 ---
 
@@ -268,28 +227,26 @@ enum LogCategory {
 
 | # | マイグレーション | 主な変更 |
 |---|----------------|---------|
-| 1 | `20260215181608_init` | 初期スキーマ |
-| 2 | `20260216045708_add_refresh_token_expires_in` | Account更新 |
-| 3 | `20260219105000_add_system_prompts` | SystemPrompt追加 |
-| 4 | `20260220000000_update_grok_enum` | Grok Enum更新 |
-| 5 | `20260221000000_add_chat_title` | ResearchChatにtitle追加 |
-| 6 | `20260221120000_add_system_prompt_versions` | バージョン履歴テーブル追加 |
+| 1 | `20260309000000_initial_schema` | 初期スキーマ作成 |
+| 2 | `20260311135420_rename_and_cleanup_tables` | テーブル名変更（research_chats→chats, research_messages→chat_messages）、未使用テーブル削除 |
 
 実行コマンド:
 ```bash
-npx prisma migrate dev    # 開発環境
-npx prisma migrate deploy # 本番環境
-npx prisma generate       # クライアント生成
-npx prisma studio         # GUI管理ツール
+# 開発環境
+supabase db push
+
+# 新規マイグレーション作成
+supabase migration new <migration-name>
 ```
 
 ---
 
-## 関連仕様
+## 関連ファイル
 
 | 項目 | 参照先 |
 |-----|--------|
-| 接続設定 | `lib/prisma.ts` |
+| サーバークライアント | `lib/supabase/server.ts` |
+| ミドルウェア | `lib/supabase/middleware.ts` |
+| クライアント | `lib/supabase/client.ts` |
 | 環境構築 | [guides/setup/database-cache.md](../guides/setup/database-cache.md) |
-| パフォーマンス | [performance.md](../operations/performance.md#データベース最適化) |
 | プロンプト管理 | [system-prompt-management.md](./system-prompt-management.md) |
