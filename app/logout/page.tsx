@@ -10,11 +10,12 @@ export default function LogoutPage() {
   useEffect(() => {
     const logout = async () => {
       const supabase = createClient();
-      await supabase.auth.signOut();
-      router.push("/auth/signin");
+      await supabase.auth.signOut({ scope: "local" });
+      // セッション削除を確実に反映させるため、ハードナビゲーションを使用
+      window.location.href = "/auth/signin";
     };
     logout();
-  }, [router]);
+  }, []);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
