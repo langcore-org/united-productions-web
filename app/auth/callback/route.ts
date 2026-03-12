@@ -30,7 +30,11 @@ export async function GET(request: Request) {
     });
 
     const { error } = await supabase.auth.exchangeCodeForSession(code);
+    console.log(`[CALLBACK] code=${code ? "yes" : "no"} error=${error?.message ?? "none"} origin=${origin} next=${next}`);
     if (!error) {
+      const allCookies = cookieStore.getAll();
+      const sbCookies = allCookies.filter((c) => c.name.startsWith("sb-"));
+      console.log(`[CALLBACK] sb-cookies set: ${sbCookies.length} names=[${sbCookies.map((c) => c.name).join(",")}]`);
       return NextResponse.redirect(`${origin}${next}`);
     }
   }

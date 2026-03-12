@@ -32,6 +32,11 @@ export async function middleware(request: NextRequest) {
   // セッション更新してユーザー情報を取得
   const { supabaseResponse, user } = await updateSession(request);
 
+  // デバッグログ（一時的）
+  const cookies = request.cookies.getAll();
+  const sbCookies = cookies.filter((c) => c.name.startsWith("sb-"));
+  console.log(`[MW] path=${pathname} user=${user?.email ?? "null"} sb-cookies=${sbCookies.length} names=[${sbCookies.map((c) => c.name).join(",")}]`);
+
   // 認証不要パスの処理
   if (PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`))) {
     // 認証済みでサインインページに来た場合はトップへ
