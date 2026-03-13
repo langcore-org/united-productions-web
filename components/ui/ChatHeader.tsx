@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Copy, ExternalLink, Sparkles } from "lucide-react";
+import { Check, Copy, ExternalLink, FileText, Lightbulb, MessageSquare, Shield, Users } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,6 +15,15 @@ import { getProgramById, programOptions } from "@/lib/knowledge/programs";
 import type { Message } from "./FeatureChat";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./select";
 import { WordExportButton } from "./WordExportButton";
+
+// featureId → アイコンのマッピング
+const featureIconMap: Record<string, React.ComponentType<{ className?: string }>> = {
+  "general-chat": MessageSquare,
+  "research-cast": Users,
+  "research-evidence": Shield,
+  minutes: FileText,
+  proposal: Lightbulb,
+};
 
 export interface ChatHeaderProps {
   title: string;
@@ -82,7 +91,10 @@ export function ChatHeader({
       <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-white">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-gray-900/20 to-gray-600/10 flex items-center justify-center border border-gray-900/20">
-            <Sparkles className="w-4 h-4 text-gray-900" />
+            {(() => {
+              const IconComponent = featureIconMap[featureId] || MessageSquare;
+              return <IconComponent className="w-4 h-4 text-gray-900" />;
+            })()}
           </div>
           <div>
             <h1 className="text-base font-semibold text-gray-900">{title}</h1>
