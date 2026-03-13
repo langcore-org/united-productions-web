@@ -34,6 +34,7 @@ export function ChatInputArea({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // テキストエリアの自動リサイズ
+  // biome-ignore lint/correctness/useExhaustiveDependencies: input change triggers resize
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
@@ -42,7 +43,7 @@ export function ChatInputArea({
         TEXTAREA_MAX_HEIGHT_PX,
       )}px`;
     }
-  }, []);
+  }, [input]);
 
   return (
     <div className="border-t border-gray-200 px-6 py-4 bg-white">
