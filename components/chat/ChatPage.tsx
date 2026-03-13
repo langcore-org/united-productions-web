@@ -1,10 +1,12 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { type ChatFeatureId, getChatConfig } from "@/lib/chat/chat-config";
 import { needsProgramSelection } from "@/lib/chat/welcome-messages";
+import { getProgramById } from "@/lib/knowledge/programs";
 import { ProgramSelectionView } from "./ProgramSelectionView";
+import type { PromptSuggestion } from "@/components/chat/PromptSuggestions";
 
 // FeatureChatを動的インポート
 const FeatureChat = dynamic(
@@ -44,6 +46,30 @@ export function ChatPage({
   const [selectedProgramId, setSelectedProgramId] = useState<string | null>(
     initialProgramId ?? null,
   );
+
+  // 選択された番組に応じた動的サジェストを生成
+  const dynamicPromptSuggestions = useMemo<PromptSuggestion[] | undefined>(() => {
+    if (!config.promptSuggestions) return undefined;
+    
+    // research-cast 機能のみ、番組名を動的に埋め込む
+    if (featureId === "research-cast" && selectedProgramId && selectedProgramId !== "all") {
+      const program = getProgramById(selectedProgramId);
+      if (program) {
+        return config.promptSuggestions.map((suggestion) => {
+          // 3番目のサジェスト（id: "3"）のみ番組名を動的に変更
+          if (suggestion.id === "3") {
+            return {
+              ...suggestion,
+              text: `過去の「${program.name}」で高視聴率を記録した回の傾向を分析して、成功パターンを表にまとめてください`,
+            };
+          }
+          return suggestion;
+        });
+      }
+    }
+    
+    return config.promptSuggestions;
+  }, [config.promptSuggestions, featureId, selectedProgramId]);
 
   useEffect(() => {
     async function loadConfig() {
@@ -96,7 +122,7 @@ export function ChatPage({
       placeholder={config.placeholder}
       inputLabel={config.inputLabel}
       outputFormat={config.outputFormat}
-      promptSuggestions={config.promptSuggestions}
+      promptSuggestions={dynamicPromptSuggestions}
       selectedProgramId={selectedProgramId}
       initialMessage={initialMessage}
     />

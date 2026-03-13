@@ -121,7 +121,7 @@ export const chatFeatureConfigs: Record<ChatFeatureId, ChatFeatureConfig> = {
     placeholder: "企画の方向性・テーマ・条件を入力してください（例：感動系、20代向け、ロケ企画）",
     outputFormat: "markdown",
     icon: "Lightbulb",
-    description: "新企画を提案",
+    description: "新コーナー・新企画を提案",
     promptKey: PROMPT_KEYS.PROPOSAL,
     promptSuggestions: [
       { id: "1", text: "この企画をより具体的に詳細化してください" },
