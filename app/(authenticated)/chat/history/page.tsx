@@ -192,8 +192,8 @@ export default function ChatHistoryPage() {
 
   return (
     <AppLayout>
-      <div className="h-full overflow-y-auto p-8">
-        <div className="max-w-5xl mx-auto space-y-6">
+      <div className="h-full overflow-y-auto p-8 flex justify-center">
+        <div className="w-full max-w-6xl space-y-6">
           {/* ヘッダー */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
