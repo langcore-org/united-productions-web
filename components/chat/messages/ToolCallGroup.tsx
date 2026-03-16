@@ -50,7 +50,9 @@ export function ToolCallGroup({
   const hasQueries = toolCalls.some((call) => call.input);
 
   // ヘッダー用の要約情報
-  const queryInputs = toolCalls.map((call) => call.input).filter((input): input is string => !!input);
+  const queryInputs = toolCalls
+    .map((call) => call.input)
+    .filter((input): input is string => !!input);
   const firstQuery = queryInputs[0];
   const extraQueryCount = queryInputs.length > 1 ? queryInputs.length - 1 : 0;
 
