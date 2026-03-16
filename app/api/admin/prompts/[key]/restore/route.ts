@@ -50,7 +50,6 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
         key: decodedKey,
         version: restored.current_version,
         restoredFrom: validatedData.version,
-        content: restored.content,
         changedBy: restored.changed_by,
         changeNote: restored.change_note,
         updatedAt: restored.updated_at,
