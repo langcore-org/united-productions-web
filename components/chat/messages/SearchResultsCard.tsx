@@ -58,65 +58,44 @@ export function SearchResultsCard({ citations, searchQuery }: SearchResultsCardP
   }
 
   return (
-    <div className="space-y-3">
-      {/* 検索クエリ表示 */}
-      {searchQuery && (
-        <div className="text-xs text-blue-800/70 font-medium mb-2">検索クエリ: {searchQuery}</div>
-      )}
+    <div className="max-h-48 overflow-y-auto pr-1 space-y-0.5">
+      {/* 検索結果リンク一覧（1行表示） */}
+      {citations.map((citation, index) => {
+        const domain = getDomain(citation.url);
+        const faviconUrl = getFaviconUrl(citation.url);
 
-      {/* 検索結果カード一覧 */}
-      <div className="space-y-3">
-        {citations.map((citation, index) => {
-          const domain = getDomain(citation.url);
-          const faviconUrl = getFaviconUrl(citation.url);
-          const displayTitle = getDisplayTitle(citation.url);
+        return (
+          <a
+            key={`${citation.url}-${index}`}
+            href={citation.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 px-1 py-0.5 rounded hover:bg-blue-100/50 transition-colors group text-xs"
+          >
+            {/* ファビコン（小さめ） */}
+            <div className="flex-shrink-0 w-3.5 h-3.5">
+              {faviconUrl ? (
+                // biome-ignore lint/a11y/useAltText: 装飾目的のため空alt
+                <img
+                  src={faviconUrl}
+                  alt=""
+                  className="w-3.5 h-3.5 rounded-sm"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = "none";
+                  }}
+                />
+              ) : (
+                <div className="w-3.5 h-3.5 rounded-sm bg-gray-200" />
+              )}
+            </div>
 
-          return (
-            <a
-              key={`${citation.url}-${index}`}
-              href={citation.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block group"
-            >
-              <div className="flex items-start gap-3 p-3 rounded-lg bg-white/50 hover:bg-white/80 transition-colors border border-blue-200/50 hover:border-blue-300">
-                {/* ファビコン */}
-                <div className="flex-shrink-0 w-6 h-6 mt-0.5">
-                  {faviconUrl ? (
-                    <img
-                      src={faviconUrl}
-                      alt=""
-                      className="w-6 h-6 rounded"
-                      onError={(e) => {
-                        // ファビコン取得失敗時は非表示
-                        (e.target as HTMLImageElement).style.display = "none";
-                      }}
-                    />
-                  ) : (
-                    <div className="w-6 h-6 rounded bg-gray-200" />
-                  )}
-                </div>
+            {/* ドメイン名（1行） */}
+            <span className="flex-1 min-w-0 truncate text-blue-800">{domain}</span>
 
-                {/* 内容 */}
-                <div className="flex-1 min-w-0">
-                  {/* タイトル（ドメイン名で代替） */}
-                  <div className="text-sm font-medium text-blue-900 group-hover:text-blue-700 truncate">
-                    {displayTitle}
-                  </div>
-
-                  {/* ドメイン名 */}
-                  <div className="flex items-center gap-1 text-xs text-blue-600/70 mt-0.5">
-                    <span className="truncate">{domain}</span>
-                    <ExternalLink className="w-3 h-3 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
-                  </div>
-
-                  {/* 注記：スニペットはAPIから取得できないため非表示 */}
-                </div>
-              </div>
-            </a>
-          );
-        })}
-      </div>
+            <ExternalLink className="w-3 h-3 flex-shrink-0 opacity-0 group-hover:opacity-60 transition-opacity" />
+          </a>
+        );
+      })}
     </div>
   );
 }

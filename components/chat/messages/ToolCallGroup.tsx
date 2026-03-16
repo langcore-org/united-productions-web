@@ -90,25 +90,25 @@ export function ToolCallGroup({
 
       {/* 展開時の詳細 */}
       {isExpanded && (
-        <div className="mt-3 pt-3 border-t border-blue-200/60 space-y-4">
+        <div className="mt-2 pt-2 border-t border-blue-200/60 space-y-2">
           {/* 検索クエリ一覧 */}
           {hasQueries && (
             <div>
-              <div className="text-xs font-medium text-blue-800/70 mb-2">検索クエリ</div>
-              <div className="space-y-1.5">
+              <div className="text-[11px] font-medium text-blue-800/70 mb-1">検索クエリ</div>
+              <div className="space-y-0.5">
                 {toolCalls.map((call, index) => (
                   <div
                     key={call.id}
-                    className="flex items-start gap-2 text-sm text-blue-900 bg-blue-100/50 px-3 py-2 rounded-lg"
+                    className="flex items-center gap-1.5 text-xs text-blue-900 bg-blue-100/50 px-2 py-1 rounded"
                   >
                     {call.status === "running" ? (
-                      <Loader2 className="w-3.5 h-3.5 animate-spin text-blue-600 mt-0.5 flex-shrink-0" />
+                      <Loader2 className="w-3 h-3 animate-spin text-blue-600 flex-shrink-0" />
                     ) : (
-                      <CheckCircle2 className="w-3.5 h-3.5 text-green-600 mt-0.5 flex-shrink-0" />
+                      <CheckCircle2 className="w-3 h-3 text-green-600 flex-shrink-0" />
                     )}
                     <div className="flex-1 min-w-0">
-                      <span className="text-blue-700/60 text-xs mr-2">{index + 1}.</span>
-                      <span className="break-all">{call.input || "クエリを取得中..."}</span>
+                      <span className="text-blue-700/50 mr-1">{index + 1}.</span>
+                      <span className="truncate">{call.input || "クエリを取得中..."}</span>
                     </div>
                   </div>
                 ))}
@@ -116,16 +116,11 @@ export function ToolCallGroup({
             </div>
           )}
 
-          {/* 参照ソース - カード形式で表示 */}
+          {/* 検索結果一覧 */}
           {hasCitations && (
-            <div>
-              <SearchResultsCard
-                citations={relatedCitations}
-                searchQuery={toolCalls
-                  .map((c) => c.input)
-                  .filter(Boolean)
-                  .join(" / ")}
-              />
+            <div className="space-y-1">
+              <div className="text-[11px] font-medium text-blue-800/70">検索結果一覧</div>
+              <SearchResultsCard citations={relatedCitations} />
             </div>
           )}
         </div>
