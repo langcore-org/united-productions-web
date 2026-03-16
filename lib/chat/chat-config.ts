@@ -49,11 +49,6 @@ export const chatFeatureConfigs: Record<ChatFeatureId, ChatFeatureConfig> = {
     icon: "MessageSquare",
     description: "一般的な質問や相談",
     promptKey: PROMPT_KEYS.GENERAL_CHAT,
-    promptSuggestions: [
-      { id: "1", text: "もっと詳しく教えて" },
-      { id: "2", text: "具体例を挙げて" },
-      { id: "3", text: "別の視点から考えて" },
-    ],
   },
   "research-cast": {
     featureId: "research-cast",
@@ -64,24 +59,6 @@ export const chatFeatureConfigs: Record<ChatFeatureId, ChatFeatureConfig> = {
     icon: "Users",
     description: "企画に適した出演者候補を提案",
     promptKey: PROMPT_KEYS.RESEARCH_CAST,
-    promptSuggestions: [
-      {
-        id: "1",
-        text: "最も出演可能性が高い候補3名について、具体的なプレゼン企画書を作成してください",
-      },
-      {
-        id: "2",
-        text: "これらの候補者の中から、番組プロデューサーへの売り込み用のピッチ資料（スライド形式）を作ってください",
-      },
-      {
-        id: "3",
-        text: "過去の「マツコの知らない世界」で高視聴率を記録した回の傾向を分析して、成功パターンを表にまとめてください",
-      },
-      {
-        id: "4",
-        text: "実在する候補者を具体的にリサーチして、連絡先や実績とともにリスト化してください",
-      },
-    ],
   },
   "research-evidence": {
     featureId: "research-evidence",
@@ -92,11 +69,6 @@ export const chatFeatureConfigs: Record<ChatFeatureId, ChatFeatureConfig> = {
     icon: "Shield",
     description: "情報の真偽を検証",
     promptKey: PROMPT_KEYS.RESEARCH_EVIDENCE,
-    promptSuggestions: [
-      { id: "1", text: "この主張の信憑性をさらに深く検証してください" },
-      { id: "2", text: "反対の意見や反論も調査して提示してください" },
-      { id: "3", text: "専門家の見解や学術的な根拠を追加で調べて" },
-    ],
   },
   minutes: {
     featureId: "minutes",
@@ -108,11 +80,6 @@ export const chatFeatureConfigs: Record<ChatFeatureId, ChatFeatureConfig> = {
     icon: "FileText",
     description: "文字起こしから議事録を作成",
     promptKey: PROMPT_KEYS.MINUTES,
-    promptSuggestions: [
-      { id: "1", text: "議事録をMarkdown形式で整形して" },
-      { id: "2", text: "ToDoリストだけを抽出して" },
-      { id: "3", text: "決定事項を箇条書きでまとめて" },
-    ],
   },
   proposal: {
     featureId: "proposal",
@@ -123,11 +90,6 @@ export const chatFeatureConfigs: Record<ChatFeatureId, ChatFeatureConfig> = {
     icon: "Lightbulb",
     description: "新コーナー・新企画を提案",
     promptKey: PROMPT_KEYS.PROPOSAL,
-    promptSuggestions: [
-      { id: "1", text: "この企画をより具体的に詳細化してください" },
-      { id: "2", text: "予算とスケジュール案も追加してください" },
-      { id: "3", text: "類似企画との差別化ポイントを強調してください" },
-    ],
   },
 };
 
