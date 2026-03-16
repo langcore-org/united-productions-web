@@ -63,8 +63,10 @@ describe("SubStep", () => {
   it("should apply active styles when isActive is true", () => {
     render(<SubStep subStep={mockSubStep} isActive={true} />);
 
-    const element = screen.getByText("検索").closest("div")?.parentElement;
-    expect(element?.className).toContain("bg-blue-50");
+    // isActive=true の場合、親のdivに bg-blue-50 が適用される
+    const button = screen.getByRole("button");
+    const container = button.parentElement;
+    expect(container?.className).toContain("bg-blue-50");
   });
 
   it("should render different status icons", () => {

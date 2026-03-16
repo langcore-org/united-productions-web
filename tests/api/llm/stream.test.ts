@@ -41,7 +41,9 @@ function integrateSummaryIntoSystemPrompt(
 // モックデータ
 // =============================================================================
 
-const MOCK_BASE_PROMPT = `## 機能固有の指示
+const MOCK_BASE_PROMPT = `## United Productions
+
+## 機能固有の指示
 
 ## 出演者リサーチ
 あなたは出演者リサーチ専門家です。`;
