@@ -8,7 +8,7 @@
 
 import { CheckCircle2, ChevronDown, ChevronUp, Loader2, Search } from "lucide-react";
 import { useState } from "react";
-import type { ToolCallInfo, CitationInfo } from "@/hooks/useLLMStream/types";
+import type { CitationInfo, ToolCallInfo } from "@/hooks/useLLMStream/types";
 import { getToolConfig } from "@/lib/tools/config";
 
 import { SearchResultsCard } from "./SearchResultsCard";
@@ -17,11 +17,17 @@ interface ToolCallGroupProps {
   toolName: string;
   toolCalls: ToolCallInfo[];
   citations: CitationInfo[];
+  defaultExpanded?: boolean;
 }
 
-export function ToolCallGroup({ toolName, toolCalls, citations }: ToolCallGroupProps) {
+export function ToolCallGroup({
+  toolName,
+  toolCalls,
+  citations,
+  defaultExpanded = false,
+}: ToolCallGroupProps) {
   const config = getToolConfig(toolName);
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(defaultExpanded);
 
   // 完了したツールと実行中のツールを分離
   const completedCalls = toolCalls.filter((call) => call.status === "completed");
@@ -43,6 +49,11 @@ export function ToolCallGroup({ toolName, toolCalls, citations }: ToolCallGroupP
   const hasCitations = relatedCitations.length > 0;
   const hasQueries = toolCalls.some((call) => call.input);
 
+  // ヘッダー用の要約情報
+  const queryInputs = toolCalls.map((call) => call.input).filter((input): input is string => !!input);
+  const firstQuery = queryInputs[0];
+  const extraQueryCount = queryInputs.length > 1 ? queryInputs.length - 1 : 0;
+
   return (
     <div className="relative px-4 py-3 text-sm leading-relaxed rounded-2xl bg-blue-50 text-blue-900 border border-blue-200 rounded-tl-sm">
       {/* ヘッダー */}
@@ -57,10 +68,19 @@ export function ToolCallGroup({ toolName, toolCalls, citations }: ToolCallGroupP
           <Loader2 className="w-4 h-4 animate-spin text-blue-600 flex-shrink-0" />
         )}
         <Search className="w-4 h-4 text-blue-600 flex-shrink-0" />
-        <span className="font-medium">
-          {config.label} {totalCount}ステップ
-          {isComplete ? "完了" : `実行中 (${completedCount}/${totalCount})`}
-        </span>
+        <div className="flex flex-col items-start gap-0.5">
+          <span className="font-medium">
+            {config.label} {totalCount}ステップ
+            {isComplete ? "完了" : `実行中 (${completedCount}/${totalCount})`}
+            {hasCitations && ` · ${relatedCitations.length}サイト`}
+          </span>
+          {(firstQuery || extraQueryCount > 0) && (
+            <span className="text-xs text-blue-800/80 line-clamp-1">
+              {firstQuery}
+              {extraQueryCount > 0 && ` +${extraQueryCount}`}
+            </span>
+          )}
+        </div>
         <span className="ml-auto text-blue-600">
           {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
         </span>
@@ -97,12 +117,12 @@ export function ToolCallGroup({ toolName, toolCalls, citations }: ToolCallGroupP
           {/* 参照ソース - カード形式で表示 */}
           {hasCitations && (
             <div>
-              <div className="text-xs font-medium text-blue-800/70 mb-2">
-                検索したウェブサイト ({relatedCitations.length}件)
-              </div>
               <SearchResultsCard
                 citations={relatedCitations}
-                searchQuery={toolCalls.map((c) => c.input).filter(Boolean).join(" / ")}
+                searchQuery={toolCalls
+                  .map((c) => c.input)
+                  .filter(Boolean)
+                  .join(" / ")}
               />
             </div>
           )}

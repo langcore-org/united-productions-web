@@ -61,9 +61,7 @@ export function SearchResultsCard({ citations, searchQuery }: SearchResultsCardP
     <div className="space-y-3">
       {/* 検索クエリ表示 */}
       {searchQuery && (
-        <div className="text-xs text-blue-800/70 font-medium mb-2">
-          検索クエリ: {searchQuery}
-        </div>
+        <div className="text-xs text-blue-800/70 font-medium mb-2">検索クエリ: {searchQuery}</div>
       )}
 
       {/* 検索結果カード一覧 */}

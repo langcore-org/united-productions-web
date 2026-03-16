@@ -5,7 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { StreamingSteps } from "@/components/chat";
 import { FollowUpSuggestions } from "@/components/chat/FollowUpSuggestions";
 import { CitationsList } from "@/components/chat/messages/CitationsList";
-import { ToolCallMessage } from "@/components/chat/messages/ToolCallMessage";
+import { ToolCallGroup } from "@/components/chat/messages/ToolCallGroup";
 import { type PromptSuggestion, PromptSuggestions } from "@/components/chat/PromptSuggestions";
 import { useChatInitialization } from "@/hooks/useChatInitialization";
 import { useConversationSave } from "@/hooks/useConversationSave";
@@ -315,22 +315,50 @@ export function FeatureChat({
           <div className="py-4">
             {messages.map((message) => (
               <div key={message.id}>
-                {/* 履歴復元時: 保存されたツール呼び出しを表示 */}
-                {message.toolCalls?.map((tc) => (
-                  <ToolCallMessage
-                    key={tc.id}
-                    toolCall={{
-                      id: tc.id,
-                      name: tc.name,
-                      displayName: tc.displayName,
-                      status: tc.status === "completed" ? "completed" : "running",
-                      input: tc.input,
-                    }}
-                    status={tc.status === "completed" ? "completed" : "running"}
-                    provider={message.llmProvider ?? provider}
-                    showHeader={false}
-                  />
-                ))}
+                {/* 履歴復元時: 保存されたツール呼び出しをグループ化して表示 */}
+                {message.role === "assistant" &&
+                  message.toolCalls &&
+                  message.toolCalls.length > 0 && (
+                    <div className="flex gap-3 px-4 py-2">
+                      {/* アバター位置と揃えるためのスペーサー */}
+                      <div className="flex-shrink-0 w-8" />
+                      <div className="flex-1 max-w-[80%] space-y-2">
+                        {Object.entries(
+                          message.toolCalls.reduce<
+                            Record<
+                              string,
+                              Array<{
+                                id: string;
+                                name: string;
+                                displayName: string;
+                                status: "running" | "completed";
+                                input?: string;
+                              }>
+                            >
+                          >((groups, tc) => {
+                            if (!groups[tc.name]) {
+                              groups[tc.name] = [];
+                            }
+                            groups[tc.name].push(tc);
+                            return groups;
+                          }, {}),
+                        ).map(([toolName, calls]) => (
+                          <ToolCallGroup
+                            key={`${message.id}-${toolName}`}
+                            toolName={toolName}
+                            toolCalls={calls.map((tc) => ({
+                              id: tc.id,
+                              name: tc.name,
+                              displayName: tc.displayName,
+                              status: tc.status,
+                              input: tc.input,
+                            }))}
+                            citations={message.citations ?? []}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 <MessageBubble
                   role={message.role}
                   content={message.content}

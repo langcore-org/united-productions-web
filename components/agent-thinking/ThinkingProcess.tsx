@@ -9,8 +9,8 @@
 "use client";
 
 import { Sparkles } from "lucide-react";
-import { TeddyIcon } from "@/components/icons/TeddyIcon";
 import { useCallback, useEffect, useState } from "react";
+import { TeddyIcon } from "@/components/icons/TeddyIcon";
 import { cn } from "@/lib/utils";
 import type { SearchResultItem, ThinkingEvent, ThinkingStep } from "@/types/agent-thinking";
 import { ComputerPanel, ComputerPanelOverlay, ComputerPanelToggle } from "./ComputerPanel";

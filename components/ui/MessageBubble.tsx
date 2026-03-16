@@ -53,11 +53,7 @@ export const MessageBubble = memo(function MessageBubble({
           isUser ? "bg-gray-800" : "bg-gray-100 border border-gray-200",
         )}
       >
-        {isUser ? (
-          <User className="w-4 h-4 text-white" />
-        ) : (
-          <TeddyIcon size={32} />
-        )}
+        {isUser ? <User className="w-4 h-4 text-white" /> : <TeddyIcon size={32} />}
       </div>
 
       {/* Content */}
