@@ -97,7 +97,8 @@ export function Sidebar({ className, onCollapseChange }: SidebarProps) {
 
       {/* Logo */}
       {!isCollapsed && (
-        <div className="px-4 pt-4 pb-2">
+        <div className="px-4 pt-4 pb-2 flex items-center gap-2">
+          <span className="bg-black text-white text-xs font-bold px-2 py-1 rounded">UP AI</span>
           <span className="font-bold text-xl text-[#1a1a1a] tracking-tight">Teddy</span>
         </div>
       )}
