@@ -8,15 +8,15 @@
 
 import { CheckCircle2, ChevronDown, ChevronUp, Loader2, Search } from "lucide-react";
 import { useState } from "react";
-import type { ToolCallInfo } from "@/hooks/useLLMStream/types";
+import type { ToolCallInfo, CitationInfo } from "@/hooks/useLLMStream/types";
 import { getToolConfig } from "@/lib/tools/config";
-import type { Citation } from "./CitationsList";
-import { CitationsList } from "./CitationsList";
+
+import { SearchResultsCard } from "./SearchResultsCard";
 
 interface ToolCallGroupProps {
   toolName: string;
   toolCalls: ToolCallInfo[];
-  citations: Citation[];
+  citations: CitationInfo[];
 }
 
 export function ToolCallGroup({ toolName, toolCalls, citations }: ToolCallGroupProps) {
@@ -94,13 +94,16 @@ export function ToolCallGroup({ toolName, toolCalls, citations }: ToolCallGroupP
             </div>
           )}
 
-          {/* 参照ソース */}
+          {/* 参照ソース - カード形式で表示 */}
           {hasCitations && (
             <div>
               <div className="text-xs font-medium text-blue-800/70 mb-2">
-                参照ソース ({relatedCitations.length}件)
+                検索したウェブサイト ({relatedCitations.length}件)
               </div>
-              <CitationsList citations={relatedCitations} />
+              <SearchResultsCard
+                citations={relatedCitations}
+                searchQuery={toolCalls.map((c) => c.input).filter(Boolean).join(" / ")}
+              />
             </div>
           )}
         </div>

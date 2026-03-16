@@ -286,7 +286,7 @@ AI生成メッセージ完成時のデータ構造。
 - Message annotations (`response.output_item.done` type: message) でも同じデータが取得可能
 - **両者は同じcitationsセットを返す**ため、どちらか一方を使用すれば十分
 
-詳細: [`docs/backlog/research-xai-citations-behavior.md`](../../backlog/research-xai-citations-behavior.md)
+詳細: [`docs/specs/api-integration/xai-citations-behavior-spec.md`](./xai-citations-behavior-spec.md)
 
 ### 2. 推奨実装パターン
 
@@ -430,7 +430,7 @@ if (event.type === "response.output_text.annotation.added" && event.annotation) 
 
 | ドキュメント | 説明 |
 |-------------|------|
-| [X検索Citations詳細調査](../../backlog/research-xai-citations-behavior.md) | 15パターンのテストによる検証結果 |
+| [X検索Citations詳細調査](./xai-citations-behavior-spec.md) | 15パターンのテストによる検証結果 |
 | [X検索Citationsワークアラウンド調査](../../backlog/research-x-search-citations-comprehensive.md) | 包括的調査レポート |
 | [ツール詳細表示機能実装計画](../../plans/tool-details-display.md) | 本調査結果に基づく機能実装計画 |
 | [ストリーミングイベント仕様（Legacy）](../../archive/2026-02-26-streaming-events-legacy.md) | LangChain時代の旧仕様（アーカイブ済み） |
