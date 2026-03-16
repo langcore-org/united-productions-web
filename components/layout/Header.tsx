@@ -60,7 +60,7 @@ export function Header({ className, onMenuClick, showMobileMenu }: HeaderProps) 
         </button>
 
         {/* Page Title - Can be passed as children or configured */}
-        <h1 className="text-lg font-semibold text-white hidden sm:block">AI Hub</h1>
+        <h1 className="text-lg font-bold text-white hidden sm:block">AI Hub</h1>
       </div>
 
       {/* Right Section */}
