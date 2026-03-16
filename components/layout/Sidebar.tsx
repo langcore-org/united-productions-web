@@ -13,26 +13,27 @@ interface SidebarProps {
   onCollapseChange?: (isCollapsed: boolean) => void;
 }
 
+// localStorageから初期値を同期的に取得（SSR対応）
+function getInitialCollapsedState(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    const saved = localStorage.getItem("sidebar-collapsed");
+    return saved ? JSON.parse(saved) : false;
+  } catch {
+    return false;
+  }
+}
+
 export function Sidebar({ className, onCollapseChange }: SidebarProps) {
   const pathname = usePathname();
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(getInitialCollapsedState);
   const [isMounted, setIsMounted] = useState(false);
 
-  // マウント時にlocalStorageから状態を読み込む
+  // マウント時に親に通知（初回レンダリング時の値を同期）
   useEffect(() => {
     setIsMounted(true);
-
-    try {
-      const savedCollapsed = localStorage.getItem("sidebar-collapsed");
-      if (savedCollapsed) {
-        const collapsed = JSON.parse(savedCollapsed);
-        setIsCollapsed(collapsed);
-        onCollapseChange?.(collapsed);
-      }
-    } catch {
-      // 読み込み失敗時はデフォルト
-    }
-  }, [onCollapseChange]);
+    onCollapseChange?.(isCollapsed);
+  }, [onCollapseChange, isCollapsed]);
 
   // サイドバー折りたたみ状態を保存
   const toggleCollapse = () => {
@@ -97,8 +98,7 @@ export function Sidebar({ className, onCollapseChange }: SidebarProps) {
 
       {/* Logo */}
       {!isCollapsed && (
-        <div className="px-4 pt-4 pb-2 flex items-center gap-2">
-          <span className="bg-black text-white text-xs font-bold px-2 py-1 rounded">UP AI</span>
+        <div className="px-4 pt-4 pb-2">
           <span className="font-bold text-xl text-[#1a1a1a] tracking-tight">Teddy</span>
         </div>
       )}
@@ -158,14 +158,17 @@ export function Sidebar({ className, onCollapseChange }: SidebarProps) {
                   )}
                 </div>
 
-                {!isCollapsed && (
-                  <div className="flex-1 min-w-0">
-                    <span className="text-sm font-medium block truncate">{item.label}</span>
-                    <span className="text-[10px] text-gray-400 block truncate">
-                      {item.description}
-                    </span>
-                  </div>
-                )}
+                <div
+                  className={cn(
+                    "flex-1 min-w-0 overflow-hidden transition-all duration-200",
+                    isCollapsed ? "w-0 opacity-0" : "opacity-100",
+                  )}
+                >
+                  <span className="text-sm font-medium block truncate">{item.label}</span>
+                  <span className="text-[10px] text-gray-400 block truncate">
+                    {item.description}
+                  </span>
+                </div>
               </Link>
             );
           })}
@@ -207,12 +210,20 @@ export function Sidebar({ className, onCollapseChange }: SidebarProps) {
             >
               <History className="w-[18px] h-[18px]" />
             </span>
-            {!isCollapsed && (
-              <>
-                <span className="text-sm font-medium flex-1 truncate">履歴を見る</span>
-                <ChevronRight className="w-4 h-4 text-gray-400" />
-              </>
-            )}
+            <span
+              className={cn(
+                "text-sm font-medium flex-1 truncate transition-all duration-200 overflow-hidden",
+                isCollapsed ? "w-0 opacity-0" : "opacity-100",
+              )}
+            >
+              履歴を見る
+            </span>
+            <ChevronRight
+              className={cn(
+                "w-4 h-4 text-gray-400 transition-all duration-200 flex-shrink-0",
+                isCollapsed ? "w-0 opacity-0" : "opacity-100",
+              )}
+            />
           </Link>
         </div>
       </nav>
@@ -239,7 +250,14 @@ export function Sidebar({ className, onCollapseChange }: SidebarProps) {
           <span className="flex-shrink-0 transition-transform duration-200 group-hover:scale-110">
             <LogOut className="w-[18px] h-[18px]" />
           </span>
-          {!isCollapsed && <span className="text-sm font-medium">ログアウト</span>}
+          <span
+            className={cn(
+              "text-sm font-medium transition-all duration-200 overflow-hidden",
+              isCollapsed ? "w-0 opacity-0" : "opacity-100",
+            )}
+          >
+            ログアウト
+          </span>
         </button>
 
         {/* 展開/縮小ボタン */}
@@ -261,7 +279,14 @@ export function Sidebar({ className, onCollapseChange }: SidebarProps) {
               )}
             />
           </span>
-          {!isCollapsed && <span className="text-sm font-medium">サイドバーを縮小</span>}
+          <span
+            className={cn(
+              "text-sm font-medium transition-all duration-200 overflow-hidden",
+              isCollapsed ? "w-0 opacity-0" : "opacity-100",
+            )}
+          >
+            サイドバーを縮小
+          </span>
         </button>
       </div>
     </aside>
