@@ -1,16 +1,29 @@
 "use client";
 
-import { ArrowRight, MessageSquare } from "lucide-react";
+import { ArrowRight, FileText, Lightbulb, MessageSquare, Shield, Users } from "lucide-react";
 import { ALL_PROGRAMS_OPTION, programOptions } from "@/lib/knowledge/programs";
+
+// featureId → アイコンのマッピング
+const featureIconMap: Record<string, React.ComponentType<{ className?: string }>> = {
+  "general-chat": MessageSquare,
+  "research-cast": Users,
+  "research-evidence": Shield,
+  "minutes": FileText,
+  "proposal": Lightbulb,
+};
 
 export interface ProgramSelectionViewProps {
   featureTitle: string;
+  featureId: string;
   onSelect: (programId: string) => void;
 }
 
-export function ProgramSelectionView({ featureTitle, onSelect }: ProgramSelectionViewProps) {
+export function ProgramSelectionView({ featureTitle, featureId, onSelect }: ProgramSelectionViewProps) {
   // 全番組選択肢（全番組 + 各番組）
   const options = [ALL_PROGRAMS_OPTION, ...programOptions];
+  
+  // 機能に応じたアイコンを取得
+  const IconComponent = featureIconMap[featureId] || MessageSquare;
 
   return (
     <div className="flex flex-col h-full bg-white">
@@ -18,7 +31,7 @@ export function ProgramSelectionView({ featureTitle, onSelect }: ProgramSelectio
       <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-gray-900/20 to-gray-600/10 flex items-center justify-center">
-            <MessageSquare className="w-4 h-4 text-gray-700" />
+            <IconComponent className="w-4 h-4 text-gray-700" />
           </div>
           <h1 className="text-lg font-semibold text-gray-900">{featureTitle}</h1>
         </div>

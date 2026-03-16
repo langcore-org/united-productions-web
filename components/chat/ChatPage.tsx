@@ -106,6 +106,7 @@ export function ChatPage({
     return (
       <ProgramSelectionView
         featureTitle={config.title}
+        featureId={featureId}
         onSelect={(programId) => setSelectedProgramId(programId)}
       />
     );
