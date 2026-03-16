@@ -45,7 +45,15 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     const versions = await getPromptVersions(key, { limit, offset });
 
-    return NextResponse.json({ prompt, versions });
+    // スネークケースからキャメルケースに変換
+    const formattedPrompt = {
+      id: prompt.id,
+      key: prompt.key,
+      name: prompt.name,
+      currentVersion: prompt.current_version,
+    };
+
+    return NextResponse.json({ prompt: formattedPrompt, versions });
   } catch (error) {
     console.error("Failed to fetch versions:", error);
     return NextResponse.json({ error: "Failed to fetch versions" }, { status: 500 });

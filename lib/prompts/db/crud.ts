@@ -63,7 +63,10 @@ export async function getPromptsFromDB(keys: string[]): Promise<Record<string, s
     const result: Record<string, string | null> = {};
     for (const key of keys) {
       const prompt = prompts.find((p) => p.key === key);
-      if (!prompt) { result[key] = null; continue; }
+      if (!prompt) {
+        result[key] = null;
+        continue;
+      }
       const version = versions?.find(
         (v) => v.prompt_id === prompt.id && v.version === prompt.current_version,
       );

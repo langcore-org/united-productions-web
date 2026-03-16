@@ -37,7 +37,18 @@ export async function GET(request: NextRequest) {
     const { data: prompts, error } = await query;
     if (error) throw error;
 
-    return NextResponse.json({ prompts: prompts || [] });
+    // スネークケースからキャメルケースに変換
+    const formattedPrompts = (prompts || []).map((prompt) => ({
+      id: prompt.id,
+      key: prompt.key,
+      name: prompt.name,
+      description: prompt.description,
+      category: prompt.category,
+      currentVersion: prompt.current_version,
+      updatedAt: prompt.updated_at,
+    }));
+
+    return NextResponse.json({ prompts: formattedPrompts });
   } catch (error) {
     console.error("Failed to fetch prompts:", error);
     return NextResponse.json({ error: "Failed to fetch prompts" }, { status: 500 });

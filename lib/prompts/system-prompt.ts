@@ -10,8 +10,8 @@
 
 import { getLineupByProgramId } from "@/lib/knowledge/lineup";
 import type { LineupEpisodeInfo } from "@/lib/knowledge/types";
-import { createClient } from "@/lib/supabase/server";
 import { getPromptFromDB } from "@/lib/prompts/db/crud";
+import { createClient } from "@/lib/supabase/server";
 
 // =============================================================================
 // データ（直接定義）
