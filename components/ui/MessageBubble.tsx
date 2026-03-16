@@ -1,8 +1,9 @@
 "use client";
 
-import { Bot, Check, ChevronDown, ChevronUp, Copy, User } from "lucide-react";
+import { Check, ChevronDown, ChevronUp, Copy, User } from "lucide-react";
 import { memo, useState } from "react";
 
+import { TeddyIcon } from "@/components/icons/TeddyIcon";
 import type { LLMProvider } from "@/lib/llm/types";
 import { cn } from "@/lib/utils";
 import { MarkdownRenderer } from "./MarkdownRenderer";
@@ -48,14 +49,14 @@ export const MessageBubble = memo(function MessageBubble({
       {/* Avatar */}
       <div
         className={cn(
-          "flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center shadow-lg",
+          "flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center shadow-lg overflow-hidden",
           isUser ? "bg-gray-800" : "bg-gray-100 border border-gray-200",
         )}
       >
         {isUser ? (
           <User className="w-4 h-4 text-white" />
         ) : (
-          <Bot className="w-4 h-4 text-gray-600" />
+          <TeddyIcon size={32} />
         )}
       </div>
 

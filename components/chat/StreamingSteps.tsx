@@ -5,7 +5,8 @@
  * @updated 2026-02-27 ヘッダーを1回だけ表示するように変更
  */
 
-import { Bot, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
+import { TeddyIcon } from "@/components/icons/TeddyIcon";
 import {
   CitationsList,
   ErrorMessage,
@@ -102,7 +103,7 @@ export function StreamingSteps({
         <div className="flex gap-4 px-4 py-2">
           <div className="flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center bg-gradient-to-br from-black to-gray-800 shadow-lg">
             {isComplete ? (
-              <Bot className="w-4 h-4 text-white" />
+              <TeddyIcon size={36} className="rounded-none" />
             ) : (
               <Loader2 className="w-4 h-4 text-white animate-spin" />
             )}

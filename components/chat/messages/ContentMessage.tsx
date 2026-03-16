@@ -4,15 +4,16 @@
  * @created 2026-02-22 11:50
  */
 
-import { Bot, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
+import { TeddyIcon } from "@/components/icons/TeddyIcon";
 import type { ContentMessageProps } from "../types";
 
 export function ContentMessage({ content, provider, isComplete, usage }: ContentMessageProps) {
   return (
     <div className="flex gap-4 px-4 py-2">
-      <div className="flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center bg-gradient-to-br from-black to-gray-800 shadow-lg">
+      <div className="flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center bg-gradient-to-br from-black to-gray-800 shadow-lg overflow-hidden">
         {isComplete ? (
-          <Bot className="w-4 h-4 text-white" />
+          <TeddyIcon size={36} className="rounded-none" />
         ) : (
           <Loader2 className="w-4 h-4 text-white animate-spin" />
         )}

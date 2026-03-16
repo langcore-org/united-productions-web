@@ -8,7 +8,8 @@
 
 "use client";
 
-import { Bot, Sparkles } from "lucide-react";
+import { Sparkles } from "lucide-react";
+import { TeddyIcon } from "@/components/icons/TeddyIcon";
 import { useCallback, useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import type { SearchResultItem, ThinkingEvent, ThinkingStep } from "@/types/agent-thinking";
@@ -184,7 +185,7 @@ export function ThinkingProcess({
           {isRunning ? (
             <Sparkles className="w-4 h-4 text-white animate-pulse" />
           ) : (
-            <Bot className="w-4 h-4 text-white" />
+            <TeddyIcon size={32} className="rounded-none" />
           )}
         </div>
 
@@ -264,7 +265,7 @@ export function SimpleThinkingProcess({
     <div className={cn("flex gap-3", className)}>
       <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-gray-900 to-gray-700 flex items-center justify-center flex-shrink-0">
         {isComplete ? (
-          <Bot className="w-4 h-4 text-white" />
+          <TeddyIcon size={32} className="rounded-none" />
         ) : (
           <Sparkles className="w-4 h-4 text-white animate-pulse" />
         )}
