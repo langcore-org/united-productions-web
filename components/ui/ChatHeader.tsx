@@ -1,6 +1,15 @@
 "use client";
 
-import { Check, Copy, ExternalLink, FileText, Lightbulb, MessageSquare, Shield, Users } from "lucide-react";
+import {
+  Check,
+  Copy,
+  ExternalLink,
+  FileText,
+  Lightbulb,
+  MessageSquare,
+  Shield,
+  Users,
+} from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {

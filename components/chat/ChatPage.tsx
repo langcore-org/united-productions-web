@@ -2,11 +2,11 @@
 
 import dynamic from "next/dynamic";
 import { useEffect, useMemo, useState } from "react";
+import type { PromptSuggestion } from "@/components/chat/PromptSuggestions";
 import { type ChatFeatureId, getChatConfig } from "@/lib/chat/chat-config";
 import { needsProgramSelection } from "@/lib/chat/welcome-messages";
 import { getProgramById } from "@/lib/knowledge/programs";
 import { ProgramSelectionView } from "./ProgramSelectionView";
-import type { PromptSuggestion } from "@/components/chat/PromptSuggestions";
 
 // FeatureChatを動的インポート
 const FeatureChat = dynamic(
@@ -50,7 +50,7 @@ export function ChatPage({
   // 選択された番組に応じた動的サジェストを生成
   const dynamicPromptSuggestions = useMemo<PromptSuggestion[] | undefined>(() => {
     if (!config.promptSuggestions) return undefined;
-    
+
     // research-cast 機能のみ、番組名を動的に埋め込む
     if (featureId === "research-cast" && selectedProgramId && selectedProgramId !== "all") {
       const program = getProgramById(selectedProgramId);
@@ -67,7 +67,7 @@ export function ChatPage({
         });
       }
     }
-    
+
     return config.promptSuggestions;
   }, [config.promptSuggestions, featureId, selectedProgramId]);
 
