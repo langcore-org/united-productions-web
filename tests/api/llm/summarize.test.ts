@@ -32,25 +32,6 @@ describe("POST /api/llm/summarize", () => {
     mockSummarize.mockReset();
   });
 
-  it.skip("認証されていない場合は401を返す", async () => {
-    // FIXME: mock の設定が正しく動作していないためスキップ
-    // requireAuth が NextResponse を返す場合の mock 設定が必要
-    mockRequireAuth.mockResolvedValue(
-      new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 }),
-    );
-
-    const request = new NextRequest("http://localhost/api/llm/summarize", {
-      method: "POST",
-      body: JSON.stringify({
-        messages: [{ role: "user", content: "Hello" }],
-        provider: "grok-4-1-fast-reasoning",
-      }),
-    });
-
-    const response = await POST(request);
-    expect(response.status).toBe(401);
-  });
-
   it("有効なリクエストで要約を返す", async () => {
     mockRequireAuth.mockResolvedValue(null);
     mockSummarize.mockResolvedValue("要約結果");

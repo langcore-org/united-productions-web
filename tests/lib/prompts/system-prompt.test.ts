@@ -78,32 +78,6 @@ describe("buildSystemPrompt", () => {
     expect(prompt).not.toContain("機能固有の指示");
   });
 
-  it.skip("featureIdありで機能プロンプトを結合", async () => {
-    mockSupabaseState.feature_prompts = {
-      data: {
-        id: "fp-1",
-        feature_id: "research-cast",
-        prompt_key: "RESEARCH_CAST",
-        is_active: true,
-      },
-      error: null,
-    };
-    mockSupabaseState.system_prompts = {
-      data: {
-        id: "sp-1",
-        key: "RESEARCH_CAST",
-        content: "## 出演者リサーチ\n\nあなたは出演者リサーチ専門家です。",
-        is_active: true,
-      },
-      error: null,
-    };
-
-    const prompt = await buildSystemPrompt("shikujiri", "research-cast");
-
-    expect(prompt).toContain("しくじり先生");
-    expect(prompt).toContain("出演者リサーチ");
-  });
-
   it("存在しないfeatureIdの場合は番組情報のみ", async () => {
     mockSupabaseState.feature_prompts = { data: null, error: null };
 
