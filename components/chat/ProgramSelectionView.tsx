@@ -8,8 +8,8 @@ const featureIconMap: Record<string, React.ComponentType<{ className?: string }>
   "general-chat": MessageSquare,
   "research-cast": Users,
   "research-evidence": Shield,
-  "minutes": FileText,
-  "proposal": Lightbulb,
+  minutes: FileText,
+  proposal: Lightbulb,
 };
 
 export interface ProgramSelectionViewProps {
@@ -18,10 +18,14 @@ export interface ProgramSelectionViewProps {
   onSelect: (programId: string) => void;
 }
 
-export function ProgramSelectionView({ featureTitle, featureId, onSelect }: ProgramSelectionViewProps) {
+export function ProgramSelectionView({
+  featureTitle,
+  featureId,
+  onSelect,
+}: ProgramSelectionViewProps) {
   // 全番組選択肢（全番組 + 各番組）
   const options = [ALL_PROGRAMS_OPTION, ...programOptions];
-  
+
   // 機能に応じたアイコンを取得
   const IconComponent = featureIconMap[featureId] || MessageSquare;
 

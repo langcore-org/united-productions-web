@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowUp, Globe, Sparkles } from "lucide-react";
+import { ArrowUp, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -66,14 +66,6 @@ export default function DashboardPage() {
               >
                 {/* Input Row */}
                 <div className="flex items-center px-5 py-4">
-                  <button
-                    type="button"
-                    className="flex items-center justify-center w-10 h-10 rounded-full mr-3 text-gray-400 hover:text-gray-600 hover:bg-gray-100"
-                    title="検索設定"
-                  >
-                    <Globe className="w-5 h-5" />
-                  </button>
-
                   <input
                     id="main-input"
                     type="text"
