@@ -9,6 +9,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { requireAuth } from "@/lib/api/auth";
 import { getPromptWithHistory, updatePromptWithVersion } from "@/lib/prompts";
+import { getPromptFromDB } from "@/lib/prompts/db/crud";
 
 // プロンプト更新用スキーマ
 const updatePromptSchema = z.object({
@@ -77,12 +78,14 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       validatedData.changeNote,
     );
 
+    const content = await getPromptFromDB(decodedKey);
+
     return NextResponse.json({
       success: true,
       data: {
         key: decodedKey,
         version: updated.current_version,
-        content: updated.content,
+        content,
         changedBy: updated.changed_by,
         changeNote: updated.change_note,
         updatedAt: updated.updated_at,

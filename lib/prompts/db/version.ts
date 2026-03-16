@@ -44,7 +44,6 @@ export async function updatePromptWithVersion(
   const { data: updated, error: updateError } = await supabase
     .from("system_prompts")
     .update({
-      content,
       current_version: newVersion,
       changed_by: changedBy || null,
       change_note: changeNote || null,

@@ -66,7 +66,6 @@ async function main() {
   await supabase
     .from("system_prompts")
     .update({
-      content: draftContent,
       current_version: newVersion,
       change_note: note || `prompt-tuningによる更新`,
       changed_by: null,

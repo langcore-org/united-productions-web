@@ -15,14 +15,23 @@ import type { SystemPrompt } from "./types";
 export async function getPromptFromDB(key: string): Promise<string | null> {
   try {
     const supabase = await createClient();
-    const { data, error } = await supabase
+    const { data: prompt } = await supabase
       .from("system_prompts")
-      .select("content")
+      .select("id, current_version")
       .eq("key", key)
+      .eq("is_active", true)
       .single();
 
-    if (error || !data) return null;
-    return data.content;
+    if (!prompt) return null;
+
+    const { data: version } = await supabase
+      .from("system_prompt_versions")
+      .select("content")
+      .eq("prompt_id", prompt.id)
+      .eq("version", prompt.current_version)
+      .single();
+
+    return version?.content ?? null;
   } catch (error) {
     console.error(`Failed to fetch prompt "${key}":`, error);
     return null;
@@ -37,15 +46,28 @@ export async function getPromptsFromDB(keys: string[]): Promise<Record<string, s
     const supabase = await createClient();
     const { data: prompts, error } = await supabase
       .from("system_prompts")
-      .select("key, content")
+      .select("id, key, current_version")
       .in("key", keys);
 
     if (error) throw error;
+    if (!prompts?.length) return Object.fromEntries(keys.map((k) => [k, null]));
+
+    const { data: versions } = await supabase
+      .from("system_prompt_versions")
+      .select("prompt_id, version, content")
+      .in(
+        "prompt_id",
+        prompts.map((p) => p.id),
+      );
 
     const result: Record<string, string | null> = {};
     for (const key of keys) {
-      const prompt = prompts?.find((p) => p.key === key);
-      result[key] = prompt?.content || null;
+      const prompt = prompts.find((p) => p.key === key);
+      if (!prompt) { result[key] = null; continue; }
+      const version = versions?.find(
+        (v) => v.prompt_id === prompt.id && v.version === prompt.current_version,
+      );
+      result[key] = version?.content ?? null;
     }
     return result;
   } catch (error) {

@@ -10,7 +10,6 @@ export interface SystemPrompt {
   key: string;
   name: string;
   description: string | null;
-  content: string;
   category: string;
   is_active: boolean;
   current_version: number;

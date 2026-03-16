@@ -11,6 +11,7 @@
 import { getLineupByProgramId } from "@/lib/knowledge/lineup";
 import type { LineupEpisodeInfo } from "@/lib/knowledge/types";
 import { createClient } from "@/lib/supabase/server";
+import { getPromptFromDB } from "@/lib/prompts/db/crud";
 
 // =============================================================================
 // データ（直接定義）
@@ -531,14 +532,7 @@ async function getPromptByFeatureId(featureId: string): Promise<string | null> {
 
   if (!mapping) return null;
 
-  const { data: prompt } = await supabase
-    .from("system_prompts")
-    .select("content")
-    .eq("key", mapping.prompt_key)
-    .eq("is_active", true)
-    .single();
-
-  return prompt?.content || null;
+  return getPromptFromDB(mapping.prompt_key);
 }
 
 // =============================================================================

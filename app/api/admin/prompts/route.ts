@@ -13,7 +13,6 @@ import { createClient } from "@/lib/supabase/server";
 const updatePromptSchema = z.object({
   name: z.string().min(1).optional(),
   description: z.string().optional(),
-  content: z.string().min(1).optional(),
   is_active: z.boolean().optional(),
 });
 
