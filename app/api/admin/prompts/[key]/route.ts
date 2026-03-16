@@ -42,7 +42,31 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ success: false, error: "Prompt not found" }, { status: 404 });
     }
 
-    return NextResponse.json({ success: true, data: prompt });
+    // スネークケースからキャメルケースに変換
+    const formattedPrompt = {
+      id: prompt.id,
+      key: prompt.key,
+      name: prompt.name,
+      description: prompt.description,
+      category: prompt.category,
+      isActive: prompt.is_active,
+      currentVersion: prompt.current_version,
+      changedBy: prompt.changed_by,
+      changeNote: prompt.change_note,
+      createdAt: prompt.created_at,
+      updatedAt: prompt.updated_at,
+      versions: prompt.versions.map((v) => ({
+        id: v.id,
+        promptId: v.prompt_id,
+        version: v.version,
+        content: v.content,
+        changedBy: v.changed_by,
+        changeNote: v.change_note,
+        createdAt: v.created_at,
+      })),
+    };
+
+    return NextResponse.json({ success: true, data: formattedPrompt });
   } catch (error) {
     console.error("Failed to fetch prompt:", error);
     const errorMessage = error instanceof Error ? error.message : "Unknown error";

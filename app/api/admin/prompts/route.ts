@@ -36,7 +36,23 @@ export async function GET(request: NextRequest) {
       if (error || !prompt) {
         return NextResponse.json({ success: false, error: "Prompt not found" }, { status: 404 });
       }
-      return NextResponse.json({ success: true, data: prompt });
+
+      // スネークケースからキャメルケースに変換
+      const formattedPrompt = {
+        id: prompt.id,
+        key: prompt.key,
+        name: prompt.name,
+        description: prompt.description,
+        category: prompt.category,
+        isActive: prompt.is_active,
+        currentVersion: prompt.current_version,
+        changedBy: prompt.changed_by,
+        changeNote: prompt.change_note,
+        createdAt: prompt.created_at,
+        updatedAt: prompt.updated_at,
+      };
+
+      return NextResponse.json({ success: true, data: formattedPrompt });
     }
 
     let query = supabase
@@ -52,7 +68,22 @@ export async function GET(request: NextRequest) {
     const { data: prompts, error } = await query;
     if (error) throw error;
 
-    return NextResponse.json({ success: true, data: prompts || [] });
+    // スネークケースからキャメルケースに変換
+    const formattedPrompts = (prompts || []).map((prompt) => ({
+      id: prompt.id,
+      key: prompt.key,
+      name: prompt.name,
+      description: prompt.description,
+      category: prompt.category,
+      isActive: prompt.is_active,
+      currentVersion: prompt.current_version,
+      changedBy: prompt.changed_by,
+      changeNote: prompt.change_note,
+      createdAt: prompt.created_at,
+      updatedAt: prompt.updated_at,
+    }));
+
+    return NextResponse.json({ success: true, data: formattedPrompts });
   } catch (error) {
     console.error("Failed to fetch prompts:", error);
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
@@ -94,7 +125,22 @@ export async function PUT(request: NextRequest) {
 
     if (error) throw error;
 
-    return NextResponse.json({ success: true, data: updatedPrompt });
+    // スネークケースからキャメルケースに変換
+    const formattedPrompt = {
+      id: updatedPrompt.id,
+      key: updatedPrompt.key,
+      name: updatedPrompt.name,
+      description: updatedPrompt.description,
+      category: updatedPrompt.category,
+      isActive: updatedPrompt.is_active,
+      currentVersion: updatedPrompt.current_version,
+      changedBy: updatedPrompt.changed_by,
+      changeNote: updatedPrompt.change_note,
+      createdAt: updatedPrompt.created_at,
+      updatedAt: updatedPrompt.updated_at,
+    };
+
+    return NextResponse.json({ success: true, data: formattedPrompt });
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(

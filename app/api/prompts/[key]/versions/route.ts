@@ -53,7 +53,14 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       currentVersion: prompt.current_version,
     };
 
-    return NextResponse.json({ prompt: formattedPrompt, versions });
+    const formattedVersions = versions.map((v) => ({
+      version: v.version,
+      changeNote: v.change_note,
+      changedBy: v.changed_by,
+      createdAt: v.created_at,
+    }));
+
+    return NextResponse.json({ prompt: formattedPrompt, versions: formattedVersions });
   } catch (error) {
     console.error("Failed to fetch versions:", error);
     return NextResponse.json({ error: "Failed to fetch versions" }, { status: 500 });
@@ -95,9 +102,9 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         id: version.id,
         version: version.version,
         content: version.content,
-        change_note: version.change_note,
-        changed_by: version.changed_by,
-        created_at: version.created_at,
+        changeNote: version.change_note,
+        changedBy: version.changed_by,
+        createdAt: version.created_at,
       },
     });
   } catch (error) {

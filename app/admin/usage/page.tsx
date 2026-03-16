@@ -19,7 +19,7 @@ import {
   Users,
 } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   CartesianGrid,
   Cell,
@@ -140,7 +140,7 @@ export default function UsagePage() {
   const [error, setError] = useState<string | null>(null);
   const [expandedUsers, setExpandedUsers] = useState(false);
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setIsLoading(true);
     setError(null);
 
@@ -159,18 +159,16 @@ export default function UsagePage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [period]);
 
   useEffect(() => {
     fetchData();
-    // biome-ignore lint/correctness/useExhaustiveDependencies: fetchDataはuseCallbackで安定
   }, [fetchData]);
 
   // 自動更新（30秒ごと）
   useEffect(() => {
     const interval = setInterval(fetchData, 30000);
     return () => clearInterval(interval);
-    // biome-ignore lint/correctness/useExhaustiveDependencies: fetchDataはuseCallbackで安定
   }, [fetchData]);
 
   // 金額フォーマット

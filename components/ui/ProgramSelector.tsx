@@ -22,7 +22,7 @@ export function ProgramSelector({ value, onChange, disabled }: ProgramSelectorPr
   return (
     <Select value={value || undefined} onValueChange={onChange} disabled={disabled}>
       <SelectTrigger className="w-[280px] h-8 text-sm border-gray-200 bg-white">
-        <SelectValue placeholder="番組を選択してください" />
+        <SelectValue placeholder="番組未指定" />
       </SelectTrigger>
       <SelectContent>
         {options.map((option) => (

@@ -114,12 +114,12 @@ export function ChatHeader({
           {/* 番組セレクター - 選択済みの場合のみ表示 */}
           {selectedProgramId !== null && (
             <Select
-              value={selectedProgramId}
+              value={selectedProgramId || undefined}
               onValueChange={handleProgramChange}
               disabled={isStreaming}
             >
               <SelectTrigger className="w-[200px] h-8 text-sm border-gray-200 bg-white">
-                <SelectValue placeholder="番組を選択" />
+                <SelectValue placeholder="番組未指定" />
               </SelectTrigger>
               <SelectContent>
                 {programOptions.map((option) => (
