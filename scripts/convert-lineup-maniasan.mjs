@@ -3,10 +3,11 @@
  *
  * Usage: node scripts/convert-lineup-maniasan.mjs
  */
-import { readFileSync, writeFileSync } from "fs";
+import { readFileSync, writeFileSync } from "node:fs";
 
 // xlsx-cli uses SheetJS internally; we use it directly
-const XLSX_PATH = "docs/assets/excels_and_words/オンエアラインナップ/マニアさん長期ラインナップ0227.xlsx";
+const XLSX_PATH =
+  "docs/assets/excels_and_words/オンエアラインナップ/マニアさん長期ラインナップ0227.xlsx";
 
 async function main() {
   const XLSX = await import("xlsx");
@@ -34,7 +35,10 @@ async function main() {
   }
 
   const headers = rows[headerRowIdx].map((h) => String(h).trim());
-  console.log("ヘッダー:", headers.filter((h) => h));
+  console.log(
+    "ヘッダー:",
+    headers.filter((h) => h),
+  );
 
   // マニアさんのカラムマッピング
   // col 0: 回数, col 1: OA日, col 2: 収録日, col 3: 演出, col 4: PV・MIX,
@@ -72,11 +76,11 @@ async function main() {
 
       // 制作スタッフ情報
       if (cleanCell(row[4])) currentEpisode.production["PV・MIX"] = cleanCell(row[4]);
-      if (cleanCell(row[5])) currentEpisode.production["ロケ日"] = cleanCell(row[5]);
-      if (cleanCell(row[7])) currentEpisode.production["ロケ"] = cleanCell(row[7]);
-      if (cleanCell(row[8])) currentEpisode.production["作家"] = cleanCell(row[8]);
-      if (cleanCell(row[9])) currentEpisode.production["担当P"] = cleanCell(row[9]);
-      if (cleanCell(row[10])) currentEpisode.production["担当D"] = cleanCell(row[10]);
+      if (cleanCell(row[5])) currentEpisode.production.ロケ日 = cleanCell(row[5]);
+      if (cleanCell(row[7])) currentEpisode.production.ロケ = cleanCell(row[7]);
+      if (cleanCell(row[8])) currentEpisode.production.作家 = cleanCell(row[8]);
+      if (cleanCell(row[9])) currentEpisode.production.担当P = cleanCell(row[9]);
+      if (cleanCell(row[10])) currentEpisode.production.担当D = cleanCell(row[10]);
 
       // 裏番組情報を集める
       const competing = collectCompeting(row, 14);
@@ -97,25 +101,22 @@ async function main() {
 
       // ロケ日・内容の追加行
       if (cleanCell(row[5])) {
-        currentEpisode.production["ロケ日"] = appendStr(
-          currentEpisode.production["ロケ日"],
-          cleanCell(row[5])
+        currentEpisode.production.ロケ日 = appendStr(
+          currentEpisode.production.ロケ日,
+          cleanCell(row[5]),
         );
       }
       if (cleanCell(row[7])) {
-        currentEpisode.production["ロケ"] = appendStr(
-          currentEpisode.production["ロケ"],
-          cleanCell(row[7])
+        currentEpisode.production.ロケ = appendStr(
+          currentEpisode.production.ロケ,
+          cleanCell(row[7]),
         );
       }
 
       // 裏番組の追加行
       const competing = collectCompeting(row, 14);
       if (competing) {
-        currentEpisode.competingPrograms = appendStr(
-          currentEpisode.competingPrograms,
-          competing
-        );
+        currentEpisode.competingPrograms = appendStr(currentEpisode.competingPrograms, competing);
       }
     }
   }
@@ -137,11 +138,7 @@ async function main() {
   console.log("最後:", JSON.stringify(episodes[episodes.length - 1], null, 2));
 
   // JSON出力
-  writeFileSync(
-    "scripts/output-maniasan.json",
-    JSON.stringify(episodes, null, 2),
-    "utf-8"
-  );
+  writeFileSync("scripts/output-maniasan.json", JSON.stringify(episodes, null, 2), "utf-8");
   console.log("\n出力: scripts/output-maniasan.json");
 }
 
@@ -161,7 +158,7 @@ function cleanCell(val) {
 function appendIfPresent(obj, key, val) {
   if (!val) return;
   if (obj[key]) {
-    obj[key] += "\n" + val;
+    obj[key] += `\n${val}`;
   } else {
     obj[key] = val;
   }
@@ -169,7 +166,7 @@ function appendIfPresent(obj, key, val) {
 
 function appendStr(existing, val) {
   if (!existing) return val;
-  return existing + "\n" + val;
+  return `${existing}\n${val}`;
 }
 
 function collectCompeting(row, startCol) {

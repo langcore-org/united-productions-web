@@ -52,7 +52,10 @@ export function getDisplayTitle(url: string): string {
   return domain.charAt(0).toUpperCase() + domain.slice(1);
 }
 
-export function SearchResultsCard({ citations, searchQuery }: SearchResultsCardProps) {
+export function SearchResultsCard({
+  citations,
+  searchQuery: _searchQuery,
+}: SearchResultsCardProps) {
   if (!citations || citations.length === 0) {
     return null;
   }
@@ -75,7 +78,6 @@ export function SearchResultsCard({ citations, searchQuery }: SearchResultsCardP
             {/* ファビコン（小さめ） */}
             <div className="flex-shrink-0 w-3.5 h-3.5">
               {faviconUrl ? (
-                // biome-ignore lint/a11y/useAltText: 装飾目的のため空alt
                 <img
                   src={faviconUrl}
                   alt=""

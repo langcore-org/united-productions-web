@@ -21,6 +21,9 @@
     "enabled": true,
     "rules": {
       "recommended": true,
+      "performance": {
+        "noImgElement": "off"
+      },
       "security": {
         "noDangerouslySetInnerHtml": "off"
       }

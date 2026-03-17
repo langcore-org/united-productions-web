@@ -7,10 +7,6 @@ vi.mock("@/lib/api/auth", () => ({
 }));
 
 import { GET as getVersion } from "@/app/api/admin/prompts/[key]/history/[version]/route";
-import { GET as getHistory } from "@/app/api/admin/prompts/[key]/history/route";
-import { POST as restoreVersion } from "@/app/api/admin/prompts/[key]/restore/route";
-import { GET as getPromptDetail, PUT as updatePrompt } from "@/app/api/admin/prompts/[key]/route";
-import { GET as getPromptsList } from "@/app/api/admin/prompts/route";
 import { requireAuth } from "@/lib/api/auth";
 
 const mockRequireAuth = requireAuth as ReturnType<typeof vi.fn>;

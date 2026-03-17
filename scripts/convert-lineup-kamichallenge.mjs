@@ -3,7 +3,7 @@
  *
  * Usage: node scripts/convert-lineup-kamichallenge.mjs
  */
-import { readFileSync, writeFileSync } from "fs";
+import { readFileSync, writeFileSync } from "node:fs";
 
 const XLSX_PATH = "docs/assets/excels_and_words/オンエアラインナップ/神業【OA長期スケ】 (4).xlsx";
 
@@ -32,7 +32,10 @@ async function main() {
   }
 
   const headers = rows[headerRowIdx].map((h) => String(h).trim());
-  console.log("ヘッダー:", headers.filter((h) => h));
+  console.log(
+    "ヘッダー:",
+    headers.filter((h) => h),
+  );
 
   // 神業のカラムマッピング（ヘッダー行から特定）
   // col 0: (空), col 1: ＃, col 2: OA日, col 3: 収録日, col 4: 演出,
@@ -85,17 +88,17 @@ async function main() {
 
       // 候補者
       const candidates = cleanCell(row[18]);
-      if (candidates) currentEpisode.production["候補者"] = candidates;
+      if (candidates) currentEpisode.production.候補者 = candidates;
 
       // 制作スタッフ
-      if (cleanCell(row[5])) currentEpisode.production["作家"] = cleanCell(row[5]);
-      if (cleanCell(row[6])) currentEpisode.production["リサーチ"] = cleanCell(row[6]);
-      if (cleanCell(row[7])) currentEpisode.production["本編PV"] = cleanCell(row[7]);
-      if (cleanCell(row[8])) currentEpisode.production["サブPV"] = cleanCell(row[8]);
-      if (cleanCell(row[9])) currentEpisode.production["担当P"] = cleanCell(row[9]);
-      if (cleanCell(row[10])) currentEpisode.production["キャスP"] = cleanCell(row[10]);
-      if (cleanCell(row[11])) currentEpisode.production["担当D"] = cleanCell(row[11]);
-      if (cleanCell(row[12])) currentEpisode.production["ロケ日"] = cleanCell(row[12]);
+      if (cleanCell(row[5])) currentEpisode.production.作家 = cleanCell(row[5]);
+      if (cleanCell(row[6])) currentEpisode.production.リサーチ = cleanCell(row[6]);
+      if (cleanCell(row[7])) currentEpisode.production.本編PV = cleanCell(row[7]);
+      if (cleanCell(row[8])) currentEpisode.production.サブPV = cleanCell(row[8]);
+      if (cleanCell(row[9])) currentEpisode.production.担当P = cleanCell(row[9]);
+      if (cleanCell(row[10])) currentEpisode.production.キャスP = cleanCell(row[10]);
+      if (cleanCell(row[11])) currentEpisode.production.担当D = cleanCell(row[11]);
+      if (cleanCell(row[12])) currentEpisode.production.ロケ日 = cleanCell(row[12]);
 
       // 裏番組（col 22以降）
       const competing = collectCompeting(row, 22);
@@ -113,32 +116,33 @@ async function main() {
 
       // 制作スタッフ追記
       if (cleanCell(row[9])) {
-        currentEpisode.production["担当P"] = appendStr(
-          currentEpisode.production["担当P"], cleanCell(row[9])
+        currentEpisode.production.担当P = appendStr(
+          currentEpisode.production.担当P,
+          cleanCell(row[9]),
         );
       }
       if (cleanCell(row[11])) {
-        currentEpisode.production["担当D"] = appendStr(
-          currentEpisode.production["担当D"], cleanCell(row[11])
+        currentEpisode.production.担当D = appendStr(
+          currentEpisode.production.担当D,
+          cleanCell(row[11]),
         );
       }
       if (cleanCell(row[12])) {
-        currentEpisode.production["ロケ日"] = appendStr(
-          currentEpisode.production["ロケ日"], cleanCell(row[12])
+        currentEpisode.production.ロケ日 = appendStr(
+          currentEpisode.production.ロケ日,
+          cleanCell(row[12]),
         );
       }
       if (cleanCell(row[18])) {
-        currentEpisode.production["候補者"] = appendStr(
-          currentEpisode.production["候補者"], cleanCell(row[18])
+        currentEpisode.production.候補者 = appendStr(
+          currentEpisode.production.候補者,
+          cleanCell(row[18]),
         );
       }
 
       const competing = collectCompeting(row, 22);
       if (competing) {
-        currentEpisode.competingPrograms = appendStr(
-          currentEpisode.competingPrograms,
-          competing
-        );
+        currentEpisode.competingPrograms = appendStr(currentEpisode.competingPrograms, competing);
       }
     }
   }
@@ -158,11 +162,7 @@ async function main() {
   console.log("最初:", JSON.stringify(episodes[0], null, 2));
   console.log("最後:", JSON.stringify(episodes[episodes.length - 1], null, 2));
 
-  writeFileSync(
-    "scripts/output-kamichallenge.json",
-    JSON.stringify(episodes, null, 2),
-    "utf-8"
-  );
+  writeFileSync("scripts/output-kamichallenge.json", JSON.stringify(episodes, null, 2), "utf-8");
   console.log("\n出力: scripts/output-kamichallenge.json");
 }
 
@@ -181,7 +181,7 @@ function cleanCell(val) {
 function appendIfPresent(obj, key, val) {
   if (!val) return;
   if (obj[key]) {
-    obj[key] += "\n" + val;
+    obj[key] += `\n${val}`;
   } else {
     obj[key] = val;
   }
@@ -189,7 +189,7 @@ function appendIfPresent(obj, key, val) {
 
 function appendStr(existing, val) {
   if (!existing) return val;
-  return existing + "\n" + val;
+  return `${existing}\n${val}`;
 }
 
 function collectCompeting(row, startCol) {

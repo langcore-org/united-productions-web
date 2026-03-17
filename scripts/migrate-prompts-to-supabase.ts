@@ -5,16 +5,16 @@
  * 注意: NeonのIDはcuid、SupabaseはUUIDのため、マッピングテーブルを使用
  */
 
+import { randomUUID } from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
-import { randomUUID } from "crypto";
 import { config } from "dotenv";
 import { Client } from "pg";
 
 config({ path: ".env.local" });
 
-const NEON_DATABASE_URL = process.env.DATABASE_URL!;
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+const NEON_DATABASE_URL = process.env.DATABASE_URL;
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 interface NeonSystemPrompt {
   id: string;
@@ -168,7 +168,7 @@ async function migrate() {
       supabase_id: supabaseId,
     }));
 
-    const fs = await import("fs");
+    const fs = await import("node:fs");
     fs.writeFileSync("prompt-id-mapping-backup.json", JSON.stringify(mappingData, null, 2));
     console.log("  ✅ prompt-id-mapping-backup.jsonに保存");
 

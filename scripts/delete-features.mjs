@@ -12,10 +12,7 @@ async function deleteFeatures() {
 
   for (const featureId of featuresToDelete) {
     try {
-      const { data, error } = await supabase
-        .from("feature_prompts")
-        .delete()
-        .eq("feature_id", featureId);
+      const { error } = await supabase.from("feature_prompts").delete().eq("feature_id", featureId);
 
       if (error) throw error;
       console.log(`✅ FeaturePrompt: ${featureId} - 削除完了`);
@@ -35,15 +32,9 @@ async function deleteFeatures() {
         .single();
 
       if (prompt) {
-        await supabase
-          .from("system_prompt_versions")
-          .delete()
-          .eq("prompt_id", prompt.id);
+        await supabase.from("system_prompt_versions").delete().eq("prompt_id", prompt.id);
 
-        await supabase
-          .from("system_prompts")
-          .delete()
-          .eq("key", key);
+        await supabase.from("system_prompts").delete().eq("key", key);
 
         console.log(`✅ SystemPrompt: ${key} - 削除`);
       } else {

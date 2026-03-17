@@ -3,9 +3,9 @@
  * 実行: node scripts/test-research-evidence.mjs
  */
 
-import { readFileSync } from "fs";
-import { resolve, dirname } from "path";
-import { fileURLToPath } from "url";
+import { readFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const projectRoot = resolve(__dirname, "..");
@@ -22,7 +22,7 @@ const XAI_API_KEY = apiKeyMatch[1].trim();
 // プロンプトファイルを読み込む
 const systemPrompt = readFileSync(
   resolve(projectRoot, "docs/prompts/RESEARCH_EVIDENCE.md"),
-  "utf-8"
+  "utf-8",
 );
 
 const testQuery = process.argv[2] ?? "ヨーグルトの乳酸菌効果が食物繊維で爆増します";

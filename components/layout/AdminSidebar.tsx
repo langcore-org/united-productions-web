@@ -7,7 +7,6 @@ import {
   LayoutDashboard,
   LogOut,
   PanelLeft,
-  Shield,
   Tv,
   Users,
 } from "lucide-react";
