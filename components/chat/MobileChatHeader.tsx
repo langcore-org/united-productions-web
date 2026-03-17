@@ -18,12 +18,9 @@ export function MobileChatHeader({ onOpenSidebar }: MobileChatHeaderProps) {
         <Menu className="w-5 h-5 text-gray-700" />
       </button>
 
-      <div className="ml-2 text-sm font-medium text-gray-800 truncate">
-        Teddy
-      </div>
+      <div className="ml-2 text-sm font-medium text-gray-800 truncate">Teddy</div>
     </header>
   );
 }
 
 export default MobileChatHeader;
-

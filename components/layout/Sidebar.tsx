@@ -62,25 +62,12 @@ export function Sidebar({ className, onCollapseChange }: SidebarProps) {
     "flex flex-col bg-[#f9f9f9] border-r border-[#e5e5e5] transition-all duration-300 ease-in-out";
 
   if (!isMounted) {
-    return (
-      <aside
-        className={cn(
-          "h-screen w-[240px]",
-          baseClasses,
-          className,
-        )}
-      />
-    );
+    return <aside className={cn("h-screen w-[240px]", baseClasses, className)} />;
   }
 
   return (
     <aside
-      className={cn(
-        "h-screen",
-        baseClasses,
-        isCollapsed ? "w-[64px]" : "w-[240px]",
-        className,
-      )}
+      className={cn("h-screen", baseClasses, isCollapsed ? "w-[64px]" : "w-[240px]", className)}
     >
       {/* Header - ロゴ非表示（将来使用予定）
       <div className={cn(

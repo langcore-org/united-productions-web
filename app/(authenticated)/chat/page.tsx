@@ -3,10 +3,10 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useRef, useState } from "react";
 import { ChatPage } from "@/components/chat/ChatPage";
-import { isValidFeatureId } from "@/lib/chat/chat-config";
-import { Sidebar } from "@/components/layout/Sidebar";
-import { MobileSidebarOverlay } from "@/components/layout/MobileSidebarOverlay";
 import { MobileChatHeader } from "@/components/chat/MobileChatHeader";
+import { MobileSidebarOverlay } from "@/components/layout/MobileSidebarOverlay";
+import { Sidebar } from "@/components/layout/Sidebar";
+import { isValidFeatureId } from "@/lib/chat/chat-config";
 
 /**
  * 統合チャットページ

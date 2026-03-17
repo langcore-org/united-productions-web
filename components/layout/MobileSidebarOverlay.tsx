@@ -47,4 +47,3 @@ export function MobileSidebarOverlay({ open, onOpenChange, children }: MobileSid
 }
 
 export default MobileSidebarOverlay;
-
