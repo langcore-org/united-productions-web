@@ -86,6 +86,8 @@ export function FeatureChat({
   const [isCopied, setIsCopied] = useState(false);
   const [attachedFiles, setAttachedFiles] = useState<AttachedFile[]>([]);
   const hasSentInitialMessageRef = useRef(false);
+  const messagesContainerRef = useRef<HTMLDivElement | null>(null);
+  const shouldAutoScrollRef = useRef(true);
 
   const provider: LLMProvider = initialProvider;
 
@@ -252,6 +254,31 @@ export function FeatureChat({
     [isPending, provider, startStream, buildStreamMessages, selectedProgramId],
   );
 
+  // ユーザーがスクロールを上に動かした場合は自動スクロールを一時停止
+  useEffect(() => {
+    const container = messagesContainerRef.current;
+    if (!container) return;
+
+    const handleScroll = () => {
+      const { scrollTop, scrollHeight, clientHeight } = container;
+      const distanceFromBottom = scrollHeight - (scrollTop + clientHeight);
+      shouldAutoScrollRef.current = distanceFromBottom < 160;
+    };
+
+    container.addEventListener("scroll", handleScroll);
+    return () => {
+      container.removeEventListener("scroll", handleScroll);
+    };
+  }, []);
+
+  // 新しいメッセージやストリーミング更新時に下端へスクロール
+  // biome-ignore lint/correctness/useExhaustiveDependencies: メッセージ追加時のみ自動スクロールすればよい
+  useEffect(() => {
+    const container = messagesContainerRef.current;
+    if (!container || !shouldAutoScrollRef.current) return;
+    container.scrollTop = container.scrollHeight;
+  }, [messages.length]);
+
   return (
     <div className={cn("flex flex-col h-full bg-white", className)}>
       <ChatHeader
@@ -267,7 +294,7 @@ export function FeatureChat({
       />
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto">
+      <div ref={messagesContainerRef} className="flex-1 overflow-y-auto">
         {isLoadingHistory ? (
           <div className="flex items-center justify-center h-full">
             <div className="flex items-center gap-3 text-gray-500">
@@ -381,6 +408,7 @@ export function FeatureChat({
                 toolCalls={toolCalls}
                 citations={citations}
                 summarizationEvents={summarizationEvents}
+                throttleIntervalMs={80}
                 usage={usage}
                 provider={provider}
                 isComplete={isComplete}

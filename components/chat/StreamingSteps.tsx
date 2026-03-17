@@ -7,7 +7,7 @@
 
 import { Loader2 } from "lucide-react";
 import { TeddyIcon } from "@/components/icons/TeddyIcon";
-import { MarkdownRenderer } from "@/components/ui/MarkdownRenderer";
+import { StreamingMarkdown } from "@/components/ui/StreamingMarkdown";
 import { useThrottledValue } from "@/hooks/useThrottledValue";
 import {
   CitationsList,
@@ -24,6 +24,7 @@ export function StreamingSteps({
   toolCalls,
   citations,
   summarizationEvents,
+  throttleIntervalMs,
   usage,
   provider,
   isComplete,
@@ -31,7 +32,7 @@ export function StreamingSteps({
   connectionStatus,
   error,
 }: StreamingStepsProps) {
-  const throttledContent = useThrottledValue(content, 80);
+  const throttledContent = useThrottledValue(content, throttleIntervalMs ?? 80);
 
   // 重複を除去したツール呼び出し
   const uniqueToolCalls = toolCalls.filter(
@@ -188,7 +189,7 @@ export function StreamingSteps({
               {throttledContent && !isComplete && (
                 <div className="relative px-4 py-3 text-sm leading-relaxed rounded-2xl bg-white text-gray-800 border border-gray-200 rounded-tl-sm">
                   <div className="streaming-content">
-                    <MarkdownRenderer content={throttledContent} />
+                    <StreamingMarkdown content={throttledContent} />
                   </div>
                 </div>
               )}

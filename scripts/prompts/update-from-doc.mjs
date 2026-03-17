@@ -1,6 +1,6 @@
+import fs from "node:fs";
+import path from "node:path";
 import { createClient } from "@supabase/supabase-js";
-import fs from "fs";
-import path from "path";
 import dotenv from "dotenv";
 
 dotenv.config({ path: ".env.local" });
@@ -19,7 +19,9 @@ async function main() {
   const [, , key, reasonArg, ...rest] = process.argv;
 
   if (!key) {
-    console.error("使用方法: node scripts/prompts/update-from-doc.mjs <PROMPT_KEY> \"変更理由\" [--file path/to/file.md]");
+    console.error(
+      '使用方法: node scripts/prompts/update-from-doc.mjs <PROMPT_KEY> "変更理由" [--file path/to/file.md]',
+    );
     process.exit(1);
   }
 
@@ -33,8 +35,7 @@ async function main() {
     }
   }
 
-  const resolvedPath =
-    filePath ?? path.join(process.cwd(), "docs", "prompts", `${key}.md`);
+  const resolvedPath = filePath ?? path.join(process.cwd(), "docs", "prompts", `${key}.md`);
 
   if (!fs.existsSync(resolvedPath)) {
     console.error(`❌ ファイルが見つかりません: ${resolvedPath}`);
@@ -62,7 +63,9 @@ async function main() {
   }
 
   if (!prompt) {
-    console.error(`❌ key="${key}" の system_prompts レコードが存在しません。先にレコードを作成してください。`);
+    console.error(
+      `❌ key="${key}" の system_prompts レコードが存在しません。先にレコードを作成してください。`,
+    );
     process.exit(1);
   }
 
@@ -75,19 +78,20 @@ async function main() {
     .maybeSingle();
 
   if (latestVersionError) {
-    console.error("❌ system_prompt_versions の最新バージョン取得に失敗しました:", latestVersionError.message);
+    console.error(
+      "❌ system_prompt_versions の最新バージョン取得に失敗しました:",
+      latestVersionError.message,
+    );
     process.exit(1);
   }
 
   const nextVersion = (latestVersionData?.version ?? 0) + 1;
 
-  const { error: insertError } = await supabase
-    .from("system_prompt_versions")
-    .insert({
-      prompt_id: prompt.id,
-      version: nextVersion,
-      content,
-    });
+  const { error: insertError } = await supabase.from("system_prompt_versions").insert({
+    prompt_id: prompt.id,
+    version: nextVersion,
+    content,
+  });
 
   if (insertError) {
     console.error("❌ system_prompt_versions への挿入に失敗しました:", insertError.message);
@@ -114,4 +118,3 @@ main().catch((error) => {
   console.error("❌ 実行時エラー:", error);
   process.exit(1);
 });
-

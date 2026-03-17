@@ -34,6 +34,8 @@ export interface StreamingStepsProps {
   toolCalls: ToolCallInfo[];
   citations: CitationInfo[];
   summarizationEvents: SummarizationEvent[];
+  /** ストリーミング中の表示更新間隔（ミリ秒） */
+  throttleIntervalMs?: number;
   usage: {
     inputTokens: number;
     outputTokens: number;
