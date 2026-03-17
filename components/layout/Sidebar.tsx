@@ -58,13 +58,15 @@ export function Sidebar({ className, onCollapseChange }: SidebarProps) {
   };
 
   // SSRとの不一致を防ぐため、マウント前は展開状態でレンダリング
+  const baseClasses =
+    "flex flex-col bg-[#f9f9f9] border-r border-[#e5e5e5] transition-all duration-300 ease-in-out";
+
   if (!isMounted) {
     return (
       <aside
         className={cn(
-          "fixed top-0 left-0 z-50 h-screen w-[240px]",
-          "flex flex-col",
-          "bg-[#f9f9f9] border-r border-[#e5e5e5]",
+          "h-screen w-[240px]",
+          baseClasses,
           className,
         )}
       />
@@ -74,10 +76,8 @@ export function Sidebar({ className, onCollapseChange }: SidebarProps) {
   return (
     <aside
       className={cn(
-        "fixed top-0 left-0 z-50 h-screen",
-        "flex flex-col",
-        "bg-[#f9f9f9] border-r border-[#e5e5e5]",
-        "transition-all duration-300 ease-in-out",
+        "h-screen",
+        baseClasses,
         isCollapsed ? "w-[64px]" : "w-[240px]",
         className,
       )}
@@ -135,17 +135,14 @@ export function Sidebar({ className, onCollapseChange }: SidebarProps) {
                 )}
                 title={isCollapsed ? item.label : undefined}
               >
-                {isItemActive && !isCollapsed && (
-                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-black rounded-r-full" />
-                )}
-                {isItemActive && isCollapsed && (
-                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-4 bg-black rounded-r-full" />
+                {isItemActive && (
+                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-6 bg-black rounded-r-full" />
                 )}
 
                 {/* Icon with plus indicator */}
                 <div
                   className={cn(
-                    "flex-shrink-0 relative",
+                    "flex-shrink-0 relative flex items-center justify-center",
                     isItemActive
                       ? "text-black"
                       : "group-hover:scale-110 transition-transform duration-200",
@@ -197,15 +194,12 @@ export function Sidebar({ className, onCollapseChange }: SidebarProps) {
             )}
             title={isCollapsed ? "履歴" : undefined}
           >
-            {pathname === "/chat/history" && !isCollapsed && (
-              <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-black rounded-r-full" />
-            )}
-            {pathname === "/chat/history" && isCollapsed && (
-              <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-4 bg-black rounded-r-full" />
+            {pathname === "/chat/history" && (
+              <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-6 bg-black rounded-r-full" />
             )}
             <span
               className={cn(
-                "flex-shrink-0 transition-transform duration-200",
+                "flex-shrink-0 relative flex items-center justify-center transition-transform duration-200",
                 pathname === "/chat/history" ? "text-black" : "group-hover:scale-110",
               )}
             >
@@ -248,7 +242,7 @@ export function Sidebar({ className, onCollapseChange }: SidebarProps) {
           )}
           title={isCollapsed ? "ログアウト" : undefined}
         >
-          <span className="flex-shrink-0 transition-transform duration-200 group-hover:scale-110">
+          <span className="flex-shrink-0 flex items-center justify-center transition-transform duration-200 group-hover:scale-110">
             <LogOut className="w-[18px] h-[18px]" />
           </span>
           <span
@@ -272,7 +266,7 @@ export function Sidebar({ className, onCollapseChange }: SidebarProps) {
           )}
           title={isCollapsed ? "サイドバーを展開" : "サイドバーを縮小"}
         >
-          <span className="flex-shrink-0 transition-transform duration-200 group-hover:scale-110">
+          <span className="flex-shrink-0 flex items-center justify-center transition-transform duration-200 group-hover:scale-110">
             <PanelLeft
               className={cn(
                 "w-[18px] h-[18px] transition-transform duration-200",
