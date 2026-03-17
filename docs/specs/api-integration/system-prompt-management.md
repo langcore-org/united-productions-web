@@ -2,7 +2,7 @@
 
 > **DB管理・バージョン履歴・管理画面の設計方針**
 >
-> **最終更新**: 2026-02-24 12:00
+> **最終更新**: 2026-03-18 10:00
 
 ---
 
@@ -55,6 +55,57 @@ lib/llm/
 | API用プロンプトビルダー | ✅ 実装済み（lib/llm/prompt-builder.ts） |
 | 管理API | 📝 実装中 |
 | 管理UI | 📝 実装中 |
+| docs からの直接更新CLI | ✅ 実装済み（scripts/prompts/update-from-doc.mjs） |
+
+---
+
+## プロンプト更新フロー（docs → DB 直更新）
+
+### 基本方針
+
+- プロンプト本文の **Single Source of Truth** は `docs/prompts/*.md` とする。
+- 本番で使用する内容は、Supabase の `system_prompts` / `system_prompt_versions` に保存されたものを常に参照する。
+- docs の更新を本番に反映する際は、専用の CLI スクリプト `scripts/prompts/update-from-doc.mjs` を使用する。
+
+### CLI スクリプト: scripts/prompts/update-from-doc.mjs
+
+- 役割: `docs/prompts/<PROMPT_KEY>.md` の内容を読み込み、対応する `system_prompts` レコードに対して新しい `system_prompt_versions` 行を追加し、`current_version` を更新する。
+- 使用環境:
+  - `.env.local` に以下が設定されていること
+    - `NEXT_PUBLIC_SUPABASE_URL`
+    - `SUPABASE_SERVICE_ROLE_KEY`
+
+#### 使い方
+
+```bash
+# デフォルトパス（docs/prompts/RESEARCH_CAST.md）から更新
+node scripts/prompts/update-from-doc.mjs RESEARCH_CAST "大量候補＋対話フローを反映"
+
+# 任意のファイルを指定して更新
+node scripts/prompts/update-from-doc.mjs RESEARCH_CAST "一時テスト" --file path/to/custom.md
+```
+
+- 引数:
+  - `<PROMPT_KEY>`: `system_prompts.key` に対応するキー（例: `RESEARCH_CAST`, `PROPOSAL`）
+  - `"変更理由"`: `system_prompt_versions.reason` に保存される変更理由（任意。省略時はデフォルト文言）
+  - `--file`: 読み込むファイルパスを明示指定（省略時は `docs/prompts/<PROMPT_KEY>.md`）
+
+#### 内部処理の流れ（概要）
+
+1. ファイル読み込み
+   - `docs/prompts/<PROMPT_KEY>.md` または `--file` で指定されたパスを読み込み、空でないことを確認する。
+2. `system_prompts` の取得
+   - `key = <PROMPT_KEY>` かつ `is_active = true` なレコードを 1 件取得する。
+   - 見つからない場合はエラー終了（先にレコードを作成する必要がある）。
+3. 最新バージョンの取得
+   - `system_prompt_versions` から `prompt_id = system_prompts.id` のレコードを `version DESC` で 1 件取得。
+   - 見つかった `version` に対して `nextVersion = version + 1` を計算（なければ 1 とみなす）。
+4. 新バージョンの挿入
+   - `system_prompt_versions` に `{ prompt_id, version: nextVersion, content, reason }` を insert。
+5. `current_version` の更新
+   - `system_prompts.current_version` を `nextVersion` に update。
+
+エラーが発生した場合は標準出力に詳細を出しつつ、`process.exit(1)` で終了する。
 
 ---
 
