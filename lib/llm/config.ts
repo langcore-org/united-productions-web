@@ -64,6 +64,17 @@ export const PROVIDER_CONFIG: Record<LLMProvider, ProviderInfo> = {
     recommendedFor: ["高品質タスク", "複雑なタスク"],
     isAvailable: true,
   },
+  "grok-4.20-multi-agent-beta-latest": {
+    id: "grok-4.20-multi-agent-beta-latest",
+    name: "Grok 4.20 Multi-Agent",
+    provider: "xAI",
+    description: "Grok 4.20マルチエージェントベータ。エビデンスリサーチ特化。",
+    inputPrice: 3.0,
+    outputPrice: 15.0,
+    contextLength: 256000,
+    recommendedFor: ["エビデンス", "高精度調査"],
+    isAvailable: true,
+  },
 
   // OpenAI - 将来追加予定
   /*
@@ -138,6 +149,7 @@ export const RATE_LIMITS: Record<LLMProvider, { rpm: number; rpd: number }> = {
   // xAI Grok - 現在使用中
   "grok-4-1-fast-reasoning": { rpm: 60, rpd: 10000 },
   "grok-4-0709": { rpm: 60, rpd: 10000 },
+  "grok-4.20-multi-agent-beta-latest": { rpm: 60, rpd: 10000 },
 
   // OpenAI - 将来追加予定
   // 'gpt-4o-mini': { rpm: 60, rpd: 10000 },
@@ -179,6 +191,7 @@ export const CACHE_CONFIG = {
 export const FREE_TIER_LIMITS: Record<LLMProvider, { rpm: number; rpd: number }> = {
   "grok-4-1-fast-reasoning": { rpm: 60, rpd: 10000 },
   "grok-4-0709": { rpm: 60, rpd: 10000 },
+  "grok-4.20-multi-agent-beta-latest": { rpm: 60, rpd: 10000 },
 };
 
 /**
