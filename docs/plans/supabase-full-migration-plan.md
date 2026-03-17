@@ -1644,7 +1644,6 @@ export interface ChatHistoryItem {
 function getAgentTypeLabel(agentType: string): string {
   const labels: Record<string, string> = {
     'RESEARCH-CAST': '出演者リサーチ',
-    'RESEARCH-LOCATION': '場所リサーチ',
     'RESEARCH-INFO': '情報リサーチ',
     'RESEARCH-EVIDENCE': 'エビデンスリサーチ',
     MINUTES: '議事録作成',

@@ -230,7 +230,7 @@ AWS RDS、Google Cloud SQL等
 現在のスキーマ（`prisma/schema.prisma`）は357行で、以下を含む：
 
 - **NextAuth関連テーブル**: `Account`, `Session`, `VerificationToken`, `User`
-- **アプリケーションテーブル**: `MeetingNote`, `Transcript`, `ResearchChat`, `ResearchMessage`, `LocationSchedule`
+- **アプリケーションテーブル**: `MeetingNote`, `Transcript`, `ResearchChat`, `ResearchMessage` ~~`LocationSchedule`~~（削除済み）
 - **システムテーブル**: `UsageLog`, `ProgramSettings`, `GrokToolSettings`, `AppLog`, `SystemSettings`, `SystemPrompt`, `SystemPromptVersion`, `FeaturePrompt`
 - **Enum定義**: `LLMProvider`, `LogLevel`, `LogCategory`
 

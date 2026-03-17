@@ -781,7 +781,6 @@ graph LR
         subgraph "リサーチ系"
             RCAST["👥 research-cast<br/>出演者リサーチ"]
             REVI["✅ research-evidence<br/>エビデンス"]
-            RLOC["📍 research-location<br/>場所リサーチ（4月以降）"]
             RINFO["🔍 research-info<br/>情報リサーチ（4月以降）"]
         end
 
@@ -831,9 +830,7 @@ graph LR
 
         G2["research-cast<br/>出演者"] --> T2["Web検索: ON<br/>X検索: ON"]
 
-        G3["research-location<br/>場所"] --> T3["Web検索: ON"]
-
-        G4["research-info<br/>情報"] --> T4["Web検索: ON<br/>X検索: ON"]
+        G3["research-info<br/>情報"] --> T3["Web検索: ON<br/>X検索: ON"]
 
         G5["research-evidence<br/>エビデンス"] --> T5["Web検索: ON"]
 
@@ -958,7 +955,7 @@ erDiagram
     RESEARCH_CHAT {
         string id PK "UUID"
         string userId FK "ユーザーID"
-        string agentType "PEOPLE/LOCATION/INFO/EVIDENCE"
+        string agentType "PEOPLE/INFO/EVIDENCE"
         string title "チャットタイトル"
         enum llmProvider "使用したLLM"
         json results "結果JSON"

@@ -1557,7 +1557,7 @@ import { getPromptFromDB, PROMPT_KEYS } from '@/lib/prompts/db';
 import type { LLMMessage } from '@/lib/llm/types';
 import { resolveProvider } from '@/lib/llm/utils';
 
-export type ResearchType = 'cast' | 'location' | 'info' | 'evidence';
+export type ResearchType = 'cast' | 'info' | 'evidence';
 
 export interface ResearchRequest {
   type: ResearchType;
@@ -1582,7 +1582,6 @@ export interface ResearchResponse {
 // リサーチタイプ別のプロンプトキー
 const RESEARCH_PROMPT_KEYS: Record<ResearchType, string> = {
   cast: PROMPT_KEYS.RESEARCH_CAST,
-  location: PROMPT_KEYS.RESEARCH_LOCATION,
   info: PROMPT_KEYS.RESEARCH_INFO,
   evidence: PROMPT_KEYS.RESEARCH_EVIDENCE,
 };
@@ -1590,7 +1589,6 @@ const RESEARCH_PROMPT_KEYS: Record<ResearchType, string> = {
 // リサーチタイプ別のPJコード
 const RESEARCH_PROJECT_CODES: Record<ResearchType, string> = {
   cast: 'PJ-C-people',
-  location: 'PJ-C-location',
   info: 'PJ-C-info',
   evidence: 'PJ-C-evidence',
 };
@@ -1710,7 +1708,7 @@ import { executeResearch, streamResearch } from '@/lib/research/service';
 import { createApiHandler } from '@/lib/api/handler';
 
 const researchSchema = z.object({
-  type: z.enum(['cast', 'location', 'info', 'evidence']),
+  type: z.enum(['cast', 'info', 'evidence']),
   query: z.string().min(1, '検索クエリを入力してください'),
   options: z.object({
     includeX: z.boolean().optional(),
@@ -1741,7 +1739,7 @@ export const POST = createApiHandler(
  * ストリーミングリサーチ
  * 
  * Query Parameters:
- * - type: cast | location | info | evidence
+ * - type: cast | info | evidence
  * - query: string
  * - includeX: boolean (optional)
  * - includeWeb: boolean (optional)
@@ -1750,7 +1748,7 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     
-    const type = searchParams.get('type') as 'cast' | 'location' | 'info' | 'evidence';
+    const type = searchParams.get('type') as 'cast' | 'info' | 'evidence';
     const query = searchParams.get('query');
     const includeX = searchParams.get('includeX') === 'true';
     const includeWeb = searchParams.get('includeWeb') === 'true';
@@ -1823,7 +1821,7 @@ import { Search, Globe, Twitter } from 'lucide-react';
 import type { GemId } from '@/lib/chat/gems';
 
 interface ResearchChatProps {
-  gemId: Extract<GemId, 'research-cast' | 'research-location' | 'research-info' | 'research-evidence'>;
+  gemId: Extract<GemId, 'research-cast' | 'research-info' | 'research-evidence'>;
 }
 
 export function ResearchChat({ gemId }: ResearchChatProps) {
@@ -1834,7 +1832,6 @@ export function ResearchChat({ gemId }: ResearchChatProps) {
     switch (gemId) {
       case 'research-cast':
         return <Twitter className="h-4 w-4" />;
-      case 'research-location':
       case 'research-info':
         return <Globe className="h-4 w-4" />;
       case 'research-evidence':
@@ -1919,30 +1916,6 @@ export default function ResearchCastPage() {
   return (
     <div className="h-[calc(100vh-4rem)]">
       <ResearchChat gemId="research-cast" />
-    </div>
-  );
-}
-```
-
-**ファイル**: `app/(authenticated)/research/location/page.tsx` (新規)
-
-```typescript
-/**
- * 場所リサーチページ
- */
-
-import { ResearchChat } from '@/components/ui/ResearchChat';
-import { Metadata } from 'next';
-
-export const metadata: Metadata = {
-  title: '場所リサーチ | AD Production AI Hub',
-  description: 'ロケ地候補と撮影条件を調査',
-};
-
-export default function ResearchLocationPage() {
-  return (
-    <div className="h-[calc(100vh-4rem)]">
-      <ResearchChat gemId="research-location" />
     </div>
   );
 }
@@ -2040,17 +2013,6 @@ describe('Research Service', () => {
     
     expect(response.content).toBeDefined();
     expect(response.usage).toBeDefined();
-  });
-
-  it('場所リサーチを実行できる', async () => {
-    const request: ResearchRequest = {
-      type: 'location',
-      query: '東京都内のレトロな喫茶店',
-    };
-
-    const response = await executeResearch(request);
-    
-    expect(response.content).toBeDefined();
   });
 
   it('エビデンスリサーチで情報源を含める', async () => {
@@ -2652,7 +2614,6 @@ export default function ProposalPage() {
 
 const researchItems = [
   { id: 'research-cast', name: '出演者リサーチ', href: '/research/cast', icon: Users },
-  { id: 'research-location', name: '場所リサーチ', href: '/research/location', icon: MapPin },
   { id: 'research-info', name: '情報リサーチ', href: '/research/info', icon: Search },
   { id: 'research-evidence', name: 'エビデンスリサーチ', href: '/research/evidence', icon: Shield },
 ];
@@ -2699,7 +2660,7 @@ const ONBOARDING_STEPS = [
   },
   {
     title: 'リサーチ機能',
-    description: '出演者、場所、情報、エビデンスの4種類のリサーチを利用できます。',
+    description: '出演者、情報、エビデンスの3種類のリサーチを利用できます。',
   },
 ];
 

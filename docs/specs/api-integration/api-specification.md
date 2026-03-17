@@ -89,7 +89,6 @@
 | `transcript` | 文字起こし変換 | ✅ 利用可能 |
 | `na-script` | NA原稿作成 | ✅ 利用可能 |
 | `meeting-notes` | 会議メモ | ✅ 利用可能 |
-| `research-location` | 場所リサーチ | ⏸️ 4月以降実装予定 |
 | `research-info` | 情報リサーチ | ⏸️ 4月以降実装予定 |
 
 ---

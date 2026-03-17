@@ -171,7 +171,6 @@ types/                  # 型定義
 | チャット | `/chat` | 汎用チャット |
 | 出演者リサーチ | `/research/cast` | 出演者候補提案 |
 | エビデンスリサーチ | `/research/evidence` | 情報検証 |
-| 場所リサーチ | `/research/location` | ロケ地調査（4月以降実装予定） |
 | 情報リサーチ | `/research/info` | 情報収集・整理（4月以降実装予定） |
 | 議事録作成 | `/minutes` | 議事録作成 |
 | 新企画立案 | `/proposal` | 企画提案 |

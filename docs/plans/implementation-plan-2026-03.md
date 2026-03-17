@@ -32,7 +32,6 @@
 | 機能 | 理由 | 今後の対応 |
 |------|------|-----------|
 | **ナレーション原稿作成** | Word形式への出力実装が困難。中途半端な完成度では現場で使われなくなるリスク。 | [4月以降にフルセットで実装を検討](../backlog/features/narration-script-creation.md) |
-| **場所リサーチ** | 開発工数が重く、出力形式も特殊になりやすい | [第2段階以降で検討](../backlog/research/location-research.md) |
 | **YouTube/Instagram/TikTokリサーチ** | YouTube/Instagramは有料ツールが必要、TikTokはAPI申請に時間がかかる | [費用対効果を検証後、段階的に導入検討](../backlog/research/youtube-instagram-research-integration.md) |
 | **対面会議音声録音対応** | 音声→文字起こし処理の工数、複数人音声の品質調整が必要 | [4月以降の追加機能として検討](../backlog/features/voice-recorder-transcription.md) |
 | **過去企画の社内ドキュメントのインプット** | 権限管理が複雑で開発工数が重い | [第2段階以降で検討](../backlog/enhancements/past-project-internal-data-input.md) |
@@ -516,7 +515,6 @@ EOF
 |--------------|----------|
 | [YouTube/Instagramリサーチ統合（本格導入）](../backlog/research/youtube-instagram-research-integration.md) | リサーチ |
 | [TikTokリサーチ統合](../backlog/research/tiktok-research-integration.md) | リサーチ |
-| [場所リサーチ](../backlog/research/location-research.md) | リサーチ |
 | [ナレーション原稿作成機能（フルセット）](../backlog/features/narration-script-creation.md) | 機能追加 |
 | [対面会議音声録音対応](../backlog/features/voice-recorder-transcription.md) | 機能追加 |
 | [過去企画の社内情報インプット](../backlog/enhancements/past-project-internal-data-input.md) | 機能強化 |

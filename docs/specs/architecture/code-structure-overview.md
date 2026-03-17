@@ -233,8 +233,8 @@
 │  - updatePromptWithVersion(): バージョン管理付き更新                      │
 │                                                                         │
 │  プロンプトキー:                                                          │
-│  GENERAL_CHAT, RESEARCH_CAST, RESEARCH_LOCATION, RESEARCH_INFO,          │
-│  RESEARCH_EVIDENCE, MINUTES, PROPOSAL, TRANSCRIPT                        │
+│  GENERAL_CHAT, RESEARCH_CAST, RESEARCH_INFO, RESEARCH_EVIDENCE,          │
+│  MINUTES, PROPOSAL, TRANSCRIPT                                           │
 └─────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -311,16 +311,16 @@
 │  │  └─ grokToolSettings← Grokツール設定                             │   │
 │  └─────────────────────────────────────────────────────────────────┘   │
 └─────────────────────────────────────────────────────────────────────────┘
-       │              │              │              │
-       ▼              ▼              ▼              ▼
-┌─────────────┐ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐
-│MeetingNote  │ │ Transcript  │ │ResearchChat │ │LocationSched│
-│  (議事録)    │ │ (文字起こし) │ │ (リサーチ)   │ │ (ロケスケ)   │
-├─────────────┤ ├─────────────┤ ├─────────────┤ ├─────────────┤
-│userId       │ │userId       │ │userId       │ │userId       │
-│type         │ │rawText      │ │agentType    │ │masterData   │
-│rawText      │ │formattedText│ │title        │ │(JSON)       │
-│formattedText│ │llmProvider  │ │llmProvider  │ │llmProvider  │
+       │              │              │
+       ▼              ▼              ▼
+┌─────────────┐ ┌─────────────┐ ┌─────────────┐
+│MeetingNote  │ │ Transcript  │ │ResearchChat │
+│  (議事録)    │ │ (文字起こし) │ │ (リサーチ)   │
+├─────────────┤ ├─────────────┤ ├─────────────┤
+│userId       │ │userId       │ │userId       │
+│type         │ │rawText      │ │agentType    │
+│rawText      │ │formattedText│ │title        │
+│formattedText│ │llmProvider  │ │llmProvider  │
 │status       │ │createdAt    │ │messages[]   │ │createdAt    │
 │createdAt    │ │updatedAt    │ │createdAt    │ │updatedAt    │
 └─────────────┘ └─────────────┘ └─────────────┘ └─────────────┘

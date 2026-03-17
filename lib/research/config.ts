@@ -3,18 +3,12 @@ import type { ResearchAgentConfig, ResearchAgentType } from "@/types/research";
 
 export const AGENT_DEFAULT_PROVIDERS: Record<ResearchAgentType, LLMProvider> = {
   people: "grok-4-1-fast-reasoning",
-  // evidence: "perplexity-sonar",
-  // location: "perplexity-sonar",
   evidence: "grok-4.20-multi-agent-beta-latest",
-  location: "grok-4-1-fast-reasoning",
 };
 
 export const AGENT_SUPPORTED_PROVIDERS: Record<ResearchAgentType, LLMProvider[]> = {
   people: ["grok-4-1-fast-reasoning", "grok-4-0709"],
-  // evidence: ["perplexity-sonar", "perplexity-sonar-pro"],
-  // location: ["perplexity-sonar", "perplexity-sonar-pro", "grok-4-1-fast-reasoning", "grok-4-0709"],
   evidence: ["grok-4.20-multi-agent-beta-latest", "grok-4-1-fast-reasoning", "grok-4-0709"],
-  location: ["grok-4-1-fast-reasoning", "grok-4-0709"],
 };
 
 export const AGENT_CONFIG: Record<
@@ -29,15 +23,6 @@ export const AGENT_CONFIG: Record<
     placeholder: "探したい人物について教えてください（名前、職業、所在地など）",
     color: "#3b82f6",
     gradient: "from-blue-500/20 to-cyan-500/20",
-  },
-  location: {
-    label: "ロケ地探し",
-    iconName: "MapPin",
-    description:
-      "撮影に適したロケーションを提案します。雰囲気、エリア、撮影条件などを入力してください。",
-    placeholder: "どんなロケ地をお探しですか？",
-    color: "#22c55e",
-    gradient: "from-green-500/20 to-emerald-500/20",
   },
   evidence: {
     label: "エビデンス",

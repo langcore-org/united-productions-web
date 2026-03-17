@@ -182,7 +182,7 @@ async *streamWithSearch(messages: LLMMessage[]): AsyncIterable<string>
 
 // リクエストスキーマ
 {
-  type: 'cast' | 'location' | 'info' | 'evidence',
+  type: 'cast' | 'info' | 'evidence',
   query: string,
   options?: {
     includeX?: boolean,
@@ -207,7 +207,6 @@ async *streamWithSearch(messages: LLMMessage[]): AsyncIterable<string>
 ```typescript
 // 各リサーチページの実装
 - agent/cast/page.tsx
-- agent/location/page.tsx
 - agent/info/page.tsx
 - agent/evidence/page.tsx
 
@@ -305,8 +304,7 @@ async *streamWithSearch(messages: LLMMessage[]): AsyncIterable<string>
 ├── 出演者リサーチ (/agent/cast)
 └── エビデンスリサーチ (/agent/evidence)
 
-# 場所リサーチ・情報リサーチは4月以降実装予定
-# ├── 場所リサーチ (/agent/location)
+# 情報リサーチは4月以降実装予定
 # └── 情報リサーチ (/agent/info)
 ```
 
@@ -480,7 +478,6 @@ app/
 │   │   └── page.tsx              # NA原稿作成
 │   ├── agent/
 │   │   ├── cast/page.tsx         # 出演者リサーチ
-│   │   ├── location/page.tsx     # 場所リサーチ
 │   │   ├── info/page.tsx         # 情報リサーチ
 │   │   └── evidence/page.tsx     # エビデンスリサーチ
 │   ├── research/

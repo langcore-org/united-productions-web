@@ -223,7 +223,7 @@ app/(authenticated)/
 ├── research/
 │   ├── cast/page.tsx
 │   └── evidence/page.tsx
-│   # location/page.tsx, info/page.tsx は4月以降実装予定
+│   # info/page.tsx は4月以降実装予定
 ├── minutes/page.tsx
 ├── proposal/page.tsx
 ├── transcript/
@@ -240,7 +240,7 @@ lib/
 └── prompts/
     ├── research-cast.ts
     ├── research-evidence.ts
-    # research-location.ts, research-info.ts は4月以降実装予定
+    # research-info.ts は4月以降実装予定
     ├── minutes.ts
     ├── proposal.ts
     ├── transcript.ts

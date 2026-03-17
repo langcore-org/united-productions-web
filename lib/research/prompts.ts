@@ -4,9 +4,7 @@ import type { ResearchAgentType } from "@/types/research";
 export const AGENT_DEFAULT_PROVIDERS: Record<ResearchAgentType, LLMProvider> = {
   people: "grok-4-1-fast-reasoning",
   // evidence: "perplexity-sonar",
-  // location: "perplexity-sonar",
   evidence: "grok-4.20-multi-agent-beta-latest",
-  location: "grok-4-1-fast-reasoning",
 };
 
 export const AGENT_SYSTEM_PROMPTS: Record<ResearchAgentType, string> = {
@@ -36,19 +34,6 @@ X（Twitter）検索を活用して、依頼された人物を特定してくだ
 - 一次情報を優先
 - 複数の独立した情報源を提示
 - 不確実な情報は明確に区別`,
-
-  location: `あなたはテレビ制作のロケ地探しエージェントです。
-依頼された条件に合うロケ地を提案してください。
-
-【出力形式】
-- 候補地を10-15カ所列挙
-- 表形式で出力（場所名、住所、アクセス、特徴、使用実績、連絡先）
-- 各候補に撮影適性スコア（1-10）を付与
-
-【注意事項】
-- 撮影許可の有無を確認
-- 季節や時間帯の注意点を記載
-- 類似ロケの実績があれば言及`,
 };
 
 export function getSystemPrompt(agentType: ResearchAgentType): string {
@@ -60,16 +45,6 @@ export function getSystemPrompt(agentType: ResearchAgentType): string {
 - 人物の特定に役立つ情報（名前、職業、所在地、SNSアカウントなど）を整理
 - 信頼できる情報源がある場合は提示
 - プライバシーに配慮し、公開情報のみを扱う
-- 日本のテレビ制作現場で使用される形式で出力`;
-
-    case "location":
-      return `あなたはロケ地リサーチの専門家です。撮影に適したロケーションを提案します。
-
-以下の点に注意して回答してください：
-- 撮影条件（雰囲気、エリア、アクセス、許可など）を考慮
-- 具体的な場所名や住所を提示可能な場合は提示
-- 撮影許可が必要な場合はその旨を明記
-- 代替案も複数提示
 - 日本のテレビ制作現場で使用される形式で出力`;
 
     case "evidence":

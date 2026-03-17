@@ -7,7 +7,7 @@ import { createLLMClient } from "@/lib/llm";
 import type { LLMMessage } from "@/lib/llm/types";
 import { getPromptFromDB, PROMPT_KEYS } from "@/lib/prompts";
 
-export type ResearchType = "cast" | "location" | "info" | "evidence";
+export type ResearchType = "cast" | "info" | "evidence";
 
 export interface ResearchRequest {
   type: ResearchType;
@@ -32,7 +32,6 @@ export interface ResearchResponse {
 // リサーチタイプ別のプロンプトキー
 const RESEARCH_PROMPT_KEYS: Record<ResearchType, string> = {
   cast: PROMPT_KEYS.RESEARCH_CAST,
-  location: PROMPT_KEYS.RESEARCH_LOCATION,
   info: PROMPT_KEYS.RESEARCH_INFO,
   evidence: PROMPT_KEYS.RESEARCH_EVIDENCE,
 };
@@ -40,7 +39,6 @@ const RESEARCH_PROMPT_KEYS: Record<ResearchType, string> = {
 // リサーチタイプ別のPJコード
 const _RESEARCH_PROJECT_CODES: Record<ResearchType, string> = {
   cast: "PJ-C-people",
-  location: "PJ-C-location",
   info: "PJ-C-info",
   evidence: "PJ-C-evidence",
 };

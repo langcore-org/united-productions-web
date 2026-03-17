@@ -79,7 +79,6 @@ lib/llm/
 │  ┌───────────────────────────────────────────────────────┐  │
 │  │  機能固有レイヤー（DBから動的取得）                      │  │
 │  │  - RESEARCH_CAST: 出演者リサーチ指示 + ツール使用指示    │  │
-│  │  - RESEARCH_LOCATION: 場所リサーチ指示 + ツール使用指示  │  │
 │  │  - PROPOSAL: 企画立案指示                              │  │
 │  │  - ...                                                │  │
 │  └───────────────────────────────────────────────────────┘  │
@@ -103,7 +102,7 @@ lib/llm/
 const FEATURE_TO_PROMPT_KEY: Record<string, string> = {
   "general-chat": "GENERAL_CHAT",
   "research-cast": "RESEARCH_CAST",
-  "research-location": "RESEARCH_LOCATION",
+
   "research-info": "RESEARCH_INFO",
   "research-evidence": "RESEARCH_EVIDENCE",
   "minutes": "MINUTES",

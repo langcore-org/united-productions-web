@@ -14,7 +14,7 @@ import { createApiHandler } from "@/lib/api/handler";
 import { executeResearch, streamResearch } from "@/lib/research/service";
 
 const researchSchema = z.object({
-  type: z.enum(["cast", "location", "info", "evidence"]),
+  type: z.enum(["cast", "info", "evidence"]),
   query: z.string().min(1, "検索クエリを入力してください"),
   options: z
     .object({
@@ -47,7 +47,7 @@ export const POST = createApiHandler(
  * ストリーミングリサーチ
  *
  * Query Parameters:
- * - type: cast | location | info | evidence
+ * - type: cast | info | evidence
  * - query: string
  * - includeX: boolean (optional)
  * - includeWeb: boolean (optional)
@@ -56,7 +56,7 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
 
-    const type = searchParams.get("type") as "cast" | "location" | "info" | "evidence";
+    const type = searchParams.get("type") as "cast" | "info" | "evidence";
     const query = searchParams.get("query");
     const includeX = searchParams.get("includeX") === "true";
     const includeWeb = searchParams.get("includeWeb") === "true";

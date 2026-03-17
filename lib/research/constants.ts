@@ -3,9 +3,9 @@
  */
 
 // ResearchAgentTypeの定義
-type ResearchAgentType = "people" | "location" | "evidence";
+type ResearchAgentType = "people" | "evidence";
 
-import { MapPin, ShieldCheck, Users } from "lucide-react";
+import { ShieldCheck, Users } from "lucide-react";
 import React from "react";
 import type { LLMProvider } from "@/lib/llm/types";
 
@@ -15,9 +15,7 @@ import type { LLMProvider } from "@/lib/llm/types";
 export const AGENT_DEFAULT_PROVIDERS: Record<ResearchAgentType, LLMProvider> = {
   people: "grok-4-1-fast-reasoning",
   // evidence: "perplexity-sonar",
-  // location: "perplexity-sonar",
   evidence: "grok-4.20-multi-agent-beta-latest",
-  location: "grok-4-1-fast-reasoning",
 };
 
 /**
@@ -26,9 +24,7 @@ export const AGENT_DEFAULT_PROVIDERS: Record<ResearchAgentType, LLMProvider> = {
 export const AGENT_SUPPORTED_PROVIDERS: Record<ResearchAgentType, LLMProvider[]> = {
   people: ["grok-4-1-fast-reasoning", "grok-4-0709"],
   // evidence: ["perplexity-sonar", "perplexity-sonar-pro"],
-  // location: ["perplexity-sonar", "perplexity-sonar-pro", "grok-4-1-fast-reasoning", "grok-4-0709"],
   evidence: ["grok-4.20-multi-agent-beta-latest", "grok-4-1-fast-reasoning", "grok-4-0709"],
-  location: ["grok-4-1-fast-reasoning", "grok-4-0709"],
 };
 
 /**
@@ -52,14 +48,6 @@ export const AGENT_CONFIG: Record<ResearchAgentType, AgentConfig> = {
     placeholder: "探したい人物について教えてください（名前、職業、所在地など）",
     color: "#3b82f6",
     gradient: "from-blue-500/20 to-cyan-500/20",
-  },
-  location: {
-    label: "ロケ地探し",
-    icon: React.createElement(MapPin, { className: "w-4 h-4" }),
-    description: "撮影に適したロケ地を提案します。雰囲気、エリア、撮影条件などを入力してください。",
-    placeholder: "どんなロケ地をお探しですか？",
-    color: "#22c55e",
-    gradient: "from-green-500/20 to-emerald-500/20",
   },
   evidence: {
     label: "エビデンス",
@@ -85,16 +73,6 @@ export function getSystemPrompt(agentType: ResearchAgentType): string {
 - プライバシーに配慮し、公開情報のみを扱う
 - 日本のテレビ制作現場で使用される形式で出力`;
 
-    case "location":
-      return `あなたはロケ地リサーチの専門家です。撮影に適したロケーションを提案します。
-
-以下の点に注意して回答してください：
-- 撮影条件（雰囲気、エリア、アクセス、許可など）を考慮
-- 具体的な場所名や住所を提示可能な場合は提示
-- 撮影許可が必要な場合はその旨を明記
-- 代替案も複数提示
-- 日本のテレビ制作現場で使用される形式で出力`;
-
     case "evidence":
       return `あなたは事実確認の専門家です。エビデンスに基づいた検証を行います。
 
@@ -118,11 +96,6 @@ export const AGENT_SUGGESTIONS: Record<ResearchAgentType, string[]> = {
     "東京で活動している若手俳優を探しています",
     "SNSで話題になっている料理人を知りたい",
     "特定の業界で著名な専門家を探しています",
-  ],
-  location: [
-    "渋谷周辺で撮影できるレトロなカフェを探しています",
-    "自然豊かな山のロケーションが欲しいです",
-    "夜景がきれいな屋上スペースはありますか？",
   ],
   evidence: [
     "この統計データの出典を確認したいです",

@@ -57,7 +57,6 @@ app/
 │   │   ├── page.tsx            # Agentページ（リダイレクト）
 │   │   ├── cast/page.tsx       # 出演者リサーチ
 │   │   ├── evidence/page.tsx   # エビデンスリサーチ
-│   │   # location/page.tsx     # 場所リサーチ（4月以降実装予定）
 │   │   # info/page.tsx         # 情報リサーチ（4月以降実装予定）
 │   └── meeting-notes/
 │       └── page.tsx            # 議事録ページ
