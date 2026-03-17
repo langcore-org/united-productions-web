@@ -32,6 +32,7 @@ export function ChatInputArea({
   onSend,
 }: ChatInputAreaProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const canSend = Boolean(input.trim()) || attachedFiles.length > 0;
 
   // テキストエリアの自動リサイズ
   // biome-ignore lint/correctness/useExhaustiveDependencies: input change triggers resize
@@ -106,10 +107,10 @@ export function ChatInputArea({
         </div>
         <Button
           onClick={onSend}
-          disabled={!input.trim() || !!isStreaming}
+          disabled={!canSend || !!isStreaming}
           className={cn(
             "h-10 w-10 p-0 transition-all duration-200",
-            !input.trim() || isStreaming
+            !canSend || isStreaming
               ? "bg-gray-200 text-gray-400"
               : "bg-gray-900 hover:bg-gray-800 text-white shadow-lg shadow-gray-900/25",
           )}
