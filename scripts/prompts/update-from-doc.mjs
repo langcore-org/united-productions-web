@@ -23,8 +23,8 @@ async function main() {
     process.exit(1);
   }
 
-  let reason = reasonArg || "docs/prompts からの内容更新";
-  let filePath: string | null = null;
+  const reason = reasonArg || "docs/prompts からの内容更新";
+  let filePath = null;
 
   for (let i = 0; i < rest.length; i++) {
     if (rest[i] === "--file") {
@@ -87,7 +87,6 @@ async function main() {
       prompt_id: prompt.id,
       version: nextVersion,
       content,
-      reason,
     });
 
   if (insertError) {
