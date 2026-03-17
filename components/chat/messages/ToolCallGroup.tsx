@@ -13,6 +13,44 @@ import { getToolConfig } from "@/lib/tools/config";
 
 import { SearchResultsCard } from "./SearchResultsCard";
 
+const LONG_QUERY_THRESHOLD = 50;
+
+function QueryItem({ call, index }: { call: ToolCallInfo; index: number }) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const isLong = (call.input?.length ?? 0) > LONG_QUERY_THRESHOLD;
+
+  return (
+    <div className="text-xs text-blue-900 bg-blue-100/50 rounded overflow-hidden">
+      <div className="flex items-center gap-1.5 px-2 py-1">
+        {call.status === "running" ? (
+          <Loader2 className="w-3 h-3 animate-spin text-blue-600 flex-shrink-0" />
+        ) : (
+          <CheckCircle2 className="w-3 h-3 text-green-600 flex-shrink-0" />
+        )}
+        <span className="flex-shrink-0 text-blue-700/50">{index + 1}.</span>
+        <span className="flex-1 min-w-0 truncate">
+          {call.input || "クエリを取得中..."}
+        </span>
+        {isLong && (
+          <button
+            type="button"
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="flex-shrink-0 text-blue-600/50 hover:text-blue-600 transition-colors"
+            aria-label={isExpanded ? "折りたたむ" : "展開する"}
+          >
+            {isExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+          </button>
+        )}
+      </div>
+      {isExpanded && (
+        <div className="mx-2 mb-1.5 px-2 py-1.5 bg-blue-100 rounded text-blue-900/80 break-all leading-relaxed">
+          {call.input}
+        </div>
+      )}
+    </div>
+  );
+}
+
 interface ToolCallGroupProps {
   toolName: string;
   toolCalls: ToolCallInfo[];
@@ -97,20 +135,7 @@ export function ToolCallGroup({
               <div className="text-[11px] font-medium text-blue-800/70 mb-1">検索クエリ</div>
               <div className="space-y-0.5">
                 {toolCalls.map((call, index) => (
-                  <div
-                    key={call.id}
-                    className="flex items-center gap-1.5 text-xs text-blue-900 bg-blue-100/50 px-2 py-1 rounded"
-                  >
-                    {call.status === "running" ? (
-                      <Loader2 className="w-3 h-3 animate-spin text-blue-600 flex-shrink-0" />
-                    ) : (
-                      <CheckCircle2 className="w-3 h-3 text-green-600 flex-shrink-0" />
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <span className="text-blue-700/50 mr-1">{index + 1}.</span>
-                      <span className="truncate">{call.input || "クエリを取得中..."}</span>
-                    </div>
-                  </div>
+                  <QueryItem key={call.id} call={call} index={index} />
                 ))}
               </div>
             </div>
