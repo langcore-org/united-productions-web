@@ -4,6 +4,7 @@ import { File, FileCode, FileText, Image, Paperclip, X } from "lucide-react";
 import { useCallback, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { MAX_FILE_SIZE_MB } from "@/config/constants";
+import { isTextFile } from "@/lib/chat/file-content";
 import { cn } from "@/lib/utils";
 
 export interface AttachedFile {
@@ -11,7 +12,7 @@ export interface AttachedFile {
   name: string;
   type: string;
   size: number;
-  content?: string;
+  content?: string | null;
 }
 
 interface FileAttachmentProps {
@@ -67,28 +68,35 @@ export function FileAttachment({
 
   const processFile = async (file: File): Promise<AttachedFile> => {
     return new Promise((resolve) => {
+      const type = file.type || "application/octet-stream";
+
+      // バイナリファイルは内容を読み込まず、メタ情報のみ保持
+      if (!isTextFile(type) && !type.startsWith("image/")) {
+        resolve({
+          id: `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          name: file.name,
+          type,
+          size: file.size,
+          content: null,
+        });
+        return;
+      }
+
       const reader = new FileReader();
       reader.onload = (e) => {
         resolve({
           id: `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
           name: file.name,
-          type: file.type || "application/octet-stream",
+          type,
           size: file.size,
           content: e.target?.result as string,
         });
       };
 
-      // テキストファイルはテキストとして読み込み、画像はBase64
-      if (
-        file.type.startsWith("text/") ||
-        file.type.includes("json") ||
-        file.type.includes("javascript")
-      ) {
+      if (isTextFile(type)) {
         reader.readAsText(file);
-      } else if (file.type.startsWith("image/")) {
+      } else if (type.startsWith("image/")) {
         reader.readAsDataURL(file);
-      } else {
-        reader.readAsText(file);
       }
     });
   };
@@ -247,24 +255,35 @@ export function FileAttachButton({ onFilesSelect, disabled }: FileAttachButtonPr
     const attachedFiles: AttachedFile[] = [];
 
     for (const file of Array.from(files)) {
+      const type = file.type || "application/octet-stream";
+
+      if (!isTextFile(type) && !type.startsWith("image/")) {
+        attachedFiles.push({
+          id: `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          name: file.name,
+          type,
+          size: file.size,
+          content: null,
+        });
+        continue;
+      }
+
       const reader = new FileReader();
       const attachedFile = await new Promise<AttachedFile>((resolve) => {
         reader.onload = (event) => {
           resolve({
             id: `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
             name: file.name,
-            type: file.type || "application/octet-stream",
+            type,
             size: file.size,
             content: event.target?.result as string,
           });
         };
 
-        if (file.type.startsWith("text/") || file.type.includes("json")) {
+        if (isTextFile(type)) {
           reader.readAsText(file);
-        } else if (file.type.startsWith("image/")) {
+        } else if (type.startsWith("image/")) {
           reader.readAsDataURL(file);
-        } else {
-          reader.readAsText(file);
         }
       });
 

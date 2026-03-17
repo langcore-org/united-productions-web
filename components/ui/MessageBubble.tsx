@@ -94,8 +94,28 @@ export const MessageBubble = memo(function MessageBubble({
 
           {/* Content */}
           {isUser ? (
-            // ユーザーメッセージはプレーンテキスト
-            <div className="text-sm leading-relaxed whitespace-pre-wrap">{content}</div>
+            <div className="text-sm leading-relaxed whitespace-pre-wrap">
+              {content.split("\n").map((line) => {
+                if (line.startsWith("📎 ")) {
+                  return (
+                    <div key={line} className="text-xs text-gray-200 mb-1">
+                      {line}
+                    </div>
+                  );
+                }
+                if (line.startsWith("> ")) {
+                  return (
+                    <div
+                      key={line}
+                      className="text-xs text-gray-300 border-l border-gray-500 pl-2 mb-1"
+                    >
+                      {line.slice(2)}
+                    </div>
+                  );
+                }
+                return <div key={line}>{line}</div>;
+              })}
+            </div>
           ) : (
             // AIメッセージはマークダウン
             <div className="text-sm leading-relaxed pr-6">

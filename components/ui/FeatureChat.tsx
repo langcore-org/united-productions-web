@@ -10,6 +10,7 @@ import { type PromptSuggestion, PromptSuggestions } from "@/components/chat/Prom
 import { useChatInitialization } from "@/hooks/useChatInitialization";
 import { useConversationSave } from "@/hooks/useConversationSave";
 import { useLLMStream } from "@/hooks/useLLMStream";
+import { buildDisplayContent, buildLlmContent } from "@/lib/chat/file-content";
 import { DEFAULT_PROVIDER } from "@/lib/llm/config";
 import type { LLMProvider } from "@/lib/llm/types";
 import { cn } from "@/lib/utils";
@@ -194,22 +195,13 @@ export function FeatureChat({
   const handleSend = async () => {
     if (!input.trim() && attachedFiles.length === 0) return;
 
-    let messageContent = input.trim();
-    if (attachedFiles.length > 0) {
-      const fileContents = attachedFiles
-        .map((file) =>
-          file.type.startsWith("image/")
-            ? `![${file.name}](${file.content})`
-            : `<file name="${file.name}" type="${file.type}" size="${file.size}">\n${file.content?.substring(0, 10000) || ""}\n</file>`,
-        )
-        .join("\n\n");
-      messageContent = messageContent ? `${messageContent}\n\n${fileContents}` : fileContents;
-    }
+    const displayContent = buildDisplayContent(input, attachedFiles);
+    const llmContent = buildLlmContent(input, attachedFiles);
 
     const userMessage: Message = {
       id: Date.now().toString(),
       role: "user",
-      content: messageContent,
+      content: displayContent,
       timestamp: new Date(),
     };
 
@@ -217,7 +209,7 @@ export function FeatureChat({
     setInput("");
     setAttachedFiles([]);
 
-    const streamMessages = buildStreamMessages(userMessage.content, messages);
+    const streamMessages = buildStreamMessages(llmContent, messages);
     await startStream(streamMessages, provider, featureId, selectedProgramId ?? undefined);
   };
 
