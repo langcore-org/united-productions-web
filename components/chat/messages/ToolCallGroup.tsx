@@ -28,9 +28,7 @@ function QueryItem({ call, index }: { call: ToolCallInfo; index: number }) {
           <CheckCircle2 className="w-3 h-3 text-green-600 flex-shrink-0" />
         )}
         <span className="flex-shrink-0 text-blue-700/50">{index + 1}.</span>
-        <span className="flex-1 min-w-0 truncate">
-          {call.input || "クエリを取得中..."}
-        </span>
+        <span className="flex-1 min-w-0 truncate">{call.input || "クエリを取得中..."}</span>
         {isLong && (
           <button
             type="button"

@@ -43,7 +43,9 @@ async function checkChats() {
     if (messages?.length) {
       const preview = messages.map((m) => ({
         ...m,
-        content: m.content ? `${String(m.content).slice(0, 80)}${m.content.length > 80 ? "…" : ""}` : null,
+        content: m.content
+          ? `${String(m.content).slice(0, 80)}${m.content.length > 80 ? "…" : ""}`
+          : null,
       }));
       console.log(JSON.stringify(preview, null, 2));
     }

@@ -286,6 +286,8 @@ export interface ProviderInfo {
   description: string;
   /** 入力価格（$/1M tokens） */
   inputPrice: number;
+  /** キャッシュ済み入力価格（$/1M tokens）。未設定の場合は inputPrice を使用 */
+  cachedInputPrice?: number;
   /** 出力価格（$/1M tokens） */
   outputPrice: number;
   /** コンテキスト長（トークン） */

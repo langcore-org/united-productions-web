@@ -27,12 +27,25 @@ if (!key) {
 async function main() {
   const { data: prompt, error } = await supabase
     .from("system_prompts")
-    .select("*")
+    .select("id, key, name, current_version")
     .eq("key", key)
     .single();
 
   if (error || !prompt) {
     console.error(`❌ プロンプト "${key}" がDBに見つかりません`);
+    process.exit(1);
+  }
+
+  // 本文は system_prompt_versions に格納されている（9782fa3 以降のDB設計）
+  const { data: version, error: versionError } = await supabase
+    .from("system_prompt_versions")
+    .select("content")
+    .eq("prompt_id", prompt.id)
+    .eq("version", prompt.current_version)
+    .single();
+
+  if (versionError || !version?.content) {
+    console.error(`❌ プロンプト "${key}" の v${prompt.current_version} の内容が取得できません`);
     process.exit(1);
   }
 
@@ -44,7 +57,7 @@ async function main() {
   mkdirSync(historyDir, { recursive: true });
 
   if (!existsSync(draftPath)) {
-    writeFileSync(draftPath, prompt.content, "utf-8");
+    writeFileSync(draftPath, version.content, "utf-8");
     console.log(`✅ draft.md を作成しました（本番 v${prompt.current_version} のコピー）`);
   } else {
     console.log(`ℹ️  draft.md は既に存在します（既存のdraftを継続使用）`);

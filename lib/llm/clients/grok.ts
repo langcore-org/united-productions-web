@@ -168,12 +168,16 @@ export class GrokClient implements LLMClient {
 
   private calcCost(usage: XAIResponse["usage"]): number {
     if (usage.cost_in_usd_ticks) {
-      return Number((usage.cost_in_usd_ticks / 1_000_000_000).toFixed(6));
+      return Number((usage.cost_in_usd_ticks / 10_000_000_000).toFixed(6));
     }
     const info = getProviderInfo(this.provider);
+    const cachedTokens = usage.input_tokens_details?.cached_tokens ?? 0;
+    const nonCachedTokens = usage.input_tokens - cachedTokens;
+    const cachedPrice = info.cachedInputPrice ?? info.inputPrice;
     return Number(
       (
-        (usage.input_tokens / 1_000_000) * info.inputPrice +
+        (nonCachedTokens / 1_000_000) * info.inputPrice +
+        (cachedTokens / 1_000_000) * cachedPrice +
         (usage.output_tokens / 1_000_000) * info.outputPrice
       ).toFixed(6),
     );

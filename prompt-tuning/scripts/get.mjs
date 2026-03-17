@@ -38,6 +38,14 @@ async function main() {
     .order("version", { ascending: false })
     .limit(3);
 
+  // 本文は system_prompt_versions に格納されている
+  const { data: currentVersion } = await supabase
+    .from("system_prompt_versions")
+    .select("content")
+    .eq("prompt_id", prompt.id)
+    .eq("version", prompt.current_version)
+    .single();
+
   console.log(`📋 ${prompt.name} (${prompt.key})`);
   console.log(`   バージョン: v${prompt.current_version}`);
   console.log(`   カテゴリ: ${prompt.category}`);
@@ -48,7 +56,7 @@ async function main() {
     );
   }
   console.log(`\n--- プロンプト内容 ---\n`);
-  console.log(prompt.content);
+  console.log(currentVersion?.content ?? "(内容なし)");
 }
 
 main().catch((e) => {
