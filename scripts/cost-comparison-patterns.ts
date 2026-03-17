@@ -27,17 +27,20 @@ const TEST_CASES: TestCase[] = [
   },
   {
     name: "C: エビデンス調査（web+x_search）",
-    prompt: "「睡眠時間が6時間以下だと認知症リスクが高まる」という説は正しいですか？信頼できるソースを提示してください。",
+    prompt:
+      "「睡眠時間が6時間以下だと認知症リスクが高まる」という説は正しいですか？信頼できるソースを提示してください。",
     tools: [{ type: "web_search" }, { type: "x_search" }],
   },
   {
     name: "D: 人物リサーチ（web+x_search）",
-    prompt: "最近SNSで話題になっている料理系インフルエンサーを5人教えてください。フォロワー数や特徴も含めて。",
+    prompt:
+      "最近SNSで話題になっている料理系インフルエンサーを5人教えてください。フォロワー数や特徴も含めて。",
     tools: [{ type: "web_search" }, { type: "x_search" }],
   },
   {
     name: "E: 複雑な調査（web+x_search）",
-    prompt: "2026年3月に放送予定のテレビ朝日のゴールデンタイム特番を全てリストアップしてください。放送日時、タイトル、出演者を含めて。",
+    prompt:
+      "2026年3月に放送予定のテレビ朝日のゴールデンタイム特番を全てリストアップしてください。放送日時、タイトル、出演者を含めて。",
     tools: [{ type: "web_search" }, { type: "x_search" }],
   },
 ];
@@ -111,8 +114,7 @@ async function callModel(model: string, tc: TestCase): Promise<Result> {
     if (msgOutput?.content) {
       result.contentLength = (msgOutput.content as { text?: string }[])
         .map((c) => c.text ?? "")
-        .join("")
-        .length;
+        .join("").length;
     }
   } catch (err) {
     result.error = String(err);
@@ -157,9 +159,7 @@ async function main() {
   console.log(
     "| テストケース | モデル | コスト | 時間 | input (cached) | output (reasoning) | web | x | 文字数 |",
   );
-  console.log(
-    "|---|---|---|---|---|---|---|---|---|",
-  );
+  console.log("|---|---|---|---|---|---|---|---|---|");
 
   for (const r of allResults) {
     const shortName = r.model.includes("4.20") ? "grok-4.20" : "grok-4.1";

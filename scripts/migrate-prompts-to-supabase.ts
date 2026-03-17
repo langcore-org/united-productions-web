@@ -12,9 +12,9 @@ import { Client } from "pg";
 
 config({ path: ".env.local" });
 
-const NEON_DATABASE_URL = process.env.DATABASE_URL;
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const NEON_DATABASE_URL = process.env.DATABASE_URL ?? "";
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY ?? ""
 
 interface NeonSystemPrompt {
   id: string;
