@@ -1,16 +1,17 @@
 "use client";
 
-import { Loader2, MessageSquare } from "lucide-react";
+import { Loader2, MessageSquare, Paperclip, Trash2, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { StreamingSteps } from "@/components/chat";
 import { FollowUpSuggestions } from "@/components/chat/FollowUpSuggestions";
 import { CitationsList } from "@/components/chat/messages/CitationsList";
 import { ToolCallGroup } from "@/components/chat/messages/ToolCallGroup";
 import { type PromptSuggestion, PromptSuggestions } from "@/components/chat/PromptSuggestions";
+import { MAX_FILE_SIZE_MB } from "@/config/constants";
 import { useChatInitialization } from "@/hooks/useChatInitialization";
 import { useConversationSave } from "@/hooks/useConversationSave";
 import { useLLMStream } from "@/hooks/useLLMStream";
-import { buildDisplayContent, buildLlmContent } from "@/lib/chat/file-content";
+import { buildDisplayContent, buildLlmContent, isTextFile } from "@/lib/chat/file-content";
 import { DEFAULT_PROVIDER } from "@/lib/llm/config";
 import type { LLMProvider } from "@/lib/llm/types";
 import { cn } from "@/lib/utils";
@@ -86,9 +87,12 @@ export function FeatureChat({
   const [input, setInput] = useState("");
   const [isCopied, setIsCopied] = useState(false);
   const [attachedFiles, setAttachedFiles] = useState<AttachedFile[]>([]);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragError, setDragError] = useState<string | null>(null);
   const hasSentInitialMessageRef = useRef(false);
   const messagesContainerRef = useRef<HTMLDivElement | null>(null);
   const shouldAutoScrollRef = useRef(true);
+  const dragCounter = useRef(0);
 
   const provider: LLMProvider = initialProvider;
 
@@ -271,8 +275,157 @@ export function FeatureChat({
     container.scrollTop = container.scrollHeight;
   }, [messages.length]);
 
+  // ファイル処理関数（ドラッグ&ドロップ用）
+  const processFile = useCallback(async (file: File): Promise<AttachedFile> => {
+    return new Promise((resolve) => {
+      const type = file.type || "application/octet-stream";
+
+      // バイナリファイルは内容を読み込まず、メタ情報のみ保持
+      if (!isTextFile(type) && !type.startsWith("image/")) {
+        resolve({
+          id: `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          name: file.name,
+          type,
+          size: file.size,
+          content: null,
+        });
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        resolve({
+          id: `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          name: file.name,
+          type,
+          size: file.size,
+          content: e.target?.result as string,
+        });
+      };
+
+      if (isTextFile(type)) {
+        reader.readAsText(file);
+      } else if (type.startsWith("image/")) {
+        reader.readAsDataURL(file);
+      }
+    });
+  }, []);
+
+  const validateFile = useCallback((file: File): string | null => {
+    if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
+      return `ファイルサイズが大きすぎます（最大${MAX_FILE_SIZE_MB}MB）`;
+    }
+    return null;
+  }, []);
+
+  const handleFiles = useCallback(
+    async (fileList: FileList | null) => {
+      if (!fileList || isPending || !enableFileAttachment) return;
+
+      setDragError(null);
+
+      const maxFiles = 5;
+      if (attachedFiles.length + fileList.length > maxFiles) {
+        setDragError(`最大${maxFiles}ファイルまで添付できます`);
+        return;
+      }
+
+      const newFiles: AttachedFile[] = [];
+
+      for (const file of Array.from(fileList)) {
+        const validationError = validateFile(file);
+        if (validationError) {
+          setDragError(validationError);
+          continue;
+        }
+
+        try {
+          const attachedFile = await processFile(file);
+          newFiles.push(attachedFile);
+        } catch {
+          setDragError(`${file.name} の読み込みに失敗しました`);
+        }
+      }
+
+      if (newFiles.length > 0) {
+        setAttachedFiles((prev) => [...prev, ...newFiles]);
+      }
+    },
+    [attachedFiles, isPending, enableFileAttachment, processFile, validateFile],
+  );
+
+  // ドラッグ&ドロップイベントハンドラ
+  const handleDragEnter = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      dragCounter.current += 1;
+      if (!isPending && enableFileAttachment) setIsDragging(true);
+    },
+    [isPending, enableFileAttachment],
+  );
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounter.current -= 1;
+    if (dragCounter.current === 0) {
+      setIsDragging(false);
+    }
+  }, []);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  }, []);
+
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      dragCounter.current = 0;
+      setIsDragging(false);
+      handleFiles(e.dataTransfer.files);
+    },
+    // biome-ignore lint/correctness/useExhaustiveDependencies: handleFilesはレンダリング間で安定
+    [handleFiles],
+  );
+
   return (
-    <div className={cn("flex flex-col h-full bg-white", className)}>
+    <section
+      aria-label="チャットエリア"
+      className={cn("flex flex-col h-full bg-white", className)}
+      onDragEnter={handleDragEnter}
+      onDragLeave={handleDragLeave}
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
+    >
+      {/* ドラッグ&ドロップオーバーレイ */}
+      {isDragging && (
+        <div className="fixed inset-0 z-50 bg-gray-900/20 backdrop-blur-sm flex items-center justify-center">
+          <div className="bg-white border-2 border-dashed border-gray-700 rounded-2xl p-12 text-center shadow-lg">
+            <Paperclip className="w-12 h-12 text-gray-700 mx-auto mb-4" />
+            <p className="text-lg font-medium text-gray-900">ファイルをドロップ</p>
+            <p className="text-sm text-gray-500 mt-1">テキスト、画像、コードファイルに対応</p>
+          </div>
+        </div>
+      )}
+
+      {/* エラーメッセージ */}
+      {dragError && (
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 px-4 py-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-600 flex items-center gap-2 shadow-lg">
+          <X className="w-4 h-4" />
+          {dragError}
+          <button
+            type="button"
+            onClick={() => setDragError(null)}
+            className="ml-2 p-1 rounded hover:bg-red-100"
+          >
+            <Trash2 className="w-3 h-3" />
+          </button>
+        </div>
+      )}
+
       <ChatHeader
         title={title}
         featureId={featureId}
@@ -456,7 +609,7 @@ export function FeatureChat({
         enableFileAttachment={enableFileAttachment}
         onSend={handleSend}
       />
-    </div>
+    </section>
   );
 }
 
