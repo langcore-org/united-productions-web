@@ -7,6 +7,7 @@
 
 import type { NextRequest } from "next/server";
 import { requireAuth } from "@/lib/api/auth";
+import { getProgramById } from "@/lib/knowledge/programs";
 import { logger } from "@/lib/logger";
 import { createClient } from "@/lib/supabase/server";
 
@@ -15,6 +16,8 @@ export interface ChatHistoryItem {
   featureId: string;
   title: string;
   agentType: string;
+  programId: string | null;
+  programName: string | null;
   updatedAt: string;
   messageCount: number;
   lastMessage?: string;
@@ -46,7 +49,7 @@ export async function GET(request: NextRequest): Promise<Response> {
 
     const { data: chats, error: chatsError } = await supabase
       .from("chats")
-      .select("id, agent_type, title, updated_at")
+      .select("id, agent_type, title, program_id, updated_at")
       .eq("user_id", userId)
       .order("updated_at", { ascending: false });
 
@@ -79,11 +82,21 @@ export async function GET(request: NextRequest): Promise<Response> {
       const title =
         chat.title || lastMessage?.content.slice(0, 30) || getAgentTypeLabel(chat.agent_type);
 
+      const programId = (chat as { program_id?: string | null }).program_id ?? null;
+      const programName =
+        programId === "all"
+          ? "番組指定なし"
+          : programId
+            ? (getProgramById(programId)?.name ?? null)
+            : null;
+
       return {
         id: chat.id,
         featureId: chat.agent_type.toLowerCase().replace(/_/g, "-"),
         title: title.length > 30 ? `${title}...` : title,
         agentType: getAgentTypeLabel(chat.agent_type),
+        programId,
+        programName,
         updatedAt: chat.updated_at,
         messageCount: chatMessages.length,
         lastMessage: lastMessage?.content.slice(0, 100),

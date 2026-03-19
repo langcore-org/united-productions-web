@@ -23,12 +23,14 @@ function normalizeProvider(provider: string | undefined): string | undefined {
 interface UseConversationSaveOptions {
   featureId: string;
   initialChatId?: string;
+  selectedProgramId?: string | null;
   onChatCreated?: (chatId: string) => void;
 }
 
 export function useConversationSave({
   featureId,
   initialChatId,
+  selectedProgramId,
   onChatCreated,
 }: UseConversationSaveOptions) {
   const [currentChatId, setCurrentChatId] = useState<string | undefined>(initialChatId);
@@ -63,6 +65,7 @@ export function useConversationSave({
         const payload = {
           chatId,
           featureId,
+          programId: selectedProgramId ?? undefined,
           messages: updatedMessages.map((m) => ({
             ...m,
             timestamp: m.timestamp instanceof Date ? m.timestamp.toISOString() : m.timestamp,
@@ -94,7 +97,7 @@ export function useConversationSave({
         console.error("Failed to save conversation:", err);
       }
     },
-    [featureId, onChatCreated],
+    [featureId, onChatCreated, selectedProgramId],
   );
 
   return {

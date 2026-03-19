@@ -108,6 +108,7 @@ export async function GET(request: NextRequest): Promise<Response> {
 const saveRequestSchema = z.object({
   chatId: z.string().optional(),
   featureId: z.string(),
+  programId: z.string().optional(),
   messages: z.array(
     z.object({
       id: z.string(),
@@ -165,7 +166,7 @@ export async function POST(request: NextRequest): Promise<Response> {
       );
     }
 
-    const { chatId, featureId, messages } = validationResult.data;
+    const { chatId, featureId, programId, messages } = validationResult.data;
     const firstUserMessage = messages.find((m) => m.role === "user");
     const supabase = await createClient();
 
@@ -175,7 +176,7 @@ export async function POST(request: NextRequest): Promise<Response> {
     if (chatId) {
       const { data: existing } = await supabase
         .from("chats")
-        .select("id")
+        .select("id, program_id")
         .eq("id", chatId)
         .eq("user_id", userId)
         .single();
@@ -184,6 +185,15 @@ export async function POST(request: NextRequest): Promise<Response> {
         return Response.json({ error: "Chat not found" }, { status: 404 });
       }
       actualChatId = existing.id;
+
+      // 既存チャットが program 未設定で、リクエストに programId がある場合のみ保存
+      if (existing.program_id == null && programId) {
+        await supabase
+          .from("chats")
+          .update({ program_id: programId })
+          .eq("id", actualChatId)
+          .eq("user_id", userId);
+      }
     } else {
       isNewChat = true;
       const { data: newChat, error: createError } = await supabase
@@ -192,6 +202,7 @@ export async function POST(request: NextRequest): Promise<Response> {
           user_id: userId,
           agent_type: featureId.toUpperCase(),
           llm_provider: "GROK_4_1_FAST_REASONING",
+          program_id: programId ?? null,
         })
         .select("id")
         .single();

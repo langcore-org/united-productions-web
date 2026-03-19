@@ -28,6 +28,8 @@ interface ChatHistory {
   featureId: string;
   title: string;
   agentType: string;
+  programId: string | null;
+  programName: string | null;
   updatedAt: string;
   createdAt: string;
   messageCount: number;
@@ -158,8 +160,10 @@ export default function ChatHistoryPage() {
   };
 
   // チャットを開く
-  const handleOpenChat = (featureId: string, chatId: string) => {
-    router.push(`/chat?agent=${featureId}&chatId=${chatId}`);
+  const handleOpenChat = (featureId: string, chatId: string, programId?: string | null) => {
+    const params = new URLSearchParams({ agent: featureId, chatId });
+    if (programId) params.set("program", programId);
+    router.push(`/chat?${params.toString()}`);
   };
 
   // フィルタリングとソート
@@ -173,7 +177,9 @@ export default function ChatHistoryPage() {
       if (searchQuery) {
         const query = searchQuery.toLowerCase();
         return (
-          item.title.toLowerCase().includes(query) || item.agentType.toLowerCase().includes(query)
+          item.title.toLowerCase().includes(query) ||
+          item.agentType.toLowerCase().includes(query) ||
+          (item.programName?.toLowerCase().includes(query) ?? false)
         );
       }
       return true;
@@ -285,7 +291,7 @@ export default function ChatHistoryPage() {
                   <Card
                     key={item.id}
                     className="cursor-pointer hover:shadow-md transition-shadow"
-                    onClick={() => handleOpenChat(item.featureId, item.id)}
+                    onClick={() => handleOpenChat(item.featureId, item.id, item.programId)}
                   >
                     <CardContent className="p-4">
                       <div className="flex items-start justify-between">
@@ -302,6 +308,14 @@ export default function ChatHistoryPage() {
                               <Badge variant="outline" className="text-xs">
                                 {getFeatureLabel(item.featureId)}
                               </Badge>
+                              {item.programName && (
+                                <Badge
+                                  variant="outline"
+                                  className="text-xs bg-blue-50 text-blue-700 border-blue-200"
+                                >
+                                  {item.programName}
+                                </Badge>
+                              )}
                             </div>
                             <div className="flex items-center gap-4 text-sm text-gray-500">
                               <span className="flex items-center gap-1">
