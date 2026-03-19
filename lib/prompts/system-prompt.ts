@@ -561,14 +561,15 @@ export async function buildSystemPrompt(
     baseParts.push("");
 
     // 出演者リサーチ機能の場合は全出演者リスト+直近5回詳細を追加
-    if (featureId === "research-cast") {
-      baseParts.push(formatAllCastListsForResearch());
-      baseParts.push("");
-      baseParts.push(formatAllRecentLineupsForResearch());
-    } else {
-      // その他の機能はラインナップ情報（最新20回）
-      baseParts.push(formatAllLineups());
-    }
+    // NOTE: 2026-03-19 ラインナップ情報の参照を一時停止
+    // if (featureId === "research-cast") {
+    //   baseParts.push(formatAllCastListsForResearch());
+    //   baseParts.push("");
+    //   baseParts.push(formatAllRecentLineupsForResearch());
+    // } else {
+    //   // その他の機能はラインナップ情報（最新20回）
+    //   baseParts.push(formatAllLineups());
+    // }
   } else {
     const program = PROGRAMS.find((p) => p.id === programId);
     if (program) {
@@ -576,35 +577,37 @@ export async function buildSystemPrompt(
       baseParts.push("");
 
       // 出演者リサーチ機能の場合は全出演者リスト+直近5回詳細を追加
-      if (featureId === "research-cast") {
-        const castListText = formatCastListForResearch(programId);
-        if (castListText) {
-          baseParts.push(castListText);
-        }
-        const recentLineupText = formatRecentLineupForResearch(programId);
-        if (recentLineupText) {
-          baseParts.push("");
-          baseParts.push(recentLineupText);
-        }
-      } else {
-        // その他の機能はラインナップ情報（最新20回）
-        const lineupText = formatLineup(programId);
-        if (lineupText) {
-          baseParts.push(lineupText);
-        }
-      }
+      // NOTE: 2026-03-19 ラインナップ情報の参照を一時停止
+      // if (featureId === "research-cast") {
+      //   const castListText = formatCastListForResearch(programId);
+      //   if (castListText) {
+      //     baseParts.push(castListText);
+      //   }
+      //   const recentLineupText = formatRecentLineupForResearch(programId);
+      //   if (recentLineupText) {
+      //     baseParts.push("");
+      //     baseParts.push(recentLineupText);
+      //   }
+      // } else {
+      //   // その他の機能はラインナップ情報（最新20回）
+      //   const lineupText = formatLineup(programId);
+      //   if (lineupText) {
+      //     baseParts.push(lineupText);
+      //   }
+      // }
     } else {
       baseParts.push(formatAllPrograms());
       baseParts.push("");
 
       // 出演者リサーチ機能の場合は全出演者リスト+直近5回詳細を追加
-      if (featureId === "research-cast") {
-        baseParts.push(formatAllCastListsForResearch());
-        baseParts.push("");
-        baseParts.push(formatAllRecentLineupsForResearch());
-      } else {
-        baseParts.push(formatAllLineups());
-      }
+      // NOTE: 2026-03-19 ラインナップ情報の参照を一時停止
+      // if (featureId === "research-cast") {
+      //   baseParts.push(formatAllCastListsForResearch());
+      //   baseParts.push("");
+      //   baseParts.push(formatAllRecentLineupsForResearch());
+      // } else {
+      //   baseParts.push(formatAllLineups());
+      // }
     }
   }
 
