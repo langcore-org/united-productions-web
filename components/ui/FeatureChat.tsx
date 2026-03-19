@@ -387,7 +387,6 @@ export function FeatureChat({
       setIsDragging(false);
       handleFiles(e.dataTransfer.files);
     },
-    // biome-ignore lint/correctness/useExhaustiveDependencies: handleFilesはレンダリング間で安定
     [handleFiles],
   );
 
