@@ -16,7 +16,7 @@ interface UsageData {
   metadata?: Record<string, unknown>;
 }
 
-function toPrismaProvider(provider: LLMProvider): string {
+function toDbProvider(provider: LLMProvider): string {
   const mapping: Record<string, string> = {
     "grok-4.1-fast-reasoning": "GROK_4_1_FAST_REASONING",
     "grok-4-0709": "GROK_4_0709",
@@ -42,7 +42,7 @@ export async function trackUsage(data: UsageData): Promise<void> {
     const supabase = createAdminClient();
     const { error } = await supabase.from("usage_logs").insert({
       user_id: data.userId,
-      provider: toPrismaProvider(data.provider),
+      provider: toDbProvider(data.provider),
       input_tokens: data.inputTokens,
       output_tokens: data.outputTokens,
       cost: totalCost,

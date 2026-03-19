@@ -87,6 +87,15 @@ docs/
 │       ├── performance.md
 │       └── change-history.md
 │
+├── prompts/                     # 【システムプロンプト】DB反映用ソース
+│   ├── GENERAL_CHAT.md          # 汎用チャット
+│   ├── MINUTES.md               # 議事録作成
+│   ├── RESEARCH_CAST.md         # 出演者リサーチ
+│   ├── RESEARCH_EVIDENCE.md     # エビデンスリサーチ
+│   └── PROPOSAL.md              # 新企画立案
+│   # NOTE: 本番の Single Source of Truth は Supabase DB。
+│   # ここのファイルを更新後、scripts/prompts/update-from-doc.mjs でDBに反映。
+│
 ├── user-docs/                   # 【ユーザードキュメント】非技術者向け
 │   ├── README.md
 │   ├── getting-started.md

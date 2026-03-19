@@ -20,7 +20,7 @@ async function main() {
 
   if (!key) {
     console.error(
-      '使用方法: node scripts/prompts/update-from-doc.mjs <PROMPT_KEY> "変更理由" [--file path/to/file.md]',
+      '使用方法: node .claude/skills/prompt/scripts/update-from-doc.mjs <PROMPT_KEY> "変更理由" [--file path/to/file.md]',
     );
     process.exit(1);
   }

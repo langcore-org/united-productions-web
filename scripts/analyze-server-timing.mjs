@@ -39,9 +39,9 @@ steps.forEach((step) => {
 console.log("\n【ボトルネック候補】\n");
 
 // buildSystemPromptのDBアクセス確認
-if (/prisma\./.test(content) || /buildSystemPrompt/.test(content)) {
+if (/buildSystemPrompt/.test(content)) {
   console.log("⚠️  buildSystemPrompt() に DB アクセスあり");
-  console.log("    推定遅延: 50-200ms (Prisma + PostgreSQL)");
+  console.log("    推定遅延: 50-200ms (Supabase/PostgreSQL)");
   console.log("    対応案: キャッシュ導入\n");
 }
 
