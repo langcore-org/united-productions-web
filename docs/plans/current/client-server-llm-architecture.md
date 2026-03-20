@@ -1,7 +1,9 @@
-# Client-Server LLM Architecture Redesign
+# Client-Server LLM Architecture
 
 > **目的**: クライアントサイドで GrokClient を直接インスタンス化する問題を根本解決
 > **作成日**: 2026-02-24
+> **更新日**: 2026-03-20
+> **状態**: ✅ 実装済み（xAI直接呼び出し方式）
 
 ---
 

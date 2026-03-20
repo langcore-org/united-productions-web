@@ -246,5 +246,18 @@ United Productions
 
 ---
 
+## 関連ドキュメント
+
+- [docs/INDEX.md](../INDEX.md) - 全ドキュメントのインデックス
+- [docs/README.md](../README.md) - ドキュメント入り口・全体構成
+- [specs/](../specs/) - 技術仕様書（最優先参照）
+- [lessons/](../lessons/) - 過去の学びと推奨事項
+- [plans/](../plans/) - 進行中の計画
+- [guides/](../guides/) - 開発ガイド
+- [backlog/](../backlog/) - 保留タスク・調査項目
+- [AGENTS.md](../../AGENTS.md) - エージェント行動指針
+
+---
+
 **最終更新日**: 2026年2月16日
 **バージョン**: 0.9.0（Wave 3完了、Wave 4進行中）

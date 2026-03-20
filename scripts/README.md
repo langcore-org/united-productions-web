@@ -1,64 +1,100 @@
 # スクリプト一覧
 
-> **データベース更新・メンテナンス用スクリプト**
+> **データベース更新・メンテナンス・検証用スクリプト**
 >
-> **最終更新**: 2026-02-24 12:00
+> **最終更新**: 2026-03-20
 
 ---
 
-## スクリプト一覧
+## スクリプトカテゴリ
+
+### プロンプト管理
 
 | スクリプト | 用途 | 実行方法 |
 |-----------|------|---------|
+| `apply-prompt-change.ts` | プロンプト変更の適用 | `npx tsx scripts/apply-prompt-change.ts` |
+| `check-prompt-usage.ts` | プロンプト使用状況の確認 | `npx tsx scripts/check-prompt-usage.ts` |
+| `delete-unused-prompts.ts` | 未使用プロンプトの削除 | `npx tsx scripts/delete-unused-prompts.ts` |
+| `migrate-prompts-to-supabase.ts` | プロンプトをSupabaseに移行 | `npx tsx scripts/migrate-prompts-to-supabase.ts` |
+| `test-system-prompt.ts` | システムプロンプトのテスト | `npx tsx scripts/test-system-prompt.ts` |
+| `test-prompt-api.mjs` | プロンプトAPIのテスト | `node scripts/test-prompt-api.mjs` |
 | `update-research-prompts.sql` | リサーチ機能のプロンプトにツール使用指示を追加 | `npx prisma db execute --file scripts/update-research-prompts.sql` |
+| `update-research-cast-prompt.sql` | 出演者リサーチプロンプトの更新 | `npx prisma db execute --file scripts/update-research-cast-prompt.sql` |
+
+### データベース・ユーザー管理
+
+| スクリプト | 用途 | 実行方法 |
+|-----------|------|---------|
+| `check-chats.mjs` | チャットデータの確認 | `node scripts/check-chats.mjs` |
+| `check-supabase.mjs` | Supabase接続確認 | `node scripts/check-supabase.mjs` |
+| `check-users.mjs` | ユーザー情報の確認 | `node scripts/check-users.mjs` |
+| `make-admin.mjs` | ユーザーを管理者に設定 | `node scripts/make-admin.mjs <user_id>` |
+| `query-supabase.mjs` | Supabaseへのクエリ実行 | `node scripts/query-supabase.mjs` |
+| `delete-features.mjs` | 機能データの削除 | `node scripts/delete-features.mjs` |
+
+### コスト・課金確認
+
+| スクリプト | 用途 | 実行方法 |
+|-----------|------|---------|
+| `check-cost-ticks.ts` | コストティックの確認 | `npx tsx scripts/check-cost-ticks.ts` |
+| `cost-comparison-patterns.ts` | コスト比較パターン分析 | `npx tsx scripts/cost-comparison-patterns.ts` |
+| `count-tokens.mjs` | トークン数のカウント | `node scripts/count-tokens.mjs` |
+| `verify-cost-billing.ts` | コスト請求の検証 | `npx tsx scripts/verify-cost-billing.ts` |
+| `verify-cost-formula.ts` | コスト計算式の検証 | `npx tsx scripts/verify-cost-formula.ts` |
+
+### LLM・API検証
+
+| スクリプト | 用途 | 実行方法 |
+|-----------|------|---------|
+| `check-general-chat.ts` | 一般チャットの確認 | `npx tsx scripts/check-general-chat.ts` |
+| `compare-grok-models.ts` | Grokモデルの比較 | `npx tsx scripts/compare-grok-models.ts` |
+| `compare-grok-raw-events.ts` | Grok生イベントの比較 | `npx tsx scripts/compare-grok-raw-events.ts` |
+| `test-research-evidence.mjs` | エビデンスリサーチのテスト | `node scripts/test-research-evidence.mjs` |
+| `investigate-api-timing.mjs` | APIタイミング調査 | `node scripts/investigate-api-timing.mjs` |
+| `investigate-citations-patterns.ts` | 引用パターン調査 | `npx tsx scripts/investigate-citations-patterns.ts` |
+| `investigate-tool-response.ts` | ツールレスポンス調査 | `npx tsx scripts/investigate-tool-response.ts` |
+| `investigate-x-citations.ts` | X検索引用調査 | `npx tsx scripts/investigate-x-citations.ts` |
+| `investigate-xai-latency.mjs` | xAIレイテンシ調査 | `node scripts/investigate-xai-latency.mjs` |
+| `analyze-server-timing.mjs` | サーバータイミング分析 | `node scripts/analyze-server-timing.mjs` |
+
+### エピソードデータ管理
+
+| スクリプト | 用途 | 実行方法 |
+|-----------|------|---------|
+| `collect-episodes-from-official.mjs` | 公式サイトからエピソード収集 | `node scripts/collect-episodes-from-official.mjs` |
+| `verify-episodes.mjs` | エピソードデータ検証 | `node scripts/verify-episodes.mjs` |
+| `verify-episodes-final.mjs` | エピソード最終検証 | `node scripts/verify-episodes-final.mjs` |
+| `verify-episodes-part2.mjs` | エピソード検証 Part2 | `node scripts/verify-episodes-part2.mjs` |
+| `verify-episodes-simple.mjs` | エピソード簡易検証 | `node scripts/verify-episodes-simple.mjs` |
+| `verify-matsuko-episodes.mjs` | マツコエピソード検証 | `node scripts/verify-matsuko-episodes.mjs` |
+| `disable-recent-episodes.mjs` | 最近のエピソード無効化 | `node scripts/disable-recent-episodes.mjs` |
+| `convert-lineup-kamichallenge.mjs` | 神チャレンジ情報変換 | `node scripts/convert-lineup-kamichallenge.mjs` |
+| `convert-lineup-maniasan.mjs` | マニアさん情報変換 | `node scripts/convert-lineup-maniasan.mjs` |
+| `check-neon.mjs` | NeonDB接続確認 | `node scripts/check-neon.mjs` |
+| `check-output.mjs` | 出力確認 | `node scripts/check-output.mjs` |
+
+### デプロイ・環境設定
+
+| スクリプト | 用途 | 実行方法 |
+|-----------|------|---------|
+| `vercel-monitor.sh` | Vercelデプロイ監視 | `./scripts/vercel-monitor.sh` |
+| `setup-vercel-env.sh` | Vercel環境変数設定 | `./scripts/setup-vercel-env.sh` |
+| `open-oauth-consent.sh` | OAuth同意画面を開く | `./scripts/open-oauth-consent.sh` |
+| `verify-langchain-migration.sh` | LangChain移行検証 | `./scripts/verify-langchain-migration.sh` |
 
 ---
 
-## update-research-prompts.sql
+## 技術スタック
 
-### 概要
+- **ランタイム**: Node.js / tsx
+- **データベース**: Supabase (PostgreSQL)
+- **ORM**: Prisma
+- **LLM**: xAI (Grok) - 直接API呼び出し（LangChain不使用）
 
-リサーチ機能（出演者、場所、情報、エビデンス）のプロンプトに、Web検索・X検索の使用指示を追加します。
+---
 
-### 背景
+## 関連ドキュメント
 
-システムプロンプト生成を共通化した際に、番組情報を「背景知識」として保持しつつ、各機能がツールを使用できるようにするため、プロンプトに明示的な指示を追加する必要がありました。
-
-### 更新対象
-
-| プロンプトキー | 機能 |
-|--------------|------|
-| `RESEARCH_CAST` | 出演者リサーチ |
-| `RESEARCH_LOCATION` | 場所リサーチ |
-| `RESEARCH_INFO` | 情報リサーチ |
-| `RESEARCH_EVIDENCE` | エビデンスリサーチ |
-
-### 追加される指示
-
-```markdown
-### 情報収集（重要）
-**最新情報や詳細な情報が必要な場合は、積極的にツールを使用してください：**
-- **Web検索**: ...
-- **X検索**: ...
-- 検索結果は必ず回答に反映し、情報源を明記してください
-```
-
-### 実行手順
-
-```bash
-# 1. 本番環境に適用する場合はバックアップを取得
-# （Prismaのマイグレーション履歴やDBダンプ）
-
-# 2. スクリプトを実行
-npx prisma db execute --file scripts/update-research-prompts.sql
-
-# 3. 更新を確認
-npx prisma studio
-# → SystemPrompt テーブルを確認
-```
-
-### 注意事項
-
-- このスクリプトは冪等ではありません（複数回実行すると同じ内容が追加される可能性があります）
-- 実行前に必ず現在のプロンプト内容をバックアップしてください
-- 既にツール使用指示が追加されている場合は実行不要です
+- `docs/specs/api-integration/system-prompt-management.md` - プロンプト管理仕様
+- `docs/specs/api-integration/llm-integration-overview.md` - LLM連携概要
+- `AGENTS.md` - エージェント行動指針

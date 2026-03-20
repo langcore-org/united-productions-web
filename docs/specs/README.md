@@ -59,14 +59,20 @@ specs/
 | `api-integration/` | API、DB、外部サービス連携 | 外部接続変更時 |
 | `operations/` | 運用、監視、品質管理 | インフラ・運用変更時 |
 
-## 関連ガイド
+## 関連ドキュメント
 
 | 内容 | 参照先 |
 |-----|--------|
+| **ドキュメントインデックス** | [docs/INDEX.md](../INDEX.md) - 全ドキュメント一覧 |
+| **ドキュメント入り口** | [docs/README.md](../README.md) - 全体構成 |
 | 環境構築手順 | [guides/setup/](../guides/setup/) |
 | 開発ガイド | [guides/development/](../guides/development/) |
+| ユーザードキュメント | [user-docs/](../user-docs/) - 非技術者向け |
+| 過去の教訓 | [lessons/](../lessons/) - 技術選定時必読 |
+| 進行中の計画 | [plans/](../plans/) - 現在のタスク |
+| 保留タスク | [backlog/](../backlog/) - 検討・調査中 |
 | API変更履歴 | [api-changelog.md](./api-changelog.md) |
 | API詳細実装 | `app/api/` ディレクトリ |
-| スキーマ定義 | `prisma/schema.prisma` |
+| スキーマ定義 | `supabase/migrations/` ディレクトリ |
 | コンポーネント実装 | `components/` ディレクトリ |
 | カスタムフック | `hooks/` ディレクトリ |

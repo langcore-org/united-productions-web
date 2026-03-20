@@ -2,7 +2,7 @@
 
 > **AI Hub 開発エージェントの行動指針**
 > 
-> **最終更新**: 2026-03-18
+> **最終更新**: 2026-03-20
 
 ---
 
@@ -143,6 +143,9 @@ SKILL.md に追加: 「このスクリプトで確認できます」
 |------|--------|---------|
 | **「どこに何が書いてあるか分からない」** | `docs/README.md` | ドキュメント全体の構成、各ディレクトリの役割 |
 | **「新しい技術・ライブラリを導入したい」** | **`docs/lessons/README.md`** | 過去の技術選定の失敗（「なぜLangChainを使わないか」等） |
+| **「認証システムを変更する」** | `docs/specs/api-integration/authentication.md` | Supabase Authの仕様、設定方法 |
+| **「データベーススキーマを変更する」** | `docs/specs/api-integration/database-schema.md` | テーブル命名規則、RLSポリシー、マイグレーション |
+| **「環境構築を行う」** | `docs/guides/setup/` | 各種セットアップ手順（Supabase、Google OAuth等） |
 | **「システムの全体像を知りたい」** | `docs/specs/system-architecture.md` | ディレクトリ構造、設計パターン、データフロー |
 | **「APIエンドポイントを新規作成・変更する」** | `docs/specs/api-specification.md` | エンドポイント命名規則、型定義、レスポンス形式 |
 | **「LLM連携のコードを書く・変更する」** | **`docs/specs/api-integration/llm-integration-overview.md`** | xAI直接呼び出し方式（LangChain不使用）、プロバイダー切り替え方法 |

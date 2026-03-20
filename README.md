@@ -1,10 +1,12 @@
 # AI Hub - United Productions
 
+> **最終更新**: 2026-03-20
+
 制作支援統合プラットフォーム。テレビ制作業務をAIで効率化するための統合ツール群です。
 
 ## 概要
 
-AI Hubは、テレビ制作現場の様々な業務をAIで支援する統合プラットフォームです。議事録作成、NA原稿生成、リサーチ・考査、ロケスケジュール管理などの機能を提供します。
+AI Hubは、テレビ制作現場の様々な業務をAIで支援する統合プラットフォームです。議事録作成、リサーチ・考査、新企画立案などの機能を提供します。
 
 ## 技術スタック
 
@@ -19,14 +21,14 @@ AI Hubは、テレビ制作現場の様々な業務をAIで支援する統合プ
 | 認証 | Supabase Auth (Google OAuth + Email/Password) |
 | データベース | PostgreSQL (Supabase) |
 | キャッシュ | Upstash Redis |
-| LLM統合 | LangChain + xAI Grok |
+| LLM統合 | **xAI直接呼び出し**（LangChainは将来のGemini追加用に保持） |
 | デプロイ | Vercel |
 
-### 開発ツール（2026-02-23導入）
+### 開発ツール
 
 | カテゴリ | ツール | 用途 |
 |---------|--------|------|
-| **Lint/Format** | [Biome](https://biomejs.dev/) | 35倍高速なLint+Format統合 |
+| **Lint/Format** | [Biome](https://biomejs.dev/) | 高速なLint+Format統合 |
 | **Git Hooks** | [Lefthook](https://github.com/evilmartians/lefthook) | 並列実行で高速なpre-commit |
 | **未使用コード検出** | [Knip](https://knip.dev/) | デッドコード検出・削除 |
 | **依存関係管理** | [Renovate](https://docs.renovatebot.com/) | 自動依存更新・セキュリティパッチ |
@@ -40,53 +42,35 @@ AI Hubは、テレビ制作現場の様々な業務をAIで支援する統合プ
 | Wave 2 | UI/LLM連携（shadcn/ui、各LLMクライアント） | ✅ 完了 |
 | Wave 3 | 機能実装（PJ-A/B/C/D、Drive連携） | ✅ 完了 |
 | Wave 4 | サイドバーナビゲーション・FeatureChat実装 | ✅ 完了 |
-| Wave 5 | 統合・最適化（キャッシュ、テスト、デプロイ） | 🔄 進行中 |
+| Wave 5 | 統合・最適化（キャッシュ、テスト、デプロイ） | ✅ 完了 |
+| Wave 6 | 本番リリース準備・最終調整 | 🔄 進行中 |
 
 ## 機能一覧
 
 ### サイドバーナビゲーション
 
 ```
+├── チャット             → /chat
 ├── リサーチ（折りたたみメニュー）
 │   ├── 出演者リサーチ → /research/cast
 │   └── エビデンスリサーチ → /research/evidence
 ├── 議事録作成         → /minutes
 ├── 新企画立案         → /proposal
-├── 文字起こし（折りたたみメニュー）
-│   ├── フォーマット変換 → /transcript
-│   └── NA原稿作成     → /transcript/na
 └── 番組設定           → /settings/program
 ```
 
-### リサーチ機能 (PJ-C)
+### 実装済み機能
 
 | 機能 | パス | 説明 |
 |------|------|------|
+| **チャット** | `/chat` | 一般的なAIチャット。番組情報を参照した自然な会話が可能 |
 | **出演者リサーチ** | `/research/cast` | 企画に適した出演者候補を提案。プロフィール、出演実績、相性分析を含む |
 | **エビデンスリサーチ** | `/research/evidence` | 情報の真偽を検証。ファクトチェック・一次情報源を特定 |
-
-> **注記**: 場所リサーチ・情報リサーチは4月以降に実装予定
-
-### 議事録・文字起こし (PJ-A/PJ-B)
-
-| 機能 | パス | 説明 |
-|------|------|------|
 | **議事録作成** | `/minutes` | 文字起こしから構造化された議事録を作成。TODO・決定事項を抽出 |
 | **新企画立案** | `/proposal` | 番組情報と過去企画を基に新しい企画案を提案 |
-| **文字起こし変換** | `/transcript` | テキスト整形・フォーマット変換。フィラー除去、段落分け |
-| **NA原稿作成** | `/transcript/na` | ナレーション原稿を作成。Wordコピー対応のプレーンテキスト出力 |
-
-### 番組設定
-
-| 機能 | パス | 説明 |
-|------|------|------|
 | **番組設定** | `/settings/program` | 番組情報・過去企画を管理。新企画立案で使用 |
 
-### ロケスケ管理 (PJ-D)
-
-- マスタースケジュールからの自動生成
-- 演者別スケジュール・香盤表・車両表
-- Markdown/CSVエクスポート
+> **将来実装予定**: 文字起こし変換、NA原稿作成、場所リサーチ、情報リサーチ
 
 ## FeatureChat コンポーネント
 
@@ -119,46 +103,48 @@ interface FeatureChatProps {
 .
 ├── app/                          # Next.js App Router
 │   ├── (authenticated)/          # 認証必須ページ
+│   │   ├── chat/
+│   │   │   └── page.tsx          # 一般チャット
 │   │   ├── research/
 │   │   │   ├── cast/page.tsx     # 出演者リサーチ
 │   │   │   └── evidence/page.tsx # エビデンスリサーチ
-│   │   │   # 場所リサーチ・情報リサーチは4月以降実装予定
 │   │   ├── minutes/page.tsx      # 議事録作成
 │   │   ├── proposal/page.tsx     # 新企画立案
-│   │   ├── transcript/
-│   │   │   ├── page.tsx          # 文字起こし変換
-│   │   │   └── na/page.tsx       # NA原稿作成
 │   │   └── settings/
 │   │       └── program/page.tsx  # 番組設定
 │   ├── api/
-│   │   ├── auth/                 # NextAuth.js認証
 │   │   ├── chat/
 │   │   │   └── feature/route.ts  # 機能別チャットAPI
 │   │   ├── llm/                  # LLM関連API
 │   │   └── settings/
 │   │       └── program/route.ts  # 番組設定API
-│   └── auth/                     # 認証ページ
+│   └── auth/                     # 認証ページ（Supabase Auth）
 ├── components/
 │   ├── layout/
 │   │   └── Sidebar.tsx           # サイドバー（折りたたみ対応）
 │   └── ui/
 │       └── FeatureChat.tsx       # 共通チャットUI
 ├── lib/
-│   ├── prompts/                  # プロンプト定数
-│   │   ├── research-cast.ts
-│   │   ├── research-evidence.ts
-│   │   # research-location.ts, research-info.ts は4月以降実装予定
-│   │   ├── minutes.ts
-│   │   ├── proposal.ts
-│   │   ├── transcript.ts
-│   │   └── na-script.ts
-│   └── llm/                      # LLM統合
+│   ├── prompts/                  # プロンプト管理
+│   │   ├── constants/            # プロンプト定数
+│   │   ├── db/                   # DB操作用（CRUD、バージョン管理）
+│   │   ├── archive/              # アーカイブされたプロンプト
+│   │   ├── index.ts              # エクスポート
+│   │   └── system-prompt.ts      # システムプロンプト構築
+│   ├── llm/                      # LLM統合
+│   │   ├── clients/              # LLMクライアント（xAI Grok等）
+│   │   ├── memory/               # 会話メモリ管理
+│   │   ├── config.ts             # LLM設定
+│   │   ├── factory.ts            # LLMクライアントファクトリ
+│   │   └── types.ts              # 型定義
+│   └── knowledge/                # 番組情報・ナレッジベース
 ├── supabase/
 │   └── migrations/               # Supabaseマイグレーション
 └── docs/                         # ドキュメント
-    ├── ARCHITECTURE.md           # アーキテクチャ設計
-    ├── API.md                    # API仕様書
-    └── IMPROVEMENT_PLAN.md       # 改善プラン
+    ├── specs/                    # 技術仕様
+    ├── guides/                   # 開発ガイド
+    ├── lessons/                  # 学びの記録
+    └── prompts/                  # プロンプト定義（DB反映用）
 ```
 
 ## 環境構築
@@ -172,7 +158,7 @@ interface FeatureChatProps {
 1. **リポジトリのクローン**
 ```bash
 git clone <repository-url>
-cd agent1
+cd teddy
 ```
 
 2. **依存関係のインストール**
@@ -207,31 +193,32 @@ npm run dev
 
 | 変数名 | 説明 | 取得先 |
 |-------|------|--------|
+| `NEXT_PUBLIC_APP_URL` | アプリケーションURL | 開発時: `http://localhost:3000` |
 | `GOOGLE_CLIENT_ID` | Google OAuth クライアントID | [Google Cloud Console](https://console.cloud.google.com/apis/credentials) |
 | `GOOGLE_CLIENT_SECRET` | Google OAuth クライアントシークレット | [Google Cloud Console](https://console.cloud.google.com/apis/credentials) |
-| `NEXTAUTH_SECRET` | NextAuth.js 秘密鍵 | `openssl rand -base64 32` |
-| `NEXTAUTH_URL` | アプリケーションURL | 開発時: `http://localhost:3000` |
 | `NEXT_PUBLIC_SUPABASE_URL` | SupabaseプロジェクトURL | [Supabase](https://supabase.com/) |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase匿名キー | [Supabase](https://supabase.com/) |
 | `SUPABASE_SERVICE_ROLE_KEY` | Supabaseサービスロールキー | [Supabase](https://supabase.com/) |
 | `UPSTASH_REDIS_REST_URL` | Upstash Redis URL | [Upstash](https://upstash.com/) |
 | `UPSTASH_REDIS_REST_TOKEN` | Upstash Redis トークン | [Upstash](https://upstash.com/) |
-| `GEMINI_API_KEY` | Google AI Studio APIキー | [AI Studio](https://aistudio.google.com/app/apikey) |
-| `XAI_API_KEY` | xAI APIキー | [xAI](https://x.ai/api) |
-| `PERPLEXITY_API_KEY` | Perplexity APIキー | [Perplexity](https://www.perplexity.ai/settings/api) |
+| `XAI_API_KEY` | xAI APIキー（必須） | [xAI](https://x.ai/api) |
+| `PERPLEXITY_API_KEY` | Perplexity APIキー（エビデンス検索用） | [Perplexity](https://www.perplexity.ai/settings/api) |
+| `GEMINI_API_KEY` | Google AI Studio APIキー（将来連携予定） | [AI Studio](https://aistudio.google.com/app/apikey) |
+
+> **注**: `NEXTAUTH_SECRET` と `NEXTAUTH_URL` は Supabase Auth 移行により不要になりました。
 
 詳細は [.env.example](./.env.example) を参照してください。
 
 ## 利用可能なLLMモデル
 
-| モデル | プロバイダー | 用途 | 無料枠 |
-|-------|------------|------|--------|
-| Gemini 2.5 Flash-Lite | Google | デフォルト・軽量タスク | 30 RPM / 1,500 RPD |
-| Gemini 3.0 Flash | Google | 高品質タスク | 30 RPM / 1,500 RPD |
-| Grok 4.1 Fast | xAI | X検索・人探し | 有料API |
+| モデル | プロバイダー | 用途 | 備考 |
+|-------|------------|------|------|
+| Grok 4.1 Fast | xAI | デフォルト・高速タスク | 有料API |
 | Grok 4 | xAI | 最高品質 | 有料API |
 | Perplexity Sonar | Perplexity | エビデンス検索 | 有料API |
 | Perplexity Sonar Pro | Perplexity | 高品質検索 | 有料API |
+
+> **注**: Geminiは将来の追加用に準備中（LangChain経由での統合予定）
 
 ## スクリプト
 
@@ -261,6 +248,9 @@ npm run analyze          # バンドルサイズ分析
 npm run test             # 単体テスト（Vitest）
 npm run test:e2e         # E2Eテスト（Playwright）
 
+# プロンプト管理
+node scripts/prompts/update-from-doc.mjs <KEY> "理由"  # プロンプトをDBに反映
+
 # Supabase関連
 supabase db push         # マイグレーション実行
 supabase db reset        # DBリセット（開発用）
@@ -274,13 +264,21 @@ supabase db reset        # DBリセット（開発用）
 - [アーキテクチャ設計](./docs/specs/architecture/system-architecture.md)
 - [API仕様書](./docs/specs/api-integration/api-specification.md)
 - [データベーススキーマ](./docs/specs/api-integration/database-schema.md)
+- [LLM統合概要](./docs/specs/api-integration/llm-integration-overview.md)
+- [システムプロンプト管理](./docs/specs/api-integration/system-prompt-management.md)
 
 ### 開発・運用
 
 - [開発ガイド](./docs/guides/development/workflow-standards.md)
 - [デプロイ手順](./docs/specs/operations/deployment-guide.md)
 - [テスト戦略](./docs/specs/operations/testing-strategy.md)
-- [**フレームワーク・ツール導入検討書**](./docs/plans/current/framework-tool-evaluation.md) ⭐ 新規
+- [エラーハンドリング](./docs/specs/operations/error-handling.md)
+
+### 学びの記録
+
+- [LangChain移行の教訓](./docs/lessons/2026-02-24-langchain-premature-abstraction.md)
+- [xAI直接実装の教訓](./docs/lessons/2026-03-20-xai-direct-implementation-lesson.md)
+- [Supabase移行の教訓](./docs/lessons/2026-03-20-supabase-migration-lesson.md)
 
 ## ライセンス
 
