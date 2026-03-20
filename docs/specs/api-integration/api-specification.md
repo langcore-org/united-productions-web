@@ -2,7 +2,7 @@
 
 > **REST APIエンドポイント定義**
 > 
-> **最終更新**: 2026-02-22 11:05
+> **最終更新**: 2026-03-20 14:35
 
 ---
 
@@ -86,10 +86,7 @@
 | `research-evidence` | エビデンスリサーチ | ✅ 利用可能 |
 | `minutes` | 議事録作成 | ✅ 利用可能 |
 | `proposal` | 新企画立案 | ✅ 利用可能 |
-| `transcript` | 文字起こし変換 | ✅ 利用可能 |
-| `na-script` | NA原稿作成 | ✅ 利用可能 |
-| `meeting-notes` | 会議メモ | ✅ 利用可能 |
-| `research-info` | 情報リサーチ | ⏸️ 4月以降実装予定 |
+| `research-info` | 情報リサーチ | ⏸️ URL直接アクセスのみ |
 
 ---
 
@@ -207,4 +204,15 @@ interface ChatSession {
 - `app/api/` - APIエンドポイント実装
 - `lib/api/` - APIユーティリティ
 - `middleware.ts` - 認証・レート制限ミドルウェア
-- [llm-integration.md](./llm-integration.md) - LLM API詳細
+- `lib/supabase/` - データベースクライアント
+- [llm-integration-overview.md](./llm-integration-overview.md) - LLM API詳細
+- [authentication.md](./authentication.md) - 認証仕様
+
+---
+
+## 変更履歴
+
+| 日付 | 変更内容 |
+|------|---------|
+| 2026-03-20 | featureId一覧を更新、関連ファイルに認証を追加 |
+| 2026-02-22 | 初版作成 |

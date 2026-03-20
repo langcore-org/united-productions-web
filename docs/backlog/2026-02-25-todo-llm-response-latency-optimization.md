@@ -1,4 +1,5 @@
 > **優先度**: 📋 低（保留）
+> **最終更新**: 2026-03-20
 > **発見日**: 2026-02-25
 > **関連ファイル**: 
 > - `lib/prompts/system-prompt.ts`
@@ -117,3 +118,14 @@ await streamLLMResponse(...);  // 要約を待たない
 
 - `docs/specs/api-integration/system-prompt-management.md`
 - `docs/specs/api-integration/llm-integration-overview.md`
+
+---
+
+## 関連ドキュメント
+
+- [Backlog README](./README.md) - Backlog管理ガイド
+- [AGENTS.md](../../AGENTS.md) - エージェント行動指針
+
+---
+
+**最終更新**: 2026-03-20 14:35

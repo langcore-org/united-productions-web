@@ -2,7 +2,7 @@
 
 > **外部API・サービスの連携設計**
 > 
-> **最終更新**: 2026-02-22 00:17
+> **最終更新**: 2026-03-20 14:35
 
 ---
 
@@ -15,7 +15,7 @@
 | **Google OAuth** | ユーザー認証 | OAuth 2.0 | ✅ 連携済み |
 | **Google Drive** | ファイル参照 | OAuth Scope | ✅ 連携済み |
 | **xAI** | Grok API | API Key | ✅ 連携済み |
-| **Neon** | PostgreSQL | 接続文字列 | ✅ 連携済み |
+| **Supabase** | PostgreSQL + Auth | 接続文字列 | ✅ 連携済み |
 | **Upstash** | Redis | REST API Token | ✅ 連携済み |
 
 ### 将来連携予定
@@ -34,11 +34,14 @@
 ### 環境変数
 
 ```bash
-# 認証
+# Supabase（認証 + データベース）
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+
+# Google OAuth（Supabase Authで使用）
 GOOGLE_CLIENT_ID=
 GOOGLE_CLIENT_SECRET=
-NEXTAUTH_SECRET=
-NEXTAUTH_URL=
 
 # LLM APIs（連携済み）
 XAI_API_KEY=
@@ -50,9 +53,11 @@ XAI_API_KEY=
 # ANTHROPIC_API_KEY=
 
 # インフラ
-DATABASE_URL=
 UPSTASH_REDIS_REST_URL=
 UPSTASH_REDIS_REST_TOKEN=
+
+# アプリケーション
+NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
 
 ### セキュリティ
@@ -154,15 +159,24 @@ const delay = Math.min(1000 * Math.pow(2, retryCount), 10000);
 | Grok | エラーメッセージ表示、代替モデル提案 |
 | Google Drive | 機能非表示、手動アップロード案内 |
 | Redis | キャッシュ無効（DB直接） |
-| Neon | エラーページ表示、再試行ボタン |
+| Supabase | エラーページ表示、再試行ボタン |
 
 ---
 
 ## 関連ファイル
 
 - `lib/llm/` - LLMクライアント実装
-- `lib/llm/langchain/` - LangChain統合
+- `lib/llm/clients/grok.ts` - xAI Grokクライアント
 - `lib/google/drive.ts` - Drive連携
 - `lib/cache/redis.ts` - Redisキャッシュ
 - `lib/rate-limit.ts` - レート制限
+- `lib/supabase/` - Supabaseクライアント
 - [deployment-guide.md](../operations/deployment-guide.md) - 環境変数設定
+
+---
+
+## 移行履歴
+
+| 日付 | 変更内容 |
+|------|---------|
+| 2026-03-20 | Neon から Supabase へ移行（データベース + 認証） |

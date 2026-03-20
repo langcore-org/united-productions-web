@@ -1,6 +1,6 @@
 # X検索 Citations ワークアラウンド - 包括的調査レポート
 
-> **調査日**: 2026-02-26  
+> **最終更新**: 2026-03-20  
 > **調査観点**: xAI API詳細、X API、代替サービス、技術的ワークアラウンド  
 > **関連ファイル**: 
 > - `docs/specs/api-integration/xai-responses-api-spec.md`
@@ -446,3 +446,14 @@ cat /tmp/xai_tool_investigation.json | jq '.events[] | select(.type | contains("
 - [ツール詳細表示機能実装計画](../plans/tool-details-display.md)
 - [Vercel AI SDK Issue #10607](https://github.com/vercel/ai/issues/10607)
 - [xAI 公式ドキュメント](https://docs.x.ai/docs/responses)
+
+---
+
+## 関連ドキュメント
+
+- [Backlog README](./README.md) - Backlog管理ガイド
+- [AGENTS.md](../../AGENTS.md) - エージェント行動指針
+
+---
+
+**最終更新**: 2026-03-20 14:35

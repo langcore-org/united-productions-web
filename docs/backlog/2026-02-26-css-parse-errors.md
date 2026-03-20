@@ -1,5 +1,6 @@
 # CSS Parse エラー（Biome制限）
 
+> **最終更新**: 2026-03-20
 > **発見日**: 2026-02-26
 > **優先度**: ⚪ 情報（対応不要）
 > **関連**: Biome, CSS
@@ -55,3 +56,14 @@ BiomeがCSSを完全にサポートするのを待つか、`biome.json`でCSSフ
 ## 参考
 
 - [Biome CSS Support](https://biomejs.dev/internals/language-support/)
+
+---
+
+## 関連ドキュメント
+
+- [Backlog README](./README.md) - Backlog管理ガイド
+- [AGENTS.md](../../AGENTS.md) - エージェント行動指針
+
+---
+
+**最終更新**: 2026-03-20 14:35

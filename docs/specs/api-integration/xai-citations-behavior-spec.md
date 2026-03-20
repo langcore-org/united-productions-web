@@ -1,6 +1,7 @@
 # xAI API Citations 詳細調査結果
 
 > **調査日**: 2026-02-26  
+> **更新日**: 2026-03-20 14:35
 > **調査スクリプト**: `scripts/investigate-citations-patterns.ts`  
 > **テストケース数**: 15パターン（うち10パターン完了）
 

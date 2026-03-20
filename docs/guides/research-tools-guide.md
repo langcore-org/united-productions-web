@@ -537,4 +537,11 @@ response = client.chat.create(
 
 ---
 
-*最終更新: 2026年2月*
+## 関連ドキュメント
+
+- [Guides README](./README.md) - ガイド一覧
+- [AGENTS.md](../../AGENTS.md) - エージェント行動指針
+
+---
+
+**最終更新**: 2026-03-20 14:35

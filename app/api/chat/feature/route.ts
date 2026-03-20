@@ -16,7 +16,7 @@ import { createClient } from "@/lib/supabase/server";
 
 async function generateAndSaveChatTitle(chatId: string, firstUserMessage: string): Promise<void> {
   try {
-    const grok = createLLMClient("grok-4-0709");
+    const grok = createLLMClient("grok-4-1-fast-reasoning");
     const response = await grok.chat([
       {
         role: "system",

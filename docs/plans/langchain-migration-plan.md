@@ -107,10 +107,10 @@
 
 | プロバイダー | モデル | 状態 | 備考 |
 |------------|--------|------|------|
-| xAI | `grok-4-1-fast-reasoning` | ✅ 使用中 | OpenAI互換API |
-| xAI | `grok-4-0709` | ✅ 対応済み | OpenAI互換API |
+| xAI | `grok-4-1-fast-reasoning` | ✅ 使用中（デフォルト） | OpenAI互換API |
+| xAI | `grok-4.20-multi-agent-beta-latest` | ✅ エビデンスリサーチ用 | OpenAI互換API |
 | OpenAI | `gpt-4o-mini`, `gpt-5` | 📝 将来追加 | 設定のみ準備 |
-| Anthropic | Claudeシリーズ | ✅ 対応済み | @langchain/anthropic使用 |
+| Anthropic | Claudeシリーズ | 📝 将来追加 | @langchain/anthropic使用 |
 | Google | Geminiシリーズ | 📝 将来追加 | 別途パッケージ必要 |
 | Perplexity | Sonarシリーズ | 📝 将来追加 | OpenAI互換API |
 

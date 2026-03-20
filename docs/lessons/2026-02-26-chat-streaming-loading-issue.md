@@ -420,3 +420,15 @@ Elm や Rust で一般的な **discriminated union（直和型）** パターン
 **「型の正規定義は責任のある層に置く」**
 
 `SummarizationEvent` は `ClientMemory` が発行するイベントであり、その型の正規定義は memory 層（`lib/llm/memory/types.ts`）が持つべき。上位層（hooks, components）は re-export のみとし、定義の重複を避ける。
+
+---
+
+## 関連ドキュメント
+
+- [Lessons README](./README.md) - 知見一覧
+- [Plans](../plans/) - 実装計画
+- [AGENTS.md](../../AGENTS.md) - エージェント行動指針
+
+---
+
+**最終更新**: 2026-03-20 14:35

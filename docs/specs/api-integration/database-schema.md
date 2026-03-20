@@ -2,7 +2,7 @@
 
 > **Supabaseデータベース設計とスキーマ定義**
 > 
-> **最終更新**: 2026-03-11 12:00
+> **最終更新**: 2026-03-20 14:35
 
 ---
 
@@ -116,7 +116,7 @@ erDiagram
 | `updated_at` | TIMESTAMPTZ | 更新日時 |
 
 **タイトル自動生成:**
-- 新規チャット作成時、最初のユーザーメッセージからGrok(grok-4-0709)で自動生成
+- 新規チャット作成時、最初のユーザーメッセージからGrok(grok-4-1-fast-reasoning)で自動生成
 - バックグラウンド実行（レスポンスを遅延させない）
 
 ### chat_messages
@@ -229,6 +229,8 @@ CREATE POLICY "Users can CRUD messages in own chats" ON chat_messages
 |---|----------------|---------|
 | 1 | `20260309000000_initial_schema` | 初期スキーマ作成 |
 | 2 | `20260311135420_rename_and_cleanup_tables` | テーブル名変更（research_chats→chats, research_messages→chat_messages）、未使用テーブル削除 |
+| 3 | `20260312000000_add_handle_new_user_trigger` | 新規ユーザー自動作成トリガー追加 |
+| 4 | `20260319000000_add_program_id_to_chats` | chatsテーブルにprogram_idカラム追加 |
 
 実行コマンド:
 ```bash
@@ -237,6 +239,16 @@ supabase db push
 
 # 新規マイグレーション作成
 supabase migration new <migration-name>
+```
+
+### マイグレーションファイルの場所
+
+```
+supabase/migrations/
+├── 20260309000000_initial_schema.sql
+├── 20260311135420_rename_and_cleanup_tables.sql
+├── 20260312000000_add_handle_new_user_trigger.sql
+└── 20260319000000_add_program_id_to_chats.sql
 ```
 
 ---
@@ -248,5 +260,8 @@ supabase migration new <migration-name>
 | サーバークライアント | `lib/supabase/server.ts` |
 | ミドルウェア | `lib/supabase/middleware.ts` |
 | クライアント | `lib/supabase/client.ts` |
+| 管理者クライアント | `lib/supabase/admin.ts` |
+| マイグレーション | `supabase/migrations/` |
 | 環境構築 | [guides/setup/database-cache.md](../guides/setup/database-cache.md) |
 | プロンプト管理 | [system-prompt-management.md](./system-prompt-management.md) |
+| 認証 | [authentication.md](./authentication.md) |

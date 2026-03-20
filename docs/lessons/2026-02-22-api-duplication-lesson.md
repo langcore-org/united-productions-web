@@ -204,4 +204,12 @@ const reader = response.body?.getReader();
 
 ---
 
-*最終更新: 2026-02-22*
+## 関連ドキュメント
+
+- [Lessons README](./README.md) - 知見一覧
+- [Plans](../plans/) - 実装計画
+- [AGENTS.md](../../AGENTS.md) - エージェント行動指針
+
+---
+
+**最終更新**: 2026-03-20 14:35

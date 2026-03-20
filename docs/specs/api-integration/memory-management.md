@@ -2,7 +2,7 @@
 
 > **クライアントサイド会話履歴管理と動的圧縮**
 >
-> **最終更新**: 2026-02-25 14:30
+> **最終更新**: 2026-03-20 14:35
 
 ---
 
@@ -288,7 +288,16 @@ const memory = new ClientMemory("grok-4-1-fast-reasoning", {
 
 - [summarization-api.md](./summarization-api.md) - 要約API仕様
 - [conversation-context-flow.md](./conversation-context-flow.md) - end-to-endデータフロー
-- [system-prompt-generation.md](./system-prompt-generation.md) - システムプロンプト生成
+- [system-prompt-management.md](./system-prompt-management.md) - システムプロンプト管理
+
+---
+
+## 変更履歴
+
+| 日付 | 変更内容 |
+|------|---------|
+| 2026-03-20 | 関連ドキュメントリンクを更新 |
+| 2026-02-25 | 初版作成 |
 
 ---
 

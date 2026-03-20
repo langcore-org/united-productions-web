@@ -35,7 +35,6 @@ const PROVIDERS: ProviderInfo[] = [
     description: "X検索対応・推論",
     category: "xai",
   },
-  { id: "grok-4-0709", name: "Grok 4", description: "高品質・標準", category: "xai", isNew: true },
   // { id: "gpt-4o-mini", name: "GPT-4o-mini", description: "コスパ良好", category: "openai" },
   // { id: "gpt-5", name: "GPT-5", description: "最新フラッグシップ", category: "openai", isNew: true },
   // Claudeモデルは現在未使用（将来追加時に有効化）

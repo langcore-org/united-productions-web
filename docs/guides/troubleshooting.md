@@ -2,38 +2,26 @@
 
 > **開発中に発生するよくある問題と解決策**
 > 
-> **最終更新**: 2026-02-20 13:16
+> **最終更新**: 2026-03-20 14:35
 
 ---
 
 ## 🔧 ビルド・型エラー
 
-### next-auth 型エラー
+### Supabase 型エラー
 
 **エラーメッセージ:**
 ```
-Property 'trustHost' does not exist on type 'AuthOptions'
+Property 'X' does not exist on type 'SupabaseClient'
 ```
 
 **原因:**
-next-auth v4.24.13 の型定義に `trustHost` が含まれていない
+型定義が古い、または型生成が必要
 
 **対応:**
-```typescript
-// types/next-auth.d.ts で型拡張
-declare module "next-auth" {
-  interface AuthOptions {
-    trustHost?: boolean;
-  }
-}
-```
-
-または型アサーションを使用:
-```typescript
-const options = {
-  ...authOptions,
-  trustHost: true,
-} as AuthOptions & { trustHost?: boolean };
+```bash
+# Supabase型を再生成
+npx supabase gen types typescript --project-id <project-id> --schema public > types/supabase.ts
 ```
 
 ---
@@ -84,7 +72,7 @@ Type error: Type 'X' is not assignable to type 'Y'
 | 変更内容 | 必要な対応 |
 |---------|-----------|
 | `.env.local` | サーバー再起動が必要 |
-| `prisma/schema.prisma` | `npx prisma generate` 実行後再起動 |
+| `supabase/config.toml` | `supabase stop && supabase start` |
 | `middleware.ts` | サーバー再起動が必要 |
 | `next.config.ts` | サーバー再起動が必要 |
 
@@ -122,7 +110,7 @@ npm run dev -- --port 3001
 
 ## 🗄️ データベース問題
 
-### データベース接続エラー
+### Supabase接続エラー
 
 **エラーメッセージ:**
 ```
@@ -130,12 +118,25 @@ Error: P1001: Can't reach database server
 ```
 
 **対応:**
-1. 環境変数 `DATABASE_URL` が正しく設定されているか確認
-2. Neon/PostgreSQL の接続状態を確認
-3. 接続文字列の形式を確認:
-   ```
-   postgresql://user:password@host:port/database?sslmode=require
-   ```
+1. 環境変数 `NEXT_PUBLIC_SUPABASE_URL` が正しく設定されているか確認
+2. Supabaseダッシュボードでプロジェクトの接続状態を確認
+3. ネットワーク接続を確認
+
+---
+
+### RLS ポリシーエラー
+
+**エラーメッセージ:**
+```
+new row violates row-level security policy for table "chats"
+```
+
+**原因:** ユーザー認証が正しく行われていない、またはRLSポリシーが未設定
+
+**対応:** 
+- ミドルウェア（`lib/supabase/middleware.ts`）が正しく設定されているか確認
+- セッションが有効か確認（`lib/supabase/server.ts`）
+- SupabaseダッシュボードでRLSポリシーを確認
 
 ---
 
@@ -170,29 +171,25 @@ Error: redirect_uri_mismatch
 
 **対応:**
 1. Google Cloud Console で承認済みリダイレクトURIを確認
-2. 開発環境: `http://localhost:3000/api/auth/callback/google`
-3. 本番環境: `https://your-domain.com/api/auth/callback/google`
+2. Supabase AuthのコールバックURL形式を確認: `https://your-project.supabase.co/auth/v1/callback`
+3. 開発環境: `http://localhost:3000`
 
 ---
 
 ### セッションが取得できない
 
 **症状:**
-- `getServerSession` が `null` を返す
+- Supabaseセッションが取得できない
 - ログイン状態なのに未認証扱いになる
 
 **対応:**
-1. `NEXTAUTH_SECRET` が設定されているか確認
-2. Cookie設定を確認:
+1. `NEXT_PUBLIC_SUPABASE_ANON_KEY` が設定されているか確認
+2. Supabaseミドルウェアが正しく設定されているか確認:
    ```typescript
-   cookies: {
-     sessionToken: {
-       name: process.env.NODE_ENV === 'production' 
-         ? '__Secure-next-auth.session-token' 
-         : 'next-auth.session-token',
-     },
-   }
+   // middleware.ts
+   import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs';
    ```
+3. Cookie設定を確認
 
 ---
 
@@ -286,9 +283,9 @@ npx playwright install chromium
 1. **環境変数**
    ```bash
    # Vercel Dashboard で確認
-   - DATABASE_URL
-   - NEXTAUTH_SECRET
-   - NEXTAUTH_URL
+   - NEXT_PUBLIC_SUPABASE_URL
+   - NEXT_PUBLIC_SUPABASE_ANON_KEY
+   - SUPABASE_SERVICE_ROLE_KEY
    - GOOGLE_CLIENT_ID
    - GOOGLE_CLIENT_SECRET
    ```
@@ -296,7 +293,7 @@ npx playwright install chromium
 2. **ビルドコマンド**
    ```bash
    # package.json の scripts
-   "build": "prisma generate && next build"
+   "build": "next build"
    ```
 
 3. **Node.js バージョン**
@@ -376,26 +373,37 @@ useEffect(() => {
 
 ---
 
-### Prisma インスタンス多重生成
+### Supabase インスタンス多重生成
 
 **警告:**
 ```
-warn(prisma-client) There are already 10 instances of Prisma Client
+Multiple GoTrueClient instances detected
 ```
 
 **対応:**
 ```typescript
-// lib/prisma.ts でシングルトンパターンを使用
-import { PrismaClient } from '@prisma/client';
+// lib/supabase/client.ts でシングルトンパターンを使用
+import { createBrowserClient } from '@supabase/ssr';
 
-const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClient | undefined;
-};
+export function createClient() {
+  return createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
+}
 
-export const prisma = globalForPrisma.prisma ?? new PrismaClient();
+// サーバーサイド
+// lib/supabase/server.ts
+import { createServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
 
-if (process.env.NODE_ENV !== 'production') {
-  globalForPrisma.prisma = prisma;
+export function createClient() {
+  const cookieStore = cookies();
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    { cookies: { /* ... */ } }
+  );
 }
 ```
 
@@ -416,8 +424,8 @@ npm run test
 # E2Eテスト（UIモード）
 npm run test:e2e:ui
 
-# Prisma Studio起動
-npx prisma studio
+# Supabase CLI起動
+npx supabase start
 
 # 環境変数確認
 node -e "console.log(process.env)"
@@ -431,8 +439,11 @@ node -e "console.log(process.env)"
 |-----|--------|
 | 環境構築 | [setup/database-cache.md](./setup/database-cache.md) |
 | 認証設定 | [setup/vercel-authentication.md](./setup/vercel-authentication.md) |
+| OAuth設定 | [setup/google-oauth-setup.md](./setup/google-oauth-setup.md) |
 | エラーハンドリング | [../specs/error-handling.md](../specs/error-handling.md) |
 | テスト戦略 | [../specs/testing-strategy.md](../specs/testing-strategy.md) |
+| Guides README | [./README.md](./README.md) |
+| AGENTS.md | [../../AGENTS.md](../../AGENTS.md) |
 
 ---
 
@@ -441,3 +452,7 @@ node -e "console.log(process.env)"
 1. **ログを確認**: `logs/` ディレクトリの該当ファイルを確認
 2. **ドキュメント検索**: `grep -r "エラーメッセージ" docs/`
 3. **チームに相談**: Slack `#ad-production-dev` チャンネル
+
+---
+
+**最終更新**: 2026-03-20 14:35

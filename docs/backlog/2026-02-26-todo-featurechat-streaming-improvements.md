@@ -1,8 +1,9 @@
 # FeatureChat・useLLMStream 改善タスク（精査済み）
 
 > **優先度**: 🔴 高（4件）/ 🟡 中（1件）/ 🟢 低（2件）
+> **最終更新**: 2026-03-20
 > **発見日**: 2026-02-26
-> **最終更新**: 2026-02-26（精査完了）
+> **精査日**: 2026-02-26（精査完了）
 > **発見者**: AI Agent（コードレビュー）
 > **関連ファイル**: 
 > - `components/ui/FeatureChat.tsx`
@@ -477,3 +478,14 @@ describe("FeatureChat", () => {
 - [StreamPhase 導入レッスン](/docs/lessons/2026-02-26-chat-streaming-loading-issue.md)
 - [useLLMStream 実装](/hooks/useLLMStream/index.ts)
 - [FeatureChat 実装](/components/ui/FeatureChat.tsx)
+
+---
+
+## 関連ドキュメント
+
+- [Backlog README](./README.md) - Backlog管理ガイド
+- [AGENTS.md](../../AGENTS.md) - エージェント行動指針
+
+---
+
+**最終更新**: 2026-03-20 14:35

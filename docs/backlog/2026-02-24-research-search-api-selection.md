@@ -1,7 +1,8 @@
 # 検索API選定検討記録
 
 > **優先度**: 🟡 中
-> **状態**: 検討完了・将来対応候補
+> **状態**: 検討完了・実装済み
+> **最終更新**: 2026-03-20
 > **作成日**: 2026-02-24
 > **関連**: plans/xai-agent-tools-final.md, research-llm-tools-comparison.md
 
@@ -290,6 +291,12 @@ ${googleResult.items.map(item => `- ${item.title}: ${item.snippet}`).join('\n')}
 
 ## 関連ドキュメント
 
+- [Backlog README](./README.md) - Backlog管理ガイド
+- [AGENTS.md](../../AGENTS.md) - エージェント行動指針
 - `research-llm-tools-comparison.md` - LLM APIツール比較
 - `research-grok-agent-tools.md` - Grok Agent Tools仕様
 - `plans/xai-agent-tools-final.md` - 実装計画書
+
+---
+
+**最終更新**: 2026-03-20 14:35

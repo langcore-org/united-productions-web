@@ -155,3 +155,15 @@
 - [docs/backlog/xai-implementation-restore-guide.md](../../backlog/xai-implementation-restore-guide.md) - xAI直接実装の復元ガイド
 - [docs/plans/xai-agent-tools-final.md](../../plans/xai-agent-tools-final.md) - xAI Agent Tools実装計画
 - [ premature optimization - Wikipedia](https://en.wikipedia.org/wiki/Program_optimization#When_to_optimize)
+
+---
+
+## 関連ドキュメント
+
+- [Lessons README](./README.md) - 知見一覧
+- [Plans](../plans/) - 実装計画
+- [AGENTS.md](../../AGENTS.md) - エージェント行動指針
+
+---
+
+**最終更新**: 2026-03-20 14:35

@@ -1,4 +1,5 @@
 > **優先度**: 🔴 高
+> **最終更新**: 2026-03-20
 > **発見日**: 2026-02-27
 > **調査担当**: AI Agent
 > **関連ファイル**: 
@@ -272,3 +273,14 @@ node scripts/investigate-xai-latency.mjs
 - `docs/lessons/2026-02-26-chat-streaming-loading-issue.md` - StreamPhase導入の詳細
 - `docs/backlog/todo-llm-response-latency-optimization.md` - 既存の最適化案
 - `docs/backlog/todo-featurechat-streaming-improvements.md` - FeatureChat改善タスク
+
+---
+
+## 関連ドキュメント
+
+- [Backlog README](./README.md) - Backlog管理ガイド
+- [AGENTS.md](../../AGENTS.md) - エージェント行動指針
+
+---
+
+**最終更新**: 2026-03-20 14:35

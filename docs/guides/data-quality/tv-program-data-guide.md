@@ -259,7 +259,9 @@ recentEpisodes: [
 
 - [検証結果レポート](../../verification/episode-data-verification-report.md)
 - [research-agentic スキル](../../.claude/skills/research-agentic/SKILL.md)
+- [Guides README](../README.md) - ガイド一覧
+- [AGENTS.md](../../AGENTS.md) - エージェント行動指針
 
 ---
 
-**最終更新**: 2026-02-27
+**最終更新**: 2026-03-20 14:35

@@ -388,6 +388,9 @@ pre-commit:
 
 ## 関連ドキュメント
 
+- [Lessons README](./README.md) - 知見一覧
+- [Plans](../plans/) - 実装計画
+- [AGENTS.md](../../AGENTS.md) - エージェント行動指針
 - `docs/backlog/review-suppression-comments.md` - 無視コメントの詳細なレビュー記録
 - `docs/backlog/improvement-accessibility.md` - アクセシビリティ改善候補
 - `docs/backlog/css-parse-errors.md` - CSS parseエラー（Biome制限）
@@ -400,3 +403,7 @@ pre-commit:
 - [React Accessibility](https://react.dev/reference/react-dom/components#accessibility)
 - [Next.js Image Optimization](https://nextjs.org/docs/app/building-your-application/optimizing/images)
 - [WebAIM Accessibility](https://webaim.org/)
+
+---
+
+**最終更新**: 2026-03-20 14:35

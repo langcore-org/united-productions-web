@@ -254,3 +254,15 @@ npx playwright test --debug
 - [Playwright Documentation](https://playwright.dev/docs/intro)
 - [Playwright Best Practices](https://playwright.dev/docs/best-practices)
 - [Next.js Testing](https://nextjs.org/docs/testing)
+
+---
+
+## 関連ドキュメント
+
+- [Guides README](./README.md) - ガイド一覧
+- [setup/vercel-authentication.md](./setup/vercel-authentication.md) - Vercel認証設定
+- [AGENTS.md](../../AGENTS.md) - エージェント行動指針
+
+---
+
+**最終更新**: 2026-03-20 14:35

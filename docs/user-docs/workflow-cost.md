@@ -2,7 +2,7 @@
 
 > **制作現場への組み込み方とコスト管理**
 > 
-> **最終更新**: 2026-02-20 13:15
+> **最終更新**: 2026-03-20 14:35
 
 ## 業務フローへの組み込み
 
@@ -90,7 +90,9 @@
 |-----|------|------|
 | AI Hub利用料 | **無料** | システム使用料は無料 |
 | LLM API使用料 | 従量課金 | 実際のAI使用分のみ |
-| インフラ費用 | **無料** | Vercel/Neon/Upstash無料枠内 |
+| インフラ費用 | **無料** | Vercel/Supabase/Upstash無料枠内 |
+
+> **技術スタック**: Next.js + Supabase Auth + Supabase PostgreSQL + xAI Grok + Upstash Redis
 
 ### LLM API使用料目安
 
@@ -103,17 +105,17 @@
 
 ### コスト削減のコツ
 
-1. **Geminiを優先使用**
-   - Google AI Studio無料枠: 月1,500リクエスト
-   - 議事録、NA原稿等はGeminiで十分
+1. **効率的な入力**
+   - 簡潔で明確な指示を心がける
+   - 不要な文脈を省く
 
-2. **Grok/Perplexityは必要時のみ**
-   - リアルタイム情報（X検索）が必要な場合のみ使用
-   - 通常のリサーチはGeminiで代替可能
-
-3. **キャッシュの活用**
+2. **キャッシュの活用**
    - 同じ質問は24時間キャッシュされる
    - 再検索時はコストゼロ
+
+3. **xAI Grokの活用**
+   - リアルタイム情報（X検索）が必要な場合に強みを発揮
+   - Web検索との組み合わせで効率的なリサーチが可能
 
 ---
 
@@ -167,5 +169,11 @@
 
 ## 関連ドキュメント
 
-- [feature-guide.md](./feature-guide.md) - 各機能の詳細
-- [troubleshooting.md](./troubleshooting.md) - 問題解決
+- [User Docs README](./README.md) - ユーザードキュメント一覧
+- [Feature Guide](./feature-guide.md) - 機能ガイド
+- [Getting Started](./getting-started.md) - クイックスタート
+- [AGENTS.md](../../AGENTS.md) - エージェント行動指針
+
+---
+
+**最終更新**: 2026-03-20 14:35

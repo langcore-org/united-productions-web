@@ -166,46 +166,44 @@ const FEATURE_TO_PROMPT_KEY: Record<string, string> = {
 
 ## データベース設計
 
-### テーブル: `SystemPrompt`
+### テーブル: `system_prompts`
 
-```prisma
-model SystemPrompt {
-  id             String   @id @default(cuid())
-  key            String   @unique
-  name           String
-  description    String?
-  content        String   @db.Text
-  category       String
-  isActive       Boolean  @default(true)
-  currentVersion Int      @default(1)
-  changedBy      String?
-  changeNote     String?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+```sql
+CREATE TABLE system_prompts (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  key TEXT UNIQUE NOT NULL,
+  name TEXT NOT NULL,
+  description TEXT,
+  content TEXT NOT NULL,
+  category TEXT NOT NULL,
+  is_active BOOLEAN DEFAULT true,
+  current_version INTEGER DEFAULT 1,
+  changed_by TEXT,
+  change_note TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
 
-  versions       SystemPromptVersion[]
-
-  @@index([category])
-  @@index([isActive])
-}
+CREATE INDEX idx_system_prompts_category ON system_prompts(category);
+CREATE INDEX idx_system_prompts_is_active ON system_prompts(is_active);
 ```
 
-### テーブル: `SystemPromptVersion`
+### テーブル: `system_prompt_versions`
 
-```prisma
-model SystemPromptVersion {
-  id          String       @id @default(cuid())
-  promptId    String
-  prompt      SystemPrompt @relation(fields: [promptId], references: [id], onDelete: Cascade)
-  version     Int
-  content     String       @db.Text
-  changedBy   String?
-  changeNote  String?
-  createdAt   DateTime     @default(now())
+```sql
+CREATE TABLE system_prompt_versions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  prompt_id UUID NOT NULL REFERENCES system_prompts(id) ON DELETE CASCADE,
+  version INTEGER NOT NULL,
+  content TEXT NOT NULL,
+  changed_by TEXT,
+  change_note TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  UNIQUE(prompt_id, version)
+);
 
-  @@index([promptId, version])
-  @@index([promptId, createdAt])
-}
+CREATE INDEX idx_system_prompt_versions_prompt_version ON system_prompt_versions(prompt_id, version);
+CREATE INDEX idx_system_prompt_versions_prompt_created ON system_prompt_versions(prompt_id, created_at);
 ```
 
 ### ER図

@@ -122,7 +122,6 @@ export const DEFAULT_SETTINGS: SettingItem[] = [
       // { label: "Gemini 2.5 Flash-Lite", value: "gemini-2.5-flash-lite" },
       // { label: "Gemini 3.0 Flash", value: "gemini-3.0-flash" },
       { label: "Grok 4.1 Fast", value: "grok-4-1-fast-reasoning" },
-      { label: "Grok 4", value: "grok-4-0709" },
       // { label: "GPT-4o-mini", value: "gpt-4o-mini" },
       // { label: "GPT-5", value: "gpt-5" },
       // { label: "Claude Sonnet 4.5", value: "claude-sonnet-4.5" },

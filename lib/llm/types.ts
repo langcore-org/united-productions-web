@@ -72,7 +72,6 @@ export const VALID_PROVIDERS = [
 
   // xAI Grok - 現在使用中
   "grok-4-1-fast-reasoning",
-  "grok-4-0709",
   "grok-4.20-multi-agent-beta-latest",
 
   // OpenAI - 将来追加予定

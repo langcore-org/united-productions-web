@@ -2,7 +2,7 @@
 
 > **よくある問題と解決方法**
 > 
-> **最終更新**: 2026-02-20 13:15
+> **最終更新**: 2026-03-20 14:35
 
 ## ログイン・認証
 
@@ -13,6 +13,8 @@
 | 「アクセス権がありません」と表示 | 許可されていないGoogleアカウント | 会社配布のGoogleアカウントでログイン |
 | ログイン画面がループする | ブラウザのキャッシュ問題 | Chromeの場合: Ctrl+Shift+Delete でキャッシュ削除 |
 | 「セッションが切れました」 | 長時間放置 | 再度ログインし直す |
+
+> **認証システム**: 本システムはSupabase Authを使用し、Google OAuthで認証を行っています。
 
 ### 画面が真っ白になる
 
@@ -127,5 +129,11 @@
 
 ## 関連ドキュメント
 
-- [getting-started.md](./getting-started.md) - 基本的な使い方
-- [feature-guide.md](./feature-guide.md) - 各機能の詳細
+- [User Docs README](./README.md) - ユーザードキュメント一覧
+- [Feature Guide](./feature-guide.md) - 機能ガイド
+- [Getting Started](./getting-started.md) - クイックスタート
+- [AGENTS.md](../../AGENTS.md) - エージェント行動指針
+
+---
+
+**最終更新**: 2026-03-20 14:35

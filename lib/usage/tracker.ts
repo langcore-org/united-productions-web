@@ -19,7 +19,6 @@ interface UsageData {
 function toDbProvider(provider: LLMProvider): string {
   const mapping: Record<string, string> = {
     "grok-4.1-fast-reasoning": "GROK_4_1_FAST_REASONING",
-    "grok-4-0709": "GROK_4_0709",
   };
   return mapping[provider] || provider.toUpperCase().replace(/-/g, "_");
 }

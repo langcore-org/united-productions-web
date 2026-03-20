@@ -2,7 +2,7 @@
 
 > **開発作業の標準的な進め方と規約**
 > 
-> **最終更新**: 2026-02-20 13:16
+> **最終更新**: 2026-03-20 14:35
 
 ---
 
@@ -69,7 +69,7 @@
 |---------|------|
 | `api` | APIエンドポイント |
 | `ui` | UIコンポーネント |
-| `db` | データベース・Prisma |
+| `db` | データベース・Supabase |
 | `auth` | 認証関連 |
 | `llm` | LLM連携 |
 | `specs` | 仕様ドキュメント |
@@ -379,3 +379,9 @@ find docs/backlog/ -name "todo-*.md" -mtime +14
 | コードレビュー | [./code-review-checklist.md](./code-review-checklist.md) |
 | 命名規約 | [./naming-conventions.md](./naming-conventions.md) |
 | 人間の介入ポイント | [./human-checkpoints.md](./human-checkpoints.md) |
+| Guides README | [../README.md](../README.md) |
+| AGENTS.md | [../../../AGENTS.md](../../../AGENTS.md) |
+
+---
+
+**最終更新**: 2026-03-20 14:35

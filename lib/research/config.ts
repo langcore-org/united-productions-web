@@ -7,8 +7,8 @@ export const AGENT_DEFAULT_PROVIDERS: Record<ResearchAgentType, LLMProvider> = {
 };
 
 export const AGENT_SUPPORTED_PROVIDERS: Record<ResearchAgentType, LLMProvider[]> = {
-  people: ["grok-4-1-fast-reasoning", "grok-4-0709"],
-  evidence: ["grok-4.20-multi-agent-beta-latest", "grok-4-1-fast-reasoning", "grok-4-0709"],
+  people: ["grok-4-1-fast-reasoning"],
+  evidence: ["grok-4.20-multi-agent-beta-latest", "grok-4-1-fast-reasoning"],
 };
 
 export const AGENT_CONFIG: Record<

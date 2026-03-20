@@ -1,5 +1,6 @@
 # CI Testエラー記録
 
+**最終更新**: 2026-03-20  
 **記録日**: 2026-02-27  
 **状態**: ⏸️ 保留（実装変更に伴うテスト更新が必要）  
 **関連**: プロンプト構造変更、UIコンポーネント変更
@@ -159,5 +160,16 @@ expect(prompt).toMatch(/## .+/);  // 番組名が見出しとして含まれる
 - `lib/prompts/system-prompt.ts` - プロンプト生成ロジック
 - `app/api/llm/stream/route.ts` - ストリーミングAPI
 - `components/chat/messages/ToolCallMessage.tsx` - UIコンポーネント
-- `middleware.ts` - 認証ミドルウェア
+- `middleware.ts` - 認証ミドルウェア（Supabase Auth使用）
 - `playwright.config.ts` - E2Eテスト設定
+
+---
+
+## 関連ドキュメント
+
+- [Backlog README](./README.md) - Backlog管理ガイド
+- [AGENTS.md](../../AGENTS.md) - エージェント行動指針
+
+---
+
+**最終更新**: 2026-03-20 14:35

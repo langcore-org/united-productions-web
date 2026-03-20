@@ -1,6 +1,6 @@
 # Claude Skills カタログ - UPエージェント開発向け
 
-> **調査日**: 2026-03-02  
+> **最終更新**: 2026-03-20  
 > **調査対象**: skillsdir.dev / playbooks.com / mcpmarket.com / GitHub  
 > **対象プロジェクト**: UPエージェント（AI Hub）- Next.js + TypeScript + Prisma + Playwright + Vercel + xAI
 
@@ -18,7 +18,7 @@
 | スタイリング | Tailwind CSS, shadcn/ui |
 | バックエンド | Next.js API Routes, Server Actions |
 | データベース | PostgreSQL, Prisma ORM |
-| 認証 | NextAuth.js v5 |
+| 認証 | Supabase Auth |
 | テスト | Playwright (E2E), Vitest |
 | デプロイ | Vercel |
 | LLM | xAI (Grok) 直接API呼び出し |
@@ -127,7 +127,7 @@
   - 環境変数設定
   - コアAPI統合
 - **プロジェクト関連性**: ⭐⭐⭐⭐
-- **導入検討**: 現在のNextAuth.js v5使用と一致。認証周りの実装時に有用
+- **導入検討**: 現在のSupabase Auth使用と一致。認証周りの実装時に有用
 
 #### 8. nextjs-react-typescript
 - **提供元**: mindrally
@@ -265,7 +265,7 @@
 └── biome-linting (コード品質)
 
 推奨:
-├── authjs-skills (認証強化時)
+├── supabase-auth (認証強化時)
 ├── prisma-queries (DBクエリ最適化時)
 └── optimized-nextjs-typescript (パフォーマンス改善時)
 
@@ -287,13 +287,27 @@
 | E2Eテスト作成 | playwright-testing-framework | 🔴 高 |
 | Vercelデプロイ | vercel-deploy | 🔴 高 |
 | コード品質管理 | biome-linting | 🔴 高 |
-| 認証実装 | authjs-skills | 🟡 中 |
+| 認証実装 | supabase-auth | 🟡 中 |
 | xAI連携強化 | llm-application-dev | 🟢 低 |
 | システムプロンプト改善 | prompt-engineer | 🟢 低 |
 
 ---
 
 ## 📝 導入手順（検討）
+
+---
+
+## 関連ドキュメント
+
+- [Backlog README](./README.md) - Backlog管理ガイド
+- [AGENTS.md](../../AGENTS.md) - エージェント行動指針
+- [Supabase Auth Docs](https://supabase.com/docs/guides/auth) - Supabase認証公式ドキュメント
+
+---
+
+**最終更新**: 2026-03-20
+
+---
 
 ### Kimi Code CLIでの使用方法
 

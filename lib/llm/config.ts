@@ -54,17 +54,6 @@ export const PROVIDER_CONFIG: Record<LLMProvider, ProviderInfo> = {
     recommendedFor: ["PJ-C", "人探し", "X検索", "リアルタイム情報"],
     isAvailable: true,
   },
-  "grok-4-0709": {
-    id: "grok-4-0709",
-    name: "Grok 4",
-    provider: "xAI",
-    description: "Grok 4標準版。高品質推論。256kコンテキスト。",
-    inputPrice: 3.0,
-    outputPrice: 15.0,
-    contextLength: 256000,
-    recommendedFor: ["高品質タスク", "複雑なタスク"],
-    isAvailable: true,
-  },
   "grok-4.20-multi-agent-beta-latest": {
     id: "grok-4.20-multi-agent-beta-latest",
     name: "Grok 4.20 Multi-Agent",
@@ -150,7 +139,6 @@ export const RATE_LIMITS: Record<LLMProvider, { rpm: number; rpd: number }> = {
 
   // xAI Grok - 現在使用中
   "grok-4-1-fast-reasoning": { rpm: 60, rpd: 10000 },
-  "grok-4-0709": { rpm: 60, rpd: 10000 },
   "grok-4.20-multi-agent-beta-latest": { rpm: 60, rpd: 10000 },
 
   // OpenAI - 将来追加予定
@@ -192,7 +180,6 @@ export const CACHE_CONFIG = {
  */
 export const FREE_TIER_LIMITS: Record<LLMProvider, { rpm: number; rpd: number }> = {
   "grok-4-1-fast-reasoning": { rpm: 60, rpd: 10000 },
-  "grok-4-0709": { rpm: 60, rpd: 10000 },
   "grok-4.20-multi-agent-beta-latest": { rpm: 60, rpd: 10000 },
 };
 

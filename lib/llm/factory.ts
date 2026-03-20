@@ -25,7 +25,6 @@ export function getProviderInfo(provider: LLMProvider) {
 export function createLLMClient(provider: LLMProvider): LLMClient {
   switch (provider) {
     case "grok-4-1-fast-reasoning":
-    case "grok-4-0709":
     case "grok-4.20-multi-agent-beta-latest":
       return new GrokClient(provider);
 

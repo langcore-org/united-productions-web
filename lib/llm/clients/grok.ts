@@ -149,8 +149,6 @@ export class GrokClient implements LLMClient {
     switch (provider) {
       case "grok-4-1-fast-reasoning":
         return "grok-4-1-fast-reasoning";
-      case "grok-4-0709":
-        return "grok-4-0709";
       case "grok-4.20-multi-agent-beta-latest":
         return "grok-4.20-multi-agent-beta-latest";
       default:

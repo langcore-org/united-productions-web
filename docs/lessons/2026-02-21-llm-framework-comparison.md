@@ -376,3 +376,15 @@ Phase 3: 高度化（必要に応じて）
 - [LangChain 公式ドキュメント](https://js.langchain.com/)
 - [Vercel AI SDK vs LangChain 比較記事](https://vercel.com/blog/ai-sdk-4)
 - [関連仕様: llm-integration-overview.md](./llm-integration-overview.md)
+
+---
+
+## 関連ドキュメント
+
+- [Lessons README](./README.md) - 知見一覧
+- [Plans](../plans/) - 実装計画
+- [AGENTS.md](../../AGENTS.md) - エージェント行動指針
+
+---
+
+**最終更新**: 2026-03-20 14:35

@@ -1,4 +1,5 @@
 > **Priority**: pending
+> **最終更新**: 2026-03-20
 > **Date**: 2026-03-08
 > **Related files**: `lefthook.yml`, `biome.json`
 
@@ -18,3 +19,14 @@ Create the repository snapshot commit with `--no-verify`.
 
 Adjust the pre-commit workflow so it does not fail when staged files are outside current Biome
 targets, or make the hook skip gracefully when zero files are eligible.
+
+---
+
+## Related Documents
+
+- [Backlog README](./README.md) - Backlog management guide
+- [AGENTS.md](../../AGENTS.md) - Agent behavior guidelines
+
+---
+
+**Last Updated**: 2026-03-20 14:35

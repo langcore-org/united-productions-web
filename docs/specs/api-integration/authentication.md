@@ -1,8 +1,8 @@
 # 認証・認可仕様
 
-> **NextAuth.js v4 による認証体系**
+> **Supabase Auth による認証体系**
 > 
-> **最終更新**: 2026-02-22 00:17
+> **最終更新**: 2026-03-20 14:35
 
 ---
 
@@ -10,10 +10,11 @@
 
 | 項目 | 内容 |
 |------|------|
-| **フレームワーク** | NextAuth.js v4.24.13 |
+| **フレームワーク** | Supabase Auth |
 | **プロバイダー** | Google OAuth 2.0 (Workspace SSO対応) |
-| **セッション管理** | JWT + Database ハイブリッド |
-| **アダプター** | Prisma Adapter (`@auth/prisma-adapter`) |
+| **セッション管理** | Cookieベース（Supabase自動管理） |
+| **クライアント** | `@supabase/ssr` |
+| **ミドルウェア** | `lib/supabase/middleware.ts` |
 
 ---
 
@@ -21,12 +22,12 @@
 
 ```
 ┌─────────┐     ┌─────────────┐     ┌─────────────┐     ┌─────────┐
-│  ユーザー  │ ──→ │  NextAuth.js │ ──→ │ Google OAuth │ ──→ │ 認可画面  │
+│  ユーザー  │ ──→ │  Supabase Auth │ ──→ │ Google OAuth │ ──→ │ 認可画面  │
 └─────────┘     └─────────────┘     └─────────────┘     └─────────┘
                                               │
                                               ↓
 ┌─────────┐     ┌─────────────┐     ┌─────────────┐
-│ ダッシュボード │ ←── │   JWT作成    │ ←── │  コールバック  │
+│ ダッシュボード │ ←── │  セッション確立  │ ←── │  コールバック  │
 └─────────┘     └─────────────┘     └─────────────┘
 ```
 
@@ -40,10 +41,16 @@
 
 ```bash
 # 必須
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+
+# Google OAuth（Supabase Authで設定）
 GOOGLE_CLIENT_ID=your_client_id
 GOOGLE_CLIENT_SECRET=your_client_secret
-NEXTAUTH_SECRET=your_secret_key
-NEXTAUTH_URL=http://localhost:3000
+
+# アプリケーションURL
+NEXT_PUBLIC_APP_URL=http://localhost:3000
 
 # オプション（Vercel環境）
 # VERCEL_ENV=preview  # プレビュー環境判定用
@@ -55,10 +62,10 @@ NEXTAUTH_URL=http://localhost:3000
 
 | 項目 | 設定値 |
 |-----|--------|
-| 有効期限 | 30日 |
-| 更新間隔 | 24時間 |
-| 保存先 | JWT (token) + DB (account/link) |
-| セッショントークン | 暗号化されたJWT |
+| 有効期限 | Supabaseデフォルト（自動管理） |
+| 更新間隔 | 自動（Supabase SSRが処理） |
+| 保存先 | Cookie（HTTPOnly, Secure） |
+| セッショントークン | Supabase管理 |
 
 ---
 
@@ -74,9 +81,20 @@ NEXTAUTH_URL=http://localhost:3000
 ### ロール判定
 
 ```typescript
-// セッションからロール取得
-const session = await getServerSession(authOptions);
-if (session?.user?.role === 'ADMIN') {
+// サーバーサイドでのロール取得
+import { createClient } from "@/lib/supabase/server";
+
+const supabase = await createClient();
+const { data: { user } } = await supabase.auth.getUser();
+
+// ユーザーテーブルからロールを取得
+const { data: profile } = await supabase
+  .from("users")
+  .select("role")
+  .eq("id", user?.id)
+  .single();
+
+if (profile?.role === "ADMIN") {
   // 管理者機能へのアクセス許可
 }
 ```
@@ -100,9 +118,11 @@ export const config = {
 | ファイル | 説明 |
 |---------|------|
 | `middleware.ts` | 認証チェックミドルウェア |
-| `app/api/auth/[...nextauth]/route.ts` | 認証エンドポイント |
-| `lib/auth-options.ts` | NextAuth設定 |
-| `components/providers/SessionProvider.tsx` | セッションプロバイダー |
+| `app/auth/signin/page.tsx` | サインインページ |
+| `app/auth/callback/route.ts` | OAuthコールバックハンドラー |
+| `lib/supabase/middleware.ts` | Supabaseミドルウェアクライアント |
+| `lib/supabase/server.ts` | サーバーサイドSupabaseクライアント |
+| `lib/supabase/client.ts` | クライアントサイドSupabaseクライアント |
 
 ---
 
@@ -111,3 +131,11 @@ export const config = {
 - 追加OAuthプロバイダー（Microsoft、GitHub等）
 - 細粒度の権限管理（機能単位のアクセス制御）
 - APIキー認証（外部連携用）
+
+---
+
+## 移行履歴
+
+| 日付 | 変更内容 |
+|------|---------|
+| 2026-03-20 | NextAuth.js から Supabase Auth へ移行 |

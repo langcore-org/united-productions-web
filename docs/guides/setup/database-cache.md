@@ -64,6 +64,10 @@
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key-here
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key-here
+
+# Google OAuth（Supabase Auth連携）
+GOOGLE_CLIENT_ID=your_google_client_id_here
+GOOGLE_CLIENT_SECRET=your_google_client_secret_here
 ```
 
 ---
@@ -139,3 +143,16 @@ supabase db rollback
 | Supabase | [Dashboard](https://supabase.com/dashboard) / [Docs](https://supabase.com/docs) |
 | Supabase Auth | [Auth Docs](https://supabase.com/docs/guides/auth) |
 | Google Cloud Console | [Console](https://console.cloud.google.com/apis/credentials) |
+
+---
+
+## 関連ドキュメント
+
+- [Guides README](../README.md) - ガイド一覧
+- [google-oauth-setup.md](./google-oauth-setup.md) - OAuth設定
+- [vercel-authentication.md](./vercel-authentication.md) - Vercel認証設定
+- [AGENTS.md](../../../AGENTS.md) - エージェント行動指針
+
+---
+
+**最終更新**: 2026-03-20 14:35

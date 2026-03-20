@@ -2,7 +2,7 @@
 
 > **ファイル、変数、型の命名標準**
 > 
-> **最終更新**: 2026-02-20 13:16
+> **最終更新**: 2026-03-20 14:35
 
 ---
 
@@ -83,12 +83,14 @@ components/
     └── ChatMessage.tsx         # メッセージ表示
 
 lib/
-├── prisma.ts                   # Prismaクライアント
+├── supabase/
+│   ├── client.ts               # Supabaseクライアント（ブラウザ）
+│   ├── server.ts               # Supabaseクライアント（サーバー）
+│   └── middleware.ts           # Supabaseミドルウェア
 ├── logger.ts                   # ロガー
 ├── errors.ts                   # エラークラス
 ├── llm/
 │   ├── clients/
-│   │   ├── gemini.ts           # Geminiクライアント（現在は未使用）
 │   │   └── grok.ts             # Grokクライアント
 │   └── utils.ts                # LLMユーティリティ
 ├── prompts/
@@ -96,15 +98,14 @@ lib/
 │   ├── minutes.ts              # 議事録プロンプト
 │   └── research-cast.ts        # 出演者リサーチプロンプト
 └── chat/
-    ├── agents.ts               # Agent定義（旧gems.ts）
-    ├── gems.ts                 # Gem定義（後方互換性のためエイリアスとして維持）
+    ├── agents.ts               # Agent定義
     └── history.ts              # 履歴管理
 
 types/
 ├── api.types.ts                # API関連の型
 ├── chat.types.ts               # チャット関連の型
 ├── llm.types.ts                # LLM関連の型
-└── next-auth.d.ts              # next-auth拡張
+└── supabase.ts                 # Supabase型定義
 ```
 
 ---
@@ -151,9 +152,8 @@ enum MessageRole {
 }
 
 enum LLMProvider {
-  Gemini = "gemini",
   Grok = "grok",
-  Perplexity = "perplexity",
+  Gemini = "gemini",
 }
 
 // union型を使用する場合も同様
@@ -261,9 +261,8 @@ const SESSION_TIMEOUT_MS = 30 * 60 * 1000; // 30分
 
 // 列挙型のような定数群
 const LLM_PROVIDERS = {
-  GEMINI: "gemini",
   GROK: "grok",
-  PERPLEXITY: "perplexity",
+  GEMINI: "gemini",
 } as const;
 
 // ❌ 悪い例
@@ -326,33 +325,27 @@ function useChat() { }
 
 ## 🗄️ データベース関連
 
-### Prisma モデル
+### Supabase テーブル
 
-```prisma
-// ✅ 良い例（PascalCase + 単数形）
-model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
-  createdAt DateTime @default(now()) @map("created_at")
-  
-  // リレーション
-  meetingNotes MeetingNote[]
-  
-  @@map("users")
+Supabaseでは、テーブル名はsnake_case、カラム名はsnake_caseを使用します。
+
+```typescript
+// ✅ 良い例（Supabaseテーブル）
+// テーブル名: users
+interface User {
+  id: string;
+  email: string;
+  name: string | null;
+  created_at: string;
 }
 
-model MeetingNote {
-  id        String   @id @default(cuid())
-  title     String
-  content   String?
-  userId    String   @map("user_id")
-  createdAt DateTime @default(now()) @map("created_at")
-  
-  // リレーション
-  user User @relation(fields: [userId], references: [id])
-  
-  @@map("meeting_notes")
+// テーブル名: meeting_notes
+interface MeetingNote {
+  id: string;
+  title: string;
+  content: string | null;
+  user_id: string;
+  created_at: string;
 }
 ```
 
@@ -360,11 +353,10 @@ model MeetingNote {
 
 | 項目 | 規則 | 例 |
 |-----|------|-----|
-| モデル名 | PascalCase, 単数形 | `User`, `MeetingNote` |
 | テーブル名 | snake_case, 複数形 | `users`, `meeting_notes` |
-| カラム名 | camelCase | `createdAt`, `userId` |
-| 外部キー | 参照モデル + Id | `userId`, `programId` |
-| リレーション名 | camelCase, 複数形 | `meetingNotes`, `users` |
+| カラム名 | snake_case | `created_at`, `user_id` |
+| 外部キー | 参照テーブル + `_id` | `user_id`, `program_id` |
+| リレーション名 | camelCase | `meetingNotes`, `user` |
 
 ---
 
@@ -415,3 +407,9 @@ async function getUserById(id: string): Promise<User | null> {
 | コンポーネント設計 | [../../specs/component-design.md](../../specs/component-design.md) |
 | コードレビュー | [./code-review-checklist.md](./code-review-checklist.md) |
 | 開発ワークフロー | [./workflow-standards.md](./workflow-standards.md) |
+| Guides README | [../README.md](../README.md) |
+| AGENTS.md | [../../../AGENTS.md](../../../AGENTS.md) |
+
+---
+
+**最終更新**: 2026-03-20 14:35

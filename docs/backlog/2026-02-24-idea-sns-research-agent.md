@@ -1,6 +1,7 @@
 > **優先度**: 🟡 中
 > **状態**: 検討中
-> **関連**: 現在はシンプルな `research-cast` 機能として実装済み（複雑なLangGraphワークフローは未実装）
+> **最終更新**: 2026-03-20
+> **関連**: 現在はシンプルな `research-cast` 機能として実装済み（xAI直接API使用、LangChainは将来の拡張用に保持）
 
 # SNS人物探索エージェント仕様書
 
@@ -566,6 +567,19 @@ CREATE INDEX idx_platforms_data ON candidate_platforms USING GIN (profile_data);
 | 2026-02-20 | 初版作成 | AI |
 | 2026-02-20 | 人物探索モードに特化して改訂 | AI |
 | 2026-02-20 | 詳細化（ワークフロー、データモデル、API、UI、セキュリティ） | AI |
+| 2026-03-20 | 技術スタック更新（xAI直接API、Supabase認証） | AI |
+
+---
+
+## 関連ドキュメント
+
+- [Backlog README](./README.md) - Backlog管理ガイド
+- [AGENTS.md](../../AGENTS.md) - エージェント行動指針
+- [LLM統合仕様](../../docs/specs/api-integration/llm-integration-overview.md) - LLM統合の詳細
+
+---
+
+**最終更新**: 2026-03-20 14:35
 
 ---
 

@@ -1,5 +1,6 @@
 > **優先度**: ⏸️ 保留
-> **発見日**: $(date +"%Y-%m-%d")
+> **最終更新**: 2026-03-20
+> **発見日**: 2026-02-24
 > **関連ファイル**: 
 > - lib/llm/memory/threshold-rolling-summary.ts
 > - hooks/useLLMStream/index.ts
@@ -65,3 +66,14 @@ model Conversation {
 
 - 設計書: docs/plans/current/conversation-memory-design.md
 - 実装済み: lib/llm/memory/threshold-rolling-summary.ts
+
+---
+
+## 関連ドキュメント
+
+- [Backlog README](./README.md) - Backlog管理ガイド
+- [AGENTS.md](../../AGENTS.md) - エージェント行動指針
+
+---
+
+**最終更新**: 2026-03-20 14:35

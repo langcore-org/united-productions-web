@@ -229,4 +229,14 @@ grep "\[COMPLETE\]" docs/logs/*.md | awk '{print $3}' | sort -u
 
 ---
 
+## 関連ドキュメント
+
+- [Lessons README](./README.md) - 知見一覧
+- [Plans](../plans/) - 実装計画
+- [AGENTS.md](../../AGENTS.md) - エージェント行動指針
+
+---
+
 **原則: 「依存関係が解決できれば即座に開始」「並列で最大限進めて早く完成させる」**
+
+**最終更新**: 2026-03-20 14:35

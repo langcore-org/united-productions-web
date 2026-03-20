@@ -1,6 +1,6 @@
 # X検索 Citations ワークアラウンド調査
 
-> **調査日**: 2026-02-26  
+> **最終更新**: 2026-03-20  
 > **調査対象**: xAI Responses API の X検索ツールにおける citations 取得制約  
 > **関連ファイル**: 
 > - `docs/specs/api-integration/xai-responses-api-spec.md`
@@ -262,3 +262,14 @@ if (event.type === "response.output_text.annotation.added" && event.annotation) 
 | **xAI側対応待ち** | - | **◎ 最優先** | 現状維持で問題なし |
 
 **結論**: X検索のcitations取得は現時点ではAPIの制約により不可能。ワークアラウンドはコストや複雑性の観点から現時点では推奨せず、xAI側の対応を待つ。UIでは「プライバシー保護のため表示されません」と適切に説明する。
+
+---
+
+## 関連ドキュメント
+
+- [Backlog README](./README.md) - Backlog管理ガイド
+- [AGENTS.md](../../AGENTS.md) - エージェント行動指針
+
+---
+
+**最終更新**: 2026-03-20 14:35

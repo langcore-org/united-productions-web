@@ -1,5 +1,6 @@
 # 無視コメント（biome-ignore）のレビュー記録
 
+> **最終更新**: 2026-03-20
 > **作成日**: 2026-02-26
 > **優先度**: 🟡 中（技術的負債の管理）
 > **関連**: Lintエラー修正, 技術的負債
@@ -318,3 +319,14 @@ key={index}
 - [DOMPurify設定ベストプラクティス](https://github.com/cure53/DOMPurify/wiki/Default-Templates-and-Hooks)
 - [WCAG 2.1 キーボード操作](https://www.w3.org/WAI/WCAG21/Understanding/keyboard)
 - [ESM対応ライブラリ検索](https://esm.sh/)
+
+---
+
+## 関連ドキュメント
+
+- [Backlog README](./README.md) - Backlog管理ガイド
+- [AGENTS.md](../../AGENTS.md) - エージェント行動指針
+
+---
+
+**最終更新**: 2026-03-20 14:35

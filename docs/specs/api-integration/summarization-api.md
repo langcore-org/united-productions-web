@@ -2,7 +2,7 @@
 
 > **会話履歴の要約生成エンドポイント**
 >
-> **最終更新**: 2026-02-25 14:35
+> **最終更新**: 2026-03-20 14:35
 
 ---
 
@@ -35,7 +35,7 @@ Content-Type: application/json
 ```typescript
 interface SummarizeRequest {
   messages: LLMMessage[];        // 要約対象のメッセージ配列
-  provider: LLMProvider;         // "grok-4-1-fast-reasoning" | "grok-4-0709"
+  provider: LLMProvider;         // "grok-4-1-fast-reasoning"
   targetTokens?: number;         // 目標トークン数（オプション）
   existingSummary?: string;      // 既存の要約（累積要約用）
 }
@@ -248,7 +248,16 @@ assistant: 今日は晴れです。
 
 - [memory-management.md](./memory-management.md) - ClientMemory詳細
 - [conversation-context-flow.md](./conversation-context-flow.md) - end-to-endデータフロー
-- [system-prompt-generation.md](./system-prompt-generation.md) - システムプロンプト生成
+- [system-prompt-management.md](./system-prompt-management.md) - システムプロンプト管理
+
+---
+
+## 変更履歴
+
+| 日付 | 変更内容 |
+|------|---------|
+| 2026-03-20 | 関連ドキュメントリンクを更新 |
+| 2026-02-25 | 初版作成 |
 
 ---
 

@@ -1,7 +1,7 @@
 # Supabase移行検討: Prisma + Neon + NextAuth から Supabase へ
 
 > **発行日**: 2026-03-08  
-> **更新日**: 2026-03-08  
+> **最終更新**: 2026-03-20  
 > **優先度**: 🔍 検討中 → ⚠️ 本番環境構築が必要  
 > **関連**: `prisma/schema.prisma`, `lib/auth-options.ts`, `lib/prisma.ts`
 
@@ -18,6 +18,8 @@
 | **環境** | 浅野個人の開発環境（Neon Free Tier） |
 | **DB URL** | `ep-plain-grass-a10993pu-pooler.ap-southeast-1.aws.neon.tech` |
 | **本番環境** | **未構築** - 新規作成が必要 |
+
+**【完了】2026-03-20: Supabase Auth + Supabase DBへの移行が完了しました。**
 
 **本番用データベースを新規作成する必要があるため、「移行」ではなく「新規構築時の選択」として検討する。**
 
@@ -291,7 +293,9 @@ const providerToken = session?.provider_token // Google access_token
 
 ## 推奨方針（本番環境新規構築）
 
-### 結論: **Supabase を推奨** ✅
+### 結論: **Supabase を推奨** ✅ → **移行完了** ✅
+
+**2026-03-20更新**: Neon + NextAuth.js から Supabase（Auth + DB）への移行が完了しました。
 
 **理由**:
 
@@ -444,3 +448,16 @@ GOOGLE_CLIENT_SECRET=xxx
 | 日付 | 内容 |
 |------|------|
 | 2026-03-08 | 初版作成 |
+| 2026-03-20 | 移行完了を反映 |
+
+---
+
+## 関連ドキュメント
+
+- [Backlog README](./README.md) - Backlog管理ガイド
+- [AGENTS.md](../../AGENTS.md) - エージェント行動指針
+- [Supabase Documentation](https://supabase.com/docs) - Supabase公式ドキュメント
+
+---
+
+**最終更新**: 2026-03-20 14:35
