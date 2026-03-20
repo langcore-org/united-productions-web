@@ -1,25 +1,148 @@
 # ドラッグ＆ドロップ機能 リファクタリング実装プラン
 
-**作成日**: 2026-03-18  
+**初版作成日**: 2026-03-18  
+**改訂日**: 2026-03-20  
 **ステータス**: 計画段階  
 **優先度**: 高
 
 ---
 
-## 実装フェーズ詳細
+## 1. このプランの前提
 
-### Phase 1: カスタムフックの作成
+再調査の結果、今回の対象は単なる drag/drop 共通化ではなく、**チャット添付機能の仕様一本化**であると整理した。
 
-#### 1.1 hooks/useFileProcessor.ts
+### 1.1 解決したい本質
+
+- ドロップ添付とクリック添付でバリデーションが違う
+- `FeatureChat` にファイル処理が寄りすぎている
+- `AttachedFile` 型が UI コンポーネントに置かれている
+- `FileUpload` 系との共通化方針が曖昧
+- テストなしでリファクタしようとしている
+
+### 1.2 今回やらないこと
+
+- `react-dropzone` の導入
+- チャット添付と `/api/upload` 解析の完全統合
+- Google Drive フローの再設計
+- ファイル解析対象の大幅拡張
+
+### 1.3 設計原則
+
+1. ユーザーに見える不整合を最優先で直す
+2. 共通化対象は「型・ポリシー・表示部品・ドラッグ状態管理」まで
+3. client/server のファイル処理は分離を維持する
+4. 未使用コードは先に扱いを決める
+5. 先に最小テストを追加してから大きく動かす
+
+---
+
+## 2. 変更対象
+
+### 2.1 主対象ファイル
+
+- `components/ui/FeatureChat.tsx`
+- `components/ui/ChatInputArea.tsx`
+- `components/ui/FileAttachment.tsx`
+- `components/ui/FileUpload.tsx`
+- `lib/chat/file-content.ts`
+- `config/constants.ts`
+- `lib/upload/file-parser.ts`
+- `app/api/upload/route.ts`
+- `types/upload.ts`
+
+### 2.2 新規作成候補
+
+- `lib/files/attached-file.ts`
+- `lib/files/format.ts`
+- `lib/files/chat-attachment-policy.ts`
+- `hooks/useChatAttachmentProcessor.ts`
+- `hooks/useFileDropTarget.ts`
+- `components/ui/DragDropOverlay.tsx`
+- `components/ui/FileValidationError.tsx`
+
+### 2.3 扱いを先に決めるファイル
+
+- `components/meeting-notes/FileUploadChat.tsx`
+- `components/ui/FileAttachment.tsx` の `FileAttachment` 本体
+
+候補:
+
+- 完全に未使用なら削除
+- すぐ削除しない場合も、今回の主要リファクタ対象からは外す
+
+---
+
+## 3. 目標状態
+
+### 3.1 チャット添付
+
+- クリック添付とドロップ添付が同じ検証を通る
+- 最大件数、サイズ上限、許可形式、エラー表示が統一される
+- `FeatureChat` は添付状態の管理のみを担い、ファイル変換の詳細はフックへ移る
+- `ChatInputArea` は UI コンポーネントとして薄くなる
+
+### 3.2 アップロード解析
+
+- `FileUpload` は単一ファイルのアップロードUIとして維持
+- 共有すべき定数/formatter だけを使う
+- `parseFile()` や `/api/upload` の責務はそのまま分離
+
+### 3.3 品質
+
+- 最低限の unit test が存在する
+- drag/drop の a11y と状態通知が改善される
+- 未使用コードの扱いが明示される
+
+---
+
+## 4. 実装フェーズ
+
+### Phase 0: 事前整理（必須）
+
+理由:
+
+- 対象範囲が曖昧なまま進めると、`FileUploadChat.tsx` や `FileAttachment.tsx` のデッドパスを巻き込みやすくなり、後から「想定外の差分」になって設計が揺れるため。
+
+目的:
+
+- スコープを正しく固定する
+
+タスク:
+
+1. `FileUploadChat.tsx` の扱いを「削除候補」または「対象外 legacy」として明記
+2. `FileAttachment.tsx` 本体が未使用であることを確認し、今回の主対象を `FileAttachButton` に絞る
+3. チャット添付ポリシーの現行仕様を確定する
+
+確定したい仕様:
+
+- 最大件数: 5
+- サイズ上限: 10MB
+- 許可形式: 現行互換を保つか、明示的に絞るか
+- バイナリファイル: 許可するが内容未読で送るか、拒否するか
+
+成果物:
+
+- 実装スコープの明文化
+- ポリシー一覧
+
+### Phase 1: 共通ポリシーと型の抽出（任意）
+
+目的:
+
+- 仕様の単一ソースを作る
+
+タスク:
+
+1. `AttachedFile` 型を UI コンポーネント外へ移動
+2. チャット添付用ポリシーを新規モジュールへ定義
+3. サイズ表示の formatter を共通化
+4. `MAX_FILE_SIZE_MB` / `MAX_FILE_SIZE` の整理方針を決める
+
+推奨構成:
 
 ```typescript
-"use client";
-
-import { useCallback, useState } from "react";
-import { MAX_FILE_SIZE_MB } from "@/config/constants";
-import { isTextFile } from "@/lib/chat/file-content";
-
-export interface ProcessedFile {
+// lib/files/attached-file.ts
+export interface AttachedFile {
   id: string;
   name: string;
   type: string;
@@ -27,153 +150,84 @@ export interface ProcessedFile {
   content?: string | null;
 }
 
-interface UseFileProcessorOptions {
-  maxSizeMB?: number;
-  maxFiles?: number;
+// lib/files/chat-attachment-policy.ts
+export const CHAT_ATTACHMENT_MAX_FILES = 5;
+export const CHAT_ATTACHMENT_MAX_SIZE_BYTES = 10 * 1024 * 1024;
+export const CHAT_ATTACHMENT_ACCEPT = {
+  text: [".txt", ".md", ".csv", ".json"],
+  image: [".png", ".jpg", ".jpeg", ".gif", ".webp"],
+  code: [".js", ".ts", ".tsx", ".jsx", ".py", ".html", ".css"],
+};
+```
+
+注意:
+
+- `FileUpload` 用の `.vtt/.docx` 制約と混ぜない
+- server-side parser の MIME定義は別に維持してよい
+
+### Phase 2: チャット添付処理の一本化（必須）
+
+理由:
+
+- クリック添付とドロップ添付でバリデーション/エラー/添付結果が分かれると、ユーザーが同じ期待を持てずUXが破綻しやすいため。
+- 特に `content: null`（読み込み不可）時の通知文言が経路ごとに欠落すると混乱の原因になるため。
+
+目的:
+
+- ドロップとクリック添付の不一致を解消する
+
+タスク:
+
+1. `useChatAttachmentProcessor.ts` を作成
+2. `FeatureChat` の `processFile` / `validateFile` / `handleFiles` を移行
+3. `FileAttachButton` からも同じ処理を呼ぶ
+4. エラー文字列の管理を親コンポーネントへ寄せる
+5. `content: null`（読み込み不可）時のユーザー通知文言を統一
+
+イメージ:
+
+```typescript
+interface UseChatAttachmentProcessorOptions {
+  existingCount: number;
+  disabled?: boolean;
 }
 
-interface UseFileProcessorReturn {
-  processFiles: (files: FileList) => Promise<ProcessedFile[]>;
-  validateFile: (file: File) => string | null;
-  isProcessing: boolean;
+interface UseChatAttachmentProcessorReturn {
+  addFiles: (fileList: FileList | File[]) => Promise<AttachedFile[]>;
   error: string | null;
   clearError: () => void;
 }
-
-function generateFileId(): string {
-  return `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-}
-
-function formatFileSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes}B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)}KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)}MB`;
-}
-
-export function useFileProcessor(
-  options: UseFileProcessorOptions = {}
-): UseFileProcessorReturn {
-  const { maxSizeMB = MAX_FILE_SIZE_MB, maxFiles = 5 } = options;
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const validateFile = useCallback(
-    (file: File): string | null => {
-      if (file.size > maxSizeMB * 1024 * 1024) {
-        return `ファイルサイズが大きすぎます（最大${maxSizeMB}MB）`;
-      }
-      return null;
-    },
-    [maxSizeMB]
-  );
-
-  const processSingleFile = useCallback(
-    async (file: File): Promise<ProcessedFile> => {
-      const type = file.type || "application/octet-stream";
-
-      // バイナリファイルは内容を読み込まず、メタ情報のみ保持
-      if (!isTextFile(type) && !type.startsWith("image/")) {
-        return {
-          id: generateFileId(),
-          name: file.name,
-          type,
-          size: file.size,
-          content: null,
-        };
-      }
-
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          resolve({
-            id: generateFileId(),
-            name: file.name,
-            type,
-            size: file.size,
-            content: e.target?.result as string,
-          });
-        };
-        reader.onerror = () => reject(new Error(`${file.name} の読み込みに失敗しました`));
-
-        if (isTextFile(type)) {
-          reader.readAsText(file);
-        } else if (type.startsWith("image/")) {
-          reader.readAsDataURL(file);
-        }
-      });
-    },
-    []
-  );
-
-  const processFiles = useCallback(
-    async (fileList: FileList): Promise<ProcessedFile[]> => {
-      setIsProcessing(true);
-      setError(null);
-
-      try {
-        const files = Array.from(fileList);
-        
-        if (files.length > maxFiles) {
-          throw new Error(`最大${maxFiles}ファイルまで添付できます`);
-        }
-
-        const processedFiles: ProcessedFile[] = [];
-        const errors: string[] = [];
-
-        for (const file of files) {
-          const validationError = validateFile(file);
-          if (validationError) {
-            errors.push(`${file.name}: ${validationError}`);
-            continue;
-          }
-
-          try {
-            const processed = await processSingleFile(file);
-            processedFiles.push(processed);
-          } catch (err) {
-            errors.push(err instanceof Error ? err.message : `${file.name} の処理に失敗しました`);
-          }
-        }
-
-        if (errors.length > 0) {
-          setError(errors.join("\n"));
-        }
-
-        return processedFiles;
-      } finally {
-        setIsProcessing(false);
-      }
-    },
-    [maxFiles, validateFile, processSingleFile]
-  );
-
-  const clearError = useCallback(() => setError(null), []);
-
-  return {
-    processFiles,
-    validateFile,
-    isProcessing,
-    error,
-    clearError,
-  };
-}
 ```
 
-#### 1.2 hooks/useDragAndDrop.ts
+ポイント:
+
+- UI側では `onFilesSelect([...attachedFiles, ...files])` のような生配列結合をやめる
+- `existingCount` を見て最大件数を統一的に判定する
+- サイズ超過や読み込み失敗を複数ファイル対応で扱う
+
+### Phase 3: ドラッグ状態管理の抽出（任意）
+
+目的:
+
+- `FeatureChat` から drag event ノイズを減らす
+
+タスク:
+
+1. `useFileDropTarget.ts` を作成
+2. `dragCounter` と file-only 判定をフックへ移す
+3. `dropEffect` を必要に応じて制御する
+4. オーバーレイ UI を `DragDropOverlay` に分離する
+
+イメージ:
 
 ```typescript
-"use client";
-
-import { useCallback, useRef, useState } from "react";
-
-interface UseDragAndDropOptions {
-  onFilesDrop: (files: FileList) => void;
+interface UseFileDropTargetOptions {
   disabled?: boolean;
-  acceptedTypes?: string[];
+  onDropFiles: (files: FileList) => void | Promise<void>;
 }
 
-interface UseDragAndDropReturn {
-  isDragging: boolean;
+interface UseFileDropTargetReturn {
+  isDraggingFile: boolean;
   handlers: {
     onDragEnter: (e: React.DragEvent) => void;
     onDragLeave: (e: React.DragEvent) => void;
@@ -181,277 +235,166 @@ interface UseDragAndDropReturn {
     onDrop: (e: React.DragEvent) => void;
   };
 }
-
-export function useDragAndDrop(options: UseDragAndDropOptions): UseDragAndDropReturn {
-  const { onFilesDrop, disabled = false } = options;
-  const [isDragging, setIsDragging] = useState(false);
-  const dragCounter = useRef(0);
-
-  const handleDragEnter = useCallback(
-    (e: React.DragEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-      dragCounter.current += 1;
-      if (!disabled) setIsDragging(true);
-    },
-    [disabled]
-  );
-
-  const handleDragLeave = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    dragCounter.current -= 1;
-    if (dragCounter.current === 0) {
-      setIsDragging(false);
-    }
-  }, []);
-
-  const handleDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-  }, []);
-
-  const handleDrop = useCallback(
-    (e: React.DragEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-      dragCounter.current = 0;
-      setIsDragging(false);
-      
-      if (!disabled && e.dataTransfer.files.length > 0) {
-        onFilesDrop(e.dataTransfer.files);
-      }
-    },
-    [disabled, onFilesDrop]
-  );
-
-  return {
-    isDragging,
-    handlers: {
-      onDragEnter: handleDragEnter,
-      onDragLeave: handleDragLeave,
-      onDragOver: handleDragOver,
-      onDrop: handleDrop,
-    },
-  };
-}
 ```
 
-### Phase 2: 共通コンポーネントの作成
+補足:
 
-#### 2.1 components/ui/DragDropOverlay.tsx
+- このフックは「ドラッグ状態」だけを担う
+- バリデーションや `FileReader` は持たせない
 
-```tsx
-"use client";
+### Phase 4: `FeatureChat` / `ChatInputArea` の整理（必須）
 
-import { Paperclip } from "lucide-react";
+理由:
 
-interface DragDropOverlayProps {
-  isVisible: boolean;
-  title?: string;
-  description?: string;
-}
+- 添付処理ロジックとUI責務が再び `FeatureChat` に寄ると、同じ問題（重複・不一致・修正漏れ）が再発しやすいため。
+- `ChatInputArea` 側で「ユーザー通知（読み込み不可など）」を確実に出せる導線を作るため。
 
-export function DragDropOverlay({
-  isVisible,
-  title = "ファイルをドロップ",
-  description = "テキスト、画像、コードファイルに対応",
-}: DragDropOverlayProps) {
-  if (!isVisible) return null;
+目的:
 
-  return (
-    <div className="fixed inset-0 z-50 bg-gray-900/20 backdrop-blur-sm flex items-center justify-center">
-      <div className="bg-white border-2 border-dashed border-gray-700 rounded-2xl p-12 text-center shadow-lg">
-        <Paperclip className="w-12 h-12 text-gray-700 mx-auto mb-4" />
-        <p className="text-lg font-medium text-gray-900">{title}</p>
-        <p className="text-sm text-gray-500 mt-1">{description}</p>
-      </div>
-    </div>
-  );
-}
-```
+- 責務分離を完了する
 
-#### 2.2 components/ui/FileValidationError.tsx
+タスク:
+
+1. `FeatureChat` に添付ロジックフックを組み込む
+2. `ChatInputArea` を入力UI専用に寄せる
+3. `FileAttachButton` に直接ロジックを持たせない
+4. `FileValidationError` を共通表示部品として導入する
+
+期待される構造:
 
 ```tsx
-"use client";
-
-import { Trash2, X } from "lucide-react";
-
-interface FileValidationErrorProps {
-  error: string | null;
-  onClear: () => void;
-  position?: "top" | "inline";
-}
-
-export function FileValidationError({
-  error,
-  onClear,
-  position = "top",
-}: FileValidationErrorProps) {
-  if (!error) return null;
-
-  if (position === "top") {
-    return (
-      <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 px-4 py-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-600 flex items-center gap-2 shadow-lg">
-        <X className="w-4 h-4" />
-        <span className="whitespace-pre-line">{error}</span>
-        <button
-          type="button"
-          onClick={onClear}
-          className="ml-2 p-1 rounded hover:bg-red-100"
-          aria-label="エラーを閉じる"
-        >
-          <Trash2 className="w-3 h-3" />
-        </button>
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex items-center gap-2 text-sm text-red-500">
-      <X className="w-3 h-3" />
-      <span>{error}</span>
-    </div>
-  );
-}
-```
-
-### Phase 3: FeatureChat.tsx のリファクタリング
-
-```tsx
-// 変更前（現在の実装）
-const [isDragging, setIsDragging] = useState(false);
-const [dragError, setDragError] = useState<string | null>(null);
-const dragCounter = useRef(0);
-
-// ファイル処理（90行程度）
-const processFile = useCallback(...);
-const validateFile = useCallback(...);
-const handleFiles = useCallback(...);
-
-// ドラッグハンドラ（40行程度）
-const handleDragEnter = useCallback(...);
-const handleDragLeave = useCallback(...);
-const handleDragOver = useCallback(...);
-const handleDrop = useCallback(...);
-
-// 変更後（リファクタリング後）
-import { useFileProcessor } from "@/hooks/useFileProcessor";
-import { useDragAndDrop } from "@/hooks/useDragAndDrop";
-import { DragDropOverlay } from "@/components/ui/DragDropOverlay";
-import { FileValidationError } from "@/components/ui/FileValidationError";
-
 const {
-  processFiles,
-  isProcessing: isFileProcessing,
-  error: fileError,
+  addFiles,
+  error: attachmentError,
   clearError,
-} = useFileProcessor({
-  maxSizeMB: MAX_FILE_SIZE_MB,
-  maxFiles: 5,
-});
-
-const handleFilesDrop = useCallback(
-  async (fileList: FileList) => {
-    if (isPending || !enableFileAttachment) return;
-    
-    const newFiles = await processFiles(fileList);
-    if (newFiles.length > 0) {
-      setAttachedFiles((prev) => [...prev, ...newFiles]);
-    }
-  },
-  [isPending, enableFileAttachment, processFiles]
-);
-
-const { isDragging, handlers: dragHandlers } = useDragAndDrop({
-  onFilesDrop: handleFilesDrop,
+} = useChatAttachmentProcessor({
+  existingCount: attachedFiles.length,
   disabled: isPending || !enableFileAttachment,
 });
 
-// JSX
-<section
-  aria-label="チャットエリア"
-  className={cn("flex flex-col h-full bg-white", className)}
-  {...dragHandlers}
->
-  <DragDropOverlay isVisible={isDragging} />
-  <FileValidationError
-    error={fileError}
-    onClear={clearError}
-    position="top"
-  />
-  {/* ... rest of the component */}
-</section>
+const { isDraggingFile, handlers } = useFileDropTarget({
+  disabled: isPending || !enableFileAttachment,
+  onDropFiles: async (files) => {
+    const next = await addFiles(files);
+    if (next.length > 0) {
+      setAttachedFiles((prev) => [...prev, ...next]);
+    }
+  },
+});
 ```
 
-### Phase 4: FileAttachment.tsx の修正
+### Phase 5: `FileUpload` 側の最小共通化（任意）
 
-```tsx
-// 修正点:
-// 1. _handleDragOver → handleDragOver に修正（Typo）
-// 2. 親コンポーネントからドラッグイベントを受け取るPropsを追加
+目的:
 
-interface FileAttachmentProps {
-  files: AttachedFile[];
-  onFilesChange: (files: AttachedFile[]) => void;
-  maxFiles?: number;
-  maxSizeMB?: number;
-  disabled?: boolean;
-  className?: string;
-  // 追加: 親からドラッグイベントを受け取る
-  externalDragging?: boolean;
-}
+- 共通化しすぎず、重複だけ減らす
 
-// 削除: 内部のドラッグ状態管理（親に委譲）
-// const [isDragging, setIsDragging] = useState(false);
+タスク:
 
-// 修正: Typo
-const handleDragOver = useCallback(...);  // _handleDragOver から変更
-```
+1. サイズ formatter を共通化
+2. サイズ上限定数の由来を整理
+3. 必要なら drag visual state のみ軽く共通化
+
+やらないこと:
+
+- `parseFile()` をチャット添付処理へ寄せる
+- `.txt/.vtt/.docx` の受理判定をチャット用 accept と統合する
+
+### Phase 6: テスト追加（必須）
+
+理由:
+
+- この機能領域は回帰が起きやすい（サイズ/件数/読めない形式の分岐、clickとdropの差）一方、現状のテストベースが薄いため。
+- 最低限の unit test がないと「仕様統一ができているか」を機械的に検証できないため。
+
+目的:
+
+- リファクタリングの安全性を確保する
+
+最小テスト対象:
+
+1. チャット添付バリデーション
+2. 件数制限
+3. サイズ超過時のエラー
+4. テキスト/画像/バイナリの処理分岐
+5. `buildDisplayContent()` / `buildLlmContent()` の出力
+
+候補:
+
+- Vitest unit test
+- 必要なら React Testing Library で `ChatInputArea` の添付イベント
+- 将来的に Playwright で drag/drop E2E
+
+### Phase 7: アクセシビリティと polish（任意）
+
+目的:
+
+- suppression コメントを減らし、UXを仕上げる
+
+タスク:
+
+1. ファイルドラッグ時のみオーバーレイ表示
+2. エラー表示へ live region 検討
+3. ドロップ領域案内文とクリック案内文の同期
+4. `noStaticElementInteractions` の見直し
 
 ---
 
-## 移行ステップ
+## 5. 実装順序
 
-### Step 1: フックの作成（後方互換性あり）
-1. `hooks/useFileProcessor.ts` を作成
-2. `hooks/useDragAndDrop.ts` を作成
-3. 既存コードは変更せず、新規コードから利用開始
+1. Phase 0: 事前整理
+2. Phase 1: 型・ポリシーの抽出
+3. Phase 6 の一部: 最小テスト追加
+4. Phase 2: チャット添付処理一本化
+5. Phase 3: ドラッグ状態管理抽出
+6. Phase 4: `FeatureChat` / `ChatInputArea` 整理
+7. Phase 5: `FileUpload` 最小共通化
+8. Phase 7: a11y と polish
 
-### Step 2: 共通コンポーネントの作成
-1. `components/ui/DragDropOverlay.tsx` を作成
-2. `components/ui/FileValidationError.tsx` を作成
+理由:
 
-### Step 3: FeatureChat.tsx の移行
-1. 新規フックをimport
-2. ドラッグ＆ドロップ関連コードを置き換え
-3. 動作確認
-
-### Step 4: FileAttachment.tsx の修正
-1. Typo修正
-2. 重複コード削除
-
-### Step 5: FileUpload.tsx の移行
-1. 新規フックを利用
-2. 重複コード削除
-
-### Step 6: テストとドキュメント更新
-1. 既存テストが通ることを確認
-2. Storybookがあれば更新
-3. ドキュメント更新
+- 先に共通仕様とテストを置くことで、後続のフック化を安全に進められる
 
 ---
 
-## チェックリスト
+## 6. リスクと対策
 
-- [ ] hooks/useFileProcessor.ts 作成
-- [ ] hooks/useDragAndDrop.ts 作成
-- [ ] components/ui/DragDropOverlay.tsx 作成
-- [ ] components/ui/FileValidationError.tsx 作成
-- [ ] FeatureChat.tsx リファクタリング
-- [ ] FileAttachment.tsx Typo修正
-- [ ] FileUpload.tsx リファクタリング
-- [ ] 既存テストの確認/更新
-- [ ] 手動動作確認
-- [ ] ドキュメント更新
+| リスク | 重大度 | 対策 |
+|--------|--------|------|
+| 添付仕様変更による既存UX差分 | 高 | ドロップ/クリック双方で比較確認 |
+| 共通化のしすぎで境界が崩れる | 高 | 共有対象を限定し、server parser は別責務のまま維持 |
+| 未使用コード整理で判断を誤る | 中 | 削除前に legacy 扱いか完全削除か決める |
+| テスト不足で退行を見逃す | 高 | バリデーションと serialization の unit test を先行追加 |
+
+---
+
+## 7. 完了条件
+
+- 必須: チャット添付のクリック/ドロップが同じバリデーションを通る
+- 必須: 最大件数・サイズ上限・エラー表示が統一される
+- 任意: `AttachedFile` 型が UI コンポーネント外へ移る
+- 必須: `FeatureChat` から添付処理詳細が抽出される
+- 任意: `FileUpload` は必要最小限の共通化に留まる
+- 必須: 最小 unit test が追加される
+- 任意: 未使用コードの扱いが決まる
+- 必須: ドキュメントが更新される（実装判断の根拠を残し、後から迷わないため）
+
+---
+
+## 8. チェックリスト
+
+- 任意: `FileUploadChat.tsx` の扱いを決める
+- 任意: `FileAttachment` 本体の扱いを決める
+- 任意: `AttachedFile` 型を移動する
+- 任意: チャット添付ポリシーを新設する
+- 任意: 共有 formatter / 定数を整理する
+- 必須: `useChatAttachmentProcessor.ts` を作成する
+- 任意: `useFileDropTarget.ts` を作成する
+- 任意: `DragDropOverlay.tsx` を作成する
+- 任意: `FileValidationError.tsx` を作成する
+- 必須: `FeatureChat.tsx` を移行する
+- 必須: `ChatInputArea.tsx` / `FileAttachButton` を移行する
+- 任意: `FileUpload.tsx` の最小共通化を行う
+- 必須: unit test を追加する（統一仕様が回帰していないことを担保するため）
+- 必須: 手動動作確認を行う（drag/drop は自動テストだけで漏れやすいため）
+- 必須: 調査レポートと実装プランを更新する（現状差分と方針を固定して次の実装に活かすため）

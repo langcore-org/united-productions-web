@@ -243,19 +243,44 @@ export function FileAttachment({
 interface FileAttachButtonProps {
   onFilesSelect: (files: AttachedFile[]) => void;
   disabled?: boolean;
+  existingCount: number;
+  maxFiles: number;
+  maxSizeMB: number;
+  onError?: (message: string | null) => void;
 }
 
-export function FileAttachButton({ onFilesSelect, disabled }: FileAttachButtonProps) {
+export function FileAttachButton({
+  onFilesSelect,
+  disabled,
+  existingCount,
+  maxFiles,
+  maxSizeMB,
+  onError,
+}: FileAttachButtonProps) {
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
 
-    const attachedFiles: AttachedFile[] = [];
+    const selectedFiles = Array.from(files);
 
-    for (const file of Array.from(files)) {
+    if (existingCount + selectedFiles.length > maxFiles) {
+      onError?.(`最大${maxFiles}ファイルまで添付できます`);
+      e.target.value = "";
+      return;
+    }
+
+    const attachedFiles: AttachedFile[] = [];
+    let lastError: string | null = null;
+
+    for (const file of selectedFiles) {
       const type = file.type || "application/octet-stream";
+
+      if (file.size > maxSizeMB * 1024 * 1024) {
+        lastError = `ファイルサイズが大きすぎます（最大${maxSizeMB}MB）`;
+        continue;
+      }
 
       if (!isTextFile(type) && !type.startsWith("image/")) {
         attachedFiles.push({
@@ -290,7 +315,10 @@ export function FileAttachButton({ onFilesSelect, disabled }: FileAttachButtonPr
       attachedFiles.push(attachedFile);
     }
 
-    onFilesSelect(attachedFiles);
+    onError?.(lastError);
+    if (attachedFiles.length > 0) {
+      onFilesSelect(attachedFiles);
+    }
     e.target.value = "";
   };
 

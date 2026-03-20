@@ -212,6 +212,7 @@ export function FeatureChat({
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
     setAttachedFiles([]);
+    setDragError(null); // 添付エラーは送信完了時点で消す
 
     const streamMessages = buildStreamMessages(llmContent, messages);
     await startStream(streamMessages, provider, featureId, selectedProgramId ?? undefined);
