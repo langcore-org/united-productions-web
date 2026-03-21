@@ -24,6 +24,7 @@ import { useCallback, useRef, useState } from "react";
 import { DriveUploadButton } from "@/components/meeting-notes/GoogleDriveButtons";
 import { FeatureCard } from "@/components/ui/FeatureCard";
 import { FileUpload } from "@/components/ui/FileUpload";
+import { getUploadAcceptRecord } from "@/types/upload";
 import { ProgramSelector } from "@/components/ui/ProgramSelector";
 import { DEFAULT_PROVIDER } from "@/lib/llm/config";
 import { cn } from "@/lib/utils";
@@ -341,10 +342,7 @@ export default function MeetingNotesPage() {
           <div className="mb-4">
             <FileUpload
               onUpload={(text, _filename) => setTranscript(text)}
-              accept={{
-                "text/plain": [".txt"],
-                "text/vtt": [".vtt"],
-              }}
+              accept={getUploadAcceptRecord()}
             />
           </div>
 

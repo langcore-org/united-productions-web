@@ -2,18 +2,14 @@
 
 import { File, FileCode, FileText, Image, Paperclip, X } from "lucide-react";
 import { useCallback, useRef, useState } from "react";
+import type { AttachedFile } from "@/types/upload";
+import { getChatAcceptRecord, getChatAcceptString } from "@/types/upload";
 import { Button } from "@/components/ui/button";
 import { MAX_FILE_SIZE_MB } from "@/config/constants";
-import { isTextFile } from "@/lib/chat/file-content";
+import { processFile } from "@/lib/chat/file-content";
 import { cn } from "@/lib/utils";
 
-export interface AttachedFile {
-  id: string;
-  name: string;
-  type: string;
-  size: number;
-  content?: string | null;
-}
+export type { AttachedFile };
 
 interface FileAttachmentProps {
   files: AttachedFile[];
@@ -24,14 +20,7 @@ interface FileAttachmentProps {
   className?: string;
 }
 
-const ACCEPTED_TYPES = {
-  "text/plain": [".txt", ".md", ".csv"],
-  "text/csv": [".csv"],
-  "application/json": [".json"],
-  "application/pdf": [".pdf"],
-  "image/*": [".png", ".jpg", ".jpeg", ".gif", ".webp"],
-  "code/*": [".js", ".ts", ".tsx", ".jsx", ".py", ".html", ".css"],
-};
+const ACCEPTED_TYPES = getChatAcceptRecord();
 
 function getFileIcon(type: string) {
   if (type.startsWith("image/")) return Image;
@@ -64,41 +53,6 @@ export function FileAttachment({
       return `ファイルサイズが大きすぎます（最大${maxSizeMB}MB）`;
     }
     return null;
-  };
-
-  const processFile = async (file: File): Promise<AttachedFile> => {
-    return new Promise((resolve) => {
-      const type = file.type || "application/octet-stream";
-
-      // バイナリファイルは内容を読み込まず、メタ情報のみ保持
-      if (!isTextFile(type) && !type.startsWith("image/")) {
-        resolve({
-          id: `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-          name: file.name,
-          type,
-          size: file.size,
-          content: null,
-        });
-        return;
-      }
-
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        resolve({
-          id: `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-          name: file.name,
-          type,
-          size: file.size,
-          content: e.target?.result as string,
-        });
-      };
-
-      if (isTextFile(type)) {
-        reader.readAsText(file);
-      } else if (type.startsWith("image/")) {
-        reader.readAsDataURL(file);
-      }
-    });
   };
 
   const handleFiles = useCallback(
@@ -134,7 +88,7 @@ export function FileAttachment({
       }
     },
     // biome-ignore lint/correctness/useExhaustiveDependencies: 依存関係は安定
-    [files, onFilesChange, maxFiles, disabled, processFile, validateFile],
+    [files, onFilesChange, maxFiles, disabled, validateFile],
   );
 
   const _handleDragOver = useCallback(
@@ -275,44 +229,16 @@ export function FileAttachButton({
     let lastError: string | null = null;
 
     for (const file of selectedFiles) {
-      const type = file.type || "application/octet-stream";
-
       if (file.size > maxSizeMB * 1024 * 1024) {
         lastError = `ファイルサイズが大きすぎます（最大${maxSizeMB}MB）`;
         continue;
       }
 
-      if (!isTextFile(type) && !type.startsWith("image/")) {
-        attachedFiles.push({
-          id: `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-          name: file.name,
-          type,
-          size: file.size,
-          content: null,
-        });
-        continue;
+      try {
+        attachedFiles.push(await processFile(file));
+      } catch {
+        lastError = `${file.name} の読み込みに失敗しました`;
       }
-
-      const reader = new FileReader();
-      const attachedFile = await new Promise<AttachedFile>((resolve) => {
-        reader.onload = (event) => {
-          resolve({
-            id: `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-            name: file.name,
-            type,
-            size: file.size,
-            content: event.target?.result as string,
-          });
-        };
-
-        if (isTextFile(type)) {
-          reader.readAsText(file);
-        } else if (type.startsWith("image/")) {
-          reader.readAsDataURL(file);
-        }
-      });
-
-      attachedFiles.push(attachedFile);
     }
 
     onError?.(lastError);
@@ -328,7 +254,7 @@ export function FileAttachButton({
         ref={inputRef}
         type="file"
         multiple
-        accept=".txt,.md,.csv,.json,.pdf,.png,.jpg,.jpeg,.gif,.webp,.js,.ts,.tsx,.jsx,.py,.html,.css"
+        accept={getChatAcceptString()}
         onChange={handleFileChange}
         className="hidden"
         disabled={disabled}

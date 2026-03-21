@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { FileUpload } from "@/components/ui/FileUpload";
+import { getUploadAcceptRecord } from "@/types/upload";
 
 // FeatureChatを動的インポート
 const FeatureChat = dynamic(
@@ -60,13 +61,7 @@ export default function MinutesPage() {
               </h2>
               <FileUpload
                 onUpload={handleFileUpload}
-                accept={{
-                  "text/plain": [".txt"],
-                  "text/vtt": [".vtt"],
-                  "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [
-                    ".docx",
-                  ],
-                }}
+                accept={getUploadAcceptRecord()}
                 maxSize={10 * 1024 * 1024} // 10MB
                 enableGoogleDrive={true}
               />

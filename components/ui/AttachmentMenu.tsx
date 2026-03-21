@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
+import { getSupportedExtensionsList } from "@/types/upload";
 
 interface AttachmentMenuProps {
   isOpen: boolean;
@@ -308,7 +309,7 @@ export function AttachmentMenu({ isOpen, onClose, onSelect, triggerRef }: Attach
       {/* メニューフッター */}
       <div className="px-4 py-2.5 bg-gray-50 rounded-b-xl border-t border-gray-100">
         <p className="text-xs text-gray-500 text-center">
-          サポート形式: PDF, PNG, JPG, TXT, MD, CSV
+          {`サポート形式: ${getSupportedExtensionsList(["text", "document", "image"])}`}
         </p>
       </div>
     </div>

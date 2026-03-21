@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { buildDisplayContent, buildLlmContent, isTextFile } from "@/lib/chat/file-content";
+import { buildDisplayContent, buildLlmContent, isTextFile, processFile } from "@/lib/chat/file-content";
 
 describe("lib/chat/file-content", () => {
   describe("isTextFile", () => {
@@ -8,8 +8,38 @@ describe("lib/chat/file-content", () => {
       expect(isTextFile("text/plain")).toBe(true);
     });
 
+    it("text/vtt は true", () => {
+      expect(isTextFile("text/vtt")).toBe(true);
+    });
+
+    it("text/markdown は true", () => {
+      expect(isTextFile("text/markdown")).toBe(true);
+    });
+
+    it("application/json は true", () => {
+      expect(isTextFile("application/json")).toBe(true);
+    });
+
     it("application/pdf は false", () => {
       expect(isTextFile("application/pdf")).toBe(false);
+    });
+  });
+
+  describe("processFile", () => {
+    it("text ファイルは content を読み込む", async () => {
+      const file = new File(["hello world"], "a.txt", { type: "text/plain" });
+      const parsed = await processFile(file);
+
+      expect(parsed.name).toBe("a.txt");
+      expect(parsed.content).toContain("hello world");
+    });
+
+    it("binary ファイルは content:null", async () => {
+      const file = new File([new Uint8Array([1, 2, 3])], "a.pdf", { type: "application/pdf" });
+      const parsed = await processFile(file);
+
+      expect(parsed.name).toBe("a.pdf");
+      expect(parsed.content).toBeNull();
     });
   });
 
@@ -50,7 +80,6 @@ describe("lib/chat/file-content", () => {
       ]);
 
       expect(display).toContain("📎 a.pdf");
-      // 引用行は出ない
       expect(display).not.toContain("> ");
     });
   });

@@ -9,6 +9,7 @@ import { Check, File, FolderOpen, Loader2, Upload, X } from "lucide-react";
 import { useCallback, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useFileUpload } from "@/hooks/useFileUpload";
+import { getUploadAcceptRecord, getUploadSupportedExtensionsList } from "@/types/upload";
 import { cn } from "@/lib/utils";
 import { GoogleDrivePicker } from "./GoogleDrivePicker";
 
@@ -20,11 +21,7 @@ interface FileUploadProps {
   enableGoogleDrive?: boolean; // Google Drive連携を有効にするか
 }
 
-const DEFAULT_ACCEPT = {
-  "text/plain": [".txt"],
-  "text/vtt": [".vtt"],
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [".docx"],
-};
+const DEFAULT_ACCEPT = getUploadAcceptRecord();
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
@@ -82,7 +79,7 @@ export function FileUpload({
     const allowedExtensions = Object.values(accept).flat();
     const fileExtension = `.${file.name.split(".").pop()?.toLowerCase()}`;
     if (!allowedExtensions.includes(fileExtension)) {
-      return "対応していないファイル形式です (.txt, .vtt, .docx)";
+      return `対応していないファイル形式です (${getUploadSupportedExtensionsList()})`;
     }
 
     return null;

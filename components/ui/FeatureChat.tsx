@@ -11,7 +11,7 @@ import { MAX_FILE_SIZE_MB } from "@/config/constants";
 import { useChatInitialization } from "@/hooks/useChatInitialization";
 import { useConversationSave } from "@/hooks/useConversationSave";
 import { useLLMStream } from "@/hooks/useLLMStream";
-import { buildDisplayContent, buildLlmContent, isTextFile } from "@/lib/chat/file-content";
+import { buildDisplayContent, buildLlmContent, processFile } from "@/lib/chat/file-content";
 import { DEFAULT_PROVIDER } from "@/lib/llm/config";
 import type { LLMProvider } from "@/lib/llm/types";
 import { cn } from "@/lib/utils";
@@ -276,42 +276,6 @@ export function FeatureChat({
     container.scrollTop = container.scrollHeight;
   }, [messages.length]);
 
-  // ファイル処理関数（ドラッグ&ドロップ用）
-  const processFile = useCallback(async (file: File): Promise<AttachedFile> => {
-    return new Promise((resolve) => {
-      const type = file.type || "application/octet-stream";
-
-      // バイナリファイルは内容を読み込まず、メタ情報のみ保持
-      if (!isTextFile(type) && !type.startsWith("image/")) {
-        resolve({
-          id: `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-          name: file.name,
-          type,
-          size: file.size,
-          content: null,
-        });
-        return;
-      }
-
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        resolve({
-          id: `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-          name: file.name,
-          type,
-          size: file.size,
-          content: e.target?.result as string,
-        });
-      };
-
-      if (isTextFile(type)) {
-        reader.readAsText(file);
-      } else if (type.startsWith("image/")) {
-        reader.readAsDataURL(file);
-      }
-    });
-  }, []);
-
   const validateFile = useCallback((file: File): string | null => {
     if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
       return `ファイルサイズが大きすぎます（最大${MAX_FILE_SIZE_MB}MB）`;
@@ -352,7 +316,7 @@ export function FeatureChat({
         setAttachedFiles((prev) => [...prev, ...newFiles]);
       }
     },
-    [attachedFiles, isPending, enableFileAttachment, processFile, validateFile],
+    [attachedFiles, isPending, enableFileAttachment, validateFile],
   );
 
   // ドラッグ&ドロップイベントハンドラ

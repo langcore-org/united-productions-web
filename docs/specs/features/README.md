@@ -1,6 +1,6 @@
 # 機能ガイド
 
-> **最終更新**: 2026-02-25 13:50
+> **最終更新**: 2026-03-22 02:00
 
 ---
 
@@ -190,3 +190,4 @@ Teddy
 
 - [システムアーキテクチャ](../architecture/system-architecture.md) - 技術的な構成
 - [API仕様](../api-integration/api-specification.md) - APIの詳細仕様
+- [ファイル添付・アップロード仕様](./file-upload-and-attachment.md) - 拡張子対応、添付挙動、パーサー仕様

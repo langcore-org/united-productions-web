@@ -1,3 +1,5 @@
+import type { AttachedFile } from "@/types/upload";
+
 export interface FileLike {
   name: string;
   type: string;
@@ -21,8 +23,45 @@ export function isTextFile(type: string): boolean {
     lower.startsWith("text/") ||
     lower.includes("json") ||
     lower.includes("javascript") ||
+    lower.includes("typescript") ||
     lower.includes("xml")
   );
+}
+
+export async function processFile(file: File): Promise<AttachedFile> {
+  return new Promise((resolve) => {
+    const type = file.type || "application/octet-stream";
+    const id = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+    const base = {
+      id,
+      name: file.name,
+      type,
+      size: file.size,
+    };
+
+    if (!isTextFile(type) && !type.startsWith("image/")) {
+      resolve({
+        ...base,
+        content: null,
+      });
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      resolve({
+        ...base,
+        content: e.target?.result as string,
+      });
+    };
+
+    if (isTextFile(type)) {
+      reader.readAsText(file);
+    } else if (type.startsWith("image/")) {
+      reader.readAsDataURL(file);
+    }
+  });
 }
 
 export function buildDisplayContent(input: string, files: FileLike[]): string {

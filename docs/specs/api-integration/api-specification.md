@@ -2,7 +2,7 @@
 
 > **REST APIエンドポイント定義**
 > 
-> **最終更新**: 2026-03-20 14:35
+> **最終更新**: 2026-03-22 02:00
 
 ---
 
@@ -101,6 +101,40 @@
 | 番組設定 | `/api/settings/program` | GET, POST |
 | ファイルアップロード | `/api/upload` | POST |
 | エクスポート | `/api/export/word` | POST |
+
+---
+
+### ファイルアップロード詳細（`POST /api/upload`）
+
+**用途**: 議事録系の入力ファイルからテキストを抽出して返却する。  
+**実装**: `app/api/upload/route.ts` / `lib/upload/file-parser.ts`
+
+**受け付け形式（拡張子）**:
+- `.txt`, `.md`, `.csv`, `.json`, `.vtt`
+- `.docx`, `.pdf`, `.xlsx`, `.xls`
+
+**成功レスポンス例**:
+```json
+{
+  "success": true,
+  "data": {
+    "text": "抽出テキスト...",
+    "filename": "meeting.vtt",
+    "size": 12345
+  }
+}
+```
+
+**エラーコード**:
+- `FILE_TOO_LARGE`
+- `EMPTY_FILE`
+- `UNSUPPORTED_TYPE`
+- `ENCODING_ERROR`
+- `PARSE_ERROR`
+
+**補足**:
+- 最大サイズは 10MB
+- MIME が欠落するケースに備え、拡張子フォールバック判定を行う
 
 ---
 
@@ -214,5 +248,6 @@ interface ChatSession {
 
 | 日付 | 変更内容 |
 |------|---------|
+| 2026-03-22 | `/api/upload` の対応拡張子・エラーコード・レスポンス例を追加 |
 | 2026-03-20 | featureId一覧を更新、関連ファイルに認証を追加 |
 | 2026-02-22 | 初版作成 |
