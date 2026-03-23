@@ -1,9 +1,8 @@
-import { encodingForModel } from 'js-tiktoken';
-import fs from 'fs';
-import path from 'path';
+import fs from "node:fs";
+import { encodingForModel } from "js-tiktoken";
 
 // GPT-4/Claude用のトークナイザー（cl100k_base）
-const enc = encodingForModel('gpt-4');
+const enc = encodingForModel("gpt-4");
 
 function countTokens(text) {
   return enc.encode(text).length;
@@ -11,14 +10,14 @@ function countTokens(text) {
 
 // プロンプトファイルを読み込み
 const promptFiles = [
-  { key: 'GENERAL_CHAT', file: 'docs/prompts/GENERAL_CHAT.md' },
-  { key: 'MINUTES', file: 'docs/prompts/MINUTES.md' },
-  { key: 'PROPOSAL', file: 'docs/prompts/PROPOSAL.md' },
-  { key: 'RESEARCH_CAST', file: 'docs/prompts/RESEARCH_CAST.md' },
-  { key: 'RESEARCH_EVIDENCE', file: 'docs/prompts/RESEARCH_EVIDENCE.md' }
+  { key: "GENERAL_CHAT", file: "docs/prompts/GENERAL_CHAT.md" },
+  { key: "MINUTES", file: "docs/prompts/MINUTES.md" },
+  { key: "PROPOSAL", file: "docs/prompts/PROPOSAL.md" },
+  { key: "RESEARCH_CAST", file: "docs/prompts/RESEARCH_CAST.md" },
+  { key: "RESEARCH_EVIDENCE", file: "docs/prompts/RESEARCH_EVIDENCE.md" },
 ];
 
-console.log('=== 正確なトークン数計算（cl100k_base）===\n');
+console.log("=== 正確なトークン数計算（cl100k_base）===\n");
 
 // 番組情報（system-prompt.ts の内容を再現）
 const programInfo = `# レギュラー番組一覧（13本）
@@ -144,49 +143,55 @@ const programInfo = `# レギュラー番組一覧（13本）
 
 const programTokens = countTokens(programInfo);
 
-console.log('【番組情報ベース】');
+console.log("【番組情報ベース】");
 console.log(`  文字数: ${programInfo.length.toLocaleString()} 文字`);
 console.log(`  トークン数: ${programTokens.toLocaleString()} tokens\n`);
 
-console.log('【機能プロンプト】');
+console.log("【機能プロンプト】");
 let maxFeatureTokens = 0;
-let maxFeatureKey = '';
+let maxFeatureKey = "";
 
 for (const { key, file } of promptFiles) {
   try {
-    const content = fs.readFileSync(file, 'utf-8');
+    const content = fs.readFileSync(file, "utf-8");
     const tokens = countTokens(content);
-    console.log(`  ${key}: ${tokens.toLocaleString()} tokens (${content.length.toLocaleString()} 文字)`);
-    
+    console.log(
+      `  ${key}: ${tokens.toLocaleString()} tokens (${content.length.toLocaleString()} 文字)`,
+    );
+
     if (tokens > maxFeatureTokens) {
       maxFeatureTokens = tokens;
       maxFeatureKey = key;
     }
-  } catch (e) {
+  } catch (_e) {
     console.log(`  ${key}: エラー`);
   }
 }
 
 // 機能固有の指示ヘッダー
-const featureHeader = '\n---\n\n## 機能固有の指示\n\n';
+const featureHeader = "\n---\n\n## 機能固有の指示\n\n";
 const featureHeaderTokens = countTokens(featureHeader);
 
 console.log(`\n【機能ヘッダー】: ${featureHeaderTokens} tokens`);
 
 // 合計
-console.log('\n【機能別 合計トークン数（システムプロンプト全体）】');
+console.log("\n【機能別 合計トークン数（システムプロンプト全体）】");
 for (const { key, file } of promptFiles) {
   try {
-    const content = fs.readFileSync(file, 'utf-8');
+    const content = fs.readFileSync(file, "utf-8");
     const total = programTokens + featureHeaderTokens + countTokens(content);
     console.log(`  ${key}: ${total.toLocaleString()} tokens`);
-  } catch (e) {
+  } catch (_e) {
     // ignore
   }
 }
 
-console.log('\n=== サマリー ===');
+console.log("\n=== サマリー ===");
 console.log(`番組情報（13本）: ${programTokens.toLocaleString()} tokens`);
 console.log(`最大機能プロンプト (${maxFeatureKey}): ${maxFeatureTokens.toLocaleString()} tokens`);
-console.log(`最大合計: ${(programTokens + featureHeaderTokens + maxFeatureTokens).toLocaleString()} tokens`);
-console.log(`最小合計 (GENERAL_CHAT): ${(programTokens + featureHeaderTokens + countTokens(fs.readFileSync('docs/prompts/GENERAL_CHAT.md', 'utf-8'))).toLocaleString()} tokens`);
+console.log(
+  `最大合計: ${(programTokens + featureHeaderTokens + maxFeatureTokens).toLocaleString()} tokens`,
+);
+console.log(
+  `最小合計 (GENERAL_CHAT): ${(programTokens + featureHeaderTokens + countTokens(fs.readFileSync("docs/prompts/GENERAL_CHAT.md", "utf-8"))).toLocaleString()} tokens`,
+);

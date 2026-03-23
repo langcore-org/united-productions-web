@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { parseFile, SUPPORTED_MIME_TYPES, MAX_FILE_SIZE } from "@/lib/upload/file-parser";
+import { MAX_FILE_SIZE, parseFile, SUPPORTED_MIME_TYPES } from "@/lib/upload/file-parser";
 
 /**
  * Minimal valid PDF containing the text "Hello World".

@@ -393,7 +393,7 @@ function formatCastListForResearch(programId: string): string {
 /**
  * 全番組の出演者リストをフォーマット（出演者リサーチ用）
  */
-function formatAllCastListsForResearch(): string {
+function _formatAllCastListsForResearch(): string {
   const lines: string[] = [];
   lines.push("# 全番組の出演者一覧");
   lines.push("");
@@ -446,7 +446,7 @@ function formatRecentLineupForResearch(programId: string): string {
 /**
  * 全番組の直近5回放送回をフォーマット（出演者リサーチ用）
  */
-function formatAllRecentLineupsForResearch(): string {
+function _formatAllRecentLineupsForResearch(): string {
   const lines: string[] = [];
   lines.push("# 全番組の直近5回放送回詳細");
   lines.push("");

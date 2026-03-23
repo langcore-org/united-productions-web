@@ -9,8 +9,8 @@ import { Check, File, FolderOpen, Loader2, Upload, X } from "lucide-react";
 import { useCallback, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useFileUpload } from "@/hooks/useFileUpload";
-import { getUploadAcceptRecord, getUploadSupportedExtensionsList } from "@/types/upload";
 import { cn } from "@/lib/utils";
+import { getUploadAcceptRecord, getUploadSupportedExtensionsList } from "@/types/upload";
 import { GoogleDrivePicker } from "./GoogleDrivePicker";
 
 interface FileUploadProps {

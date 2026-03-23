@@ -89,12 +89,7 @@ export interface ParsedFile {
 }
 
 export interface ParseError {
-  code:
-    | "FILE_TOO_LARGE"
-    | "UNSUPPORTED_TYPE"
-    | "EMPTY_FILE"
-    | "ENCODING_ERROR"
-    | "PARSE_ERROR";
+  code: "FILE_TOO_LARGE" | "UNSUPPORTED_TYPE" | "EMPTY_FILE" | "ENCODING_ERROR" | "PARSE_ERROR";
   message: string;
 }
 

@@ -2,12 +2,12 @@
 
 import { File, FileCode, FileText, Image, Paperclip, X } from "lucide-react";
 import { useCallback, useRef, useState } from "react";
-import type { AttachedFile } from "@/types/upload";
-import { getChatAcceptRecord, getChatAcceptString } from "@/types/upload";
 import { Button } from "@/components/ui/button";
 import { MAX_FILE_SIZE_MB } from "@/config/constants";
 import { processFile } from "@/lib/chat/file-content";
 import { cn } from "@/lib/utils";
+import type { AttachedFile } from "@/types/upload";
+import { getChatAcceptRecord, getChatAcceptString } from "@/types/upload";
 
 export type { AttachedFile };
 

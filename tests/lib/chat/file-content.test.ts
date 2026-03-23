@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { buildDisplayContent, buildLlmContent, isTextFile, processFile } from "@/lib/chat/file-content";
+import {
+  buildDisplayContent,
+  buildLlmContent,
+  isTextFile,
+  processFile,
+} from "@/lib/chat/file-content";
 
 describe("lib/chat/file-content", () => {
   describe("isTextFile", () => {
