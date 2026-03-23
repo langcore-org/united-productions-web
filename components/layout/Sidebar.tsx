@@ -103,7 +103,7 @@ export function Sidebar({ className, onCollapseChange }: SidebarProps) {
         )}
 
         {/* Buttons */}
-        <div className={cn("py-2 space-y-0.5", isCollapsed ? "px-1.5" : "px-2")}>
+        <div className={cn("py-2 space-y-0.5", isCollapsed ? "px-0" : "px-2")}>
           {getChatNavigationItems().map((item) => {
             const isItemActive = isActive(item.href);
             const IconComponent = item.icon;
@@ -160,7 +160,7 @@ export function Sidebar({ className, onCollapseChange }: SidebarProps) {
         </div>
 
         {/* History Link */}
-        <div className={cn("mt-4 pt-4 border-t border-[#e5e5e5]", isCollapsed ? "px-1.5" : "px-2")}>
+        <div className={cn("mt-4 pt-4 border-t border-[#e5e5e5]", isCollapsed ? "px-0" : "px-2")}>
           {!isCollapsed && (
             <div className="px-1 pb-2">
               <span className="text-[11px] font-semibold text-[#6b7280] uppercase tracking-wider">
@@ -214,7 +214,7 @@ export function Sidebar({ className, onCollapseChange }: SidebarProps) {
       <div
         className={cn(
           "py-2 space-y-0.5 border-t border-[#e5e5e5] flex-shrink-0 bg-[#f9f9f9]",
-          isCollapsed ? "px-1.5" : "px-2",
+          isCollapsed ? "px-0" : "px-2",
         )}
       >
         <button

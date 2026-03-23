@@ -21,6 +21,7 @@ function ChatPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const touchStartXRef = useRef<number | null>(null);
   const touchCurrentXRef = useRef<number | null>(null);
 
@@ -87,12 +88,14 @@ function ChatPageContent() {
     <div className="h-screen flex flex-col md:flex-row overflow-hidden">
       {/* デスクトップ用サイドバー（固定） */}
       <aside className="hidden md:block fixed top-0 left-0 z-40 h-screen">
-        <Sidebar />
+        <Sidebar onCollapseChange={setIsSidebarCollapsed} />
       </aside>
 
       {/* メインエリア */}
       <div
-        className="flex-1 md:ml-[240px] h-full flex flex-col overflow-hidden"
+        className={`flex-1 h-full flex flex-col overflow-hidden transition-all duration-300 ease-in-out ${
+          isSidebarCollapsed ? 'md:ml-[64px]' : 'md:ml-[240px]'
+        }`}
         // モバイルのみスワイプ検知
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}

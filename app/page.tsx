@@ -14,7 +14,13 @@ export default function DashboardPage() {
             {/* Logo Section */}
             <div className="flex flex-col items-center mb-12">
               <div className="flex items-center gap-3 mb-2">
-                <Image src="/Teddy_icon.PNG" alt="Teddy" width={56} height={56} className="rounded-2xl" />
+                <Image
+                  src="/Teddy_icon.PNG"
+                  alt="Teddy"
+                  width={56}
+                  height={56}
+                  className="rounded-2xl"
+                />
                 <h1 className="text-4xl font-semibold tracking-tight text-gray-900">Teddy</h1>
               </div>
               <p className="text-sm text-gray-500">Teacher &amp; Buddy</p>
