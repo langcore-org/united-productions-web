@@ -1,12 +1,23 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { Sidebar } from "./Sidebar";
 
 interface AppLayoutProps {
   children: React.ReactNode;
   className?: string;
+}
+
+// localStorageから初期値を同期的に取得（SSR対応）
+function getInitialCollapsedState(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    const saved = localStorage.getItem("sidebar-collapsed");
+    return saved ? JSON.parse(saved) : false;
+  } catch {
+    return false;
+  }
 }
 
 /**
@@ -16,6 +27,11 @@ interface AppLayoutProps {
  */
 export function AppLayout({ children, className }: AppLayoutProps) {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+
+  // マウント時にlocalStorageから状態を読み込む
+  useEffect(() => {
+    setIsSidebarCollapsed(getInitialCollapsedState());
+  }, []);
 
   return (
     <div className={cn("h-screen overflow-hidden bg-white text-gray-900", className)}>

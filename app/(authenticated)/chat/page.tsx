@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useCallback, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { ChatPage } from "@/components/chat/ChatPage";
 import { MobileChatHeader } from "@/components/chat/MobileChatHeader";
 import { MobileSidebarOverlay } from "@/components/layout/MobileSidebarOverlay";
@@ -17,6 +17,17 @@ import { isValidFeatureId } from "@/lib/chat/chat-config";
  * - ?program=xxx : 指定番組で新規チャット（番組選択スキップ）
  * - ?message=xxx : 初期メッセージを送信して開始（URLエンコード推奨）
  */
+// localStorageから初期値を同期的に取得（SSR対応）
+function getInitialCollapsedState(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    const saved = localStorage.getItem("sidebar-collapsed");
+    return saved ? JSON.parse(saved) : false;
+  } catch {
+    return false;
+  }
+}
+
 function ChatPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -24,6 +35,11 @@ function ChatPageContent() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const touchStartXRef = useRef<number | null>(null);
   const touchCurrentXRef = useRef<number | null>(null);
+
+  // マウント時にlocalStorageから状態を読み込む
+  useEffect(() => {
+    setIsSidebarCollapsed(getInitialCollapsedState());
+  }, []);
 
   // agent指定があればそれを使用、なければ general
   const agentId = searchParams.get("agent") || "general";
