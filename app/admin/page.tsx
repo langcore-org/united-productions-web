@@ -7,7 +7,6 @@ import {
   Cpu,
   DollarSign,
   FileText,
-  Mic,
   Settings,
   Shield,
   Sparkles,
@@ -25,20 +24,6 @@ import type { LLMProvider } from "@/lib/llm/types";
 
 // 機能の定義
 const FEATURES = [
-  {
-    id: "PJ-A",
-    name: "議事録作成",
-    description: "Zoom文字起こしから議事録を自動生成",
-    icon: FileText,
-    path: "/meeting-notes",
-  },
-  {
-    id: "PJ-B",
-    name: "NA原稿作成",
-    description: "Premiere Pro書き起こしからNA原稿を作成",
-    icon: Mic,
-    path: "/transcripts",
-  },
   {
     id: "PJ-C-people",
     name: "出演者リサーチ",
