@@ -2,7 +2,7 @@
 
 > **REST APIエンドポイント定義**
 > 
-> **最終更新**: 2026-03-22 02:00
+> **最終更新**: 2026-03-23 22:45
 
 ---
 
@@ -92,15 +92,15 @@
 
 ### 機能別API
 
-| 機能 | エンドポイント | メソッド |
-|-----|---------------|---------|
-| 議事録 | `/api/meeting-notes` | POST |
-| 文字起こし | `/api/transcripts` | POST |
-| リサーチ | `/api/research` | POST |
-| ロケスケ | `/api/schedules` | GET, POST |
-| 番組設定 | `/api/settings/program` | GET, POST |
-| ファイルアップロード | `/api/upload` | POST |
-| エクスポート | `/api/export/word` | POST |
+| 機能 | エンドポイント | メソッド | 状態 |
+|-----|---------------|---------|------|
+| ~~議事録（旧）~~ | ~~`/api/meeting-notes`~~ | ~~POST~~ | 🗑️ **削除**（`/api/chat/feature` に統合） |
+| ~~文字起こし（旧）~~ | ~~`/api/transcripts`~~ | ~~POST~~ | 🗑️ **削除**（`/api/chat/feature` に統合） |
+| ~~リサーチ（旧）~~ | ~~`/api/research`~~ | ~~POST~~ | 🗑️ **削除**（`/api/chat/feature` に統合） |
+| ロケスケ | `/api/schedules` | GET, POST | ✅ |
+| 番組設定 | `/api/settings/program` | GET, POST | ✅ |
+| ファイルアップロード | `/api/upload` | POST | ✅ |
+| エクスポート | `/api/export/word` | POST | ✅ |
 
 ---
 
