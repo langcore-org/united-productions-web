@@ -1,6 +1,6 @@
 # AI Hub - United Productions
 
-> **最終更新**: 2026-03-20
+> **最終更新**: 2026-03-23
 
 制作支援統合プラットフォーム。テレビ制作業務をAIで効率化するための統合ツール群です。
 
@@ -45,18 +45,40 @@ AI Hubは、テレビ制作現場の様々な業務をAIで支援する統合プ
 | Wave 5 | 統合・最適化（キャッシュ、テスト、デプロイ） | ✅ 完了 |
 | Wave 6 | 本番リリース準備・最終調整 | 🔄 進行中 |
 
-## 機能一覧
+## ページ構成
 
-### サイドバーナビゲーション
+### アプリケーション構成
 
 ```
-├── チャット             → /chat
-├── リサーチ（折りたたみメニュー）
-│   ├── 出演者リサーチ → /research/cast
-│   └── エビデンスリサーチ → /research/evidence
-├── 議事録作成         → /minutes
-├── 新企画立案         → /proposal
-└── 番組設定           → /settings/program
+【公開ページ】
+/                    → トップページ（ランディング）
+/auth/signin         → サインイン（Google OAuth）
+/preview-login       → プレビューログイン（開発用）
+
+【認証済みユーザー向け】
+/chat                → AIチャット（統合機能）
+/chat/history        → チャット履歴一覧
+
+【管理画面】
+/admin               → 管理画面トップ（ダッシュボード）
+/admin/users         → ユーザー管理
+/admin/programs      → 番組管理
+/admin/prompts       → プロンプト管理
+/admin/usage         → 使用量統計
+```
+
+### サイドバーナビゲーション（5機能）
+
+```
+【新規作成】
+├── 💬 チャット              → /chat
+├── 👥 出演者リサーチ        → /chat?agent=research-cast
+├── 🛡️ エビデンスリサーチ   → /chat?agent=research-evidence
+├── 📝 議事録作成            → /chat?agent=minutes
+└── 💡 新企画立案            → /chat?agent=proposal
+
+【履歴】
+└── 🕐 履歴を見る            → /chat/history
 ```
 
 ### 実装済み機能
@@ -64,13 +86,11 @@ AI Hubは、テレビ制作現場の様々な業務をAIで支援する統合プ
 | 機能 | パス | 説明 |
 |------|------|------|
 | **チャット** | `/chat` | 一般的なAIチャット。番組情報を参照した自然な会話が可能 |
-| **出演者リサーチ** | `/research/cast` | 企画に適した出演者候補を提案。プロフィール、出演実績、相性分析を含む |
-| **エビデンスリサーチ** | `/research/evidence` | 情報の真偽を検証。ファクトチェック・一次情報源を特定 |
-| **議事録作成** | `/minutes` | 文字起こしから構造化された議事録を作成。TODO・決定事項を抽出 |
-| **新企画立案** | `/proposal` | 番組情報と過去企画を基に新しい企画案を提案 |
-| **番組設定** | `/settings/program` | 番組情報・過去企画を管理。新企画立案で使用 |
-
-> **将来実装予定**: 文字起こし変換、NA原稿作成、場所リサーチ、情報リサーチ
+| **出演者リサーチ** | `/chat?agent=research-cast` | 企画に適した出演者候補を提案。プロフィール、出演実績、相性分析を含む |
+| **エビデンスリサーチ** | `/chat?agent=research-evidence` | 情報の真偽を検証。ファクトチェック・一次情報源を特定 |
+| **議事録作成** | `/chat?agent=minutes` | 文字起こしから構造化された議事録を作成。TODO・決定事項を抽出 |
+| **新企画立案** | `/chat?agent=proposal` | 番組情報と過去企画を基に新しい企画案を提案 |
+| **チャット履歴** | `/chat/history` | 過去の会話を一覧表示・検索・再開 |
 
 ## FeatureChat コンポーネント
 
@@ -104,39 +124,43 @@ interface FeatureChatProps {
 ├── app/                          # Next.js App Router
 │   ├── (authenticated)/          # 認証必須ページ
 │   │   ├── chat/
-│   │   │   └── page.tsx          # 一般チャット
-│   │   ├── research/
-│   │   │   ├── cast/page.tsx     # 出演者リサーチ
-│   │   │   └── evidence/page.tsx # エビデンスリサーチ
-│   │   ├── minutes/page.tsx      # 議事録作成
-│   │   ├── proposal/page.tsx     # 新企画立案
-│   │   └── settings/
-│   │       └── program/page.tsx  # 番組設定
-│   ├── api/
+│   │   │   ├── page.tsx          # 統合チャット（5機能）
+│   │   │   └── history/
+│   │   │       └── page.tsx      # チャット履歴
+│   │   └── layout.tsx            # 認証済みレイアウト
+│   ├── admin/                    # 管理画面
+│   │   ├── page.tsx              # ダッシュボード
+│   │   ├── users/                # ユーザー管理
+│   │   ├── programs/             # 番組管理
+│   │   ├── prompts/              # プロンプト管理
+│   │   └── usage/                # 使用量統計
+│   ├── api/                      # API Routes
 │   │   ├── chat/
-│   │   │   └── feature/route.ts  # 機能別チャットAPI
+│   │   │   ├── feature/route.ts  # 機能別チャットAPI
+│   │   │   └── history/route.ts  # 履歴API
 │   │   ├── llm/                  # LLM関連API
-│   │   └── settings/
-│   │       └── program/route.ts  # 番組設定API
+│   │   └── upload/route.ts       # ファイルアップロードAPI
 │   └── auth/                     # 認証ページ（Supabase Auth）
 ├── components/
+│   ├── chat/                     # チャット関連コンポーネント
+│   │   ├── ChatPage.tsx          # メインチャットページ
+│   │   └── ...
 │   ├── layout/
-│   │   └── Sidebar.tsx           # サイドバー（折りたたみ対応）
-│   └── ui/
-│       └── FeatureChat.tsx       # 共通チャットUI
+│   │   ├── Sidebar.tsx           # サイドバー（5機能ナビゲーション）
+│   │   └── AppLayout.tsx         # アプリレイアウト
+│   └── ui/                       # UIコンポーネント
+│       └── FeatureChat.tsx       # 機能別チャットUI
 ├── lib/
+│   ├── chat/                     # チャット機能関連
+│   │   ├── chat-config.ts        # 機能設定（5機能の定義）
+│   │   └── navigation.ts         # ナビゲーション関数
 │   ├── prompts/                  # プロンプト管理
-│   │   ├── constants/            # プロンプト定数
-│   │   ├── db/                   # DB操作用（CRUD、バージョン管理）
-│   │   ├── archive/              # アーカイブされたプロンプト
-│   │   ├── index.ts              # エクスポート
+│   │   ├── constants.ts          # プロンプト定数
+│   │   ├── db.ts                 # DB操作用
 │   │   └── system-prompt.ts      # システムプロンプト構築
 │   ├── llm/                      # LLM統合
 │   │   ├── clients/              # LLMクライアント（xAI Grok等）
-│   │   ├── memory/               # 会話メモリ管理
-│   │   ├── config.ts             # LLM設定
-│   │   ├── factory.ts            # LLMクライアントファクトリ
-│   │   └── types.ts              # 型定義
+│   │   └── config.ts             # LLM設定
 │   └── knowledge/                # 番組情報・ナレッジベース
 ├── supabase/
 │   └── migrations/               # Supabaseマイグレーション

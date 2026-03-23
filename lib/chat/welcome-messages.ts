@@ -15,7 +15,7 @@ const NO_PROGRAM_WELCOME_MESSAGES: Record<string, string> = {
 
 /** 番組選択が必要な機能のウェルカムメッセージ */
 const WELCOME_TEMPLATES: Record<string, string> = {
-  "general-chat": `私はUnited Productionsの制作するレギュラー番組の情報を学習したAIです。番組の企画案、出演者についての相談、業界のトレンドなど——知りたいことを何でもお聞かせください。`,
+  "general-chat": `私はUNITED PRODUCTIONSの制作するレギュラー番組の情報を学習したAIです。番組の企画案、出演者についての相談、業界のトレンドなど——知りたいことを何でもお聞かせください。`,
 
   "research-cast": `「{program}」の出演者候補を探します。
 

@@ -1,6 +1,6 @@
 # FeatureChatコンポーネント仕様
 
-> **最終更新**: 2026-02-25 13:15
+> **最終更新**: 2026-03-23 22:50
 
 ---
 
@@ -90,18 +90,18 @@ interface FeatureChatProps {
 **Plaintextモード:**
 ```
 ┌─────────────────────────────────────────┐
-│ NA原稿作成                              │
+│ 議事録作成                              │
 ├─────────────────────────────────────────┤
 │                                         │
 │ ┌─────────────────────────────────────┐ │
-│ │ 【NA原稿】                          │ │
+│ │ 【議事録】                          │ │
 │ │                                     │ │
-│ │ 新しい料理番組のご紹介。            │ │
-│ │ この番組では...                     │ │
+│ │ ## 会議概要                         │ │
+│ │ - 日時: 2026/03/23 14:00-15:30      │ │
+│ │ - 参加者: 山田、佐藤、鈴木          │ │
 │ │                                     │ │
-│ │ ---                                 │ │
-│ │ 【情報】                            │ │
-│ │ - 想定尺：28秒                      │ │
+│ │ ## 決定事項                         │ │
+│ │ - [x] ロケーション: 東京スタジオ    │ │
 │ └─────────────────────────────────────┘ │
 │              [コピー]                   │
 │                                         │
@@ -220,14 +220,14 @@ const titleGenerationPrompt = `
   outputFormat="markdown"
 />
 
-// NA原稿作成（Plaintext）
+// 議事録作成（Markdown + ファイル添付対応）
 <FeatureChat
-  featureId="na-script"
-  title="NA原稿作成"
-  systemPrompt={NA_SCRIPT_SYSTEM_PROMPT}
-  placeholder="文字起こしテキストを貼り付けてください"
-  inputLabel="文字起こし"
-  outputFormat="plaintext"
+  featureId="minutes"
+  title="議事録作成"
+  systemPrompt={MINUTES_SYSTEM_PROMPT}
+  placeholder="文字起こしテキストを貼り付けるか、ファイルを添付してください"
+  inputLabel="文字起こし入力"
+  outputFormat="markdown"
 />
 ```
 
