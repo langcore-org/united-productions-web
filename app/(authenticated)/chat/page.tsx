@@ -94,7 +94,7 @@ function ChatPageContent() {
       {/* メインエリア */}
       <div
         className={`flex-1 h-full flex flex-col overflow-hidden transition-all duration-300 ease-in-out ${
-          isSidebarCollapsed ? 'md:ml-[64px]' : 'md:ml-[240px]'
+          isSidebarCollapsed ? "md:ml-[64px]" : "md:ml-[240px]"
         }`}
         // モバイルのみスワイプ検知
         onTouchStart={handleTouchStart}
