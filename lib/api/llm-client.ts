@@ -2,7 +2,7 @@
  * LLM APIクライアント
  *
  * HTTPリクエスト・エラーハンドリング・SSEストリーム読み取りを集約し、
- * フック（useLLMStream, useLangChainChat）から直接 fetch を呼ばなくて済むようにする。
+ * フック（useLLMStream）から直接 fetch を呼ばなくて済むようにする。
  */
 
 import { parseSSEStream, type SSEEvent } from "@/lib/llm/sse-parser";

@@ -1395,27 +1395,33 @@ LLMコスト: $0.002〜$0.003/回
 
 ## 5. 推奨アーキテクチャ
 
-### 5.1 推奨案: RAG-First Hybrid Orchestration（2段階アプローチ）
+### 5.1 推奨案: Agent-First → RAG Tool 追加（2026-03-22 統合方針）
 
-Vercel AI SDKの「サーバーサイドツールとカスタムツールの混在不可」制限を踏まえ、**段階的な2つのアプローチ**を推奨する。
+> **方針統合（2026-03-22）**: 本セクションは [エージェントループ分析レポート](./agentic-loop-self-implementation-analysis.md) の方針決定と統合済み。旧Phase A（RAG事前実行）→ Phase B（Full Agent化）の2段階アプローチを廃止し、以下に変更。
 
-#### Phase A: RAG事前実行方式（まず実装、シンプル）
+#### Step 1: エージェントループ + ask_user（先に実装）
 
-RAGを**API呼び出し前に事前実行**し、結果をシステムプロンプトに注入。Grok APIにはサーバーサイドツールのみ渡す。
+既存GrokClientの `fetch()` 直接呼び出しを維持し、その上にエージェントループを自前実装。server-side（web_search, x_search）とclient-side（ask_user）のハイブリッド方式。
 
-**メリット**: 実装がシンプル、既存GrokClient実装を最小変更で拡張可能
-**デメリット**: RAG検索とGrok判断が分離される（LLMが検索クエリを最適化できない）
+**理由**: 現在のナレッジ（約5,500行）はsystemPromptに収まるためRAGの緊急性が低い。ask_userによるリサーチ品質向上が即座に得られる。
 
-#### Phase B: OpenAI SDK互換モードでFull Agent化（将来拡張）
+→ 実装計画: [`docs/plans/agentic-loop-implementation.md`](../plans/agentic-loop-implementation.md)
 
-OpenAI SDK（`baseURL: "https://api.x.ai/v1"`）を使うと、xAI Responses APIで**function calling（RAG等）とserver-side tools（web_search等）を同一リクエストで混在可能**。xAI公式ドキュメントがこの方式を推奨している。
+#### Step 2: RAG基盤構築 + rag_search ツール追加（後から追加）
 
-**メリット**: LLMがRAG検索クエリを自律的に最適化、真のエージェンティック動作
-**デメリット**: multi-turn tool callの実装が複雑
+エージェントループが安定した後、RAG基盤を構築し `rag_search` をclient-sideツールとしてエージェントループに追加。
 
-**情報源**: [xAI Advanced Usage](https://docs.x.ai/developers/tools/advanced-usage) - 「mixing server-side and client-side tools」はxAI SDK/OpenAI SDKで対応
+旧Phase A（RAG事前実行 → systemPrompt注入）はスキップし、最初から `rag_search` ツールとして実装する。エージェントループが既に存在するため、ask_userと同列にclient-sideツールとして追加するのが自然。LLMが検索クエリを自律的に最適化できる利点もある。
 
-### 5.2 Phase A: RAG事前実行アーキテクチャ（推奨スタート地点）
+**旧Phase Aの知見は活用**: RAG基盤（pgvector、hybrid_search、embedding pipeline）の設計はStep 2でそのまま使用。
+
+#### HTTPクライアント層について
+
+旧Phase Bでは `OpenAI SDK互換モード` を前提としていたが、[HTTPクライアント層の選定調査](./agentic-loop-self-implementation-analysis.md#6-httpクライアント層の選定調査2026-03-22) の結果、`fetch()` 直接呼び出しを維持する方針に決定。xAI固有機能（`x_search_call`, `cost_in_usd_ticks`等）への完全対応が理由。xAI公式APIはOpenAI SDKなしでもserver-side + client-sideツールの混在をサポートしている。
+
+### 5.2 ~~Phase A: RAG事前実行アーキテクチャ~~（廃止 → 参考資料として保持）
+
+> **廃止（2026-03-22）**: Phase A（RAG事前実行 → systemPrompt注入）はスキップし、Agent Loop構築後に直接 `rag_search` ツールとして追加する方針に変更（5.1参照）。ただし以下のアーキテクチャ図・コード例はRAG基盤設計（hybrid_search, embedding pipeline等）の参考として有効。
 
 ```
 ┌──────────────────────────────────────────────────────┐
@@ -1484,7 +1490,9 @@ const stream = grok.streamWithUsage([
 
 **変更点**: 既存の `buildSystemPrompt()` にRAG結果を追加するだけ。GrokClient自体の変更は不要。
 
-### 5.3 Phase B: Full Agent（OpenAI SDK互換）アーキテクチャ
+### 5.3 ~~Phase B: Full Agent（OpenAI SDK互換）アーキテクチャ~~（方針変更 → 参考資料として保持）
+
+> **方針変更（2026-03-22）**: OpenAI SDKの使用は見送り、`fetch()` 直接呼び出しでエージェントループを自前実装する方針に決定。ただし以下のツール混在パターンやループ構造は実装の参考として有効。HTTPクライアント層の選定調査の詳細は [agentic-loop-self-implementation-analysis.md セクション6](./agentic-loop-self-implementation-analysis.md) を参照。
 
 ```
 ┌──────────────────────────────────────────────────────┐
@@ -1615,16 +1623,17 @@ Step 3': LLM判断 → web_search を自動実行（xAIサーバーサイド）
   → 不足分のみ外部検索
 ```
 
-### 5.5 既存実装からの移行パス
+### 5.5 既存実装からの移行パス（2026-03-22 更新）
 
-| 段階 | 現在 | Phase A | Phase B |
+| 段階 | 現在 | Step 1: Agent Loop | Step 2: RAG追加 |
 |------|------|---------|---------|
-| LLMクライアント | `GrokClient` (直接API) | `GrokClient` (変更なし) | OpenAI SDK互換 (新規) |
-| ストリーミング | カスタムSSEパーサー | そのまま維持 | カスタムSSE (拡張) |
-| ツール呼び出し | Grokサーバーサイド | Grokサーバーサイド (変更なし) | function calling + server-side (混在) |
-| ナレッジ | プロンプト直接注入 | **RAG事前実行 + プロンプト注入** | **RAGをカスタムツール化** |
+| LLMクライアント | `GrokClient` (直接API) | `GrokClient` 拡張（ループ追加） | そのまま維持 |
+| ストリーミング | カスタムSSEパーサー | 拡張（ツールイベント対応） | そのまま維持 |
+| ツール呼び出し | Grokサーバーサイド | **server-side + client-side (ask_user)** | **+ rag_search 追加** |
+| ナレッジ | プロンプト直接注入 | プロンプト直接注入（変更なし） | **rag_search ツール化** |
 | プロンプト管理 | `feature_prompts` テーブル | そのまま維持 | そのまま維持 |
 | チャット履歴 | Supabase | そのまま維持 | そのまま維持 |
+| HTTPクライアント | `fetch()` 直接 | `fetch()` 直接（変更なし） | `fetch()` 直接（変更なし） |
 
 ### 5.6 Vercel AI SDKの位置づけ
 
@@ -1641,45 +1650,44 @@ Vercel AI SDKは**エージェンティック・ループのコア**としては
 
 ---
 
-## 6. 実装ロードマップ
+## 6. 実装ロードマップ（2026-03-22 更新）
 
-### Phase 0: 技術検証・PoC（優先度: 最高）
+> **ロードマップ統合（2026-03-22）**: 旧 Phase 0→1→2→3→4 を廃止し、[実装計画](../plans/agentic-loop-implementation.md) と整合させた新ロードマップに変更。Agent Loop を先に実装し、RAGは後から追加する方針。
+
+### Phase 0: 技術検証・PoC（完了）
 - [x] Vercel AI SDK v6.0.128 の動作確認
 - [x] xAI Responses API 制限の検証（サーバーサイド/クライアントサイドツール混在不可）
 - [x] Voyage AI voyage-4 系列のAPI検証
 - [x] pgvector + pgvectorscale ベンチマーク調査
 - [x] OpenAI SDK互換モードの調査（function calling + server-side tools混在）
-- [ ] OpenAI SDKでのxAI API動作検証（PoC実装）
+- [x] HTTPクライアント層の選定調査 → `fetch()` 直接維持に決定
+- [x] フレームワーク比較（LangGraph, Vercel AI SDK） → 自前実装に決定
+- ~~[ ] OpenAI SDKでのxAI API動作検証（PoC実装）~~ → `fetch()` 直接方式に決定、不要
+
+### Phase 1: エージェントループ実装（優先度: 最高）
+
+→ **詳細計画**: [`docs/plans/agentic-loop-implementation.md`](../plans/agentic-loop-implementation.md)
+
+- [ ] GrokClient拡張: server-side + client-side ツールのハイブリッド対応
+- [ ] エージェントループ（tool_calls検出→実行→再リクエスト）
+- [ ] `ask_user` ツール実装（HITL: ストリーム中断→ユーザー入力待ち→再開）
+- [ ] ストリーミング中のツール実行ステータスUI表示
+- [ ] 各機能（research-evidence, research-cast, proposal, minutes, general-chat）への適用
+
+### Phase 2: RAG基盤構築 + rag_search ツール追加（優先度: 高）
 - [ ] ハイブリッド検索（ベクトル+全文）の動作確認
 - [ ] 実際の社内資料でのRAG精度検証
-
-### Phase 1: RAG基盤構築（優先度: 最高）
 - [ ] Supabase に `documents` / `document_chunks` テーブル作成（マイグレーション）
 - [ ] pgvector / pgvectorscale 拡張の有効化
 - [ ] ハイブリッド検索RPC関数 `hybrid_search()` の作成
 - [ ] ドキュメントパーサー実装（mammoth, exceljs, pdf-parse, vttパーサー）
 - [ ] チャンキング + エンベディング生成パイプライン（**Voyage AI voyage-4**推奨）
+- [ ] `rag_search` をclient-sideツールとしてエージェントループに追加
 - [ ] 管理画面でのドキュメントアップロード・管理UI
 - [ ] 既存の `docs/assets/documents/` サンプル資料でRAGを構築・検証
 - [ ] 既存の `lib/knowledge/` データもRAGに移行
 
-### Phase 2: RAG事前実行統合（Phase A実装、優先度: 高）
-- [ ] `lib/rag/` モジュール作成（hybridSearch, formatRAGContext）
-- [ ] 既存の `buildSystemPrompt()` にRAG結果注入ロジックを追加
-- [ ] 「社内情報を最優先で使え」のプロンプト設計
-- [ ] 既存 `/api/llm/stream` route にRAG事前実行を追加
-- [ ] RAGヒット率のログ記録（外部検索が発生した割合を計測）
-- [ ] コスト削減効果の検証
-
-### Phase 3: Full Agent化（Phase B実装、優先度: 中）
-- [ ] OpenAI SDK互換クライアント作成（`baseURL: api.x.ai/v1`）
-- [ ] function calling (`rag_search`) + server-side tools (`web_search`, `x_search`) の混在実装
-- [ ] エージェンティック・ループ（tool_calls検出→実行→再リクエスト）
-- [ ] `grok-4.20-multi-agent-beta` での動作検証
-- [ ] ストリーミング中のツール実行ステータス表示
-- [ ] `previous_response_id` を活用したマルチターン最適化
-
-### Phase 4: コスト最適化 + 高度化（優先度: 低）
+### Phase 3: コスト最適化 + 高度化（優先度: 低）
 - [ ] 検索パターン分析（RAGヒット率のモニタリング・ダッシュボード）
 - [ ] 頻出クエリのRAG結果キャッシュ（Supabase or Upstash）
 - [ ] タスク別モデル自動選択（軽量→Grok 4.1 Fast、詳細→Grok 4.20 Multi-Agent）

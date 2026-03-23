@@ -1,11 +1,9 @@
 /**
  * Grok LLM Client
  *
- * xAI Responses APIを直接使用したLLMクライアント実装（LangChainバイパス）
+ * xAI Responses APIを直接使用したLLMクライアント実装
  * Agent Tools（web_search, x_search, code_execution）に対応
- *
- * 復元元: git commit b8297cf
- * 改修: ツール設定簡略化・SSEイベント形式変更・collections_search削除・x_search_callイベント型修正
+ * CitationManager: URL正規化・重複除去・ソース推測（web_search / x_search）
  */
 
 import { createClientLogger } from "@/lib/logger";
@@ -38,6 +36,62 @@ const XAI_TOOL_TYPE_MAP: Record<string, GrokToolType> = {
   x_search_call: "x_search",
   code_interpreter_call: "code_execution",
 };
+
+/**
+ * URLによるツール種別の推測（citations用）
+ */
+function inferToolTypeFromUrl(url: string): "web_search" | "x_search" {
+  if (url.includes("x.com") || url.includes("twitter.com")) {
+    return "x_search";
+  }
+  return "web_search";
+}
+
+/**
+ * 重複を除去したcitationsを管理するクラス
+ */
+class CitationManager {
+  private seenUrls = new Set<string>();
+  private citations: Array<{ url: string; title: string; source: "web_search" | "x_search" }> = [];
+
+  add(url: string, title: string): boolean {
+    const normalizedUrl = this.normalizeUrl(url);
+    if (this.seenUrls.has(normalizedUrl)) {
+      return false;
+    }
+    this.seenUrls.add(normalizedUrl);
+    this.citations.push({
+      url: normalizedUrl,
+      title: title || String(this.citations.length + 1),
+      source: inferToolTypeFromUrl(normalizedUrl),
+    });
+    return true;
+  }
+
+  getAll() {
+    return [...this.citations];
+  }
+
+  getXSearchCitations() {
+    return this.citations.filter((c) => c.source === "x_search");
+  }
+
+  getWebSearchCitations() {
+    return this.citations.filter((c) => c.source === "web_search");
+  }
+
+  private normalizeUrl(url: string): string {
+    try {
+      const urlObj = new URL(url);
+      if (urlObj.hostname === "twitter.com") {
+        urlObj.hostname = "x.com";
+      }
+      return `${urlObj.protocol}//${urlObj.hostname}${urlObj.pathname}`;
+    } catch {
+      return url;
+    }
+  }
+}
 
 /**
  * xAI Responses APIレスポンス型
@@ -109,8 +163,15 @@ interface XAIStreamEvent {
     input?: string;
     call_id?: string;
     action?: { type?: string; query?: string };
-    // Note: contentフィールドは使用していない（Inline annotationsを使用）
-    // 詳細: https://kimi.com/kimi-docs/backlog/research-xai-citations-behavior
+    content?: Array<{
+      type: string;
+      text?: string;
+      annotations?: Array<{
+        type: string;
+        url?: string;
+        title?: string;
+      }>;
+    }>;
   };
   annotation?: {
     type: string;
@@ -238,6 +299,26 @@ export class GrokClient implements LLMClient {
     };
   }
 
+  /**
+   * citationsを抽出してCitationManagerに追加
+   */
+  private extractCitations(
+    item: NonNullable<XAIStreamEvent["item"]>,
+    citationManager: CitationManager,
+  ): void {
+    if (item.type !== "message" || !item.content) return;
+
+    for (const content of item.content) {
+      if (content.type !== "output_text" || !content.annotations) continue;
+
+      for (const annotation of content.annotations) {
+        if (annotation.type === "url_citation" && annotation.url) {
+          citationManager.add(annotation.url, annotation.title ?? "");
+        }
+      }
+    }
+  }
+
   // ─── パブリックAPI ────────────────────────────────────────
 
   /**
@@ -304,7 +385,7 @@ export class GrokClient implements LLMClient {
     let buffer = "";
 
     // citationsの重複を管理（調査結果: Inline annotations内で重複あり）
-    const seenCitationUrls = new Set<string>();
+    const citationManager = new CitationManager();
 
     let hasEmittedThinking = false;
 
@@ -321,26 +402,25 @@ export class GrokClient implements LLMClient {
 
       // ツール呼び出し完了
       if (event.type === "response.output_item.done" && event.item) {
-        // Message annotationsは無視（Inline annotationsと同じデータのため）
-        // 調査結果: https://kimi.com/kimi-docs/backlog/research-xai-citations-behavior
-        return this.parseToolCallEvent(event.item, "completed");
+        const toolCall = this.parseToolCallEvent(event.item, "completed");
+
+        // messageタイプの場合はcitationsを抽出（重複はCitationManagerが除去）
+        this.extractCitations(event.item, citationManager);
+
+        return toolCall;
       }
 
-      // 引用URL（Inline annotationsのみ使用）
-      // 調査結果: InlineとMessageは同じcitationsセットを返すため、Inlineのみで十分
+      // 引用URL（Inline annotations）
       if (event.type === "response.output_text.annotation.added" && event.annotation) {
         if (event.annotation.type === "url_citation" && event.annotation.url) {
-          // 重複除去（同じURLが本文中で複数回参照される場合がある）
-          if (seenCitationUrls.has(event.annotation.url)) {
-            return null;
+          const isNew = citationManager.add(event.annotation.url, event.annotation.title ?? "");
+          if (isNew) {
+            return {
+              type: "citation",
+              url: event.annotation.url,
+              title: event.annotation.title ?? "",
+            };
           }
-          seenCitationUrls.add(event.annotation.url);
-
-          return {
-            type: "citation",
-            url: event.annotation.url,
-            title: event.annotation.title ?? "",
-          };
         }
         return null;
       }
@@ -357,6 +437,12 @@ export class GrokClient implements LLMClient {
           if (details.code_interpreter_calls)
             toolCalls.code_execution = details.code_interpreter_calls;
         }
+        logger.info("Stream completed", {
+          totalCitations: citationManager.getAll().length,
+          xSearchCitations: citationManager.getXSearchCitations().length,
+          webSearchCitations: citationManager.getWebSearchCitations().length,
+        });
+
         return {
           type: "done",
           usage: {
