@@ -51,7 +51,6 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     });
   } catch (error) {
     console.error("Failed to fetch prompt version:", error);
-    const errorMessage = error instanceof Error ? error.message : "Unknown error";
     return errorResponse("Failed to fetch prompt version", 500);
   }
 }

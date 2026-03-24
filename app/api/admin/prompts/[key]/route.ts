@@ -70,7 +70,6 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     return NextResponse.json({ success: true, data: formattedPrompt });
   } catch (error) {
     console.error("Failed to fetch prompt:", error);
-    const errorMessage = error instanceof Error ? error.message : "Unknown error";
     return errorResponse("Failed to fetch prompt", 500);
   }
 }

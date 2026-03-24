@@ -69,7 +69,6 @@ export function handleApiError(error: unknown): NextResponse {
     return errorResponse(error.message, error.statusCode, { code: error.code });
   }
 
-  const message = error instanceof Error ? error.message : "不明なエラーが発生しました";
   console.error("APIエラー:", error);
 
   return errorResponse("内部サーバーエラー", 500);

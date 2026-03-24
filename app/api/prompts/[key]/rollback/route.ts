@@ -55,7 +55,6 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     });
   } catch (error) {
     console.error("Failed to rollback prompt:", error);
-    const message = error instanceof Error ? error.message : "Unknown error";
     return errorResponse("Failed to rollback", 500);
   }
 }

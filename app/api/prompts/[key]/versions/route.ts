@@ -107,7 +107,6 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     });
   } catch (error) {
     console.error("Failed to create version:", error);
-    const message = error instanceof Error ? error.message : "Unknown error";
     return errorResponse("Failed to create version", 500);
   }
 }

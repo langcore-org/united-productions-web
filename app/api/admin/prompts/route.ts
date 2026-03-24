@@ -87,7 +87,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ success: true, data: formattedPrompts });
   } catch (error) {
     console.error("Failed to fetch prompts:", error);
-    const errorMessage = error instanceof Error ? error.message : "Unknown error";
     return errorResponse("Failed to fetch prompts", 500);
   }
 }
