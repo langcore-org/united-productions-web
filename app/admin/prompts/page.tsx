@@ -40,10 +40,10 @@ export default function AdminPromptsPage() {
 
   const fetchPrompts = useCallback(async () => {
     try {
-      const res = await fetch("/api/prompts");
+      const res = await fetch("/api/admin/prompts");
       if (!res.ok) throw new Error("Failed to fetch");
       const data = await res.json();
-      setPrompts(data.prompts || []);
+      setPrompts(data.data || []);
     } catch (e) {
       console.error(e);
     } finally {
@@ -64,18 +64,18 @@ export default function AdminPromptsPage() {
 
     try {
       const [versionsRes, contentRes] = await Promise.all([
-        fetch(`/api/prompts/${prompt.key}/versions`),
-        fetch(`/api/prompts/${prompt.key}`),
+        fetch(`/api/admin/prompts/${prompt.key}/history`),
+        fetch(`/api/admin/prompts/${prompt.key}`),
       ]);
 
       if (versionsRes.ok) {
         const versionsData = await versionsRes.json();
-        setVersions(versionsData.versions || []);
+        setVersions(versionsData.data?.versions || []);
       }
 
       if (contentRes.ok) {
         const contentData = await contentRes.json();
-        setPromptContent(contentData);
+        setPromptContent(contentData.data);
       }
     } catch (e) {
       console.error(e);
