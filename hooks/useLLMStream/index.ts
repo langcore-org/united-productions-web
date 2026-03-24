@@ -70,8 +70,7 @@ export function useLLMStream(options: UseLLMStreamOptions = {}) {
         memoryRef.current = new ClientMemory(provider, {
           tokenThreshold,
           maxRecentTurns,
-          onSummarizationUpdate: (event) =>
-            dispatch({ type: "UPSERT_SUMMARIZATION_EVENT", event }),
+          onSummarizationUpdate: (event) => dispatch({ type: "UPSERT_SUMMARIZATION_EVENT", event }),
         });
       }
       return memoryRef.current;

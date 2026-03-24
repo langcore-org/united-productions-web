@@ -71,7 +71,21 @@ export function FeatureChat({
   const provider: LLMProvider = initialProvider;
 
   const llmStream = useLLMStream();
-  const { content, isComplete, isPending, phase, error, usage, toolCalls, citations, summarizationEvents, followUp, connectionStatus, startStream, resetStream } = llmStream;
+  const {
+    content,
+    isComplete,
+    isPending,
+    phase,
+    error,
+    usage,
+    toolCalls,
+    citations,
+    summarizationEvents,
+    followUp,
+    connectionStatus,
+    startStream,
+    resetStream,
+  } = llmStream;
 
   const chat = useChatMessages({
     provider,

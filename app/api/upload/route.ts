@@ -43,11 +43,9 @@ export async function POST(request: NextRequest) {
 
     // ファイルサイズチェック
     if (file.size > MAX_FILE_SIZE) {
-      return errorResponse(
-        `ファイルサイズは${formatBytes(MAX_FILE_SIZE)}以下にしてください`,
-        413,
-        { code: "FILE_TOO_LARGE" },
-      );
+      return errorResponse(`ファイルサイズは${formatBytes(MAX_FILE_SIZE)}以下にしてください`, 413, {
+        code: "FILE_TOO_LARGE",
+      });
     }
 
     // ファイル解析
