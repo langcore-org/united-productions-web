@@ -6,6 +6,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { requireAuth } from "@/lib/api/auth";
+import { errorResponse, validationErrorResponse } from "@/lib/api/utils";
 import { rollbackPrompt } from "@/lib/prompts/db/versions";
 
 const rollbackSchema = z.object({
@@ -33,10 +34,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
     const validation = rollbackSchema.safeParse(body);
     if (!validation.success) {
-      return NextResponse.json(
-        { error: "Invalid request", details: validation.error.format() },
-        { status: 400 },
-      );
+      return validationErrorResponse(validation.error);
     }
 
     const newVersion = await rollbackPrompt(key, validation.data.version, {
@@ -58,6 +56,6 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   } catch (error) {
     console.error("Failed to rollback prompt:", error);
     const message = error instanceof Error ? error.message : "Unknown error";
-    return NextResponse.json({ error: "Failed to rollback", message }, { status: 500 });
+    return errorResponse("Failed to rollback", 500);
   }
 }

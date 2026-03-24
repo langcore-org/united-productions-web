@@ -7,6 +7,7 @@
 
 import type { NextRequest } from "next/server";
 import { requireAuth } from "@/lib/api/auth";
+import { errorResponse } from "@/lib/api/utils";
 import { getProgramById } from "@/lib/knowledge/programs";
 import { logger } from "@/lib/logger";
 import { createClient } from "@/lib/supabase/server";
@@ -107,7 +108,7 @@ export async function GET(request: NextRequest): Promise<Response> {
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
     logger.error(`[${requestId}] Failed to get chat history`, { error: errorMessage });
-    return Response.json({ error: "Failed to get chat history", requestId }, { status: 500 });
+    return errorResponse("Failed to get chat history", 500);
   }
 }
 
@@ -123,7 +124,7 @@ export async function DELETE(request: NextRequest): Promise<Response> {
     const chatId = searchParams.get("id");
 
     if (!chatId) {
-      return Response.json({ error: "id is required" }, { status: 400 });
+      return errorResponse("id is required", 400);
     }
 
     const supabase = await createClient();
@@ -136,6 +137,6 @@ export async function DELETE(request: NextRequest): Promise<Response> {
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
     logger.error(`[${requestId}] Failed to delete chat`, { error: errorMessage });
-    return Response.json({ error: "Failed to delete chat", requestId }, { status: 500 });
+    return errorResponse("Failed to delete chat", 500);
   }
 }

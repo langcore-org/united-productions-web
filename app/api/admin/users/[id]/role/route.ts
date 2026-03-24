@@ -7,6 +7,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { requireAuth } from "@/lib/api/auth";
+import { errorResponse, validationErrorResponse } from "@/lib/api/utils";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 const updateRoleSchema = z.object({
@@ -24,7 +25,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     const validationResult = updateRoleSchema.safeParse(body);
 
     if (!validationResult.success) {
-      return NextResponse.json({ success: false, error: "Invalid request body" }, { status: 400 });
+      return validationErrorResponse(validationResult.error);
     }
 
     const { role } = validationResult.data;
@@ -37,10 +38,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       .single();
 
     if (fetchError || !user) {
-      return NextResponse.json(
-        { success: false, error: "ユーザーが見つかりません" },
-        { status: 404 },
-      );
+      return errorResponse("ユーザーが見つかりません", 404);
     }
 
     const { data: updatedUser, error: updateError } = await supabase
@@ -55,9 +53,6 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     return NextResponse.json({ success: true, data: updatedUser });
   } catch (error) {
     console.error("Failed to update user role:", error);
-    return NextResponse.json(
-      { success: false, error: "Failed to update user role" },
-      { status: 500 },
-    );
+    return errorResponse("Failed to update user role", 500);
   }
 }

@@ -8,6 +8,7 @@
 import type { NextRequest } from "next/server";
 import { z } from "zod";
 import { requireAuth } from "@/lib/api/auth";
+import { errorResponse, validationErrorResponse } from "@/lib/api/utils";
 import { GrokClient } from "@/lib/llm/clients/grok";
 import { DEFAULT_PROVIDER } from "@/lib/llm/config";
 import { isValidProvider } from "@/lib/llm/factory";
@@ -59,16 +60,7 @@ export async function POST(request: NextRequest): Promise<Response> {
     const validationResult = streamRequestSchema.safeParse(body);
     if (!validationResult.success) {
       logger.warn(`[${requestId}] Validation failed`);
-      return new Response(
-        JSON.stringify({
-          error: "Invalid request",
-          message: validationResult.error.issues
-            .map((e) => `${e.path.join(".")}: ${e.message}`)
-            .join(", "),
-          requestId,
-        }),
-        { status: 400, headers: { "Content-Type": "application/json" } },
-      );
+      return validationErrorResponse(validationResult.error);
     }
 
     const { messages, provider: requestedProvider, featureId, programId } = validationResult.data;
@@ -77,10 +69,7 @@ export async function POST(request: NextRequest): Promise<Response> {
     let provider: LLMProvider;
     if (requestedProvider) {
       if (!isValidProvider(requestedProvider)) {
-        return new Response(JSON.stringify({ error: "Invalid provider", requestId }), {
-          status: 400,
-          headers: { "Content-Type": "application/json" },
-        });
+        return errorResponse("Invalid provider", 400);
       }
       provider = requestedProvider;
     } else {
@@ -90,13 +79,7 @@ export async function POST(request: NextRequest): Promise<Response> {
     logger.info(`[${requestId}] Using provider: ${provider}, feature: ${featureId || "default"}`);
 
     if (!provider.startsWith("grok-")) {
-      return new Response(
-        JSON.stringify({
-          error: `Provider "${provider}" is not supported for streaming`,
-          requestId,
-        }),
-        { status: 400, headers: { "Content-Type": "application/json" } },
-      );
+      return errorResponse(`Provider "${provider}" is not supported for streaming`, 400);
     }
 
     // システムプロンプトを構築（一元管理関数を使用）
@@ -163,9 +146,6 @@ export async function POST(request: NextRequest): Promise<Response> {
     const errorMessage = error instanceof Error ? error.message : "Internal server error";
     logger.error(`[${requestId}] Error`, { error: errorMessage });
 
-    return new Response(JSON.stringify({ error: errorMessage, requestId }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" },
-    });
+    return errorResponse(errorMessage, 500);
   }
 }

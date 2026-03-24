@@ -7,7 +7,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { ZodError, type ZodSchema } from "zod";
 import { requireAuth } from "./auth";
-import { handleApiError } from "./utils";
+import { errorResponse, handleApiError, validationErrorResponse } from "./utils";
 
 interface HandlerOptions<T> {
   schema?: ZodSchema<T>;
@@ -64,24 +64,12 @@ export function createApiHandler<T>(
           const validationResult = schema.safeParse(body);
 
           if (!validationResult.success) {
-            return NextResponse.json(
-              {
-                error: "バリデーションエラー",
-                details: validationResult.error.issues.map((e) => ({
-                  path: e.path.join("."),
-                  message: e.message,
-                })),
-              },
-              { status: 400 },
-            );
+            return validationErrorResponse(validationResult.error);
           }
 
           data = validationResult.data;
         } catch {
-          return NextResponse.json(
-            { error: "リクエストボディのパースに失敗しました" },
-            { status: 400 },
-          );
+          return errorResponse("リクエストボディのパースに失敗しました", 400);
         }
       }
 
@@ -89,16 +77,7 @@ export function createApiHandler<T>(
       return await handler({ request, data, userId });
     } catch (error) {
       if (error instanceof ZodError) {
-        return NextResponse.json(
-          {
-            error: "バリデーションエラー",
-            details: error.issues.map((e) => ({
-              path: e.path.join("."),
-              message: e.message,
-            })),
-          },
-          { status: 400 },
-        );
+        return validationErrorResponse(error);
       }
 
       return handleApiError(error);

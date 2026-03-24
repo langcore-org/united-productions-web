@@ -6,6 +6,7 @@
 
 import { type NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/api/auth";
+import { errorResponse } from "@/lib/api/utils";
 import { getPromptVersionHistory } from "@/lib/prompts";
 
 interface RouteParams {
@@ -46,12 +47,9 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
 
     if (errorMessage.includes("not found")) {
-      return NextResponse.json({ success: false, error: errorMessage }, { status: 404 });
+      return errorResponse(errorMessage, 404);
     }
 
-    return NextResponse.json(
-      { success: false, error: "Failed to fetch prompt history", details: errorMessage },
-      { status: 500 },
-    );
+    return errorResponse("Failed to fetch prompt history", 500);
   }
 }

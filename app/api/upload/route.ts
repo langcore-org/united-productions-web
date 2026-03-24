@@ -7,6 +7,7 @@
 
 import { type NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/api/auth";
+import { errorResponse } from "@/lib/api/utils";
 import { MAX_FILE_SIZE, parseFile } from "@/lib/upload/file-parser";
 
 /**
@@ -37,21 +38,15 @@ export async function POST(request: NextRequest) {
     const file = formData.get("file") as File | null;
 
     if (!file) {
-      return NextResponse.json(
-        { success: false, error: "ファイルが見つかりません" },
-        { status: 400 },
-      );
+      return errorResponse("ファイルが見つかりません", 400);
     }
 
     // ファイルサイズチェック
     if (file.size > MAX_FILE_SIZE) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: `ファイルサイズは${formatBytes(MAX_FILE_SIZE)}以下にしてください`,
-          code: "FILE_TOO_LARGE",
-        },
-        { status: 413 },
+      return errorResponse(
+        `ファイルサイズは${formatBytes(MAX_FILE_SIZE)}以下にしてください`,
+        413,
+        { code: "FILE_TOO_LARGE" },
       );
     }
 
@@ -71,16 +66,10 @@ export async function POST(request: NextRequest) {
 
     if (error && typeof error === "object" && "code" in error) {
       const parseError = error as { code: string; message: string };
-      return NextResponse.json(
-        { success: false, error: parseError.message, code: parseError.code },
-        { status: 400 },
-      );
+      return errorResponse(parseError.message, 400, { code: parseError.code });
     }
 
-    return NextResponse.json(
-      { success: false, error: "ファイルの処理に失敗しました" },
-      { status: 500 },
-    );
+    return errorResponse("ファイルの処理に失敗しました", 500);
   }
 }
 

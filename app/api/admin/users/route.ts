@@ -6,6 +6,7 @@
 
 import { type NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/api/auth";
+import { errorResponse } from "@/lib/api/utils";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 interface UserUsage {
@@ -134,6 +135,6 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error("Failed to fetch users:", error);
-    return NextResponse.json({ success: false, error: "Failed to fetch users" }, { status: 500 });
+    return errorResponse("Failed to fetch users", 500);
   }
 }

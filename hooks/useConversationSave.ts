@@ -8,7 +8,7 @@
  */
 
 import { useCallback, useState } from "react";
-import type { Message } from "@/components/ui/FeatureChat";
+import type { Message } from "@/components/ui/chat-types";
 
 /**
  * LLMプロバイダー名をAPI期待形式（アッパースネークケース）に変換

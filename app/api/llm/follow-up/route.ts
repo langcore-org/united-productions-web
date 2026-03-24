@@ -8,6 +8,7 @@
 import type { NextRequest } from "next/server";
 import { z } from "zod";
 import { requireAuth } from "@/lib/api/auth";
+import { errorResponse, validationErrorResponse } from "@/lib/api/utils";
 import { GrokClient } from "@/lib/llm/clients/grok";
 import { getProviderInfo } from "@/lib/llm/config";
 
@@ -102,16 +103,7 @@ export async function POST(request: NextRequest): Promise<Response> {
     const validationResult = followUpRequestSchema.safeParse(body);
     if (!validationResult.success) {
       logger.warn(`[${requestId}] Validation failed`);
-      return new Response(
-        JSON.stringify({
-          error: "Invalid request",
-          message: validationResult.error.issues
-            .map((e) => `${e.path.join(".")}: ${e.message}`)
-            .join(", "),
-          requestId,
-        }),
-        { status: 400, headers: { "Content-Type": "application/json" } },
-      );
+      return validationErrorResponse(validationResult.error);
     }
 
     const { messages } = validationResult.data;
@@ -176,9 +168,6 @@ export async function POST(request: NextRequest): Promise<Response> {
     const errorMessage = error instanceof Error ? error.message : "Internal server error";
     logger.error(`[${requestId}] Error`, { error: errorMessage });
 
-    return new Response(JSON.stringify({ error: errorMessage, requestId }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" },
-    });
+    return errorResponse(errorMessage, 500);
   }
 }

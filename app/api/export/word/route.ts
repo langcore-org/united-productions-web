@@ -8,6 +8,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { requireAuth } from "@/lib/api/auth";
+import { errorResponse, validationErrorResponse } from "@/lib/api/utils";
 import { generateWordDocument } from "@/lib/export/word-generator";
 
 // リクエストスキーマ
@@ -45,14 +46,7 @@ export async function POST(request: NextRequest) {
     // バリデーション
     const validationResult = wordExportSchema.safeParse(body);
     if (!validationResult.success) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "入力データが不正です",
-          details: validationResult.error.issues,
-        },
-        { status: 400 },
-      );
+      return validationErrorResponse(validationResult.error);
     }
 
     const { content, filename, title } = validationResult.data;
@@ -83,12 +77,9 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("Word export error:", error);
-    return NextResponse.json(
-      {
-        success: false,
-        error: error instanceof Error ? error.message : "Word出力中にエラーが発生しました",
-      },
-      { status: 500 },
+    return errorResponse(
+      error instanceof Error ? error.message : "Word出力中にエラーが発生しました",
+      500,
     );
   }
 }

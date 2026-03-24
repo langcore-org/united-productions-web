@@ -21,7 +21,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { getProgramById, programOptions } from "@/lib/knowledge/programs";
-import type { Message } from "./FeatureChat";
+import type { Message } from "./chat-types";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./select";
 import { WordExportButton } from "./WordExportButton";
 

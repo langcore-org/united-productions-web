@@ -8,6 +8,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { requireAuth } from "@/lib/api/auth";
+import { errorResponse, validationErrorResponse } from "@/lib/api/utils";
 import { getPromptWithHistory, updatePromptWithVersion } from "@/lib/prompts";
 import { getPromptFromDB } from "@/lib/prompts/db/crud";
 
@@ -39,7 +40,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     const prompt = await getPromptWithHistory(decodedKey);
 
     if (!prompt) {
-      return NextResponse.json({ success: false, error: "Prompt not found" }, { status: 404 });
+      return errorResponse("Prompt not found", 404);
     }
 
     // スネークケースからキャメルケースに変換
@@ -70,10 +71,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   } catch (error) {
     console.error("Failed to fetch prompt:", error);
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
-    return NextResponse.json(
-      { success: false, error: "Failed to fetch prompt", details: errorMessage },
-      { status: 500 },
-    );
+    return errorResponse("Failed to fetch prompt", 500);
   }
 }
 
@@ -117,17 +115,14 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { success: false, error: "Invalid request data", details: error.issues },
-        { status: 400 },
-      );
+      return validationErrorResponse(error);
     }
 
     if (error instanceof Error && error.message.includes("not found")) {
-      return NextResponse.json({ success: false, error: error.message }, { status: 404 });
+      return errorResponse(error.message, 404);
     }
 
     console.error("Failed to update prompt:", error);
-    return NextResponse.json({ success: false, error: "Failed to update prompt" }, { status: 500 });
+    return errorResponse("Failed to update prompt", 500);
   }
 }

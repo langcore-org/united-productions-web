@@ -7,6 +7,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { requireAuth } from "@/lib/api/auth";
+import { errorResponse, validationErrorResponse } from "@/lib/api/utils";
 import type { LLMProvider } from "@/lib/llm/types";
 import { trackUsage } from "@/lib/usage/tracker";
 
@@ -26,10 +27,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     const validationResult = usageSchema.safeParse(body);
     if (!validationResult.success) {
-      return NextResponse.json(
-        { error: "リクエストが無効です", details: validationResult.error.format() },
-        { status: 400 },
-      );
+      return validationErrorResponse(validationResult.error);
     }
 
     const { provider, inputTokens, outputTokens, metadata } = validationResult.data;
@@ -45,6 +43,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Usage tracking error:", error);
-    return NextResponse.json({ error: "使用量の記録に失敗しました" }, { status: 500 });
+    return errorResponse("使用量の記録に失敗しました", 500);
   }
 }

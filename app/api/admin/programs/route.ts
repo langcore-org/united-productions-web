@@ -7,6 +7,7 @@
 
 import { type NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/api/auth";
+import { errorResponse } from "@/lib/api/utils";
 import { getProgramById, programs } from "@/lib/knowledge/programs";
 import type { ProgramInfo } from "@/lib/knowledge/types";
 
@@ -82,7 +83,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       // 特定番組の取得
       const program = getProgramById(id);
       if (!program) {
-        return NextResponse.json({ error: "番組が見つかりません", id }, { status: 404 });
+        return errorResponse("番組が見つかりません", 404);
       }
 
       return NextResponse.json({
@@ -99,6 +100,6 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     });
   } catch (error) {
     console.error("Programs API error:", error);
-    return NextResponse.json({ error: "内部サーバーエラー" }, { status: 500 });
+    return errorResponse("内部サーバーエラー", 500);
   }
 }

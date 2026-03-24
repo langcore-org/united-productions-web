@@ -7,6 +7,7 @@
  */
 
 import { type NextRequest, NextResponse } from "next/server";
+import { errorResponse } from "@/lib/api/utils";
 import { createClient } from "@/lib/supabase/server";
 
 const DRIVE_API_BASE = "https://www.googleapis.com/drive/v3";
@@ -34,7 +35,7 @@ export async function GET(request: NextRequest) {
     } = await supabase.auth.getSession();
 
     if (!session?.provider_token) {
-      return NextResponse.json({ error: "認証が必要です" }, { status: 401 });
+      return errorResponse("認証が必要です", 401);
     }
 
     const accessToken = session.provider_token;
@@ -42,7 +43,7 @@ export async function GET(request: NextRequest) {
     const fileId = searchParams.get("fileId");
 
     if (!fileId) {
-      return NextResponse.json({ error: "fileIdが必要です" }, { status: 400 });
+      return errorResponse("fileIdが必要です", 400);
     }
 
     const metaResponse = await fetch(
@@ -55,7 +56,7 @@ export async function GET(request: NextRequest) {
     );
 
     if (!metaResponse.ok) {
-      return NextResponse.json({ error: "ファイルが見つかりません" }, { status: 404 });
+      return errorResponse("ファイルが見つかりません", 404);
     }
 
     const metadata = await metaResponse.json();
@@ -77,11 +78,9 @@ export async function GET(request: NextRequest) {
 
       if (!exportResponse.ok) {
         const errorData = await exportResponse.json().catch(() => ({}));
-        return NextResponse.json(
-          {
-            error: `ファイルのエクスポートに失敗しました: ${errorData.error?.message || exportResponse.statusText}`,
-          },
-          { status: exportResponse.status },
+        return errorResponse(
+          `ファイルのエクスポートに失敗しました: ${errorData.error?.message || exportResponse.statusText}`,
+          exportResponse.status,
         );
       }
 
@@ -95,10 +94,7 @@ export async function GET(request: NextRequest) {
       });
 
       if (!contentResponse.ok) {
-        return NextResponse.json(
-          { error: "ファイルの取得に失敗しました" },
-          { status: contentResponse.status },
-        );
+        return errorResponse("ファイルの取得に失敗しました", contentResponse.status);
       }
 
       content = await contentResponse.text();
@@ -118,6 +114,6 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error("Drive download error:", error);
-    return NextResponse.json({ error: "サーバーエラー" }, { status: 500 });
+    return errorResponse("サーバーエラー", 500);
   }
 }

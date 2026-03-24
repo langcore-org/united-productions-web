@@ -2,6 +2,8 @@
  * API共通ユーティリティ
  *
  * API Routesでの共通処理をまとめます。
+ *
+ * @updated 2026-03-24: errorResponse ヘルパー追加（B-4 エラーフォーマット統一）
  */
 
 import { type NextRequest, NextResponse } from "next/server";
@@ -11,38 +13,66 @@ import { LLMError } from "@/lib/llm/errors";
 export { LLMError } from "@/lib/llm/errors";
 
 /**
+ * 統一エラーレスポンスの型
+ *
+ * 全APIルートで使用する標準フォーマット:
+ * - error: 人間が読めるエラーメッセージ（必須）
+ * - details: バリデーションエラーの詳細（任意）
+ * - code: マシンリーダブルなエラーコード（任意）
+ */
+interface ApiErrorBody {
+  error: string;
+  details?: Array<{ path: string; message: string }>;
+  code?: string;
+}
+
+/**
+ * 統一フォーマットのエラーレスポンスを作成
+ *
+ * `success: false` パターンや `requestId` の混在を排除し、
+ * HTTPステータスコードでエラー判定する設計に統一。
+ */
+export function errorResponse(
+  message: string,
+  status: number,
+  options?: { details?: ApiErrorBody["details"]; code?: string },
+): NextResponse<ApiErrorBody> {
+  const body: ApiErrorBody = { error: message };
+  if (options?.details) body.details = options.details;
+  if (options?.code) body.code = options.code;
+  return NextResponse.json(body, { status });
+}
+
+/**
+ * Zodバリデーションエラーから統一エラーレスポンスを作成
+ */
+export function validationErrorResponse(zodError: ZodError): NextResponse<ApiErrorBody> {
+  return errorResponse("バリデーションエラー", 400, {
+    details: zodError.issues.map((e) => ({
+      path: e.path.join("."),
+      message: e.message,
+    })),
+  });
+}
+
+/**
  * APIエラーをハンドリングして適切なレスポンスを返す
  * @param error - 発生したエラー
  * @returns NextResponse
  */
 export function handleApiError(error: unknown): NextResponse {
-  // Zodバリデーションエラー
   if (error instanceof ZodError) {
-    return NextResponse.json(
-      {
-        error: "バリデーションエラー",
-        details: error.issues.map((e) => ({
-          path: e.path.join("."),
-          message: e.message,
-        })),
-      },
-      { status: 400 },
-    );
+    return validationErrorResponse(error);
   }
 
-  // LLMエラー
   if (error instanceof LLMError) {
-    return NextResponse.json(
-      { error: error.message, code: error.code },
-      { status: error.statusCode },
-    );
+    return errorResponse(error.message, error.statusCode, { code: error.code });
   }
 
-  // 一般的なエラー
   const message = error instanceof Error ? error.message : "不明なエラーが発生しました";
   console.error("APIエラー:", error);
 
-  return NextResponse.json({ error: "内部サーバーエラー", message }, { status: 500 });
+  return errorResponse("内部サーバーエラー", 500);
 }
 
 /**

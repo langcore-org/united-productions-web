@@ -10,6 +10,7 @@
 import type { NextRequest } from "next/server";
 import { z } from "zod";
 import { requireAuth } from "@/lib/api/auth";
+import { errorResponse, validationErrorResponse } from "@/lib/api/utils";
 import { createLLMClient } from "@/lib/llm";
 import { logger } from "@/lib/logger";
 import { createClient } from "@/lib/supabase/server";
@@ -97,11 +98,11 @@ export async function GET(request: NextRequest): Promise<Response> {
       return Response.json({ chats: chats || [] });
     }
 
-    return Response.json({ error: "chatId or featureId is required" }, { status: 400 });
+    return errorResponse("chatId or featureId is required", 400);
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
     logger.error(`[${requestId}] Failed to get conversation`, { error: errorMessage });
-    return Response.json({ error: "Failed to get conversation", requestId }, { status: 500 });
+    return errorResponse("Failed to get conversation", 500);
   }
 }
 
@@ -151,7 +152,7 @@ export async function POST(request: NextRequest): Promise<Response> {
     try {
       body = await request.json();
     } catch {
-      return Response.json({ error: "Invalid request body" }, { status: 400 });
+      return errorResponse("Invalid request body", 400);
     }
 
     const validationResult = saveRequestSchema.safeParse(body);
@@ -160,10 +161,7 @@ export async function POST(request: NextRequest): Promise<Response> {
         errors: validationResult.error.issues,
         body: JSON.stringify(body).slice(0, 500),
       });
-      return Response.json(
-        { error: "Invalid request", details: validationResult.error.format() },
-        { status: 400 },
-      );
+      return validationErrorResponse(validationResult.error);
     }
 
     const { chatId, featureId, programId, messages } = validationResult.data;
@@ -182,7 +180,7 @@ export async function POST(request: NextRequest): Promise<Response> {
         .single();
 
       if (!existing) {
-        return Response.json({ error: "Chat not found" }, { status: 404 });
+        return errorResponse("Chat not found", 404);
       }
       actualChatId = existing.id;
 
@@ -243,7 +241,7 @@ export async function POST(request: NextRequest): Promise<Response> {
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
     logger.error(`[${requestId}] Failed to save conversation`, { error: errorMessage });
-    return Response.json({ error: "Failed to save conversation", requestId }, { status: 500 });
+    return errorResponse("Failed to save conversation", 500);
   }
 }
 
@@ -264,12 +262,12 @@ export async function DELETE(request: NextRequest): Promise<Response> {
       try {
         body = await request.json();
       } catch {
-        return Response.json({ error: "chatId is required" }, { status: 400 });
+        return errorResponse("chatId is required", 400);
       }
 
       const parsed = z.object({ featureId: z.string() }).safeParse(body);
       if (!parsed.success) {
-        return Response.json({ error: "chatId is required" }, { status: 400 });
+        return errorResponse("chatId is required", 400);
       }
 
       const { data: chat } = await supabase
@@ -292,6 +290,6 @@ export async function DELETE(request: NextRequest): Promise<Response> {
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
     logger.error(`[${requestId}] Failed to delete conversation`, { error: errorMessage });
-    return Response.json({ error: "Failed to delete conversation", requestId }, { status: 500 });
+    return errorResponse("Failed to delete conversation", 500);
   }
 }

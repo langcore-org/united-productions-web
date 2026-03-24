@@ -1,41 +1,35 @@
 "use client";
 
-import { Loader2, MessageSquare, Paperclip, Trash2, X } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { StreamingSteps } from "@/components/chat";
-import { FollowUpSuggestions } from "@/components/chat/FollowUpSuggestions";
-import { CitationsList } from "@/components/chat/messages/CitationsList";
-import { ToolCallGroup } from "@/components/chat/messages/ToolCallGroup";
-import { type PromptSuggestion, PromptSuggestions } from "@/components/chat/PromptSuggestions";
-import { MAX_FILE_SIZE_MB } from "@/config/constants";
+/**
+ * FeatureChat - コンテナコンポーネント
+ *
+ * 責務: フック群とUIコンポーネントを接続するオーケストレーション層。
+ * メッセージ状態管理 → useChatMessages
+ * LLMストリーミング → useLLMStream
+ * 会話保存 → useConversationSave
+ * チャット初期化 → useChatInitialization
+ * メッセージ表示 → ChatMessages
+ * 入力 → ChatInputArea
+ *
+ * @updated 2026-03-24: B-1リファクタリングで580行 → 約150行に削減
+ */
+
+import { Paperclip, Trash2, X } from "lucide-react";
+import { useEffect, useRef } from "react";
+import type { PromptSuggestion } from "@/components/chat/PromptSuggestions";
 import { useChatInitialization } from "@/hooks/useChatInitialization";
+import { useChatMessages } from "@/hooks/useChatMessages";
 import { useConversationSave } from "@/hooks/useConversationSave";
 import { useLLMStream } from "@/hooks/useLLMStream";
-import { buildDisplayContent, buildLlmContent, processFile } from "@/lib/chat/file-content";
 import { DEFAULT_PROVIDER } from "@/lib/llm/config";
 import type { LLMProvider } from "@/lib/llm/types";
 import { cn } from "@/lib/utils";
 import { ChatHeader } from "./ChatHeader";
 import { ChatInputArea } from "./ChatInputArea";
-import type { AttachedFile } from "./FileAttachment";
-import { MessageBubble } from "./MessageBubble";
+import { ChatMessages } from "./ChatMessages";
+import type { Message } from "./chat-types";
 
-export interface Message {
-  id: string;
-  role: "user" | "assistant";
-  content: string;
-  timestamp: Date;
-  llmProvider?: LLMProvider;
-  toolCalls?: Array<{
-    id: string;
-    name: string;
-    displayName: string;
-    status: "running" | "completed";
-    input?: string;
-  }>;
-  citations?: Array<{ url: string; title: string }>;
-  usage?: { inputTokens: number; outputTokens: number; cost: number };
-}
+export type { Message };
 
 export interface FeatureChatProps {
   featureId: string;
@@ -45,23 +39,14 @@ export interface FeatureChatProps {
   inputLabel?: string;
   outputFormat?: "markdown" | "plaintext";
   className?: string;
-  /** チャットセッションID（指定なしの場合は新規チャット） */
   chatId?: string;
-  /** チャットが新規作成されたときに呼ばれるコールバック */
   onChatCreated?: (chatId: string) => void;
-  /** 使用するLLMプロバイダー（未指定時はデフォルト） */
   provider?: LLMProvider;
-  /** 空の状態の説明 */
   emptyDescription?: string;
-  /** ファイル添付を有効化 */
   enableFileAttachment?: boolean;
-  /** プロンプトサジェスト（AIレスポンス後に表示） */
   promptSuggestions?: PromptSuggestion[];
-  /** 新規チャット時のサジェスト例 */
   suggestions?: string[];
-  /** 選択された番組ID（必須） */
   selectedProgramId: string | null;
-  /** 初期メッセージ（指定時は自動送信） */
   initialMessage?: string;
 }
 
@@ -83,87 +68,60 @@ export function FeatureChat({
   selectedProgramId,
   initialMessage,
 }: FeatureChatProps) {
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [input, setInput] = useState("");
-  const [isCopied, setIsCopied] = useState(false);
-  const [attachedFiles, setAttachedFiles] = useState<AttachedFile[]>([]);
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragError, setDragError] = useState<string | null>(null);
-  const hasSentInitialMessageRef = useRef(false);
-  const messagesContainerRef = useRef<HTMLDivElement | null>(null);
-  const shouldAutoScrollRef = useRef(true);
-  const dragCounter = useRef(0);
-
   const provider: LLMProvider = initialProvider;
 
-  const {
-    content,
-    isComplete,
+  const llmStream = useLLMStream();
+  const { content, isComplete, isPending, phase, error, usage, toolCalls, citations, summarizationEvents, followUp, connectionStatus, startStream, resetStream } = llmStream;
+
+  const chat = useChatMessages({
+    provider,
+    featureId,
+    selectedProgramId,
+    enableFileAttachment,
     isPending,
-    phase,
-    error,
-    usage,
-    toolCalls,
-    citations,
-    summarizationEvents,
-    followUp,
-    connectionStatus,
     startStream,
-    resetStream,
-  } = useLLMStream();
+  });
 
   const { currentChatId, isLoadingHistory, loadConversation, saveConversation } =
     useConversationSave({ featureId, initialChatId, selectedProgramId, onChatCreated });
 
-  // チャット初期化（履歴読み込み、ウェルカムメッセージ、初期メッセージ送信準備）
   useChatInitialization({
     featureId,
     provider,
     initialChatId,
     initialMessage,
     selectedProgramId,
-    messages,
-    setMessages,
+    messages: chat.messages,
+    setMessages: chat.setMessages,
     loadConversation,
   });
 
-  const buildStreamMessages = useCallback((userContent: string, history: Message[]) => {
-    const conversationHistory = history.map((m) => ({ role: m.role, content: m.content }));
-    return [...conversationHistory, { role: "user" as const, content: userContent }];
-  }, []);
+  const hasSentInitialMessageRef = useRef(false);
 
-  // 初期メッセージの自動送信（useChatInitializationでメッセージがセットされた後）
+  // 初期メッセージの自動送信
   useEffect(() => {
-    // 既存会話、または既に送信済みの場合はスキップ
     if (initialChatId || hasSentInitialMessageRef.current) return;
     if (!initialMessage?.trim()) return;
-    // 初期化フックでセットされたメッセージを検知して送信
-    if (messages.length !== 1) return;
-    if (messages[0]?.role !== "user") return;
-    if (messages[0]?.content !== initialMessage.trim()) return;
+    if (chat.messages.length !== 1) return;
+    if (chat.messages[0]?.role !== "user") return;
+    if (chat.messages[0]?.content !== initialMessage.trim()) return;
 
     hasSentInitialMessageRef.current = true;
-
-    const streamMessages = buildStreamMessages(messages[0].content, []);
+    const streamMessages = chat.buildStreamMessages(chat.messages[0].content, []);
     startStream(streamMessages, provider, featureId, selectedProgramId ?? undefined);
   }, [
-    messages,
+    chat.messages,
     initialMessage,
     initialChatId,
     provider,
     featureId,
     selectedProgramId,
-    buildStreamMessages,
+    chat.buildStreamMessages,
     startStream,
   ]);
 
   // ストリーミング完了時にメッセージを保存
   useEffect(() => {
-    console.log("[FeatureChat] Save effect triggered:", {
-      isComplete,
-      hasContent: !!content,
-      currentChatId,
-    });
     if (isComplete && content) {
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
@@ -177,7 +135,7 @@ export function FeatureChat({
           ? { inputTokens: usage.inputTokens, outputTokens: usage.outputTokens, cost: usage.cost }
           : undefined,
       };
-      setMessages((prev) => {
+      chat.setMessages((prev) => {
         const newMessages = [...prev, assistantMessage];
         saveConversation(newMessages, currentChatId);
         return newMessages;
@@ -194,178 +152,22 @@ export function FeatureChat({
     usage,
     resetStream,
     saveConversation,
+    chat.setMessages,
   ]);
 
-  const handleSend = async () => {
-    if (!input.trim() && attachedFiles.length === 0) return;
-
-    const displayContent = buildDisplayContent(input, attachedFiles);
-    const llmContent = buildLlmContent(input, attachedFiles);
-
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      role: "user",
-      content: displayContent,
-      timestamp: new Date(),
-    };
-
-    setMessages((prev) => [...prev, userMessage]);
-    setInput("");
-    setAttachedFiles([]);
-    setDragError(null); // 添付エラーは送信完了時点で消す
-
-    const streamMessages = buildStreamMessages(llmContent, messages);
-    await startStream(streamMessages, provider, featureId, selectedProgramId ?? undefined);
-  };
-
-  const handleCopy = async () => {
-    const lastAssistantMessage = [...messages].reverse().find((m) => m.role === "assistant");
-    if (lastAssistantMessage) {
-      await navigator.clipboard.writeText(lastAssistantMessage.content);
-      setIsCopied(true);
-      setTimeout(() => setIsCopied(false), 2000);
-    }
-  };
-
-  const lastAssistantMessage = [...messages].reverse().find((m) => m.role === "assistant");
-  const hasMessages = messages.length > 0;
-
-  // biome-ignore lint/correctness/useExhaustiveDependencies: handleSuggestionClickは安定
-  const handleSuggestionClick = useCallback(
-    async (suggestionText: string) => {
-      if (isPending || !suggestionText.trim()) return;
-      const userMessage: Message = {
-        id: Date.now().toString(),
-        role: "user",
-        content: suggestionText.trim(),
-        timestamp: new Date(),
-      };
-      setMessages((prev) => {
-        const newMessages = [...prev, userMessage];
-        const streamMessages = buildStreamMessages(userMessage.content, newMessages.slice(0, -1));
-        startStream(streamMessages, provider, featureId, selectedProgramId ?? undefined);
-        return newMessages;
-      });
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [isPending, provider, startStream, buildStreamMessages, selectedProgramId],
-  );
-
-  // ユーザーがスクロールを上に動かした場合は自動スクロールを一時停止
-  useEffect(() => {
-    const container = messagesContainerRef.current;
-    if (!container) return;
-
-    const handleScroll = () => {
-      const { scrollTop, scrollHeight, clientHeight } = container;
-      const distanceFromBottom = scrollHeight - (scrollTop + clientHeight);
-      shouldAutoScrollRef.current = distanceFromBottom < 160;
-    };
-
-    container.addEventListener("scroll", handleScroll);
-    return () => {
-      container.removeEventListener("scroll", handleScroll);
-    };
-  }, []);
-
-  // 新しいメッセージやストリーミング更新時に下端へスクロール
-  // biome-ignore lint/correctness/useExhaustiveDependencies: メッセージ追加時のみ自動スクロールすればよい
-  useEffect(() => {
-    const container = messagesContainerRef.current;
-    if (!container || !shouldAutoScrollRef.current) return;
-    container.scrollTop = container.scrollHeight;
-  }, [messages.length]);
-
-  const validateFile = useCallback((file: File): string | null => {
-    if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
-      return `ファイルサイズが大きすぎます（最大${MAX_FILE_SIZE_MB}MB）`;
-    }
-    return null;
-  }, []);
-
-  const handleFiles = useCallback(
-    async (fileList: FileList | null) => {
-      if (!fileList || isPending || !enableFileAttachment) return;
-
-      setDragError(null);
-
-      const maxFiles = 5;
-      if (attachedFiles.length + fileList.length > maxFiles) {
-        setDragError(`最大${maxFiles}ファイルまで添付できます`);
-        return;
-      }
-
-      const newFiles: AttachedFile[] = [];
-
-      for (const file of Array.from(fileList)) {
-        const validationError = validateFile(file);
-        if (validationError) {
-          setDragError(validationError);
-          continue;
-        }
-
-        try {
-          const attachedFile = await processFile(file);
-          newFiles.push(attachedFile);
-        } catch {
-          setDragError(`${file.name} の読み込みに失敗しました`);
-        }
-      }
-
-      if (newFiles.length > 0) {
-        setAttachedFiles((prev) => [...prev, ...newFiles]);
-      }
-    },
-    [attachedFiles, isPending, enableFileAttachment, validateFile],
-  );
-
-  // ドラッグ&ドロップイベントハンドラ
-  const handleDragEnter = useCallback(
-    (e: React.DragEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-      dragCounter.current += 1;
-      if (!isPending && enableFileAttachment) setIsDragging(true);
-    },
-    [isPending, enableFileAttachment],
-  );
-
-  const handleDragLeave = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    dragCounter.current -= 1;
-    if (dragCounter.current === 0) {
-      setIsDragging(false);
-    }
-  }, []);
-
-  const handleDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-  }, []);
-
-  const handleDrop = useCallback(
-    (e: React.DragEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-      dragCounter.current = 0;
-      setIsDragging(false);
-      handleFiles(e.dataTransfer.files);
-    },
-    [handleFiles],
-  );
+  const lastAssistantMessage = [...chat.messages].reverse().find((m) => m.role === "assistant");
+  const hasMessages = chat.messages.length > 0;
 
   return (
     <section
       aria-label="チャットエリア"
       className={cn("flex flex-col h-full bg-white", className)}
-      onDragEnter={handleDragEnter}
-      onDragLeave={handleDragLeave}
-      onDragOver={handleDragOver}
-      onDrop={handleDrop}
+      onDragEnter={chat.handleDragEnter}
+      onDragLeave={chat.handleDragLeave}
+      onDragOver={chat.handleDragOver}
+      onDrop={chat.handleDrop}
     >
-      {/* ドラッグ&ドロップオーバーレイ */}
-      {isDragging && (
+      {chat.isDragging && (
         <div className="fixed inset-0 z-50 bg-gray-900/20 backdrop-blur-sm flex items-center justify-center">
           <div className="bg-white border-2 border-dashed border-gray-700 rounded-2xl p-12 text-center shadow-lg">
             <Paperclip className="w-12 h-12 text-gray-700 mx-auto mb-4" />
@@ -375,14 +177,13 @@ export function FeatureChat({
         </div>
       )}
 
-      {/* エラーメッセージ */}
-      {dragError && (
+      {chat.dragError && (
         <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 px-4 py-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-600 flex items-center gap-2 shadow-lg">
           <X className="w-4 h-4" />
-          {dragError}
+          {chat.dragError}
           <button
             type="button"
-            onClick={() => setDragError(null)}
+            onClick={() => chat.setDragError(null)}
             className="ml-2 p-1 rounded hover:bg-red-100"
           >
             <Trash2 className="w-3 h-3" />
@@ -396,182 +197,44 @@ export function FeatureChat({
         outputFormat={outputFormat}
         hasMessages={hasMessages}
         lastAssistantMessage={lastAssistantMessage}
-        isCopied={isCopied}
+        isCopied={chat.isCopied}
         selectedProgramId={selectedProgramId}
         isStreaming={isPending}
-        onCopy={handleCopy}
+        onCopy={chat.handleCopy}
       />
 
-      {/* Messages */}
-      <div ref={messagesContainerRef} className="flex-1 overflow-y-auto">
-        {isLoadingHistory ? (
-          <div className="flex items-center justify-center h-full">
-            <div className="flex items-center gap-3 text-gray-500">
-              <Loader2 className="w-5 h-5 animate-spin" />
-              <span className="text-sm">履歴を読み込み中...</span>
-            </div>
-          </div>
-        ) : !hasMessages && !isPending ? (
-          <div className="flex flex-col items-center justify-center h-full text-center px-6">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-gray-900/20 to-gray-600/10 flex items-center justify-center border border-gray-900/20 mb-4">
-              <MessageSquare className="w-8 h-8 text-gray-900" />
-            </div>
-            <h2 className="text-lg font-medium text-gray-900 mb-2">{title}</h2>
-            <p className="text-sm text-gray-500 max-w-md">
-              {emptyDescription || "メッセージを送信して、AIと対話を始めましょう。"}
-            </p>
-
-            {/* サジェストボタン */}
-            {suggestions.length > 0 && (
-              <div className="mt-8 w-full max-w-lg">
-                <p className="text-xs text-gray-400 mb-3">例:</p>
-                <div className="flex flex-wrap justify-center gap-2">
-                  {suggestions.map((suggestion) => (
-                    <button
-                      type="button"
-                      key={suggestion}
-                      onClick={() => handleSuggestionClick(suggestion)}
-                      className="px-4 py-2 text-sm text-gray-600 bg-gray-50 hover:bg-gray-100 border border-gray-200 hover:border-gray-300 rounded-full transition-all duration-200"
-                    >
-                      {suggestion}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            <div className="mt-8 flex items-center gap-2 text-xs text-gray-500">
-              <span className="px-2 py-1 rounded bg-gray-100 border border-gray-200">
-                Ctrl + Enter
-              </span>
-              <span>で送信</span>
-            </div>
-          </div>
-        ) : (
-          <div className="py-4">
-            {messages.map((message) => (
-              <div key={message.id}>
-                {/* 履歴復元時: 保存されたツール呼び出しをグループ化して表示 */}
-                {message.role === "assistant" &&
-                  message.toolCalls &&
-                  message.toolCalls.length > 0 && (
-                    <div className="flex gap-3 px-4 py-2">
-                      {/* アバター位置と揃えるためのスペーサー */}
-                      <div className="flex-shrink-0 w-8" />
-                      <div className="flex-1 max-w-[80%] space-y-2">
-                        {Object.entries(
-                          message.toolCalls.reduce<
-                            Record<
-                              string,
-                              Array<{
-                                id: string;
-                                name: string;
-                                displayName: string;
-                                status: "running" | "completed";
-                                input?: string;
-                              }>
-                            >
-                          >((groups, tc) => {
-                            if (!groups[tc.name]) {
-                              groups[tc.name] = [];
-                            }
-                            groups[tc.name].push(tc);
-                            return groups;
-                          }, {}),
-                        ).map(([toolName, calls]) => (
-                          <ToolCallGroup
-                            key={`${message.id}-${toolName}`}
-                            toolName={toolName}
-                            toolCalls={calls.map((tc) => ({
-                              id: tc.id,
-                              name: tc.name,
-                              displayName: tc.displayName,
-                              status: tc.status,
-                              input: tc.input,
-                            }))}
-                            citations={message.citations ?? []}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                <MessageBubble
-                  role={message.role}
-                  content={message.content}
-                  timestamp={message.timestamp}
-                  llmProvider={message.llmProvider}
-                />
-                {message.citations && message.citations.length > 0 && (
-                  <div className="px-4 max-w-3xl mx-auto">
-                    <CitationsList citations={message.citations} />
-                  </div>
-                )}
-              </div>
-            ))}
-
-            {/* ストリーミング中または完了後（ツール・要約情報がある場合）は StreamingSteps を表示 */}
-            {(isPending ||
-              (isComplete && (toolCalls.length > 0 || summarizationEvents.length > 0))) && (
-              <StreamingSteps
-                content={content}
-                toolCalls={toolCalls}
-                citations={citations}
-                summarizationEvents={summarizationEvents}
-                throttleIntervalMs={80}
-                usage={usage}
-                provider={provider}
-                isComplete={isComplete}
-                phase={phase}
-                connectionStatus={connectionStatus}
-              />
-            )}
-
-            {/* フォローアップサジェスト（動的生成） */}
-            {!isPending && hasMessages && lastAssistantMessage && (
-              <div className="px-4 py-4 max-w-3xl mx-auto">
-                <FollowUpSuggestions
-                  suggestions={followUp.questions.map((q, i) => ({ id: String(i), text: q }))}
-                  onSuggestionClick={handleSuggestionClick}
-                  isLoading={followUp.isLoading}
-                />
-              </div>
-            )}
-
-            {/* 固定プロンプトサジェスト（設定されている場合） */}
-            {!isPending &&
-              hasMessages &&
-              lastAssistantMessage &&
-              promptSuggestions.length > 0 &&
-              followUp.questions.length === 0 &&
-              !followUp.isLoading && (
-                <div className="px-4 py-4 max-w-3xl mx-auto">
-                  <PromptSuggestions
-                    suggestions={promptSuggestions}
-                    onSuggestionClick={handleSuggestionClick}
-                  />
-                </div>
-              )}
-
-            {error && (
-              <div className="mx-4 my-4 p-4 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
-                <p className="font-medium mb-1">エラーが発生しました</p>
-                <p className="text-red-300/80">{error}</p>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
+      <ChatMessages
+        messages={chat.messages}
+        isLoadingHistory={isLoadingHistory}
+        isPending={isPending}
+        isComplete={isComplete}
+        title={title}
+        emptyDescription={emptyDescription}
+        suggestions={suggestions}
+        promptSuggestions={promptSuggestions}
+        onSuggestionClick={chat.handleSuggestionClick}
+        content={content}
+        phase={phase}
+        error={error}
+        usage={usage}
+        toolCalls={toolCalls}
+        citations={citations}
+        summarizationEvents={summarizationEvents}
+        followUp={followUp}
+        connectionStatus={connectionStatus}
+        provider={provider}
+      />
 
       <ChatInputArea
-        input={input}
-        onInputChange={setInput}
-        attachedFiles={attachedFiles}
-        onFilesChange={setAttachedFiles}
+        input={chat.input}
+        onInputChange={chat.setInput}
+        attachedFiles={chat.attachedFiles}
+        onFilesChange={chat.setAttachedFiles}
         isStreaming={isPending}
         inputLabel={inputLabel}
         placeholder={placeholder}
         enableFileAttachment={enableFileAttachment}
-        onSend={handleSend}
+        onSend={chat.handleSend}
       />
     </section>
   );

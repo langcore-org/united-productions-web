@@ -8,6 +8,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { requireAuth } from "@/lib/api/auth";
+import { errorResponse, validationErrorResponse } from "@/lib/api/utils";
 import { createClient } from "@/lib/supabase/server";
 
 const updatePromptSchema = z.object({
@@ -34,7 +35,7 @@ export async function GET(request: NextRequest) {
         .single();
 
       if (error || !prompt) {
-        return NextResponse.json({ success: false, error: "Prompt not found" }, { status: 404 });
+        return errorResponse("Prompt not found", 404);
       }
 
       // スネークケースからキャメルケースに変換
@@ -87,10 +88,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error("Failed to fetch prompts:", error);
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
-    return NextResponse.json(
-      { success: false, error: "Failed to fetch prompts", details: errorMessage },
-      { status: 500 },
-    );
+    return errorResponse("Failed to fetch prompts", 500);
   }
 }
 
@@ -103,10 +101,7 @@ export async function PUT(request: NextRequest) {
     const key = searchParams.get("key");
 
     if (!key) {
-      return NextResponse.json(
-        { success: false, error: "Key parameter is required" },
-        { status: 400 },
-      );
+      return errorResponse("Key parameter is required", 400);
     }
 
     const body = await request.json();
@@ -143,12 +138,9 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({ success: true, data: formattedPrompt });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { success: false, error: "Invalid request data", details: error.issues },
-        { status: 400 },
-      );
+      return validationErrorResponse(error);
     }
     console.error("Failed to update prompt:", error);
-    return NextResponse.json({ success: false, error: "Failed to update prompt" }, { status: 500 });
+    return errorResponse("Failed to update prompt", 500);
   }
 }

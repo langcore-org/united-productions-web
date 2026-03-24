@@ -10,7 +10,7 @@
  */
 
 import { useEffect, useRef } from "react";
-import type { Message } from "@/components/ui/FeatureChat";
+import type { Message } from "@/components/ui/chat-types";
 import { getWelcomeMessage, hasWelcomeMessage } from "@/lib/chat/welcome-messages";
 import { getProgramById } from "@/lib/knowledge/programs";
 import type { LLMProvider } from "@/lib/llm/types";

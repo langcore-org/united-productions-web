@@ -6,6 +6,7 @@
  */
 
 import { type NextRequest, NextResponse } from "next/server";
+import { errorResponse } from "@/lib/api/utils";
 import { createClient } from "@/lib/supabase/server";
 
 const DRIVE_API_BASE = "https://www.googleapis.com/drive/v3";
@@ -104,7 +105,7 @@ export async function GET(request: NextRequest) {
     } = await supabase.auth.getSession();
 
     if (!session?.provider_token) {
-      return NextResponse.json({ error: "認証が必要です" }, { status: 401 });
+      return errorResponse("認証が必要です", 401);
     }
 
     const accessToken = session.provider_token;
@@ -115,7 +116,7 @@ export async function GET(request: NextRequest) {
     const query = sanitizeDriveQuery(rawQuery);
 
     if (Number.isNaN(pageSize) || pageSize < 1) {
-      return NextResponse.json({ error: "無効なpageSizeです" }, { status: 400 });
+      return errorResponse("無効なpageSizeです", 400);
     }
 
     let q = "trashed=false";
@@ -136,14 +137,14 @@ export async function GET(request: NextRequest) {
     if (!response.ok) {
       const error = await response.json();
       console.error("Drive API error:", error);
-      return NextResponse.json({ error: "Drive APIエラー" }, { status: response.status });
+      return errorResponse("Drive APIエラー", response.status);
     }
 
     const data = await response.json();
     return NextResponse.json({ files: data.files || [] });
   } catch (error) {
     console.error("Drive files error:", error);
-    return NextResponse.json({ error: "サーバーエラー" }, { status: 500 });
+    return errorResponse("サーバーエラー", 500);
   }
 }
 
@@ -155,7 +156,7 @@ export async function POST(request: NextRequest) {
     } = await supabase.auth.getSession();
 
     if (!session?.provider_token) {
-      return NextResponse.json({ error: "認証が必要です" }, { status: 401 });
+      return errorResponse("認証が必要です", 401);
     }
 
     const accessToken = session.provider_token;
@@ -164,12 +165,12 @@ export async function POST(request: NextRequest) {
     const name = formData.get("name") as string;
 
     if (!file) {
-      return NextResponse.json({ error: "ファイルが必要です" }, { status: 400 });
+      return errorResponse("ファイルが必要です", 400);
     }
 
     const validation = validateFile(file, name);
     if (!validation.valid) {
-      return NextResponse.json({ error: validation.error }, { status: 400 });
+      return errorResponse(validation.error || "バリデーションエラー", 400);
     }
 
     const sanitizedName = sanitizeFilename(name || file.name);
@@ -208,10 +209,7 @@ export async function POST(request: NextRequest) {
     if (!response.ok) {
       const error = await response.json();
       console.error("Drive upload error:", error);
-      return NextResponse.json(
-        { error: "アップロードに失敗しました" },
-        { status: response.status },
-      );
+      return errorResponse("アップロードに失敗しました", response.status);
     }
 
     const data = await response.json();
@@ -225,6 +223,6 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("Drive upload error:", error);
-    return NextResponse.json({ error: "サーバーエラー" }, { status: 500 });
+    return errorResponse("サーバーエラー", 500);
   }
 }

@@ -7,6 +7,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { requireAuth } from "@/lib/api/auth";
+import { errorResponse, validationErrorResponse } from "@/lib/api/utils";
 import { restorePromptVersion } from "@/lib/prompts";
 
 // 復元リクエストスキーマ
@@ -57,23 +58,17 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { success: false, error: "Invalid request data", details: error.issues },
-        { status: 400 },
-      );
+      return validationErrorResponse(error);
     }
 
     if (error instanceof Error) {
       const message = error.message;
       if (message.includes("not found")) {
-        return NextResponse.json({ success: false, error: message }, { status: 404 });
+        return errorResponse(message, 404);
       }
     }
 
     console.error("Failed to restore prompt:", error);
-    return NextResponse.json(
-      { success: false, error: "Failed to restore prompt" },
-      { status: 500 },
-    );
+    return errorResponse("Failed to restore prompt", 500);
   }
 }

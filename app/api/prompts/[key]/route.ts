@@ -5,6 +5,7 @@
 
 import { type NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/api/auth";
+import { errorResponse } from "@/lib/api/utils";
 import { getLatestPrompt } from "@/lib/prompts/db/versions";
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ key: string }> }) {
@@ -22,7 +23,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     const latest = await getLatestPrompt(key);
 
     if (!latest) {
-      return NextResponse.json({ error: "Prompt not found" }, { status: 404 });
+      return errorResponse("Prompt not found", 404);
     }
 
     return NextResponse.json({
@@ -32,6 +33,6 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     });
   } catch (error) {
     console.error("Failed to fetch prompt:", error);
-    return NextResponse.json({ error: "Failed to fetch prompt" }, { status: 500 });
+    return errorResponse("Failed to fetch prompt", 500);
   }
 }

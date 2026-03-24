@@ -1,7 +1,7 @@
 # リファクタリングプラン
 
 > **作成日**: 2026-03-23
-> **最終更新**: 2026-03-23
+> **最終更新**: 2026-03-24（B-2は管理画面ページのため保留）
 > **ステータス**: 計画策定完了
 > **対象**: Teddy コードベース全体
 > **前提**: 3/31正式リリース（残り9日）、4月以降エージェントループ + RAG実装予定
@@ -50,15 +50,7 @@
 | **メリット** | セキュリティの基本防御が向上 |
 | **リスク** | React開発モードで`unsafe-eval`が必要な場合あり。本番のみ制限する分岐が必要 |
 | **工数** | 1-2h |
-| **判断** | **リリース前に検討すべき**。最低限 `unsafe-eval` を本番で無効化 |
-
-**対応方針**:
-```javascript
-// 本番環境のみ unsafe-eval を除外
-const csp = process.env.NODE_ENV === 'production'
-  ? "script-src 'self' 'unsafe-inline'"
-  : "script-src 'self' 'unsafe-eval' 'unsafe-inline'";
-```
+| **判断** | ✅ **2026-03-24 完了** — `next.config.ts` で `isProd` 分岐を追加し、本番では `unsafe-eval` を除外 |
 
 #### S-2. Supabase RLSポリシーの追加
 
@@ -69,12 +61,12 @@ const csp = process.env.NODE_ENV === 'production'
 | **メリット** | データアクセスのセキュリティが根本的に向上 |
 | **リスク** | RLS設定ミスで正常なアクセスが遮断される恐れ。十分なテストが必要 |
 | **工数** | 3-5h |
-| **判断** | **リリース前に最低限のポリシー追加すべき** |
+| **判断** | ✅ **2026-03-24 確認済み** — 初期マイグレーション（`20260309000000`）で全テーブルにRLS設定済み・DB適用済み。追加対応不要 |
 
-**最低限のRLSポリシー対象テーブル**:
-- `chats` — ユーザーが自分のチャットのみ閲覧可能
-- `chat_messages` — チャットに紐づくメッセージのみ閲覧可能
-- `usage_logs` — 管理者のみ閲覧可能
+**確認済みポリシー**:
+- `chats` — 自分のチャットのみ CRUD ✅
+- `chat_messages` — 自分のチャットに紐づくメッセージのみ CRUD ✅
+- `usage_logs` — SELECT: 自分のログのみ / INSERT: サービスロールのみ。管理者APIは `createAdminClient()`（サービスロール）でRLSバイパス ✅
 
 ---
 
@@ -187,7 +179,7 @@ if (authResult instanceof Response) {
 | **メリット** | エージェントループ実装（ask_userツール等）の際にUIロジックの見通しが大幅向上 |
 | **リスク** | 中。props/stateの受け渡し再設計が必要 |
 | **工数** | 3-4h |
-| **判断** | **エージェントループ実装と同時に対応**するのが効率的 |
+| **判断** | ✅ **2026-03-24 完了** — FeatureChat 580行→約150行。useChatMessages, ChatMessages, chat-types.ts を抽出 |
 
 **現在の責務（13個）**:
 1. メッセージ状態管理
@@ -220,21 +212,23 @@ FeatureChat（コンテナ）
 
 | 項目 | 内容 |
 |------|------|
-| **場所** | 4つのページコンポーネント |
+| **場所** | 2つの管理画面ページコンポーネント |
 | **問題** | ストリーミング処理ロジック・UI・状態管理が1ファイルに混在 |
-| **メリット** | 再利用性向上（meeting-notes と transcripts は類似構造） |
+| **メリット** | 再利用性向上 |
 | **リスク** | 中。ページ単位でテストが必要 |
-| **工数** | 6-8h（4ページ分） |
-| **判断** | **4月中に段階的に。meeting-notes と transcripts を先に** |
+| **工数** | 4-6h（2ページ分） |
+| **判断** | ⏸️ **保留（中止）** — 管理画面ページは現在使用者がおらず優先度が低いため |
 
-**対象ファイル**:
+**対象ファイル（現状維持）**:
 
 | ファイル | 行数 | 主な問題 |
 |---------|------|---------|
 | `app/admin/usage/page.tsx` | 830行 | 定数・チャートを別コンポーネント化可能 |
-| `app/(authenticated)/meeting-notes/page.tsx` | 678行 | テンプレート選択・入力・ストリーミング・結果表示が混在 |
 | `app/admin/programs/[id]/page.tsx` | 670行 | タブ毎の内容を別コンポーネント化可能 |
-| `app/(authenticated)/transcripts/page.tsx` | 636行 | meeting-notesと同構造。共通化効果大 |
+
+**削除済み（対象外）**:
+- ~~`app/(authenticated)/meeting-notes/page.tsx`~~ — 削除済み
+- ~~`app/(authenticated)/transcripts/page.tsx`~~ — 削除済み
 
 #### B-3. useLLMStream の状態グループ化
 
@@ -245,22 +239,7 @@ FeatureChat（コンテナ）
 | **メリット** | エージェントループ追加時に状態管理が爆発しない基盤になる |
 | **リスク** | 中。既存の全呼び出し元の修正が必要 |
 | **工数** | 2-3h |
-| **判断** | **エージェントループ実装の前段階として対応** |
-
-**現在の9つのState**:
-```typescript
-const [content, setContent] = useState("");
-const [phase, setPhase] = useState<StreamPhase>("idle");
-const [error, setError] = useState<string | null>(null);
-const [usage, setUsage] = useState<UsageInfo | null>(null);
-const [toolCalls, setToolCalls] = useState<ToolCallInfo[]>([]);
-const [citations, setCitations] = useState<CitationInfo[]>([]);
-const [summarizationEvents, setSummarizationEvents] = useState<SummarizationEvent[]>([]);
-const [followUp, setFollowUp] = useState<FollowUpInfo>(...);
-const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>(...);
-```
-
-**提案**: `useReducer` で関連状態をグループ化するか、オブジェクト1つにまとめる。
+| **判断** | ✅ **2026-03-24 完了** — 9個のuseStateをuseReducerに統合。`hooks/useLLMStream/reducer.ts` を新設。外部インターフェースは変更なし |
 
 #### B-4. エラーレスポンスフォーマットの統一
 
@@ -271,15 +250,7 @@ const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>(...);
 | **メリット** | フロントエンドのエラーハンドリングが統一可能 |
 | **リスク** | 低-中。フロントエンドのエラー処理も合わせて修正が必要 |
 | **工数** | 2-3h |
-| **判断** | **A-4（APIパターン統一）と同時に対応** |
-
-**現状のバラつき**:
-
-| ルート | エラーレスポンス形式 |
-|-------|-------------------|
-| `/api/llm/stream` | `{ error, requestId }` |
-| `/api/chat/feature` | `{ error, details, requestId }` |
-| `/api/upload` | `{ success: false, error }` |
+| **判断** | ✅ **2026-03-24 完了** — `errorResponse`, `validationErrorResponse` ヘルパーを `lib/api/utils.ts` に追加。全23ルートを統一フォーマット `{ error }` / `{ error, details }` / `{ error, code }` に移行。`success: false` パターンと `requestId` 混在を廃止 |
 
 ---
 
@@ -354,9 +325,9 @@ const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>(...);
 ## 3. 実行スケジュール
 
 ```
-【リリース前（〜3/31）】
-  S-1. CSP設定の確認・強化（unsafe-eval）         1-2h
-  S-2. 最低限のRLSポリシー追加                    3-5h
+【リリース前（〜3/31）】 ✅ 完了
+  S-1. CSP設定の確認・強化（unsafe-eval）         ✅ 2026-03-24
+  S-2. 最低限のRLSポリシー追加                    ✅ 2026-03-24（初期マイグレーションで対応済みを確認）
 
 【リリース直後（4月第1週）】
   A-1. grok.ts / grok-refactored.ts 統一          1-2h
@@ -369,8 +340,10 @@ const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>(...);
   B-1. FeatureChat分割                             3-4h
   B-3. useLLMStream状態グループ化                  2-3h
 
+【保留（管理画面のため優先度低）】
+  B-2. ページコンポーネント分割（admin/*）         ⏸️ 保留
+
 【4月中〜後半】
-  B-2. ページコンポーネント分割                    6-8h
   C-2. テストカバレッジ拡大                        8-12h
 
 【RAG実装と並行（時期未定）】
@@ -385,9 +358,9 @@ const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>(...);
 |--------|---------|-----------|
 | **S（セキュリティ）** | 4-7h | リリース前 |
 | **A（高優先度）** | 7-10h | 4月第1週 |
-| **B（中優先度）** | 13-18h | 4月中 |
+| **B（中優先度）** | 9-12h | 4月中（B-2は保留） |
 | **C（低優先度）** | 12-18h | 4月後半〜 |
-| **合計** | **36-53h** | |
+| **合計** | **32-47h** | |
 
 ---
 
@@ -470,4 +443,4 @@ const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>(...);
 
 ---
 
-*最終更新: 2026-03-22*
+*最終更新: 2026-03-24（B-2は管理画面ページのため保留）*

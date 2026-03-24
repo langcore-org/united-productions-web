@@ -5,6 +5,7 @@
 
 import { type NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/api/auth";
+import { errorResponse } from "@/lib/api/utils";
 import { createClient } from "@/lib/supabase/server";
 
 export async function GET(request: NextRequest) {
@@ -51,6 +52,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ prompts: formattedPrompts });
   } catch (error) {
     console.error("Failed to fetch prompts:", error);
-    return NextResponse.json({ error: "Failed to fetch prompts" }, { status: 500 });
+    return errorResponse("Failed to fetch prompts", 500);
   }
 }

@@ -7,6 +7,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { requireAuth } from "@/lib/api/auth";
+import { errorResponse, validationErrorResponse } from "@/lib/api/utils";
 import { createPromptVersion, getPromptVersions } from "@/lib/prompts/db/versions";
 import { createClient } from "@/lib/supabase/server";
 
@@ -40,7 +41,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       .single();
 
     if (error || !prompt) {
-      return NextResponse.json({ error: "Prompt not found" }, { status: 404 });
+      return errorResponse("Prompt not found", 404);
     }
 
     const versions = await getPromptVersions(key, { limit, offset });
@@ -63,7 +64,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     return NextResponse.json({ prompt: formattedPrompt, versions: formattedVersions });
   } catch (error) {
     console.error("Failed to fetch versions:", error);
-    return NextResponse.json({ error: "Failed to fetch versions" }, { status: 500 });
+    return errorResponse("Failed to fetch versions", 500);
   }
 }
 
@@ -84,10 +85,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
     const validation = createVersionSchema.safeParse(body);
     if (!validation.success) {
-      return NextResponse.json(
-        { error: "Invalid request", details: validation.error.format() },
-        { status: 400 },
-      );
+      return validationErrorResponse(validation.error);
     }
 
     const version = await createPromptVersion(key, {
@@ -110,6 +108,6 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   } catch (error) {
     console.error("Failed to create version:", error);
     const message = error instanceof Error ? error.message : "Unknown error";
-    return NextResponse.json({ error: "Failed to create version", message }, { status: 500 });
+    return errorResponse("Failed to create version", 500);
   }
 }

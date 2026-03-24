@@ -6,6 +6,7 @@
 
 import { type NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/api/auth";
+import { errorResponse } from "@/lib/api/utils";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 interface UsageStats {
@@ -202,9 +203,6 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error("Usage stats error:", error);
-    return NextResponse.json(
-      { success: false, error: "統計データの取得に失敗しました" },
-      { status: 500 },
-    );
+    return errorResponse("統計データの取得に失敗しました", 500);
   }
 }

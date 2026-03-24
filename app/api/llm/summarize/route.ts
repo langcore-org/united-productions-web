@@ -16,6 +16,7 @@
 
 import { type NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/api/auth";
+import { errorResponse } from "@/lib/api/utils";
 import { GrokClient } from "@/lib/llm/clients/grok";
 import type { LLMMessage, LLMProvider } from "@/lib/llm/types";
 
@@ -75,17 +76,11 @@ export async function POST(
 
     // バリデーション
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
-      return NextResponse.json(
-        { error: "Invalid messages: must be a non-empty array" },
-        { status: 400 },
-      );
+      return errorResponse("Invalid messages: must be a non-empty array", 400);
     }
 
     if (!provider || !provider.startsWith("grok-")) {
-      return NextResponse.json(
-        { error: "Invalid provider: must be a grok provider" },
-        { status: 400 },
-      );
+      return errorResponse("Invalid provider: must be a grok provider", 400);
     }
 
     // 目標文字数を計算
@@ -102,6 +97,6 @@ export async function POST(
   } catch (error) {
     console.error("Summarization error:", error);
     const message = error instanceof Error ? error.message : "Summarization failed";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return errorResponse(message, 500);
   }
 }

@@ -6,6 +6,7 @@
 
 import { type NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/api/auth";
+import { errorResponse } from "@/lib/api/utils";
 import { getPromptVersion } from "@/lib/prompts";
 
 interface RouteParams {
@@ -29,16 +30,13 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     const versionNum = parseInt(version, 10);
 
     if (Number.isNaN(versionNum) || versionNum < 1) {
-      return NextResponse.json(
-        { success: false, error: "Invalid version number" },
-        { status: 400 },
-      );
+      return errorResponse("Invalid version number", 400);
     }
 
     const versionData = await getPromptVersion(decodedKey, versionNum);
 
     if (!versionData) {
-      return NextResponse.json({ success: false, error: "Version not found" }, { status: 404 });
+      return errorResponse("Version not found", 404);
     }
 
     return NextResponse.json({
@@ -54,9 +52,6 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   } catch (error) {
     console.error("Failed to fetch prompt version:", error);
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
-    return NextResponse.json(
-      { success: false, error: "Failed to fetch prompt version", details: errorMessage },
-      { status: 500 },
-    );
+    return errorResponse("Failed to fetch prompt version", 500);
   }
 }
