@@ -48,8 +48,12 @@ export async function middleware(request: NextRequest) {
     return supabaseResponse;
   }
 
-  // すべてのその他のパスは認証必須
+  // すべてのその他のパスは認証必須（ローカル開発時はスキップ可能）
   if (!user) {
+    // ローカル開発用: SKIP_AUTH=true で認証をバイパス
+    if (process.env.SKIP_AUTH === "true") {
+      return supabaseResponse;
+    }
     const signInUrl = new URL("/auth/signin", request.url);
     signInUrl.searchParams.set("callbackUrl", pathname);
     return NextResponse.redirect(signInUrl);

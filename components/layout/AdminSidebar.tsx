@@ -1,15 +1,6 @@
 "use client";
 
-import {
-  BarChart3,
-  ChevronRight,
-  FileText,
-  LayoutDashboard,
-  LogOut,
-  PanelLeft,
-  Tv,
-  Users,
-} from "lucide-react";
+import { BarChart3, ChevronRight, FileText, LogOut, PanelLeft, Tv, Users } from "lucide-react";
 // import { TeddyIcon } from "@/components/icons/TeddyIcon"; // ロゴは非表示（将来使用予定）
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -23,11 +14,6 @@ interface AdminSidebarProps {
 
 // 管理画面ナビゲーション項目
 const adminNavItems = [
-  {
-    icon: <LayoutDashboard className="w-[18px] h-[18px]" />,
-    label: "ダッシュボード",
-    href: "/admin",
-  },
   {
     icon: <Users className="w-[18px] h-[18px]" />,
     label: "ユーザー管理",
@@ -87,7 +73,7 @@ export function AdminSidebar({ className, onCollapseChange }: AdminSidebarProps)
   const isActive = (href: string) => {
     if (pathname === href) return true;
     // サブページもアクティブにする
-    if (href !== "/admin" && pathname.startsWith(href)) return true;
+    if (pathname.startsWith(href)) return true;
     return false;
   };
 

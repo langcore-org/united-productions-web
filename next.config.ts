@@ -17,6 +17,7 @@ const nextConfig: NextConfig = {
     parallelServerCompiles: true,
   },
   async headers() {
+    const isProd = process.env.NODE_ENV === "production";
     return [
       {
         source: "/api/:path*",
@@ -35,7 +36,10 @@ const nextConfig: NextConfig = {
             key: "Content-Security-Policy",
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-eval' 'unsafe-inline'",
+              // 本番環境では unsafe-eval を除外（React HMR は開発時のみ必要）
+              isProd
+                ? "script-src 'self' 'unsafe-inline'"
+                : "script-src 'self' 'unsafe-eval' 'unsafe-inline'",
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: https:",
               "font-src 'self'",

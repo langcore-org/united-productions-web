@@ -29,11 +29,29 @@ allowedOrigins: [
 
 ```
 default-src 'self';
-script-src 'self' 'unsafe-inline' 'unsafe-eval';
+script-src 'self' 'unsafe-inline';              // 本番環境（unsafe-eval除外）
+script-src 'self' 'unsafe-eval' 'unsafe-inline'; // 開発環境（React HMR用）
 style-src 'self' 'unsafe-inline';
 img-src 'self' data: https:;
-connect-src 'self' https://api.upstash.io https://generativelanguage.googleapis.com;
+font-src 'self';
+connect-src 'self' https://api.x.ai https://api.perplexity.ai https://generativelanguage.googleapis.com;
+frame-ancestors 'none';
+base-uri 'self';
+form-action 'self';
 ```
+
+### CSP設定の詳細
+
+| ディレクティブ | 設定値 | 説明 |
+|--------------|--------|------|
+| `default-src` | `'self'` | デフォルトですべてのリソースを同一生成元に制限 |
+| `script-src` | `'self' 'unsafe-inline'`（本番）<br>`'self' 'unsafe-eval' 'unsafe-inline'`（開発） | **本番環境では `unsafe-eval` を除外**してXSS対策を強化。開発環境ではReact HMRのために `unsafe-eval` を許可 |
+| `style-src` | `'self' 'unsafe-inline'` | インラインスタイルを許可（UIフレームワークで必要） |
+| `img-src` | `'self' data: https:` | データURI画像とHTTPS画像を許可 |
+| `connect-src` | `'self' https://api.x.ai https://api.perplexity.ai https://generativelanguage.googleapis.com` | LLM API（xAI, Perplexity, Gemini）への接続を許可 |
+| `frame-ancestors` | `'none'` | クリックジャッキング対策 |
+| `base-uri` | `'self'` | `<base>` タグの制限 |
+| `form-action` | `'self'` | フォーム送信先を制限 |
 
 ## 入力検証
 

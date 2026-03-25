@@ -819,8 +819,8 @@ export default function UsagePage() {
 
           {/* 戻るリンク */}
           <div className="flex justify-start">
-            <Link href="/admin">
-              <Button variant="outline">← 管理画面トップへ</Button>
+            <Link href="/admin/prompts">
+              <Button variant="outline">← プロンプト管理へ</Button>
             </Link>
           </div>
         </div>
