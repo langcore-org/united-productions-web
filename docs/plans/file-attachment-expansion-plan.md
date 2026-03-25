@@ -590,7 +590,7 @@ Google Driveからのファイル取得は `components/ui/GoogleDrivePicker.tsx`
 
 ### 9.2 既存計画書
 
-- `docs/plans/development/meeting-minutes-file-upload.md` - 議事録ファイルアップロード計画
+- `docs/archive/2026-03-12-meeting-minutes-file-upload.md` - 議事録ファイルアップロード計画
 
 ---
 

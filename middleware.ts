@@ -73,5 +73,7 @@ export const config = {
     "/settings/:path*",
     "/auth/:path*",
     "/preview-login",
+    "/admin/:path*",
+    "/api/admin/:path*",
   ],
 };

@@ -428,7 +428,7 @@ components/chat/ChatPage.tsx         # ツール設定統合
 app/(authenticated)/chat/page.tsx    # ツール設定統合
 lib/chat/chat-config.ts              # 機能別ツール設定
 lib/chat/gems.ts                     # Gem別ツール設定
-docs/plans/current/agentic-chat-design.md  # 設計ドキュメント
+docs/plans/agentic-chat-design.md  # 設計ドキュメント
 ```
 
 #### エージェンティック機能の概要

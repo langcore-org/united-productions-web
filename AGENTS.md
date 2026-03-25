@@ -740,10 +740,36 @@ node scripts/prompts/update-from-doc.mjs <PROMPT_KEY> "変更理由"
 | `docs/archive/` | `YYYY-MM-DD-元のファイル名.md`（**アーカイブ日**を先頭に） | `2026-02-22-refactoring-completed.md` |
 | `docs/backlog/` | `idea-機能名.md` / `research-調査名.md` / `todo-タスク名.md` | `idea-vtuber-research.md` |
 
-**重要**: 
+**重要**:
 - `lessons/` は**終了・完了した日付**をファイル名に入れる
 - `archive/` は**アーカイブした日付**をファイル名に入れる
 - `plans/` は**作成日ではなく計画名**をファイル名に入れ、日付はメタデータ内に記載
+
+### ドキュメントメタデータ（必須）
+
+すべてのドキュメントは、ファイル先頭に以下のメタデータを含める。
+
+#### 通常ドキュメント（plans/, backlog/, specs/ 等）
+
+```markdown
+# ドキュメントタイトル
+
+**作成日**: YYYY-MM-DD
+**対象**: （任意）対象機能・コンポーネント名
+```
+
+#### archive へ移動するとき
+
+ファイル名の先頭に移動日を付与（`YYYY-MM-DD-元のファイル名.md`）し、ドキュメント内にも移動日を追記する。
+
+```markdown
+# ドキュメントタイトル
+
+**作成日**: YYYY-MM-DD
+**アーカイブ日**: YYYY-MM-DD  ← archive 移動時に追記
+```
+
+> **参考フォーマット**: `docs/archive/2026-02-15-technical-review.md`
 
 ### ドキュメントライフサイクル
 

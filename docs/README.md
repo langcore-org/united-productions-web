@@ -2,7 +2,7 @@
 
 > **本ディレクトリは「UPエージェント」（AI Hub）開発用のドキュメント群です。**
 > 
-> **最終更新**: 2026-03-20 15:47
+> **最終更新**: 2026-03-25 18:40
 
 ---
 
@@ -96,13 +96,24 @@ cat docs/lessons/README.md
 
 | 日付 | ドキュメント | カテゴリ | 概要 |
 |------|-------------|---------|------|
-| 03-20 | [lessons/2026-03-20-xai-direct-implementation-lesson.md](./lessons/2026-03-20-xai-direct-implementation-lesson.md) | lessons | xAI直接呼び出しへの移行教訓 |
-| 03-20 | [lessons/2026-03-20-supabase-migration-lesson.md](./lessons/2026-03-20-supabase-migration-lesson.md) | lessons | Supabase移行の教訓 |
-| 03-20 | [INDEX.md](./INDEX.md) | docs | ドキュメントインデックス（新規作成） |
-| 03-18 | [specs/api-integration/2026-03-18-grok-model-comparison.md](./specs/api-integration/2026-03-18-grok-model-comparison.md) | specs | Grokモデル比較 |
-| 03-12 | [plans/testing/field-test-preparation-20260312.md](./plans/testing/field-test-preparation-20260312.md) | plans | フィールドテスト準備 |
-| 03-11 | [guides/setup/google-oauth-setup.md](./guides/setup/google-oauth-setup.md) | guides | Google OAuth設定ガイド |
-| 03-05 | [plans/development/weekly-progress-meeting-20260305.md](./plans/development/weekly-progress-meeting-20260305.md) | plans | 週次進捗会議 |
+| 03-26 | [archive/2026-03-26-bug-fixes-and-final-tuning.md](./archive/2026-03-26-bug-fixes-and-final-tuning.md) | archive | バグ修正・最終調整完了 |
+| 03-25 | [archive/2026-03-25-new-project-naming-and-subtitle.md](./archive/2026-03-25-new-project-naming-and-subtitle.md) | archive | 新企画立案命名・サブテキスト設定完了 |
+| 03-25 | [archive/2026-03-25-screenshot-for-company-announcement.md](./archive/2026-03-25-screenshot-for-company-announcement.md) | archive | 社内発表用スクリーンショット作成完了 |
+| 03-25 | [archive/2026-03-25-design-final-adjustment.md](./archive/2026-03-25-design-final-adjustment.md) | archive | デザイン最終調整完了 |
+| 03-25 | [plans/implementation-plan-2026-03.md](./plans/implementation-plan-2026-03.md) | plans | 3月実装プラン - 全タスク完了 |
+| 03-19 | [archive/2026-03-19-feedback-incorporation-from-field-test.md](./archive/2026-03-19-feedback-incorporation-from-field-test.md) | archive | 現場テストフィードバック反映完了 |
+| 03-19 | [archive/2026-03-19-admin-dashboard-cost-monitoring.md](./archive/2026-03-19-admin-dashboard-cost-monitoring.md) | archive | 管理画面調整（コスト監視）完了 |
+| 03-12 | [archive/2026-03-12-field-test.md](./archive/2026-03-12-field-test.md) | archive | 3月12日現場テスト完了 |
+| 03-12 | [archive/2026-03-12-prompt-tuning-performer-research.md](./archive/2026-03-12-prompt-tuning-performer-research.md) | archive | 出演者リサーチプロンプト磨き込み完了 |
+| 03-12 | [archive/2026-03-12-prompt-tuning-evidence-research.md](./archive/2026-03-12-prompt-tuning-evidence-research.md) | archive | エビデンスリサーチプロンプト磨き込み完了 |
+| 03-12 | [archive/2026-03-12-new-project-planning-porting.md](./archive/2026-03-12-new-project-planning-porting.md) | archive | 新規企画立案機能の移植完了 |
+| 03-11 | [archive/2026-03-11-test-to-production-migration.md](./archive/2026-03-11-test-to-production-migration.md) | archive | テストから本番への移行完了 |
+| 03-10 | [archive/2026-03-10-performer-research-ui-improvement.md](./archive/2026-03-10-performer-research-ui-improvement.md) | archive | 出演者リサーチUI改善完了 |
+| 03-10 | [archive/2026-03-10-research-integration-test.md](./archive/2026-03-10-research-integration-test.md) | archive | リサーチ機能統合テスト完了 |
+| 03-05 | [archive/2026-03-05-sidebar-functionality-consultation.md](./archive/2026-03-05-sidebar-functionality-consultation.md) | archive | サイドバー機能実装相談対応完了 |
+| 03-05 | [archive/2026-03-05-weekly-progress-meeting.md](./archive/2026-03-05-weekly-progress-meeting.md) | archive | 週次進捗報告会（3月5日）完了 |
+| 03-05 | [backlog/research/sns-paid-tool-verification.md](./backlog/research/sns-paid-tool-verification.md) | backlog | SNS有料ツール統合検証完了（第2段階に保留） |
+| 03-02 | [archive/2026-03-02-subtitle-content-for-new-project.md](./archive/2026-03-02-subtitle-content-for-new-project.md) | archive | 新企画立案サブテキスト内容策定完了 |
 
 ### 2026年2月（主な更新）
 

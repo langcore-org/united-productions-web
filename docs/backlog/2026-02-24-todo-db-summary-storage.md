@@ -64,7 +64,7 @@ model Conversation {
 
 ## 参考
 
-- 設計書: docs/plans/current/conversation-memory-design.md
+- 設計書: docs/plans/conversation-memory-design.md
 - 実装済み: lib/llm/memory/threshold-rolling-summary.ts
 
 ---

@@ -4,7 +4,7 @@
 > **対応完了日**: 2026-02-22  
 > **ステータス**: 完了・保管  
 > **調査対象**: `/api/llm/langchain`, `/api/llm/langchain/stream`  
-> **関連ドキュメント**: `docs/plans/current/langchain-migration-*.md`
+> **関連ドキュメント**: `docs/archive/langchain-migration-*.md`
 
 ---
 
@@ -147,8 +147,8 @@ grep -r "llm/langchain" /home/koyomaru/agent1 --include="*.ts" --include="*.tsx"
 rm -rf /home/koyomaru/agent1/app/api/llm/langchain
 
 # 3. ドキュメント更新
-# - docs/plans/current/langchain-migration-completion-report.md
-# - docs/plans/current/langchain-migration-verification-report.md
+# - docs/archive/langchain-migration-completion-report.md
+# - docs/archive/langchain-migration-verification-report.md
 ```
 
 ### 4.4 ドキュメント更新内容

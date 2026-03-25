@@ -138,61 +138,52 @@
 | [program-knowledge-permissions-design.md](./plans/program-knowledge-permissions-design.md) | 番組ナレッジ権限設計 | 随時 |
 | [implementation-plan-2026-03.md](./plans/implementation-plan-2026-03.md) | 2026年3月実装計画 | 随時 |
 
-#### plans/design/ - デザイン関連
+#### plans/ - 計画・設計
 
 | ファイル | 内容 | 更新日 |
 |---------|------|--------|
-| [design-final-adjustment.md](./plans/design/design-final-adjustment.md) | デザイン最終調整 | 随時 |
-| [new-project-naming-and-subtitle.md](./plans/design/new-project-naming-and-subtitle.md) | 新プロジェクト命名・サブタイトル | 随時 |
-| [screenshot-for-company-announcement.md](./plans/design/screenshot-for-company-announcement.md) | 社内発表用スクリーンショット | 随時 |
-| [sidebar-functionality-consultation.md](./plans/design/sidebar-functionality-consultation.md) | サイドバー機能相談 | 随時 |
-| [subtitle-content-for-new-project.md](./plans/design/subtitle-content-for-new-project.md) | 新プロジェクトサブタイトル内容 | 随時 |
+| [implementation-plan-2026-03.md](./plans/implementation-plan-2026-03.md) | 3月実装プラン | ✅ 全タスク完了 |
+| [official-release-20260330.md](./plans/official-release-20260330.md) | 2026/03/31正式リリース | 🟡 準備完了 |
+| [client-server-llm-architecture.md](./plans/client-server-llm-architecture.md) | クライアント-サーバーLLMアーキテクチャ | 随時 |
+| [conversation-memory-design.md](./plans/conversation-memory-design.md) | 会話メモリ設計 | 随時 |
+| [guide-and-manual-creation.md](./plans/guide-and-manual-creation.md) | ガイド・マニュアル作成 | 随時 |
+| [test-user-registration.md](./plans/test-user-registration.md) | テストユーザー登録 | 随時 |
+| [frontend-redesign-minimal-elegant.md](./plans/frontend-redesign-minimal-elegant.md) | フロントエンド再設計 | 随時 |
+| [sidebar-redesign.md](./plans/sidebar-redesign.md) | サイドバー再設計 | 随時 |
+| [agentic-chat-design.md](./plans/agentic-chat-design.md) | Agenticチャット設計 | 随時 |
+| [agentic-loop-implementation.md](./plans/agentic-loop-implementation.md) | Agenticループ実装 | 随時 |
+| [file-attachment-expansion-plan.md](./plans/file-attachment-expansion-plan.md) | ファイル添付拡張計画 | 随時 |
+| [icon-unification-plan.md](./plans/icon-unification-plan.md) | アイコン統一計画 | 随時 |
+| [program-knowledge-permissions-design.md](./plans/program-knowledge-permissions-design.md) | 番組知識権限設計 | 随時 |
+| [prompt-version-management.md](./plans/prompt-version-management.md) | プロンプトバージョン管理 | 随時 |
+| [tool-details-display.md](./plans/tool-details-display.md) | ツール詳細表示 | 随時 |
+| [claude-code-agent-integration-plan.md](./plans/claude-code-agent-integration-plan.md) | Claude Codeエージェント統合計画 | 随時 |
+| [knip-unused-code-report.md](./plans/knip-unused-code-report.md) | 未使用コードレポート | 随時 |
 
-#### plans/development/ - 開発関連
+**アーカイブ済みの完了タスク**:
+| [design-final-adjustment.md](./archive/2026-03-25-design-final-adjustment.md) | デザイン最終調整 | ✅ 2026-03-25完了 |
+| [new-project-naming-and-subtitle.md](./archive/2026-03-25-new-project-naming-and-subtitle.md) | 新プロジェクト命名・サブタイトル | ✅ 2026-03-25完了 |
+| [screenshot-for-company-announcement.md](./archive/2026-03-25-screenshot-for-company-announcement.md) | 社内発表用スクリーンショット | ✅ 2026-02-26完了 |
+| [sidebar-functionality-consultation.md](./archive/2026-03-05-sidebar-functionality-consultation.md) | サイドバー機能相談 | ✅ 2026-03-05完了 |
+| [subtitle-content-for-new-project.md](./archive/2026-03-02-subtitle-content-for-new-project.md) | 新プロジェクトサブタイトル内容 | ✅ 2026-03-02完了 |
+| [meeting-minutes-file-upload.md](./archive/2026-03-12-meeting-minutes-file-upload.md) | 議事録ファイルアップロード | ✅ 2026-03-12完了 |
+| [meeting-minutes-guide-text.md](./archive/2026-03-12-meeting-minutes-guide-text.md) | 議事録ガイドテキスト | ✅ 2026-03-12完了 |
+| [admin-dashboard-cost-monitoring.md](./archive/2026-03-19-admin-dashboard-cost-monitoring.md) | 管理ダッシュボード・コスト監視 | ✅ 2026-03-19完了 |
+| [new-project-planning-porting.md](./archive/2026-03-12-new-project-planning-porting.md) | 新企画立案移植 | ✅ 2026-03-12完了 |
+| [performer-research-ui-improvement.md](./archive/2026-03-10-performer-research-ui-improvement.md) | 出演者リサーチUI改善 | ✅ 2026-03-10完了 |
+| [program-info-input-expansion.md](./archive/2026-03-19-program-info-input-expansion.md) | 番組情報入力拡張 | ✅ 2026-03-19完了 |
+| [prompt-tuning-evidence-research.md](./archive/2026-03-12-prompt-tuning-evidence-research.md) | エビデンスリサーチプロンプト調整 | ✅ 2026-03-12完了 |
+| [prompt-tuning-performer-research.md](./archive/2026-03-12-prompt-tuning-performer-research.md) | 出演者リサーチプロンプト調整 | ✅ 2026-03-12完了 |
+| [sns-paid-tool-verification.md](./backlog/research/sns-paid-tool-verification.md) | SNS有料ツール検証 | ✅ 完了（第2段階に保留） |
+| [test-to-production-migration.md](./archive/2026-03-11-test-to-production-migration.md) | テスト→本番移行 | ✅ 2026-03-11完了 |
+| [weekly-progress-meeting-20260305.md](./archive/2026-03-05-weekly-progress-meeting.md) | 週次進捗会議 2026/03/05 | ✅ 2026-03-05完了 |
+| [bug-fixes-and-final-tuning.md](./archive/2026-03-26-bug-fixes-and-final-tuning.md) | バグ修正・最終調整 | ✅ 2026-03-26完了 |
+| [feedback-incorporation-from-field-test.md](./archive/2026-03-19-feedback-incorporation-from-field-test.md) | フィールドテストフィードバック反映 | ✅ 2026-03-19完了 |
+| [field-test-preparation-20260312.md](./archive/2026-03-12-field-test.md) | フィールドテスト準備・実施 2026/03/12 | ✅ 2026-03-12完了 |
+| [research-integration-test.md](./archive/2026-03-10-research-integration-test.md) | リサーチ統合テスト | ✅ 2026-03-10完了 |
 
-| ファイル | 内容 | 更新日 |
-|---------|------|--------|
-| [admin-dashboard-cost-monitoring.md](./plans/development/admin-dashboard-cost-monitoring.md) | 管理ダッシュボード・コスト監視 | 随時 |
-| [meeting-minutes-file-upload.md](./plans/development/meeting-minutes-file-upload.md) | 議事録ファイルアップロード | 随時 |
-| [meeting-minutes-guide-text.md](./plans/development/meeting-minutes-guide-text.md) | 議事録ガイドテキスト | 随時 |
-| [new-project-planning-porting.md](./plans/development/new-project-planning-porting.md) | 新企画立案移植 | 随時 |
-| [performer-research-ui-improvement.md](./plans/development/performer-research-ui-improvement.md) | 出演者リサーチUI改善 | 随時 |
-| [program-info-input-expansion.md](./plans/development/program-info-input-expansion.md) | 番組情報入力拡張 | 随時 |
-| [prompt-tuning-evidence-research.md](./plans/development/prompt-tuning-evidence-research.md) | エビデンスリサーチプロンプト調整 | 随時 |
-| [prompt-tuning-performer-research.md](./plans/development/prompt-tuning-performer-research.md) | 出演者リサーチプロンプト調整 | 随時 |
-| [sns-paid-tool-verification.md](./plans/development/sns-paid-tool-verification.md) | SNS有料ツール検証 | 随時 |
-| [test-to-production-migration.md](./plans/development/test-to-production-migration.md) | テスト→本番移行 | 随時 |
-| [weekly-progress-meeting-20260305.md](./plans/development/weekly-progress-meeting-20260305.md) | 週次進捗会議 2026/03/05 | 2026-03-05 |
-| [youtube-instagram-research-implementation.md](./plans/development/youtube-instagram-research-implementation.md) | YouTube/Instagramリサーチ実装 | 随時 |
-
-#### plans/current/ - 現在の計画
-
-| ファイル | 内容 | 更新日 |
-|---------|------|--------|
-| [client-server-llm-architecture.md](./plans/current/client-server-llm-architecture.md) | クライアント-サーバーLLMアーキテクチャ | 随時 |
-| [conversation-memory-design.md](./plans/current/conversation-memory-design.md) | 会話メモリ設計 | 随時 |
-
-#### plans/management/ - 管理関連
-
-| ファイル | 内容 | 更新日 |
-|---------|------|--------|
-| [guide-and-manual-creation.md](./plans/management/guide-and-manual-creation.md) | ガイド・マニュアル作成 | 随時 |
-| [test-user-registration.md](./plans/management/test-user-registration.md) | テストユーザー登録 | 随時 |
-
-#### plans/release/ - リリース関連
-
-| ファイル | 内容 | 更新日 |
-|---------|------|--------|
-| [bug-fixes-and-final-tuning.md](./plans/release/bug-fixes-and-final-tuning.md) | バグ修正・最終調整 | 随時 |
-| [official-release-20260330.md](./plans/release/official-release-20260330.md) | 2026/03/30正式リリース | 随時 |
-
-#### plans/testing/ - テスト関連
-
-| ファイル | 内容 | 更新日 |
-|---------|------|--------|
-| [feedback-incorporation-from-field-test.md](./plans/testing/feedback-incorporation-from-field-test.md) | フィールドテストフィードバック反映 | 随時 |
-| [field-test-preparation-20260312.md](./plans/testing/field-test-preparation-20260312.md) | フィールドテスト準備 2026/03/12 | 随時 |
-| [research-integration-test.md](./plans/testing/research-integration-test.md) | リサーチ統合テスト | 随時 |
+**バックログ（第2段階以降）**:
+| [youtube-instagram-research-integration.md](./backlog/research/youtube-instagram-research-integration.md) | YouTube/Instagramリサーチ統合 | ⏸️ 第2段階に延期 |
 
 ---
 
