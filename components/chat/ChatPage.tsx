@@ -79,6 +79,17 @@ export function ChatPage({
         const baseConfig = getChatConfig(featureId);
         setConfig(baseConfig);
         setSystemPrompt(baseConfig.systemPrompt);
+
+        // 新規チャットで番組選択が必要かつ番組未指定の場合、直近の選択を取得
+        if (!initialProgramId && !chatId && needsProgramSelection(featureId)) {
+          const res = await fetch(`/api/chat/feature?featureId=${featureId}`);
+          if (res.ok) {
+            const data = (await res.json()) as { lastProgramId?: string | null };
+            if (data.lastProgramId) {
+              setSelectedProgramId(data.lastProgramId);
+            }
+          }
+        }
       } catch (error) {
         console.error("Failed to load config:", error);
         const fallbackConfig = getChatConfig(featureId);
@@ -90,7 +101,7 @@ export function ChatPage({
     }
 
     loadConfig();
-  }, [featureId]);
+  }, [featureId, chatId, initialProgramId]);
 
   if (isLoading) {
     return (

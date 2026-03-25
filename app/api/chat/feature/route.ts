@@ -88,14 +88,24 @@ export async function GET(request: NextRequest): Promise<Response> {
     }
 
     if (featureId) {
-      const { data: chats } = await supabase
-        .from("chats")
-        .select("id, title, created_at, updated_at")
-        .eq("user_id", userId)
-        .eq("agent_type", featureId.toUpperCase())
-        .order("updated_at", { ascending: false });
+      const [{ data: chats }, { data: lastChat }] = await Promise.all([
+        supabase
+          .from("chats")
+          .select("id, title, created_at, updated_at")
+          .eq("user_id", userId)
+          .eq("agent_type", featureId.toUpperCase())
+          .order("updated_at", { ascending: false }),
+        supabase
+          .from("chats")
+          .select("program_id")
+          .eq("user_id", userId)
+          .not("program_id", "is", null)
+          .order("updated_at", { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+      ]);
 
-      return Response.json({ chats: chats || [] });
+      return Response.json({ chats: chats || [], lastProgramId: lastChat?.program_id ?? null });
     }
 
     return errorResponse("chatId or featureId is required", 400);
