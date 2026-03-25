@@ -114,7 +114,7 @@ export function Sidebar({ className, onCollapseChange }: SidebarProps) {
                 href={item.href}
                 className={cn(
                   "flex items-center rounded-xl transition-all duration-200 ease-out",
-                  "group relative overflow-hidden",
+                  "group relative",
                   isCollapsed ? "w-10 h-10 justify-center p-0 mx-auto" : "gap-3 px-3 py-2.5",
                   isItemActive
                     ? "bg-white text-black border border-[#e5e5e5]"
@@ -145,8 +145,8 @@ export function Sidebar({ className, onCollapseChange }: SidebarProps) {
 
                 <div
                   className={cn(
-                    "flex-1 min-w-0 overflow-hidden transition-all duration-200",
-                    isCollapsed ? "w-0 opacity-0" : "opacity-100",
+                    "min-w-0 overflow-hidden transition-all duration-200",
+                    isCollapsed ? "w-0 opacity-0" : "flex-1 opacity-100",
                   )}
                 >
                   <span className="text-sm font-medium block truncate">{item.label}</span>
@@ -194,8 +194,8 @@ export function Sidebar({ className, onCollapseChange }: SidebarProps) {
             </span>
             <span
               className={cn(
-                "text-sm font-medium flex-1 truncate transition-all duration-200 overflow-hidden",
-                isCollapsed ? "w-0 opacity-0" : "opacity-100",
+                "text-sm font-medium truncate transition-all duration-200 overflow-hidden",
+                isCollapsed ? "w-0 opacity-0" : "flex-1 opacity-100",
               )}
             >
               履歴を見る
