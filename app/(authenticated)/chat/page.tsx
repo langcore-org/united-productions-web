@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useCallback, useEffect, useRef, useState } from "react";
+import { Suspense, useCallback, useRef, useState } from "react";
 import { ChatPage } from "@/components/chat/ChatPage";
 import { MobileChatHeader } from "@/components/chat/MobileChatHeader";
 import { MobileSidebarOverlay } from "@/components/layout/MobileSidebarOverlay";
@@ -17,29 +17,12 @@ import { isValidFeatureId } from "@/lib/chat/chat-config";
  * - ?program=xxx : 指定番組で新規チャット（番組選択スキップ）
  * - ?message=xxx : 初期メッセージを送信して開始（URLエンコード推奨）
  */
-// localStorageから初期値を同期的に取得（SSR対応）
-function getInitialCollapsedState(): boolean {
-  if (typeof window === "undefined") return false;
-  try {
-    const saved = localStorage.getItem("sidebar-collapsed");
-    return saved ? JSON.parse(saved) : false;
-  } catch {
-    return false;
-  }
-}
-
 function ChatPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const touchStartXRef = useRef<number | null>(null);
   const touchCurrentXRef = useRef<number | null>(null);
-
-  // マウント時にlocalStorageから状態を読み込む
-  useEffect(() => {
-    setIsSidebarCollapsed(getInitialCollapsedState());
-  }, []);
 
   // agent指定があればそれを使用、なければ general
   const agentId = searchParams.get("agent") || "general";
@@ -102,17 +85,14 @@ function ChatPageContent() {
 
   return (
     <div className="h-screen flex flex-col md:flex-row overflow-hidden">
-      {/* デスクトップ用サイドバー（固定） */}
-      <aside className="hidden md:block fixed top-0 left-0 z-40 h-screen">
-        <Sidebar onCollapseChange={setIsSidebarCollapsed} />
-      </aside>
+      {/* デスクトップ用サイドバー */}
+      <div className="hidden md:block flex-shrink-0">
+        <Sidebar />
+      </div>
 
       {/* メインエリア */}
       <div
-        className={`flex-1 h-full flex flex-col overflow-hidden transition-all duration-300 ease-in-out ${
-          isSidebarCollapsed ? "md:ml-[64px]" : "md:ml-[240px]"
-        }`}
-        // モバイルのみスワイプ検知
+        className="flex-1 h-full flex flex-col overflow-hidden min-w-0"
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}

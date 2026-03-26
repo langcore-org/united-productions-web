@@ -10,7 +10,6 @@ import { cn } from "@/lib/utils";
 
 interface SidebarProps {
   className?: string;
-  onCollapseChange?: (isCollapsed: boolean) => void;
 }
 
 // localStorageから初期値を同期的に取得（SSR対応）
@@ -24,22 +23,18 @@ function getInitialCollapsedState(): boolean {
   }
 }
 
-export function Sidebar({ className, onCollapseChange }: SidebarProps) {
+export function Sidebar({ className }: SidebarProps) {
   const pathname = usePathname();
   const [isCollapsed, setIsCollapsed] = useState(getInitialCollapsedState);
   const [isMounted, setIsMounted] = useState(false);
 
-  // マウント時に親に通知（初回レンダリング時の値を同期）
   useEffect(() => {
     setIsMounted(true);
-    onCollapseChange?.(isCollapsed);
-  }, [onCollapseChange, isCollapsed]);
+  }, []);
 
-  // サイドバー折りたたみ状態を保存
   const toggleCollapse = () => {
     const newState = !isCollapsed;
     setIsCollapsed(newState);
-    onCollapseChange?.(newState);
     try {
       localStorage.setItem("sidebar-collapsed", JSON.stringify(newState));
     } catch {
