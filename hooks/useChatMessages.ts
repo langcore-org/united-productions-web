@@ -12,7 +12,7 @@ import type { Message } from "@/components/ui/chat-types";
 import type { AttachedFile } from "@/components/ui/FileAttachment";
 import { MAX_FILE_SIZE_MB } from "@/config/constants";
 import { buildDisplayContent, buildLlmContent, processFile } from "@/lib/chat/file-content";
-import type { LLMProvider } from "@/lib/llm/types";
+import type { LLMMessage, LLMProvider } from "@/lib/llm/types";
 
 interface UseChatMessagesOptions {
   provider: LLMProvider;
@@ -21,7 +21,7 @@ interface UseChatMessagesOptions {
   enableFileAttachment: boolean;
   isPending: boolean;
   startStream: (
-    messages: Array<{ role: string; content: string }>,
+    messages: LLMMessage[],
     provider: LLMProvider,
     featureId?: string,
     programId?: string,
@@ -44,9 +44,9 @@ export function useChatMessages({
   const [dragError, setDragError] = useState<string | null>(null);
   const dragCounter = useRef(0);
 
-  const buildStreamMessages = useCallback((userContent: string, history: Message[]) => {
-    const conversationHistory = history.map((m) => ({ role: m.role, content: m.content }));
-    return [...conversationHistory, { role: "user" as const, content: userContent }];
+  const buildStreamMessages = useCallback((userContent: string, history: Message[]): LLMMessage[] => {
+    const conversationHistory: LLMMessage[] = history.map((m) => ({ role: m.role, content: m.content }));
+    return [...conversationHistory, { role: "user", content: userContent }];
   }, []);
 
   const handleSend = useCallback(async () => {
