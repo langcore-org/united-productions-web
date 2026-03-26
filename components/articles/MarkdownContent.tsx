@@ -1,10 +1,10 @@
 "use client";
 
+import { Check, Copy, Link2 } from "lucide-react";
 import { useState } from "react";
 import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
-import { Copy, Check, Link2 } from "lucide-react";
+import remarkGfm from "remark-gfm";
 import "highlight.js/styles/github-dark.css";
 
 // コードブロックコンポーネント
@@ -58,7 +58,10 @@ function Heading({
   const sizeClass = sizes[level] || "text-base";
 
   return (
-    <Tag id={id} className={`group flex items-center gap-3 font-bold tracking-tight text-gray-900 ${sizeClass}`}>
+    <Tag
+      id={id}
+      className={`group flex items-center gap-3 font-bold tracking-tight text-gray-900 ${sizeClass}`}
+    >
       <span>{children}</span>
       {id && (
         <a
@@ -74,7 +77,15 @@ function Heading({
 }
 
 const components = {
-  code({ inline, className, children }: { inline?: boolean; className?: string; children: React.ReactNode }) {
+  code({
+    inline,
+    className,
+    children,
+  }: {
+    inline?: boolean;
+    className?: string;
+    children: React.ReactNode;
+  }) {
     const match = /language-(\w+)/.exec(className || "");
     const content = String(children).replace(/\n$/, "");
 
@@ -89,20 +100,48 @@ const components = {
     );
   },
   h1: ({ children }: { children: React.ReactNode }) => {
-    const id = String(children).toLowerCase().replace(/\s+/g, "-").replace(/[^\w\-]/g, "");
-    return <Heading level={1} id={id}>{children}</Heading>;
+    const id = String(children)
+      .toLowerCase()
+      .replace(/\s+/g, "-")
+      .replace(/[^\w-]/g, "");
+    return (
+      <Heading level={1} id={id}>
+        {children}
+      </Heading>
+    );
   },
   h2: ({ children }: { children: React.ReactNode }) => {
-    const id = String(children).toLowerCase().replace(/\s+/g, "-").replace(/[^\w\-]/g, "");
-    return <Heading level={2} id={id}>{children}</Heading>;
+    const id = String(children)
+      .toLowerCase()
+      .replace(/\s+/g, "-")
+      .replace(/[^\w-]/g, "");
+    return (
+      <Heading level={2} id={id}>
+        {children}
+      </Heading>
+    );
   },
   h3: ({ children }: { children: React.ReactNode }) => {
-    const id = String(children).toLowerCase().replace(/\s+/g, "-").replace(/[^\w\-]/g, "");
-    return <Heading level={3} id={id}>{children}</Heading>;
+    const id = String(children)
+      .toLowerCase()
+      .replace(/\s+/g, "-")
+      .replace(/[^\w-]/g, "");
+    return (
+      <Heading level={3} id={id}>
+        {children}
+      </Heading>
+    );
   },
   h4: ({ children }: { children: React.ReactNode }) => {
-    const id = String(children).toLowerCase().replace(/\s+/g, "-").replace(/[^\w\-]/g, "");
-    return <Heading level={4} id={id}>{children}</Heading>;
+    const id = String(children)
+      .toLowerCase()
+      .replace(/\s+/g, "-")
+      .replace(/[^\w-]/g, "");
+    return (
+      <Heading level={4} id={id}>
+        {children}
+      </Heading>
+    );
   },
   table: ({ children }: { children: React.ReactNode }) => (
     <div className="overflow-x-auto my-6 rounded-xl border border-gray-200 shadow-sm">
@@ -113,7 +152,9 @@ const components = {
     <thead className="bg-gray-50">{children}</thead>
   ),
   th: ({ children }: { children: React.ReactNode }) => (
-    <th className="font-semibold text-gray-700 px-4 py-3 text-left border-b border-gray-200">{children}</th>
+    <th className="font-semibold text-gray-700 px-4 py-3 text-left border-b border-gray-200">
+      {children}
+    </th>
   ),
   td: ({ children }: { children: React.ReactNode }) => (
     <td className="px-4 py-3 text-gray-700 border-b border-gray-100 last:border-b-0">{children}</td>
@@ -122,10 +163,14 @@ const components = {
     <tr className="hover:bg-gray-50/50 transition-colors">{children}</tr>
   ),
   ul: ({ children }: { children: React.ReactNode }) => (
-    <ul className="my-4 space-y-2 list-disc list-inside text-gray-700 marker:text-gray-400">{children}</ul>
+    <ul className="my-4 space-y-2 list-disc list-inside text-gray-700 marker:text-gray-400">
+      {children}
+    </ul>
   ),
   ol: ({ children }: { children: React.ReactNode }) => (
-    <ol className="my-4 space-y-2 list-decimal list-inside text-gray-700 marker:text-gray-400">{children}</ol>
+    <ol className="my-4 space-y-2 list-decimal list-inside text-gray-700 marker:text-gray-400">
+      {children}
+    </ol>
   ),
   li: ({ children }: { children: React.ReactNode }) => (
     <li className="leading-relaxed">{children}</li>
@@ -137,7 +182,10 @@ const components = {
   ),
   hr: () => <hr className="my-10 border-gray-200" />,
   a: ({ href, children }: { href?: string; children: React.ReactNode }) => (
-    <a href={href} className="text-blue-600 font-medium hover:underline decoration-2 underline-offset-2">
+    <a
+      href={href}
+      className="text-blue-600 font-medium hover:underline decoration-2 underline-offset-2"
+    >
       {children}
     </a>
   ),

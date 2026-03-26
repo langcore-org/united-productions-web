@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { type ArticleType, getAllSlugs, getArticleBySlug } from "@/lib/articles";
 import { MarkdownContent } from "@/components/articles/MarkdownContent";
+import { type ArticleType, getAllSlugs, getArticleBySlug } from "@/lib/articles";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -56,7 +56,9 @@ export default async function ArticleDetailPage({ params }: Props) {
         {/* ヘッダー */}
         <header className="mb-12 pb-8 border-b border-gray-100">
           <div className="flex items-center gap-2 mb-4">
-            <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${TYPE_COLOR[article.type]}`}>
+            <span
+              className={`text-xs font-medium px-2.5 py-1 rounded-full ${TYPE_COLOR[article.type]}`}
+            >
               {TYPE_LABEL[article.type]}
             </span>
             <time className="text-xs text-gray-400">{article.date}</time>

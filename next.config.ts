@@ -16,6 +16,17 @@ const nextConfig: NextConfig = {
     parallelServerBuildTraces: true,
     parallelServerCompiles: true,
   },
+  async redirects() {
+    return [
+      // 記事URLの変更に伴うリダイレクト
+      {
+        source: "/articles/getting-started",
+        destination: "/articles/quickstart",
+        permanent: true,
+      },
+    ];
+  },
+
   async headers() {
     const isProd = process.env.NODE_ENV === "production";
     return [

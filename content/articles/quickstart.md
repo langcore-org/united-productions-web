@@ -1,6 +1,6 @@
 ---
 title: "Teddy クイックスタートガイド"
-slug: "getting-started"
+slug: "quickstart"
 date: "2026-03-26"
 type: "guide"
 description: "Teddyの基本的な使い方とユースケースを紹介します。議事録作成、出演者リサーチ、エビデンス検証など、制作業務での活用方法を解説します。"
