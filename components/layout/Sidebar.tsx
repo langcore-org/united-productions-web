@@ -238,7 +238,7 @@ export function Sidebar({ className }: SidebarProps) {
             effectiveCollapsed ? "w-10 h-10 justify-center p-0 mx-auto" : "gap-3 px-3 py-2",
             "text-[#6b7280] hover:bg-white hover:text-[#1a1a1a]",
           )}
-          title={effectiveCollapsed ? "お知らせ" : undefined}
+          title={effectiveCollapsed ? "ガイド" : undefined}
         >
           <span className="flex-shrink-0 flex items-center justify-center transition-transform duration-200 group-hover:scale-110">
             <Newspaper className="w-[18px] h-[18px]" />
@@ -249,7 +249,7 @@ export function Sidebar({ className }: SidebarProps) {
               effectiveCollapsed ? "w-0 opacity-0" : "opacity-100",
             )}
           >
-            お知らせ
+            ガイド
           </span>
         </Link>
 
