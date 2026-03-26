@@ -28,11 +28,18 @@ export function Sidebar({ className }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(getInitialCollapsedState);
   const [isMounted, setIsMounted] = useState(false);
 
+  // トップページに遷移した時に縮小状態にリセット
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
-  const effectiveCollapsed = pathname === "/" ? true : isCollapsed;
+  useEffect(() => {
+    if (pathname === "/") {
+      setIsCollapsed(true);
+    }
+  }, [pathname]);
+
+  const effectiveCollapsed = isCollapsed;
 
   const toggleCollapse = () => {
     const newState = !isCollapsed;
