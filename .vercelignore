@@ -1,6 +1,11 @@
 # ドキュメント
-*.md
 docs/
+
+# ルートのMarkdownファイル（記事は除く）
+/*.md
+README.md
+CHANGELOG.md
+CONTRIBUTING.md
 
 # テストファイル
 tests/
