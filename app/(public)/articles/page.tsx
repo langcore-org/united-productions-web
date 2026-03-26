@@ -1,6 +1,6 @@
+import { ArrowRight, BookOpen } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, BookOpen } from "lucide-react";
 import { type ArticleType, getAllArticles } from "@/lib/articles";
 
 export const metadata: Metadata = {
@@ -40,19 +40,15 @@ export default function ArticlesPage() {
           >
             ← アプリに戻る
           </Link>
-          
+
           <div className="flex items-center gap-3 mb-4">
             <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-emerald-500 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20">
               <BookOpen className="w-6 h-6 text-white" />
             </div>
           </div>
-          
-          <h1 className="text-4xl font-bold tracking-tight text-gray-900 mb-3">
-            ガイド
-          </h1>
-          <p className="text-xl text-gray-600 max-w-2xl">
-            Teddyの使い方・活用ガイド
-          </p>
+
+          <h1 className="text-4xl font-bold tracking-tight text-gray-900 mb-3">ガイド</h1>
+          <p className="text-xl text-gray-600 max-w-2xl">Teddyの使い方・活用ガイド</p>
         </div>
       </div>
 
@@ -77,7 +73,9 @@ export default function ArticlesPage() {
                   <div className="flex-1 min-w-0">
                     {/* タグと日付 */}
                     <div className="flex items-center gap-3 mb-3">
-                      <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full ${TYPE_COLOR[article.type]}`}>
+                      <span
+                        className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full ${TYPE_COLOR[article.type]}`}
+                      >
                         <span>{TYPE_ICON[article.type]}</span>
                         {TYPE_LABEL[article.type]}
                       </span>

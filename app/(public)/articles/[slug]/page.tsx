@@ -1,9 +1,9 @@
+import { ArrowLeft } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
-import { type ArticleType, getAllSlugs, getArticleBySlug } from "@/lib/articles";
 import { MarkdownContent } from "@/components/articles/MarkdownContent";
+import { type ArticleType, getAllSlugs, getArticleBySlug } from "@/lib/articles";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -67,7 +67,9 @@ export default async function ArticleDetailPage({ params }: Props) {
         <header className="mb-12">
           {/* タグと日付 */}
           <div className="flex items-center gap-3 mb-6">
-            <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full ${TYPE_COLOR[article.type]}`}>
+            <span
+              className={`inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full ${TYPE_COLOR[article.type]}`}
+            >
               <span>{TYPE_ICON[article.type]}</span>
               {TYPE_LABEL[article.type]}
             </span>
@@ -86,9 +88,7 @@ export default async function ArticleDetailPage({ params }: Props) {
           </h1>
 
           {/* 説明文 */}
-          <p className="text-xl text-gray-600 leading-relaxed">
-            {article.description}
-          </p>
+          <p className="text-xl text-gray-600 leading-relaxed">{article.description}</p>
 
           {/* 区切り線 */}
           <div className="mt-8 h-1 w-20 bg-gradient-to-r from-blue-500 to-emerald-500 rounded-full" />
@@ -100,12 +100,8 @@ export default async function ArticleDetailPage({ params }: Props) {
         {/* フッターCTA */}
         <div className="mt-16 pt-8 border-t border-gray-200">
           <div className="bg-gray-900 rounded-2xl p-8 text-center">
-            <h2 className="text-xl font-bold text-white mb-3">
-              Teddyを使ってみましょう
-            </h2>
-            <p className="text-gray-400 mb-6">
-              制作業務をAIで効率化します
-            </p>
+            <h2 className="text-xl font-bold text-white mb-3">Teddyを使ってみましょう</h2>
+            <p className="text-gray-400 mb-6">制作業務をAIで効率化します</p>
             <Link
               href="/auth/signin"
               className="inline-flex items-center gap-2 bg-white text-gray-900 text-sm font-semibold px-6 py-3 rounded-xl hover:bg-gray-100 transition-colors"
