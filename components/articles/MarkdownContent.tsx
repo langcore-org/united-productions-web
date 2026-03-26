@@ -1,9 +1,9 @@
 "use client";
 
-import type { Components } from "react-markdown";
 import { Check, Copy, Link2 } from "lucide-react";
 import type { ReactNode } from "react";
 import { useState } from "react";
+import type { Components } from "react-markdown";
 import ReactMarkdown from "react-markdown";
 import rehypeHighlight from "rehype-highlight";
 import remarkGfm from "remark-gfm";
@@ -123,10 +123,26 @@ const components: Components = {
     );
   },
 
-  h1: ({ children }) => <Heading level={1} id={makeId(children)}>{children}</Heading>,
-  h2: ({ children }) => <Heading level={2} id={makeId(children)}>{children}</Heading>,
-  h3: ({ children }) => <Heading level={3} id={makeId(children)}>{children}</Heading>,
-  h4: ({ children }) => <Heading level={4} id={makeId(children)}>{children}</Heading>,
+  h1: ({ children }) => (
+    <Heading level={1} id={makeId(children)}>
+      {children}
+    </Heading>
+  ),
+  h2: ({ children }) => (
+    <Heading level={2} id={makeId(children)}>
+      {children}
+    </Heading>
+  ),
+  h3: ({ children }) => (
+    <Heading level={3} id={makeId(children)}>
+      {children}
+    </Heading>
+  ),
+  h4: ({ children }) => (
+    <Heading level={4} id={makeId(children)}>
+      {children}
+    </Heading>
+  ),
 
   table: ({ children }) => (
     <div className="overflow-x-auto my-8 rounded-xl border border-gray-200 shadow-sm">
@@ -134,14 +150,18 @@ const components: Components = {
     </div>
   ),
 
-  thead: ({ children }) => <thead className="bg-gray-50 border-b border-gray-200">{children}</thead>,
+  thead: ({ children }) => (
+    <thead className="bg-gray-50 border-b border-gray-200">{children}</thead>
+  ),
 
   th: ({ children }) => (
     <th className="font-semibold text-gray-700 px-4 py-3.5 text-left">{children}</th>
   ),
 
   td: ({ children }) => (
-    <td className="px-4 py-3.5 text-gray-700 border-b border-gray-100 last:border-b-0">{children}</td>
+    <td className="px-4 py-3.5 text-gray-700 border-b border-gray-100 last:border-b-0">
+      {children}
+    </td>
   ),
 
   tr: ({ children }) => (
@@ -157,7 +177,9 @@ const components: Components = {
   ),
 
   ol: ({ children }) => (
-    <ol className="my-5 space-y-2 text-gray-700 list-decimal pl-5 marker:text-gray-500">{children}</ol>
+    <ol className="my-5 space-y-2 text-gray-700 list-decimal pl-5 marker:text-gray-500">
+      {children}
+    </ol>
   ),
 
   li: ({ children }) => <li className="leading-7 pl-1">{children}</li>,
@@ -214,7 +236,11 @@ interface MarkdownContentProps {
 export function MarkdownContent({ content }: MarkdownContentProps) {
   return (
     <article className="prose prose-gray max-w-none prose-a:no-underline">
-      <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeHighlight]} components={components}>
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        rehypePlugins={[rehypeHighlight]}
+        components={components}
+      >
         {content}
       </ReactMarkdown>
     </article>
