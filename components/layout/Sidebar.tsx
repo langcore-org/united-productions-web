@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronRight, History, LogOut, Newspaper, PanelLeft, Plus } from "lucide-react";
+import { ChevronRight, History, LogOut, PanelLeft, Plus } from "lucide-react";
 // import { TeddyIcon } from "@/components/icons/TeddyIcon"; // ロゴは非表示（将来使用予定）
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -231,28 +231,6 @@ export function Sidebar({ className }: SidebarProps) {
           effectiveCollapsed ? "px-0" : "px-2",
         )}
       >
-        <Link
-          href="/articles"
-          className={cn(
-            "flex items-center rounded-xl transition-all duration-200 ease-out group w-full",
-            effectiveCollapsed ? "w-10 h-10 justify-center p-0 mx-auto" : "gap-3 px-3 py-2",
-            "text-[#6b7280] hover:bg-white hover:text-[#1a1a1a]",
-          )}
-          title={effectiveCollapsed ? "ガイド" : undefined}
-        >
-          <span className="flex-shrink-0 flex items-center justify-center transition-transform duration-200 group-hover:scale-110">
-            <Newspaper className="w-[18px] h-[18px]" />
-          </span>
-          <span
-            className={cn(
-              "text-sm font-medium transition-all duration-200 overflow-hidden",
-              effectiveCollapsed ? "w-0 opacity-0" : "opacity-100",
-            )}
-          >
-            ガイド
-          </span>
-        </Link>
-
         <button
           type="button"
           onClick={() => {
