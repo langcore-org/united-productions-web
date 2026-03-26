@@ -50,7 +50,7 @@ export default async function ArticleDetailPage({ params }: Props) {
             href="/articles"
             className="text-sm text-gray-400 hover:text-gray-600 transition-colors"
           >
-            ← お知らせ一覧
+            ← ガイド一覧
           </Link>
         </nav>
 

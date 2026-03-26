@@ -32,8 +32,8 @@ export default function ArticlesPage() {
           >
             ← アプリに戻る
           </Link>
-          <h1 className="text-3xl font-semibold tracking-tight text-gray-900 mb-2">お知らせ</h1>
-          <p className="text-gray-500">リリース情報・利用ガイド</p>
+          <h1 className="text-3xl font-semibold tracking-tight text-gray-900 mb-2">ガイド</h1>
+          <p className="text-gray-500">Teddyの使い方・活用ガイド</p>
         </header>
 
         {articles.length === 0 ? (
