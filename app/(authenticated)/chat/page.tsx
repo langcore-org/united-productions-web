@@ -1,11 +1,8 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useCallback, useRef, useState } from "react";
+import { Suspense, useCallback } from "react";
 import { ChatPage } from "@/components/chat/ChatPage";
-import { MobileChatHeader } from "@/components/chat/MobileChatHeader";
-import { MobileSidebarOverlay } from "@/components/layout/MobileSidebarOverlay";
-import { Sidebar } from "@/components/layout/Sidebar";
 import { isValidFeatureId } from "@/lib/chat/chat-config";
 
 /**
@@ -20,24 +17,13 @@ import { isValidFeatureId } from "@/lib/chat/chat-config";
 function ChatPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
-  const touchStartXRef = useRef<number | null>(null);
-  const touchCurrentXRef = useRef<number | null>(null);
 
-  // agent指定があればそれを使用、なければ general
   const agentId = searchParams.get("agent") || "general";
   const featureId = isValidFeatureId(agentId) ? agentId : "general-chat";
-
-  // chatId指定なし = 新規チャット、指定あり = 既存チャットの続き
   const chatId = searchParams.get("chatId") ?? undefined;
-
-  // program指定あり = その番組で新規チャット開始（番組選択スキップ）
   const initialProgramId = searchParams.get("program") ?? undefined;
-
-  // 初期メッセージ（トップページからの入力など）
   const initialMessage = searchParams.get("message") ?? undefined;
 
-  // 新規チャット作成時にURLを更新（ブラウザ履歴を汚さないようreplaceState）
   const handleChatCreated = useCallback(
     (newChatId: string) => {
       const params = new URLSearchParams(searchParams.toString());
@@ -47,76 +33,14 @@ function ChatPageContent() {
     [searchParams, router],
   );
 
-  const handleTouchStart = (event: React.TouchEvent<HTMLDivElement>) => {
-    const touch = event.touches[0];
-    touchStartXRef.current = touch.clientX;
-    touchCurrentXRef.current = touch.clientX;
-  };
-
-  const handleTouchMove = (event: React.TouchEvent<HTMLDivElement>) => {
-    if (touchStartXRef.current === null) return;
-    const touch = event.touches[0];
-    touchCurrentXRef.current = touch.clientX;
-  };
-
-  const handleTouchEnd = () => {
-    const startX = touchStartXRef.current;
-    const endX = touchCurrentXRef.current;
-    touchStartXRef.current = null;
-    touchCurrentXRef.current = null;
-
-    if (startX === null || endX === null) return;
-
-    const deltaX = endX - startX;
-    const threshold = 40;
-    const edgeThreshold = 24;
-
-    // 画面左端からの右スワイプで開く
-    if (!isMobileSidebarOpen && startX <= edgeThreshold && deltaX > threshold) {
-      setIsMobileSidebarOpen(true);
-      return;
-    }
-
-    // オーバーレイ表示中の左スワイプで閉じる
-    if (isMobileSidebarOpen && deltaX < -threshold) {
-      setIsMobileSidebarOpen(false);
-    }
-  };
-
   return (
-    <div className="h-screen flex flex-col md:flex-row overflow-hidden">
-      {/* デスクトップ用サイドバー */}
-      <div className="hidden md:block flex-shrink-0">
-        <Sidebar />
-      </div>
-
-      {/* メインエリア */}
-      <div
-        className="flex-1 h-full flex flex-col overflow-hidden min-w-0"
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-      >
-        {/* モバイル用ヘッダー */}
-        <MobileChatHeader onOpenSidebar={() => setIsMobileSidebarOpen(true)} />
-
-        {/* チャット本体 */}
-        <div className="flex-1 overflow-hidden">
-          <ChatPage
-            featureId={featureId}
-            chatId={chatId}
-            initialProgramId={initialProgramId}
-            initialMessage={initialMessage}
-            onChatCreated={handleChatCreated}
-          />
-        </div>
-      </div>
-
-      {/* モバイル用オーバーレイサイドバー */}
-      <MobileSidebarOverlay open={isMobileSidebarOpen} onOpenChange={setIsMobileSidebarOpen}>
-        <Sidebar />
-      </MobileSidebarOverlay>
-    </div>
+    <ChatPage
+      featureId={featureId}
+      chatId={chatId}
+      initialProgramId={initialProgramId}
+      initialMessage={initialMessage}
+      onChatCreated={handleChatCreated}
+    />
   );
 }
 

@@ -57,7 +57,7 @@ export function Sidebar({ className }: SidebarProps) {
     "flex flex-col bg-[#f9f9f9] border-r border-[#e5e5e5] transition-all duration-300 ease-in-out";
 
   if (!isMounted) {
-    return <aside className={cn("h-screen w-[240px]", baseClasses, className)} />;
+    return <aside className={cn("h-screen w-[64px]", baseClasses, className)} />;
   }
 
   return (
