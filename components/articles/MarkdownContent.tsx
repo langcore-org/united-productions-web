@@ -19,19 +19,26 @@ function CodeBlock({ children, className }: { children: string; className?: stri
   };
 
   return (
-    <div className="relative group my-6 rounded-xl overflow-hidden bg-gray-900 shadow-lg">
-      <div className="flex items-center justify-between px-4 py-2.5 bg-gray-800 border-b border-gray-700">
-        <span className="text-xs text-gray-400 font-mono uppercase">{language}</span>
+    <div className="relative group my-6 rounded-xl overflow-hidden bg-[#0d1117] shadow-lg border border-gray-800">
+      <div className="flex items-center justify-between px-4 py-2.5 bg-[#161b22] border-b border-gray-800">
+        <div className="flex items-center gap-2">
+          <div className="flex gap-1.5">
+            <span className="w-3 h-3 rounded-full bg-[#ff5f56]" />
+            <span className="w-3 h-3 rounded-full bg-[#ffbd2e]" />
+            <span className="w-3 h-3 rounded-full bg-[#27c93f]" />
+          </div>
+          <span className="ml-3 text-xs text-gray-500 font-mono uppercase">{language}</span>
+        </div>
         <button
           type="button"
           onClick={handleCopy}
-          className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-white transition-colors"
+          className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-300 transition-colors px-2 py-1 rounded hover:bg-gray-800"
         >
           {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
           {copied ? "コピー済み" : "コピー"}
         </button>
       </div>
-      <pre className="p-4 overflow-x-auto text-sm leading-relaxed">
+      <pre className="p-4 overflow-x-auto text-sm leading-relaxed text-gray-300">
         <code>{children}</code>
       </pre>
     </div>
@@ -49,32 +56,43 @@ function Heading({
   id?: string;
 }) {
   const Tag = `h${level}` as keyof JSX.IntrinsicElements;
-  const sizes: Record<number, string> = {
-    1: "text-3xl mt-12 mb-6",
-    2: "text-2xl mt-10 mb-5 pb-2 border-b border-gray-100",
-    3: "text-xl mt-8 mb-4",
-    4: "text-lg mt-6 mb-3",
+  const sizes: Record<number, { class: string; icon: string }> = {
+    1: { class: "text-3xl mt-8 mb-6", icon: "w-5 h-5" },
+    2: { class: "text-2xl mt-10 mb-5 pb-3 border-b border-gray-200", icon: "w-4 h-4" },
+    3: { class: "text-xl mt-8 mb-4 text-gray-800", icon: "w-4 h-4" },
+    4: { class: "text-lg mt-6 mb-3 text-gray-800", icon: "w-3.5 h-3.5" },
   };
-  const sizeClass = sizes[level] || "text-base";
+  const config = sizes[level] || { class: "text-base", icon: "w-4 h-4" };
 
   return (
     <Tag
       id={id}
-      className={`group flex items-center gap-3 font-bold tracking-tight text-gray-900 ${sizeClass}`}
+      className={`group flex items-center gap-2 font-bold tracking-tight text-gray-900 scroll-mt-24 ${config.class}`}
     >
       <span>{children}</span>
       {id && (
         <a
           href={`#${id}`}
-          className="opacity-0 group-hover:opacity-100 transition-all text-gray-300 hover:text-gray-500 p-1 rounded hover:bg-gray-100"
-          aria-label="リンクをコピー"
+          className="opacity-0 group-hover:opacity-100 transition-all text-gray-400 hover:text-blue-500 p-1 rounded"
+          aria-label="アンカーリンク"
+          onClick={(e) => {
+            e.preventDefault();
+            navigator.clipboard.writeText(`${window.location.origin}${window.location.pathname}#${id}`);
+          }}
         >
-          <Link2 className="w-4 h-4" />
+          <Link2 className={config.icon} />
         </a>
       )}
     </Tag>
   );
 }
+
+// ID生成ヘルパー
+const makeId = (children: React.ReactNode) =>
+  String(children)
+    .toLowerCase()
+    .replace(/\s+/g, "-")
+    .replace(/[^\w\-\u3000-\u9fff]/g, "");
 
 const components = {
   code({
@@ -94,106 +112,128 @@ const components = {
     }
 
     return (
-      <code className="bg-gray-100 text-gray-800 px-1.5 py-0.5 rounded text-sm font-mono border border-gray-200">
+      <code className="bg-gray-100 text-gray-800 px-1.5 py-0.5 rounded-md text-sm font-mono border border-gray-200">
         {children}
       </code>
     );
   },
-  h1: ({ children }: { children: React.ReactNode }) => {
-    const id = String(children)
-      .toLowerCase()
-      .replace(/\s+/g, "-")
-      .replace(/[^\w-]/g, "");
-    return (
-      <Heading level={1} id={id}>
-        {children}
-      </Heading>
-    );
-  },
-  h2: ({ children }: { children: React.ReactNode }) => {
-    const id = String(children)
-      .toLowerCase()
-      .replace(/\s+/g, "-")
-      .replace(/[^\w-]/g, "");
-    return (
-      <Heading level={2} id={id}>
-        {children}
-      </Heading>
-    );
-  },
-  h3: ({ children }: { children: React.ReactNode }) => {
-    const id = String(children)
-      .toLowerCase()
-      .replace(/\s+/g, "-")
-      .replace(/[^\w-]/g, "");
-    return (
-      <Heading level={3} id={id}>
-        {children}
-      </Heading>
-    );
-  },
-  h4: ({ children }: { children: React.ReactNode }) => {
-    const id = String(children)
-      .toLowerCase()
-      .replace(/\s+/g, "-")
-      .replace(/[^\w-]/g, "");
-    return (
-      <Heading level={4} id={id}>
-        {children}
-      </Heading>
-    );
-  },
+
+  h1: ({ children }: { children: React.ReactNode }) => (
+    <Heading level={1} id={makeId(children)}>{children}</Heading>
+  ),
+  h2: ({ children }: { children: React.ReactNode }) => (
+    <Heading level={2} id={makeId(children)}>{children}</Heading>
+  ),
+  h3: ({ children }: { children: React.ReactNode }) => (
+    <Heading level={3} id={makeId(children)}>{children}</Heading>
+  ),
+  h4: ({ children }: { children: React.ReactNode }) => (
+    <Heading level={4} id={makeId(children)}>{children}</Heading>
+  ),
+
   table: ({ children }: { children: React.ReactNode }) => (
-    <div className="overflow-x-auto my-6 rounded-xl border border-gray-200 shadow-sm">
+    <div className="overflow-x-auto my-8 rounded-xl border border-gray-200 shadow-sm">
       <table className="w-full text-sm">{children}</table>
     </div>
   ),
+
   thead: ({ children }: { children: React.ReactNode }) => (
-    <thead className="bg-gray-50">{children}</thead>
+    <thead className="bg-gray-50 border-b border-gray-200">{children}</thead>
   ),
+
   th: ({ children }: { children: React.ReactNode }) => (
-    <th className="font-semibold text-gray-700 px-4 py-3 text-left border-b border-gray-200">
-      {children}
-    </th>
+    <th className="font-semibold text-gray-700 px-4 py-3.5 text-left">{children}</th>
   ),
+
   td: ({ children }: { children: React.ReactNode }) => (
-    <td className="px-4 py-3 text-gray-700 border-b border-gray-100 last:border-b-0">{children}</td>
+    <td className="px-4 py-3.5 text-gray-700 border-b border-gray-100 last:border-b-0">{children}</td>
   ),
+
   tr: ({ children }: { children: React.ReactNode }) => (
-    <tr className="hover:bg-gray-50/50 transition-colors">{children}</tr>
+    <tr className="border-b border-gray-100 last:border-b-0 even:bg-gray-50/50 hover:bg-gray-100/50 transition-colors">
+      {children}
+    </tr>
   ),
+
+  tbody: ({ children }: { children: React.ReactNode }) => (
+    <tbody className="bg-white">{children}</tbody>
+  ),
+
   ul: ({ children }: { children: React.ReactNode }) => (
-    <ul className="my-4 space-y-2 list-disc list-inside text-gray-700 marker:text-gray-400">
+    <ul className="my-5 space-y-2 text-gray-700 list-disc pl-5 marker:text-gray-400">
       {children}
     </ul>
   ),
+
   ol: ({ children }: { children: React.ReactNode }) => (
-    <ol className="my-4 space-y-2 list-decimal list-inside text-gray-700 marker:text-gray-400">
+    <ol className="my-5 space-y-2 text-gray-700 list-decimal pl-5 marker:text-gray-500">
       {children}
     </ol>
   ),
+
   li: ({ children }: { children: React.ReactNode }) => (
-    <li className="leading-relaxed">{children}</li>
+    <li className="leading-7 pl-1">{children}</li>
   ),
+
   blockquote: ({ children }: { children: React.ReactNode }) => (
-    <blockquote className="my-6 pl-4 border-l-4 border-gray-300 italic text-gray-600 bg-gray-50 py-3 pr-4 rounded-r-lg">
-      {children}
+    <blockquote className="my-6 pl-5 border-l-4 border-blue-400 bg-blue-50/50 py-4 pr-4 rounded-r-lg">
+      <div className="text-gray-700 italic">{children}</div>
     </blockquote>
   ),
-  hr: () => <hr className="my-10 border-gray-200" />,
-  a: ({ href, children }: { href?: string; children: React.ReactNode }) => (
-    <a
-      href={href}
-      className="text-blue-600 font-medium hover:underline decoration-2 underline-offset-2"
-    >
-      {children}
-    </a>
+
+  hr: () => (
+    <div className="my-10 flex items-center gap-4">
+      <div className="flex-1 h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent" />
+      <span className="text-gray-400 text-xs">•</span>
+      <div className="flex-1 h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent" />
+    </div>
   ),
+
+  a: ({ href, children }: { href?: string; children: React.ReactNode }) => {
+    const isExternal = href?.startsWith("http");
+    return (
+      <a
+        href={href}
+        target={isExternal ? "_blank" : undefined}
+        rel={isExternal ? "noopener noreferrer" : undefined}
+        className="text-blue-600 font-medium hover:underline decoration-2 underline-offset-2 hover:text-blue-700 transition-colors"
+      >
+        {children}
+        {isExternal && <span className="text-xs ml-0.5">↗</span>}
+      </a>
+    );
+  },
+
   p: ({ children }: { children: React.ReactNode }) => (
-    <p className="my-4 text-gray-700 leading-relaxed">{children}</p>
+    <p className="my-4 text-gray-700 leading-7">{children}</p>
   ),
+
   strong: ({ children }: { children: React.ReactNode }) => (
-    <strong className="font-bold text-gray-900">{children}</strong>
+    <strong className="font-semibold text-gray-900">{children}</strong>
+  ),
+
+  em: ({ children }: { children: React.ReactNode }) => (
+    <em className="italic text-gray-800">{children}</em>
+  ),
+
+  del: ({ children }: { children: React.ReactNode }) => (
+    <del className="line-through text-gray-500">{children}</del>
+  ),
+
+  img: ({ src, alt }: { src?: string; alt?: string }) => (
+    <figure className="my-8">
+      <img
+        src={src}
+        alt={alt}
+        className="w-full rounded-xl border border-gray-200 shadow-sm"
+      />
+      {alt && <figcaption className="mt-2 text-center text-sm text-gray-500">{alt}</figcaption>}
+    </figure>
+  ),
+
+  // 入れ子リスト対応
+  "ul > li": ({ children }: { children: React.ReactNode }) => (
+    <li className="leading-7">{children}</li>
   ),
 };
 
@@ -203,7 +243,7 @@ interface MarkdownContentProps {
 
 export function MarkdownContent({ content }: MarkdownContentProps) {
   return (
-    <article className="prose prose-gray max-w-none">
+    <article className="prose prose-gray max-w-none prose-a:no-underline">
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         rehypePlugins={[rehypeHighlight]}
