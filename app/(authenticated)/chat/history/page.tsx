@@ -17,7 +17,6 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
-import { AppLayout } from "@/components/layout/AppLayout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -197,185 +196,183 @@ export default function ChatHistoryPage() {
   };
 
   return (
-    <AppLayout>
-      <div className="h-full overflow-y-auto p-8 flex justify-center">
-        <div className="w-full max-w-6xl space-y-6">
-          {/* ヘッダー */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-gray-900 flex items-center justify-center">
-                <History className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900">チャット履歴</h1>
-                <p className="text-gray-500">{filteredHistory.length}件の履歴</p>
-              </div>
+    <div className="h-full overflow-y-auto p-8 flex justify-center">
+      <div className="w-full max-w-6xl space-y-6">
+        {/* ヘッダー */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-xl bg-gray-900 flex items-center justify-center">
+              <History className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">チャット履歴</h1>
+              <p className="text-gray-500">{filteredHistory.length}件の履歴</p>
             </div>
           </div>
+        </div>
 
-          {message && (
-            <div
-              className={`p-4 rounded-lg ${
-                message.type === "success" ? "bg-green-50 text-green-800" : "bg-red-50 text-red-800"
-              }`}
+        {message && (
+          <div
+            className={`p-4 rounded-lg ${
+              message.type === "success" ? "bg-green-50 text-green-800" : "bg-red-50 text-red-800"
+            }`}
+          >
+            {message.text}
+          </div>
+        )}
+
+        {/* フィルターと検索 */}
+        <div className="space-y-4">
+          {/* 機能フィルター */}
+          <div className="flex flex-wrap gap-2">
+            {FEATURE_FILTERS.map((feature) => {
+              const Icon = feature.icon;
+              const isActive = selectedFeature === feature.id;
+
+              return (
+                <button
+                  type="button"
+                  key={feature.id}
+                  onClick={() => setSelectedFeature(feature.id)}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    isActive
+                      ? "bg-gray-900 text-white"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  }`}
+                >
+                  <Icon className="w-4 h-4" />
+                  {feature.label}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* 検索とソート */}
+          <div className="flex items-center gap-4">
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Input
+                placeholder="タイトルや内容で検索..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <Button
+              variant="outline"
+              onClick={() => setSortOrder(sortOrder === "desc" ? "asc" : "desc")}
+              className="flex items-center gap-2"
             >
-              {message.text}
+              <ArrowUpDown className="w-4 h-4" />
+              {sortOrder === "desc" ? "新しい順" : "古い順"}
+            </Button>
+          </div>
+        </div>
+
+        {/* 履歴一覧 */}
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
+          </div>
+        ) : filteredHistory.length === 0 ? (
+          <div className="text-center py-12 text-gray-500">
+            <History className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+            <p>履歴が見つかりません</p>
+            {searchQuery && <p className="text-sm mt-2">検索条件を変更してお試しください</p>}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-4">
+            {filteredHistory.map((item) => {
+              const FeatureIcon = getFeatureIcon(item.featureId);
+
+              return (
+                <Card
+                  key={item.id}
+                  className="cursor-pointer hover:shadow-md transition-shadow"
+                  onClick={() => handleOpenChat(item.featureId, item.id, item.programId)}
+                >
+                  <CardContent className="p-4">
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-start gap-4">
+                        {/* アイコン */}
+                        <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
+                          <FeatureIcon className="w-5 h-5 text-gray-600" />
+                        </div>
+
+                        {/* 内容 */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <h3 className="font-semibold text-gray-900 truncate">{item.title}</h3>
+                            <Badge variant="outline" className="text-xs">
+                              {getFeatureLabel(item.featureId)}
+                            </Badge>
+                            {item.programName && (
+                              <Badge
+                                variant="outline"
+                                className="text-xs bg-blue-50 text-blue-700 border-blue-200"
+                              >
+                                {item.programName}
+                              </Badge>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-4 text-sm text-gray-500">
+                            <span className="flex items-center gap-1">
+                              <Calendar className="w-3.5 h-3.5" />
+                              {getRelativeTime(item.updatedAt)}
+                            </span>
+                            <span>{item.messageCount}件のメッセージ</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* アクション */}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => handleDelete(item.id, e)}
+                        className="text-gray-400 hover:text-red-600"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        )}
+
+        {/* ページネーション */}
+        {!loading && filteredHistory.length > 0 && (
+          <div className="flex items-center justify-between pt-4">
+            <div className="text-sm text-gray-500">
+              {pagination.offset + 1} -{" "}
+              {Math.min(pagination.offset + filteredHistory.length, pagination.total)} /{" "}
+              {pagination.total}件
             </div>
-          )}
-
-          {/* フィルターと検索 */}
-          <div className="space-y-4">
-            {/* 機能フィルター */}
-            <div className="flex flex-wrap gap-2">
-              {FEATURE_FILTERS.map((feature) => {
-                const Icon = feature.icon;
-                const isActive = selectedFeature === feature.id;
-
-                return (
-                  <button
-                    type="button"
-                    key={feature.id}
-                    onClick={() => setSelectedFeature(feature.id)}
-                    className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                      isActive
-                        ? "bg-gray-900 text-white"
-                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                    }`}
-                  >
-                    <Icon className="w-4 h-4" />
-                    {feature.label}
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* 検索とソート */}
-            <div className="flex items-center gap-4">
-              <div className="flex-1 relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <Input
-                  placeholder="タイトルや内容で検索..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
+            <div className="flex items-center gap-2">
               <Button
                 variant="outline"
-                onClick={() => setSortOrder(sortOrder === "desc" ? "asc" : "desc")}
-                className="flex items-center gap-2"
+                size="sm"
+                onClick={() => handlePageChange(pagination.offset - pagination.limit)}
+                disabled={pagination.offset === 0}
               >
-                <ArrowUpDown className="w-4 h-4" />
-                {sortOrder === "desc" ? "新しい順" : "古い順"}
+                <ChevronLeft className="w-4 h-4 mr-1" />
+                前へ
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handlePageChange(pagination.offset + pagination.limit)}
+                disabled={!pagination.hasMore}
+              >
+                次へ
+                <ChevronRight className="w-4 h-4 ml-1" />
               </Button>
             </div>
           </div>
-
-          {/* 履歴一覧 */}
-          {loading ? (
-            <div className="flex items-center justify-center py-12">
-              <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
-            </div>
-          ) : filteredHistory.length === 0 ? (
-            <div className="text-center py-12 text-gray-500">
-              <History className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-              <p>履歴が見つかりません</p>
-              {searchQuery && <p className="text-sm mt-2">検索条件を変更してお試しください</p>}
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 gap-4">
-              {filteredHistory.map((item) => {
-                const FeatureIcon = getFeatureIcon(item.featureId);
-
-                return (
-                  <Card
-                    key={item.id}
-                    className="cursor-pointer hover:shadow-md transition-shadow"
-                    onClick={() => handleOpenChat(item.featureId, item.id, item.programId)}
-                  >
-                    <CardContent className="p-4">
-                      <div className="flex items-start justify-between">
-                        <div className="flex items-start gap-4">
-                          {/* アイコン */}
-                          <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
-                            <FeatureIcon className="w-5 h-5 text-gray-600" />
-                          </div>
-
-                          {/* 内容 */}
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1">
-                              <h3 className="font-semibold text-gray-900 truncate">{item.title}</h3>
-                              <Badge variant="outline" className="text-xs">
-                                {getFeatureLabel(item.featureId)}
-                              </Badge>
-                              {item.programName && (
-                                <Badge
-                                  variant="outline"
-                                  className="text-xs bg-blue-50 text-blue-700 border-blue-200"
-                                >
-                                  {item.programName}
-                                </Badge>
-                              )}
-                            </div>
-                            <div className="flex items-center gap-4 text-sm text-gray-500">
-                              <span className="flex items-center gap-1">
-                                <Calendar className="w-3.5 h-3.5" />
-                                {getRelativeTime(item.updatedAt)}
-                              </span>
-                              <span>{item.messageCount}件のメッセージ</span>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* アクション */}
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={(e) => handleDelete(item.id, e)}
-                          className="text-gray-400 hover:text-red-600"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-          )}
-
-          {/* ページネーション */}
-          {!loading && filteredHistory.length > 0 && (
-            <div className="flex items-center justify-between pt-4">
-              <div className="text-sm text-gray-500">
-                {pagination.offset + 1} -{" "}
-                {Math.min(pagination.offset + filteredHistory.length, pagination.total)} /{" "}
-                {pagination.total}件
-              </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handlePageChange(pagination.offset - pagination.limit)}
-                  disabled={pagination.offset === 0}
-                >
-                  <ChevronLeft className="w-4 h-4 mr-1" />
-                  前へ
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handlePageChange(pagination.offset + pagination.limit)}
-                  disabled={!pagination.hasMore}
-                >
-                  次へ
-                  <ChevronRight className="w-4 h-4 ml-1" />
-                </Button>
-              </div>
-            </div>
-          )}
-        </div>
+        )}
       </div>
-    </AppLayout>
+    </div>
   );
 }
