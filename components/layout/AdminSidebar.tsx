@@ -9,7 +9,6 @@ import { cn } from "@/lib/utils";
 
 interface AdminSidebarProps {
   className?: string;
-  onCollapseChange?: (isCollapsed: boolean) => void;
 }
 
 // 管理画面ナビゲーション項目
@@ -36,32 +35,29 @@ const adminNavItems = [
   },
 ];
 
-export function AdminSidebar({ className, onCollapseChange }: AdminSidebarProps) {
+// localStorageから初期値を同期的に取得（SSR対応）
+function getInitialCollapsedState(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    const saved = localStorage.getItem("admin-sidebar-collapsed");
+    return saved ? JSON.parse(saved) : false;
+  } catch {
+    return false;
+  }
+}
+
+export function AdminSidebar({ className }: AdminSidebarProps) {
   const pathname = usePathname();
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(getInitialCollapsedState);
   const [isMounted, setIsMounted] = useState(false);
 
-  // マウント時にlocalStorageから状態を読み込む
   useEffect(() => {
     setIsMounted(true);
+  }, []);
 
-    try {
-      const savedCollapsed = localStorage.getItem("admin-sidebar-collapsed");
-      if (savedCollapsed) {
-        const collapsed = JSON.parse(savedCollapsed);
-        setIsCollapsed(collapsed);
-        onCollapseChange?.(collapsed);
-      }
-    } catch {
-      // 読み込み失敗時はデフォルト
-    }
-  }, [onCollapseChange]);
-
-  // サイドバー折りたたみ状態を保存
   const toggleCollapse = () => {
     const newState = !isCollapsed;
     setIsCollapsed(newState);
-    onCollapseChange?.(newState);
     try {
       localStorage.setItem("admin-sidebar-collapsed", JSON.stringify(newState));
     } catch {
@@ -82,7 +78,7 @@ export function AdminSidebar({ className, onCollapseChange }: AdminSidebarProps)
     return (
       <aside
         className={cn(
-          "fixed top-0 left-0 z-50 h-screen w-[240px]",
+          "h-screen w-[240px] flex-shrink-0",
           "flex flex-col",
           "bg-white border-r border-gray-200",
           className,
@@ -94,7 +90,7 @@ export function AdminSidebar({ className, onCollapseChange }: AdminSidebarProps)
   return (
     <aside
       className={cn(
-        "fixed top-0 left-0 z-50 h-screen",
+        "h-screen flex-shrink-0",
         "flex flex-col",
         "bg-white border-r border-gray-200",
         "transition-all duration-300 ease-in-out",
