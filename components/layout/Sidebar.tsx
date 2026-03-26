@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 
 interface SidebarProps {
   className?: string;
+  forceCollapsed?: boolean;
 }
 
 // localStorageから初期値を同期的に取得（SSR対応）
@@ -23,7 +24,7 @@ function getInitialCollapsedState(): boolean {
   }
 }
 
-export function Sidebar({ className }: SidebarProps) {
+export function Sidebar({ className, forceCollapsed }: SidebarProps) {
   const pathname = usePathname();
   const [isCollapsed, setIsCollapsed] = useState(getInitialCollapsedState);
   const [isMounted, setIsMounted] = useState(false);
@@ -31,6 +32,8 @@ export function Sidebar({ className }: SidebarProps) {
   useEffect(() => {
     setIsMounted(true);
   }, []);
+
+  const effectiveCollapsed = forceCollapsed ?? isCollapsed;
 
   const toggleCollapse = () => {
     const newState = !isCollapsed;
@@ -62,16 +65,16 @@ export function Sidebar({ className }: SidebarProps) {
 
   return (
     <aside
-      className={cn("h-screen", baseClasses, isCollapsed ? "w-[64px]" : "w-[240px]", className)}
+      className={cn("h-screen", baseClasses, effectiveCollapsed ? "w-[64px]" : "w-[240px]", className)}
     >
       {/* Header - ロゴ非表示（将来使用予定）
       <div className={cn(
         "flex items-center h-14 bg-[#f9f9f9]",
-        isCollapsed ? "px-2 justify-center" : "px-4"
+        effectiveCollapsed ? "px-2 justify-center" : "px-4"
       )}>
         <div className="flex items-center gap-2">
           <TeddyIcon size={28} variant="filled" className="text-gray-900" />
-          {!isCollapsed && (
+          {!effectiveCollapsed && (
             <span className="font-bold text-lg text-[#1a1a1a]">Teddy</span>
           )}
         </div>
@@ -79,7 +82,7 @@ export function Sidebar({ className }: SidebarProps) {
       */}
 
       {/* Logo */}
-      {!isCollapsed && (
+      {!effectiveCollapsed && (
         <div className="px-4 pt-4 pb-2 flex items-center gap-2">
           <span className="bg-black text-white text-xs font-black px-2 py-1 rounded">UP AI</span>
           <span className="font-bold text-xl text-[#1a1a1a] tracking-tight">Teddy</span>
@@ -89,7 +92,7 @@ export function Sidebar({ className }: SidebarProps) {
       {/* New Chat Buttons */}
       <nav className="flex-1 overflow-y-auto flex flex-col min-h-0 bg-[#f9f9f9] custom-scrollbar">
         {/* Section Title */}
-        {!isCollapsed && (
+        {!effectiveCollapsed && (
           <div className="px-3 pt-2 pb-2">
             <span className="text-[11px] font-semibold text-[#6b7280] uppercase tracking-wider">
               新規作成
@@ -98,7 +101,7 @@ export function Sidebar({ className }: SidebarProps) {
         )}
 
         {/* Buttons */}
-        <div className={cn("py-2 space-y-0.5", isCollapsed ? "px-0" : "px-2")}>
+        <div className={cn("py-2 space-y-0.5", effectiveCollapsed ? "px-0" : "px-2")}>
           {getChatNavigationItems().map((item) => {
             const isItemActive = isActive(item.href);
             const IconComponent = item.icon;
@@ -110,12 +113,12 @@ export function Sidebar({ className }: SidebarProps) {
                 className={cn(
                   "flex items-center rounded-xl transition-all duration-200 ease-out",
                   "group relative",
-                  isCollapsed ? "w-10 h-10 justify-center p-0 mx-auto" : "gap-3 px-3 py-2.5",
+                  effectiveCollapsed ? "w-10 h-10 justify-center p-0 mx-auto" : "gap-3 px-3 py-2.5",
                   isItemActive
                     ? "bg-white text-black border border-[#e5e5e5]"
                     : "text-[#6b7280] hover:bg-white hover:text-[#1a1a1a]",
                 )}
-                title={isCollapsed ? item.label : undefined}
+                title={effectiveCollapsed ? item.label : undefined}
               >
                 {isItemActive && (
                   <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-6 bg-black rounded-r-full" />
@@ -131,7 +134,7 @@ export function Sidebar({ className }: SidebarProps) {
                   )}
                 >
                   <IconComponent className="w-[18px] h-[18px]" />
-                  {!isCollapsed && (
+                  {!effectiveCollapsed && (
                     <div className="absolute -top-1 -right-1 w-3 h-3 bg-black rounded-full flex items-center justify-center">
                       <Plus className="w-2 h-2 text-white" />
                     </div>
@@ -141,7 +144,7 @@ export function Sidebar({ className }: SidebarProps) {
                 <div
                   className={cn(
                     "min-w-0 overflow-hidden transition-all duration-200",
-                    isCollapsed ? "w-0 opacity-0" : "flex-1 opacity-100",
+                    effectiveCollapsed ? "w-0 opacity-0" : "flex-1 opacity-100",
                   )}
                 >
                   <span className="text-sm font-medium block truncate">{item.label}</span>
@@ -155,8 +158,8 @@ export function Sidebar({ className }: SidebarProps) {
         </div>
 
         {/* History Link */}
-        <div className={cn("mt-4 pt-4 border-t border-[#e5e5e5]", isCollapsed ? "px-0" : "px-2")}>
-          {!isCollapsed && (
+        <div className={cn("mt-4 pt-4 border-t border-[#e5e5e5]", effectiveCollapsed ? "px-0" : "px-2")}>
+          {!effectiveCollapsed && (
             <div className="px-1 pb-2">
               <span className="text-[11px] font-semibold text-[#6b7280] uppercase tracking-wider">
                 履歴
@@ -169,12 +172,12 @@ export function Sidebar({ className }: SidebarProps) {
             className={cn(
               "flex items-center rounded-xl transition-all duration-200 ease-out",
               "group relative overflow-hidden",
-              isCollapsed ? "w-10 h-10 justify-center p-0 mx-auto" : "gap-3 px-3 py-2.5",
+              effectiveCollapsed ? "w-10 h-10 justify-center p-0 mx-auto" : "gap-3 px-3 py-2.5",
               pathname === "/chat/history"
                 ? "bg-white text-black border border-[#e5e5e5]"
                 : "text-[#6b7280] hover:bg-white hover:text-[#1a1a1a]",
             )}
-            title={isCollapsed ? "履歴" : undefined}
+            title={effectiveCollapsed ? "履歴" : undefined}
           >
             {pathname === "/chat/history" && (
               <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-6 bg-black rounded-r-full" />
@@ -190,7 +193,7 @@ export function Sidebar({ className }: SidebarProps) {
             <span
               className={cn(
                 "text-sm font-medium truncate transition-all duration-200 overflow-hidden",
-                isCollapsed ? "w-0 opacity-0" : "flex-1 opacity-100",
+                effectiveCollapsed ? "w-0 opacity-0" : "flex-1 opacity-100",
               )}
             >
               履歴を見る
@@ -198,7 +201,7 @@ export function Sidebar({ className }: SidebarProps) {
             <ChevronRight
               className={cn(
                 "w-4 h-4 text-gray-400 transition-all duration-200 flex-shrink-0",
-                isCollapsed ? "w-0 opacity-0" : "opacity-100",
+                effectiveCollapsed ? "w-0 opacity-0" : "opacity-100",
               )}
             />
           </Link>
@@ -209,7 +212,7 @@ export function Sidebar({ className }: SidebarProps) {
       <div
         className={cn(
           "py-2 space-y-0.5 border-t border-[#e5e5e5] flex-shrink-0 bg-[#f9f9f9]",
-          isCollapsed ? "px-0" : "px-2",
+          effectiveCollapsed ? "px-0" : "px-2",
         )}
       >
         <button
@@ -219,10 +222,10 @@ export function Sidebar({ className }: SidebarProps) {
           }}
           className={cn(
             "flex items-center rounded-xl transition-all duration-200 ease-out group w-full",
-            isCollapsed ? "w-10 h-10 justify-center p-0 mx-auto" : "gap-3 px-3 py-2",
+            effectiveCollapsed ? "w-10 h-10 justify-center p-0 mx-auto" : "gap-3 px-3 py-2",
             "text-[#6b7280] hover:bg-white hover:text-[#1a1a1a]",
           )}
-          title={isCollapsed ? "ログアウト" : undefined}
+          title={effectiveCollapsed ? "ログアウト" : undefined}
         >
           <span className="flex-shrink-0 flex items-center justify-center transition-transform duration-200 group-hover:scale-110">
             <LogOut className="w-[18px] h-[18px]" />
@@ -230,7 +233,7 @@ export function Sidebar({ className }: SidebarProps) {
           <span
             className={cn(
               "text-sm font-medium transition-all duration-200 overflow-hidden",
-              isCollapsed ? "w-0 opacity-0" : "opacity-100",
+              effectiveCollapsed ? "w-0 opacity-0" : "opacity-100",
             )}
           >
             ログアウト
@@ -243,23 +246,23 @@ export function Sidebar({ className }: SidebarProps) {
           onClick={toggleCollapse}
           className={cn(
             "flex items-center rounded-xl transition-all duration-200 ease-out group",
-            isCollapsed ? "w-10 h-10 justify-center p-0 mx-auto" : "gap-3 px-3 py-2",
+            effectiveCollapsed ? "w-10 h-10 justify-center p-0 mx-auto" : "gap-3 px-3 py-2",
             "text-[#6b7280] hover:bg-white hover:text-[#1a1a1a]",
           )}
-          title={isCollapsed ? "サイドバーを展開" : "サイドバーを縮小"}
+          title={effectiveCollapsed ? "サイドバーを展開" : "サイドバーを縮小"}
         >
           <span className="flex-shrink-0 flex items-center justify-center transition-transform duration-200 group-hover:scale-110">
             <PanelLeft
               className={cn(
                 "w-[18px] h-[18px] transition-transform duration-200",
-                isCollapsed ? "" : "rotate-180",
+                effectiveCollapsed ? "" : "rotate-180",
               )}
             />
           </span>
           <span
             className={cn(
               "text-sm font-medium transition-all duration-200 overflow-hidden",
-              isCollapsed ? "w-0 opacity-0" : "opacity-100",
+              effectiveCollapsed ? "w-0 opacity-0" : "opacity-100",
             )}
           >
             サイドバーを縮小

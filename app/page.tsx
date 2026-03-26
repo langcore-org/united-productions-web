@@ -7,7 +7,7 @@ export default function DashboardPage() {
   const items = getChatNavigationItems();
 
   return (
-    <AppLayout>
+    <AppLayout forceCollapsed>
       <div className="flex min-h-screen bg-white">
         <div className="flex-1 flex flex-col overflow-hidden">
           <main className="flex-1 flex flex-col items-center justify-center px-6 py-12">

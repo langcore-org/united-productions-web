@@ -9,6 +9,7 @@ import { Sidebar } from "./Sidebar";
 interface AppLayoutProps {
   children: React.ReactNode;
   className?: string;
+  forceCollapsed?: boolean;
 }
 
 /**
@@ -16,7 +17,7 @@ interface AppLayoutProps {
  * - Sidebar（デスクトップ: 常時表示、モバイル: スワイプ/ハンバーガーで表示）
  * - ライトモード固定
  */
-export function AppLayout({ children, className }: AppLayoutProps) {
+export function AppLayout({ children, className, forceCollapsed }: AppLayoutProps) {
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const touchStartXRef = useRef<number | null>(null);
   const touchCurrentXRef = useRef<number | null>(null);
@@ -64,7 +65,7 @@ export function AppLayout({ children, className }: AppLayoutProps) {
     >
       {/* Sidebar - デスクトップのみ表示 */}
       <div className="hidden md:block flex-shrink-0">
-        <Sidebar />
+        <Sidebar forceCollapsed={forceCollapsed} />
       </div>
 
       {/* Main Content */}
@@ -76,7 +77,7 @@ export function AppLayout({ children, className }: AppLayoutProps) {
 
       {/* モバイル用オーバーレイサイドバー */}
       <MobileSidebarOverlay open={isMobileSidebarOpen} onOpenChange={setIsMobileSidebarOpen}>
-        <Sidebar />
+        <Sidebar forceCollapsed={forceCollapsed} />
       </MobileSidebarOverlay>
     </div>
   );
