@@ -2,11 +2,11 @@
 
 import { Menu } from "lucide-react";
 
-interface MobileChatHeaderProps {
+interface MobileHeaderProps {
   onOpenSidebar: () => void;
 }
 
-export function MobileChatHeader({ onOpenSidebar }: MobileChatHeaderProps) {
+export function MobileHeader({ onOpenSidebar }: MobileHeaderProps) {
   return (
     <header className="md:hidden flex items-center h-12 px-3 border-b border-[#e5e5e5] bg-white/90 backdrop-blur-sm">
       <button
@@ -23,4 +23,4 @@ export function MobileChatHeader({ onOpenSidebar }: MobileChatHeaderProps) {
   );
 }
 
-export default MobileChatHeader;
+export default MobileHeader;

@@ -10,7 +10,6 @@ import { cn } from "@/lib/utils";
 
 interface SidebarProps {
   className?: string;
-  forceCollapsed?: boolean;
 }
 
 // localStorageから初期値を同期的に取得（SSR対応）
@@ -24,7 +23,7 @@ function getInitialCollapsedState(): boolean {
   }
 }
 
-export function Sidebar({ className, forceCollapsed }: SidebarProps) {
+export function Sidebar({ className }: SidebarProps) {
   const pathname = usePathname();
   const [isCollapsed, setIsCollapsed] = useState(getInitialCollapsedState);
   const [isMounted, setIsMounted] = useState(false);
@@ -33,7 +32,7 @@ export function Sidebar({ className, forceCollapsed }: SidebarProps) {
     setIsMounted(true);
   }, []);
 
-  const effectiveCollapsed = forceCollapsed ?? isCollapsed;
+  const effectiveCollapsed = pathname === "/" ? true : isCollapsed;
 
   const toggleCollapse = () => {
     const newState = !isCollapsed;
@@ -65,7 +64,12 @@ export function Sidebar({ className, forceCollapsed }: SidebarProps) {
 
   return (
     <aside
-      className={cn("h-screen", baseClasses, effectiveCollapsed ? "w-[64px]" : "w-[240px]", className)}
+      className={cn(
+        "h-screen",
+        baseClasses,
+        effectiveCollapsed ? "w-[64px]" : "w-[240px]",
+        className,
+      )}
     >
       {/* Header - ロゴ非表示（将来使用予定）
       <div className={cn(
@@ -158,7 +162,12 @@ export function Sidebar({ className, forceCollapsed }: SidebarProps) {
         </div>
 
         {/* History Link */}
-        <div className={cn("mt-4 pt-4 border-t border-[#e5e5e5]", effectiveCollapsed ? "px-0" : "px-2")}>
+        <div
+          className={cn(
+            "mt-4 pt-4 border-t border-[#e5e5e5]",
+            effectiveCollapsed ? "px-0" : "px-2",
+          )}
+        >
           {!effectiveCollapsed && (
             <div className="px-1 pb-2">
               <span className="text-[11px] font-semibold text-[#6b7280] uppercase tracking-wider">

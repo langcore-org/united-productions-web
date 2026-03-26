@@ -1,15 +1,14 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { MobileChatHeader } from "@/components/chat/MobileChatHeader";
 import { cn } from "@/lib/utils";
+import { MobileHeader } from "./MobileHeader";
 import { MobileSidebarOverlay } from "./MobileSidebarOverlay";
 import { Sidebar } from "./Sidebar";
 
 interface AppLayoutProps {
   children: React.ReactNode;
   className?: string;
-  forceCollapsed?: boolean;
 }
 
 /**
@@ -17,7 +16,7 @@ interface AppLayoutProps {
  * - Sidebar（デスクトップ: 常時表示、モバイル: スワイプ/ハンバーガーで表示）
  * - ライトモード固定
  */
-export function AppLayout({ children, className, forceCollapsed }: AppLayoutProps) {
+export function AppLayout({ children, className }: AppLayoutProps) {
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const touchStartXRef = useRef<number | null>(null);
   const touchCurrentXRef = useRef<number | null>(null);
@@ -65,19 +64,19 @@ export function AppLayout({ children, className, forceCollapsed }: AppLayoutProp
     >
       {/* Sidebar - デスクトップのみ表示 */}
       <div className="hidden md:block flex-shrink-0">
-        <Sidebar forceCollapsed={forceCollapsed} />
+        <Sidebar />
       </div>
 
       {/* Main Content */}
       <main className="h-screen overflow-hidden flex-1 min-w-0 flex flex-col">
         {/* モバイル用ヘッダー */}
-        <MobileChatHeader onOpenSidebar={() => setIsMobileSidebarOpen(true)} />
+        <MobileHeader onOpenSidebar={() => setIsMobileSidebarOpen(true)} />
         <div className="flex-1 overflow-hidden">{children}</div>
       </main>
 
       {/* モバイル用オーバーレイサイドバー */}
       <MobileSidebarOverlay open={isMobileSidebarOpen} onOpenChange={setIsMobileSidebarOpen}>
-        <Sidebar forceCollapsed={forceCollapsed} />
+        <Sidebar />
       </MobileSidebarOverlay>
     </div>
   );
