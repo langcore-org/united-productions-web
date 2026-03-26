@@ -15,12 +15,12 @@ interface SidebarProps {
 
 // localStorageから初期値を同期的に取得（SSR対応）
 function getInitialCollapsedState(): boolean {
-  if (typeof window === "undefined") return false;
+  if (typeof window === "undefined") return true;
   try {
     const saved = localStorage.getItem("sidebar-collapsed");
-    return saved ? JSON.parse(saved) : false;
+    return saved !== null ? JSON.parse(saved) : true;
   } catch {
-    return false;
+    return true;
   }
 }
 
