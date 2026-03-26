@@ -1,9 +1,9 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import type { Metadata } from "next";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { getArticleBySlug, getAllSlugs, type ArticleType } from "@/lib/articles";
+import { type ArticleType, getAllSlugs, getArticleBySlug } from "@/lib/articles";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -46,7 +46,10 @@ export default async function ArticleDetailPage({ params }: Props) {
       <div className="max-w-2xl mx-auto px-6 py-16">
         {/* パンくず */}
         <nav className="mb-10">
-          <Link href="/articles" className="text-sm text-gray-400 hover:text-gray-600 transition-colors">
+          <Link
+            href="/articles"
+            className="text-sm text-gray-400 hover:text-gray-600 transition-colors"
+          >
             ← お知らせ一覧
           </Link>
         </nav>
@@ -54,17 +57,22 @@ export default async function ArticleDetailPage({ params }: Props) {
         {/* ヘッダー */}
         <header className="mb-10 pb-8 border-b border-gray-100">
           <div className="flex items-center gap-2 mb-4">
-            <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${TYPE_COLOR[article.type]}`}>
+            <span
+              className={`text-xs font-medium px-2 py-0.5 rounded-full ${TYPE_COLOR[article.type]}`}
+            >
               {TYPE_LABEL[article.type]}
             </span>
             <time className="text-xs text-gray-400">{article.date}</time>
           </div>
-          <h1 className="text-2xl font-semibold tracking-tight text-gray-900 mb-3">{article.title}</h1>
+          <h1 className="text-2xl font-semibold tracking-tight text-gray-900 mb-3">
+            {article.title}
+          </h1>
           <p className="text-gray-500">{article.description}</p>
         </header>
 
         {/* 本文 */}
-        <article className="prose prose-gray max-w-none
+        <article
+          className="prose prose-gray max-w-none
           prose-headings:font-semibold prose-headings:tracking-tight prose-headings:text-gray-900
           prose-h1:text-2xl prose-h2:text-xl prose-h3:text-lg
           prose-p:text-gray-700 prose-p:leading-relaxed
@@ -76,10 +84,9 @@ export default async function ArticleDetailPage({ params }: Props) {
           prose-td:text-gray-700
           prose-blockquote:border-l-gray-300 prose-blockquote:text-gray-500
           prose-a:text-blue-600 prose-a:no-underline hover:prose-a:underline
-        ">
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>
-            {article.content}
-          </ReactMarkdown>
+        "
+        >
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>{article.content}</ReactMarkdown>
         </article>
 
         {/* CTA */}

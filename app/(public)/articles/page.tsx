@@ -1,6 +1,6 @@
-import Link from "next/link";
 import type { Metadata } from "next";
-import { getAllArticles, type ArticleType } from "@/lib/articles";
+import Link from "next/link";
+import { type ArticleType, getAllArticles } from "@/lib/articles";
 
 export const metadata: Metadata = {
   title: "記事一覧 - Teddy",
@@ -26,7 +26,10 @@ export default function ArticlesPage() {
     <div className="min-h-screen bg-white">
       <div className="max-w-2xl mx-auto px-6 py-16">
         <header className="mb-12">
-          <Link href="/auth/signin" className="text-sm text-gray-400 hover:text-gray-600 transition-colors mb-8 inline-block">
+          <Link
+            href="/auth/signin"
+            className="text-sm text-gray-400 hover:text-gray-600 transition-colors mb-8 inline-block"
+          >
             ← アプリに戻る
           </Link>
           <h1 className="text-3xl font-semibold tracking-tight text-gray-900 mb-2">お知らせ</h1>
@@ -44,7 +47,9 @@ export default function ArticlesPage() {
                   className="flex flex-col gap-2 px-6 py-5 bg-white hover:bg-gray-50 transition-colors"
                 >
                   <div className="flex items-center gap-2">
-                    <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${TYPE_COLOR[article.type]}`}>
+                    <span
+                      className={`text-xs font-medium px-2 py-0.5 rounded-full ${TYPE_COLOR[article.type]}`}
+                    >
                       {TYPE_LABEL[article.type]}
                     </span>
                     <time className="text-xs text-gray-400">{article.date}</time>
