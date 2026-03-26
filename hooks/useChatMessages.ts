@@ -44,10 +44,16 @@ export function useChatMessages({
   const [dragError, setDragError] = useState<string | null>(null);
   const dragCounter = useRef(0);
 
-  const buildStreamMessages = useCallback((userContent: string, history: Message[]): LLMMessage[] => {
-    const conversationHistory: LLMMessage[] = history.map((m) => ({ role: m.role, content: m.content }));
-    return [...conversationHistory, { role: "user", content: userContent }];
-  }, []);
+  const buildStreamMessages = useCallback(
+    (userContent: string, history: Message[]): LLMMessage[] => {
+      const conversationHistory: LLMMessage[] = history.map((m) => ({
+        role: m.role,
+        content: m.content,
+      }));
+      return [...conversationHistory, { role: "user", content: userContent }];
+    },
+    [],
+  );
 
   const handleSend = useCallback(async () => {
     if (!input.trim() && attachedFiles.length === 0) return;

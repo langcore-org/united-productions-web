@@ -22,9 +22,7 @@ export function AdminLayout({ children, className }: AdminLayoutProps) {
       </div>
 
       {/* Main Content - 残りの幅を自動で埋める */}
-      <main className="h-screen overflow-y-auto flex-1 min-w-0">
-        {children}
-      </main>
+      <main className="h-screen overflow-y-auto flex-1 min-w-0">{children}</main>
     </div>
   );
 }

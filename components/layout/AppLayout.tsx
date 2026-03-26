@@ -22,9 +22,7 @@ export function AppLayout({ children, className }: AppLayoutProps) {
       </div>
 
       {/* Main Content - 残りの幅を自動で埋める */}
-      <main className="h-screen overflow-hidden flex-1 min-w-0">
-        {children}
-      </main>
+      <main className="h-screen overflow-hidden flex-1 min-w-0">{children}</main>
     </div>
   );
 }
